@@ -1,2 +1,1 @@
-# PowerPlatform-CdsServiceClient
-Issue tracking for the Microsoft.PowerPlatform.Cds.Client nuget packages. 
+TODO: Create a file called LICENSE (not LICENSE.TXT, LICENSE.md, etc.)…
