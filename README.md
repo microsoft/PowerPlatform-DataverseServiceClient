@@ -45,7 +45,7 @@ If your working against CDS Only and or custom entities and sdk messages, you sh
 <b>Note: Please be aware that during the Alpha \ Beta phases, these nuget packages are not supported via official channels. 
 Support is aware of them, however you will likely be directed back to the community forums for support during the Alpha \ Beta phases.  A number of our dev's and PM's do monitor this channel and can respond to questions and feedback. 
 
-While we are monitoring the community forums,  you are encouraged to open issue [here](../issues) 
+While we are monitoring the community forums,  you are encouraged to open issue [here](https://github.com/microsoft/PowerPlatform-CdsServiceClient/issues) 
 </b>
 
 ## Samples / Docs
