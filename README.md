@@ -35,11 +35,6 @@ The alpha version of the SDK libs supports the following and has the following n
 * We will likely ship more extension packages that will contain the “CRM” messages,  though over time, we will likely split the namespaces of those messages up based on service line,  think Field Service or Sales or Customer Service, etc..
 * Plugin Development using this Client is NOT supported at this time. 
 
-
-Samples and such will be updated overtime on the PowerApps Samples GitHub Site as we move forward with the evolution of this capability.   That said, any of the existing CrmServiceClient samples can be used as a base to start. 
-You can find those here: [https://github.com/microsoft/PowerApps-Samples/tree/master/cds/orgsvc/C%23](PowerApps-Samples/cds/orgsvc/C#/)
-
-
 From a scenario point of view,  we are particularity interested in any issues or challenges when using these library in either Asp.net Core or Functions scenarios. 
  
 We believe forthe vast majorty of applications working against the older dynamices sdk libs, you should only need Microsoft.Powerplatform.Cds.Client and Microsoft.Dynamics.Sdk.Messages.
@@ -53,6 +48,12 @@ Support is aware of them, however you will likely be directed back to the commun
 While we are monitoring the community forums,  you are encouraged to open issue [here](../issues) 
 </b>
 
+## Samples / Docs
+Samples and such will be updated overtime on the PowerApps Samples GitHub Site as we move forward with the evolution of this capability. That said, any of the existing CrmServiceClient samples can be used as a base to start. You can find those here: https://github.com/microsoft/PowerApps-Samples/tree/master/cds/orgsvc/C%23
+
+For connections strings, docs on supported patterns are here: [https://docs.microsoft.com/en-us/powerapps/developer/common-data-service/xrm-tooling/use-connection-strings-xrm-tooling-connect](Connection String Docs)
+
+For General docs on the CrmServiceClient, which is what CdsServiceClient is modeled on: [https://docs.microsoft.com/en-us/powerapps/developer/common-data-service/xrm-tooling/build-windows-client-applications-xrm-tools](CrmServiceClient Docs)
 
 ## Contributing
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us the rights to use your contribution. For details, visit https://cla.microsoft.com.
