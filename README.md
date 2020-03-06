@@ -49,11 +49,11 @@ While we are monitoring the community forums,  you are encouraged to open issue 
 </b>
 
 ## Samples / Docs
-Samples and such will be updated overtime on the PowerApps Samples GitHub Site as we move forward with the evolution of this capability. That said, any of the existing CrmServiceClient samples can be used as a base to start. You can find those here: [https://github.com/microsoft/PowerApps-Samples/tree/master/cds/orgsvc/C%23](Samples)
+Samples and such will be updated overtime on the PowerApps Samples GitHub Site as we move forward with the evolution of this capability. That said, any of the existing CrmServiceClient samples can be used as a base to start. You can find those here: [Samples](https://github.com/microsoft/PowerApps-Samples/tree/master/cds/orgsvc/C%23)
 
-For connections strings, docs on supported patterns are here: [https://docs.microsoft.com/en-us/powerapps/developer/common-data-service/xrm-tooling/use-connection-strings-xrm-tooling-connect](ConnectionString_Docs)
+For connections strings, docs on supported patterns are here: [Connection String Docs](https://docs.microsoft.com/en-us/powerapps/developer/common-data-service/xrm-tooling/use-connection-strings-xrm-tooling-connect)
 
-For General docs on the CrmServiceClient, which is what CdsServiceClient is modeled on: [https://docs.microsoft.com/en-us/powerapps/developer/common-data-service/xrm-tooling/build-windows-client-applications-xrm-tools](CrmServiceClient_Docs)
+For General docs on the CrmServiceClient, which is what CdsServiceClient is modeled on: [CrmServiceClient Docs](https://docs.microsoft.com/en-us/powerapps/developer/common-data-service/xrm-tooling/build-windows-client-applications-xrm-tools)
 
 ## Contributing
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us the rights to use your contribution. For details, visit https://cla.microsoft.com.
