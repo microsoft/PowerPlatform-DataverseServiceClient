@@ -1,10 +1,19 @@
+## Current Release Notes
+Current release notes:
+
+[Microsoft.Powerplatform.Cds.Client](releasenotes/Microsoft.Powerplatform.Cds.Client.ReleaseNotes.txt)
+
+[Microsoft.Powerplatform.Cds.Client.Dynamics](releasenotes/Microsoft.Powerplatform.Cds.Client.Dynamics.ReleaseNotes.txt)
+
+[Microsoft.Dynamics.Sdk.Messages](releasenotes/Microsoft.Dynamics.Sdk.Messages.ReleaseNotes.txt)
+
 ## Overview
 This is currently an issues only repositiry to support the Microsoft.PowerPlatform.Cds.Client and its supporting assemblies and classes. 
 This encompases the contents of the following nuget packages:
 
-[Microsoft.PowerPlatform.Cds.Client](https://www.nuget.org/packages/Microsoft.Powerplatform.Cds.Client)
+[Microsoft.PowerPlatform.Cds.Client](https://www.nuget.org/packages/Microsoft.PowerPlatform.Cds.Client)
 -
-[Microsoft.PowerPlatform.Cds.Client.Dynamics](https://www.nuget.org/packages/Microsoft.Powerplatform.Cds.Client.Dynamics)
+[Microsoft.PowerPlatform.Cds.Client.Dynamics](https://www.nuget.org/packages/Microsoft.PowerPlatform.Cds.Client.Dynamics)
 -
 [Microsoft.Dynamics.Sdk.Messages](https://www.nuget.org/packages/Microsoft.Dynamics.Sdk.Messages)
 -
