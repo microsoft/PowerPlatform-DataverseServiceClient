@@ -1,0 +1,103 @@
+<Project>
+
+  <PropertyGroup Condition="'$(UseProjectSettingForFramework)' == ''">
+    <TargetFrameworks>net462;net472;net48;netcoreapp3.0;netcoreapp3.1</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <SrcRoot>$(MSBuildThisFileDirectory)</SrcRoot>
+    <RepoRoot>$([System.IO.Path]::Combine($(SrcRoot), ".."))</RepoRoot>
+    <RepoRoot>$([System.IO.Path]::GetFullPath($(RepoRoot)))</RepoRoot>
+    <!-- <TargetOS Condition=" '$(TargetOS)' == '' ">win</TargetOS> -->
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+        <!-- this property must be re-defined in individual .csprojs or a .props file per component area -->
+    <ComponentAreaName Condition="'$(ComponentAreaName)' == ''">FORGOT-To-Set-ComponentAreaName</ComponentAreaName>
+  </PropertyGroup>
+
+<PropertyGroup>
+    <Features>IOperation</Features>
+    <!-- These variables define the object and binary roots, respectively. -->
+    <!-- Define OutDir based on TargetFramework, then fallback to ToolFramework -->
+    <OutputRootDir Condition=" '$(OutputRootDir)' == '' ">$(RepoRoot)\bin\$(Configuration)\$(ComponentAreaName)\$(TargetFramework)</OutputRootDir> 
+    <OutputRootDir>$(OutputRootDir.TrimEnd({'\\'}))</OutputRootDir>
+
+    <!-- These variables are the ones that the standard MSBuild targets recognize. -->
+    <OutDir Condition=" '$(OutDir)' =='' ">$([System.IO.Path]::Combine($(OutputRootDir), $(RelativeOutputPath)))</OutDir>
+    <!-- OutDir requires a trailing slash to prevent MSB8004 warning -->
+    <OutDir>$(OutDir.TrimEnd("\\"))\</OutDir>
+    <!-- Ensures OutputPath always matches OutDir -->
+    <OutputPath>$(OutDir)</OutputPath>
+    <BaseIntermediateOutputPath Condition=" '$(BaseIntermediateOutputPath)' == ''">$(RepoRoot)\obj\$(ComponentAreaName)\$(MSBuildProjectName)</BaseIntermediateOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(SignAssembly)' == 'true'">
+    <AssemblyOriginatorKeyFile>$(RepoRoot)\build\crmKey\35MSSharedLib1024.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>true</DelaySign>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DefineConstants>TRACE</DefineConstants>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'CRMINTERNAL|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE;CRMINTERNAL</DefineConstants>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Enable_Telemetry)' == 'true' " >
+    <DefineConstants>$(DefineConstants);PROD_CUSTOMER_TELEMETRY</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageVersion_CDSServerNuget>4.5.786</PackageVersion_CDSServerNuget>
+    <PackageVersion_Adal>3.19.8</PackageVersion_Adal>
+    <PackageVersion_CdsSdk>4.5.786</PackageVersion_CdsSdk>
+    <PackageVersion_RestClientRuntime>2.3.20</PackageVersion_RestClientRuntime>
+    <PackageVersion_Newtonsoft>10.0.3</PackageVersion_Newtonsoft>
+  </PropertyGroup>
+
+  <!-- <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" /> -->
+</Project>

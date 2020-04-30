@@ -1,0 +1,57 @@
+Notice: 
+    This package is an ALPHA release. - Use at your own risk.
+    This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8, .net core 3.0 and 3.1 
+    We have not stabilized on NameSpace or Class names with this package as of yet and things will change as we move though the preview.
+    General Documentation is the same as CrmServiceClient and can be found here: 
+        https://docs.microsoft.com/en-us/dotnet/api/microsoft.xrm.tooling.connector.crmserviceclient?view=dynamics-xrmtooling-ce-9
+    Connection String Docs can be found here: 
+        https://docs.microsoft.com/en-us/powerapps/developer/common-data-service/xrm-tooling/use-connection-strings-xrm-tooling-connect
+    Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time. 
+
+++CURRENTRELEASEID++
+BREAKING CHANGE!!!
+Altering Nuget Version to 3 digit semantic version
+Namespace change from Microsoft.Powerplatform.xxxx to Microsoft.PowerPlatform.xxxx
+Fixed an error with setting CallerId when ClientSecret Auth type is used.  
+    Thanks for all the bug reports on this and repro's that really helped us run it down. 
+
+0.0.1.11-Alpha:
+Fixed a number of discovery related issue that were broken during the port. 
+Added new forms of DiscoveryGlobalOrganziations to allow for a token function to be passed to enabled this for use in WebSites and functions where it makes sense. 
+Updated several sovereign GEO's configs to reflect use of Global discovery for those GEOs
+Fixed a bug in LinQ create methods that would appear on non-windows deployments. 
+    This would manifest as a missing method exception when trying to create a sequential guid. 
+
+0.0.1.9-Alpha:
+Fixes a bug in using ExecuteCdsWebRequest that blocked connections using clientSecretAuth types.
+
+0.0.1.8-Alpha:
+Removed IOverrideAuthHookWrapper and property and replaced with a new constructor form. 
+    This capability was replaced with a new constructor that accepts a function pointer as a parameter to the constructor. 
+    This user provided function takes the form of string FunctionName (string InstanceUri),  When called, the current instance URI will be
+    passed in and the function is expected to return an access token for access to that instance.  
+    This form allows an given instance of the CdsServiceClient to be associated with a Auth Processor vs having the auth processor at the process level.
+
+Fixed a bug reported in .clone in .net core builds.  When cloning a connection in .net core, the system would think you were using an invalid auth type.
+
+Known issues:
+    None at this time.. Please report any issues on the GitHub Issues site. 
+
+
+0.0.1.7-Alpha
+    Fixed a Nuget Package dependency issue in Microsoft.Dynamics.Sdk.Messages
+
+0.0.1.6-Alpha
+Intial Alpha release of Microsoft.Cds.Client.CdsServiceClient 
+    WARNING: This is an ALPHA release. 
+    This library is a rename and renamespace of the Microsoft.Xrm.Tooling.Connector.CrmSeriviceClient.
+    If you are familiar with the CrmServiceClient,  By Renaming each occurrence of Crm to Cds, you should find that API's match up.
+    Major changes from CrmServiceClient:
+        This library does not support User Interactive or User Password Auth flows in .net core. 
+        This library does not support AD or ADFS login to OnPremise,  
+            to use against an onPrem instance of CDS, your instance must be configured with 
+            ADFS + OAuth and the application ID you wish to use registered.
+        This library removes several Dynamics specific helper methods from CrmServiceClient. 
+            this additional methods can be found by include the nuget package Microsoft.Cds.Client.Dynamics
+        
+

@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="14.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.30319</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{C3256636-2F3A-4E4D-ADD8-8AE7B5CB9C76}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Microsoft.Xrm.Tooling.Connector.Behaviors</RootNamespace>
+    <AssemblyName>Microsoft.Xrm.Tooling.Connector.Behaviors</AssemblyName>
+<TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$(EnlistmentRoot)\target\debug\amd64</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>$(EnlistmentRoot)\target\debug\amd64</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="BCrmWebSvc.cs" />
+    <Compile Include="BCrmServiceClient.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Accessibility">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(EnlistmentRoot)\target\debug\amd64\Accessibility.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Xrm.Sdk.Moles">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(EnlistmentRoot)\target\debug\amd64\Microsoft.Xrm.Sdk.Moles.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Configuration.Install" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Design" />
+    <Reference Include="System.DirectoryServices" />
+    <Reference Include="System" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Messaging" />
+    <Reference Include="System.Runtime.Remoting" />
+    <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.XML" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="Microsoft.Moles.Framework">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(EnlistmentRoot)\private\lib\moles\tools\Microsoft.Moles.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="mscorlib.Moles">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(EnlistmentRoot)\private\lib\moles\MolesAssemblies\mscorlib\4.0.0.0__b77a5c561934e089\mscorlib.Moles.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(EnlistmentRoot)\public\ext\VisualStudio\VS10RTM\PublicAssemblies\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Xrm.Sdk">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(EnlistmentRoot)\target\debug\amd64\Microsoft.Xrm.Sdk.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Crm.Sdk">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(EnlistmentRoot)\target\debug\amd64\Microsoft.Crm.Sdk.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Crm.Sdk.Proxy">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(EnlistmentRoot)\target\debug\amd64\Microsoft.Crm.Sdk.Proxy.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Xrm.Tooling.Connector">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(EnlistmentRoot)\target\USD\Microsoft.Xrm.Tooling.Connector.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Moles.Framework">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(EnlistmentRoot)\private\lib\moles\tools\Microsoft.Moles.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Xrm.Tooling.Connector.Moles">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(EnlistmentRoot)\target\debug\amd64\.Moles.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Xrm.Sdk.Moles">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(EnlistmentRoot)\target\debug\amd64\Microsoft.Xrm.Sdk.Moles.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Crm.Sdk.Proxy.Moles">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(EnlistmentRoot)\target\debug\amd64\Microsoft.Crm.Sdk.Proxy.Moles.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Xrm.Tooling.Connector.Moles">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(EnlistmentRoot)\target\debug\amd64\Microsoft.Xrm.Tooling.Connector.Moles.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Crm.Entities.Moles">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(EnlistmentRoot)\target\debug\amd64\Microsoft.Crm.Entities.Moles.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+</Project>
