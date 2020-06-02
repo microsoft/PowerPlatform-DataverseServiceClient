@@ -12,8 +12,8 @@ This repositiry contains the code for the Microsoft.PowerPlatform.Cds.Client and
 
 **IMPORTANT NOTE**
 
-**This repositiry cannot be built outside of Microsoft** 
-This is due to a set of dependencies on nuget packages that are internally available only.  at some point in the future, we will expose the supporting nuget packages when we have updated our server infrastructure to support plugin development on .net core.
+**The CdsServiceClient cannot be built outside of Microsoft** 
+This is due to a set of dependencies on nuget packages that are internally available only.  At some point in the future, we will expose the supporting nuget packages when we have updated our server infrastructure to support plugin development on .net core.
 
 
 This encompases the contents of the following nuget packages:
