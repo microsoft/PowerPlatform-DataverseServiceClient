@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Microsoft.PowerPlatform.Cds.Client</RootNamespace>
+    <ComponentAreaName>CdsClient</ComponentAreaName>
+    <SignAssembly>true</SignAssembly>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+  <Import Project="..\..\..\Build.Common.Core.props" />
+
+  <PropertyGroup>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="UnitTestBehaviors\**" />
+    <Compile Remove="UnitTests\**" />
+    <EmbeddedResource Remove="UnitTestBehaviors\**" />
+    <EmbeddedResource Remove="UnitTests\**" />
+    <None Remove="UnitTestBehaviors\**" />
+    <None Remove="UnitTests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Cds.CoreAssemblies.Internal" Version="$(PackageVersion_CDSServerNuget)">
+      <IncludeAssets></IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="$(PackageVersion_Adal)" />
+    <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="$(PackageVersion_RestClientRuntime)" />
+    <PackageReference Include="Microsoft.VisualBasic" Version="10.3.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(PackageVersion_Newtonsoft)" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.7.0" />
+    <PackageReference Include="System.Runtime.Caching" Version="4.7.0" />
+    <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.7.0" />
+  </ItemGroup>
+
+</Project>

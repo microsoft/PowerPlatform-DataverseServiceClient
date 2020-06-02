@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>Microsoft.Dynamics.Sdk.Messages</id>
+    <version>1.0.0</version>
+    <authors>Microsoft</authors>
+    <owners>crmsdk,Microsoft</owners>
+    <licenseUrl>https://go.microsoft.com/fwlink/?linkid=2108407</licenseUrl>
+    <projectUrl>https://github.com/microsoft/PowerPlatform-CdsServiceClient</projectUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>This package contains the preview of the .net core Dynamics Messages Assembly. Used to issue commands to Dynamics Applications Installed on Microsoft Common Data Service. This Package has been authored by the Microsoft Common Data Service SDK team.</description>
+    <summary>This package contains messages used to interact with the Dynamics CE applications via the CdsServiceClient.</summary>
+    <copyright>© Microsoft Corporation. All rights reserved.</copyright>
+    <tags>Dynamics CommonDataService CDS PowerApps PowerPlatform</tags>
+    <dependencies>
+      <group targetFramework=".NETFramework4.6.2">
+        <dependency id="Microsoft.PowerPlatform.Cds.Client" version="0.2.0-Alpha" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETFramework4.7.2">
+        <dependency id="Microsoft.PowerPlatform.Cds.Client" version="0.2.0-Alpha" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETFramework4.8">
+        <dependency id="Microsoft.PowerPlatform.Cds.Client" version="0.2.0-Alpha" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETCoreApp3.0">
+        <dependency id="Microsoft.PowerPlatform.Cds.Client" version="0.2.0-Alpha" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETCoreApp3.1">
+        <dependency id="Microsoft.PowerPlatform.Cds.Client" version="0.2.0-Alpha" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+    <frameworkAssemblies>
+      <frameworkAssembly assemblyName="System.IO" targetFramework=".NETFramework4.7.2, .NETFramework4.8" />
+      <frameworkAssembly assemblyName="System.Linq" targetFramework=".NETFramework4.7.2, .NETFramework4.8" />
+      <frameworkAssembly assemblyName="System.Linq.Expressions" targetFramework=".NETFramework4.7.2, .NETFramework4.8" />
+      <frameworkAssembly assemblyName="System.Reflection" targetFramework=".NETFramework4.7.2, .NETFramework4.8" />
+      <frameworkAssembly assemblyName="System.Runtime" targetFramework=".NETFramework4.7.2, .NETFramework4.8" />
+      <frameworkAssembly assemblyName="System.Runtime.Serialization.Primitives" targetFramework=".NETFramework4.7.2, .NETFramework4.8" />
+      <frameworkAssembly assemblyName="System.Runtime.Serialization.Xml" targetFramework=".NETFramework4.7.2, .NETFramework4.8" />
+      <frameworkAssembly assemblyName="System.Security.Cryptography.Algorithms" targetFramework=".NETFramework4.7.2, .NETFramework4.8" />
+      <frameworkAssembly assemblyName="System.Security.Cryptography.Encoding" targetFramework=".NETFramework4.7.2, .NETFramework4.8" />
+      <frameworkAssembly assemblyName="System.Security.Cryptography.Primitives" targetFramework=".NETFramework4.7.2, .NETFramework4.8" />
+      <frameworkAssembly assemblyName="System.Xml.XmlDocument" targetFramework=".NETFramework4.7.2, .NETFramework4.8" />
+    </frameworkAssemblies>
+  </metadata>
+  <files>
+    <file src="{signedBinDir}\{configuration}\CdsClient\netcoreapp3.1\Microsoft.Dynamics.Sdk.Messages.dll" target="lib\netcoreapp3.1\Microsoft.Dynamics.Sdk.Messages.dll" />
+    <file src="{signedBinDir}\{configuration}\CdsClient\netcoreapp3.0\Microsoft.Dynamics.Sdk.Messages.dll" target="lib\netcoreapp3.0\Microsoft.Dynamics.Sdk.Messages.dll" />
+    <file src="{signedBinDir}\{configuration}\CdsClient\net472\Microsoft.Dynamics.Sdk.Messages.dll" target="lib\net472\Microsoft.Dynamics.Sdk.Messages.dll" />
+    <file src="{signedBinDir}\{configuration}\CdsClient\net462\Microsoft.Dynamics.Sdk.Messages.dll" target="lib\net462\Microsoft.Dynamics.Sdk.Messages.dll" />
+    <file src="{signedBinDir}\{configuration}\CdsClient\net48\Microsoft.Dynamics.Sdk.Messages.dll" target="lib\net48\Microsoft.Dynamics.Sdk.Messages.dll" />
+  </files>
+</package>

@@ -1,30 +1,36 @@
 Notice: 
     This package is an ALPHA release. - Use at your own risk.
-    This package is an extension to the Microsoft.Cds.Client Nuget package.
+    This package is Contains SDK messaged intended be used in conjuction with the Microsoft.Cds.Client Nuget package.
     This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8, .net core 3.0 and 3.1 
     We have not stabilized on NameSpace or Class names with this package as of yet and things will change as we move though the preview.
 
-0.2.1-Alpha:
+    Documentation for Most of these messages can be found here: 
+        https://docs.microsoft.com/en-us/dotnet/api/microsoft.crm.sdk.messages?view=dynamics-general-ce-9
+
+++CURRENTRELEASEID++
+    Updates from CDS Core libs. 
+
+0.2.1-Alpha: 
 BREAKING CHANGE!!!
 Altering Nuget Version to 3 digit semantic version
 Namespace change from Microsoft.Powerplatform.xxxx to Microsoft.PowerPlatform.xxxx
 No other changes to this assembly
 
 0.0.1.11-Alpha:
-    No Updates here. 
+    Updated Dynamics messages to pick up current North America versions of application messages.
 
 0.0.1.9-Alpha:
     No Updates here.
 
 0.0.1.8-Alpha:
-    No Updates here.
-    
+    No updates here.
+
 0.0.1.7-Alpha
     Fixed a Nuget Package dependency issue in Microsoft.Dynamics.Sdk.Messages
 
 0.0.1.6-Alpha
-Intial Alpha release of Microsoft.Cds.Client.CdsServiceClient Dynamics extensions
+Intial Alpha release of Microsoft.Dynamics.Messages Message Package
     WARNING: This is an ALPHA release. 
-    This library contains helper extensions supporting Sales and Service actions.
+    This library contains messages supporting Sales and Service and Marketing Applications.
         
 

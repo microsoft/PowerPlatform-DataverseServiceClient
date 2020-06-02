@@ -8,7 +8,11 @@ Notice:
         https://docs.microsoft.com/en-us/powerapps/developer/common-data-service/xrm-tooling/use-connection-strings-xrm-tooling-connect
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time. 
 
-0.2.1-Alpha:
+++CURRENTRELEASEID++
+Several updates to Create / Update / Delete operations to move the underlying features over to use the WebAPI. 
+Please report any bugs that you run into with this.  This has been "mostly" tested with our current test suite, however we have not full tested all data type translation at this point. 
+
+0.2.1-Alpha: 
 BREAKING CHANGE!!!
 Altering Nuget Version to 3 digit semantic version
 Namespace change from Microsoft.Powerplatform.xxxx to Microsoft.PowerPlatform.xxxx
