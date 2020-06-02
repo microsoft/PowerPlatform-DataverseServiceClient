@@ -1,14 +1,21 @@
 ## Current Release Notes
 Current release notes:
 
-[Microsoft.Powerplatform.Cds.Client](releasenotes/Microsoft.Powerplatform.Cds.Client.ReleaseNotes.txt)
+[Microsoft.Powerplatform.Cds.Client](src/nuspecs/Microsoft.Powerplatform.Cds.Client.ReleaseNotes.txt)
 
-[Microsoft.Powerplatform.Cds.Client.Dynamics](releasenotes/Microsoft.Powerplatform.Cds.Client.Dynamics.ReleaseNotes.txt)
+[Microsoft.Powerplatform.Cds.Client.Dynamics](src/nuspecs/Microsoft.Powerplatform.Cds.Client.Dynamics.ReleaseNotes.txt)
 
-[Microsoft.Dynamics.Sdk.Messages](releasenotes/Microsoft.Dynamics.Sdk.Messages.ReleaseNotes.txt)
+[Microsoft.Dynamics.Sdk.Messages](src/nuspecs/Microsoft.Dynamics.Sdk.Messages.ReleaseNotes.txt)
 
 ## Overview
-This is currently an issues only repositiry to support the Microsoft.PowerPlatform.Cds.Client and its supporting assemblies and classes. 
+This repositiry contains the code for the Microsoft.PowerPlatform.Cds.Client and its supporting assemblies and classes. 
+
+**IMPORTANT NOTE**
+
+**This repositiry cannot be built outside of Microsoft** 
+This is due to a set of dependencies on nuget packages that are internally available only.  at some point in the future, we will expose the supporting nuget packages when we have updated our server infrastructure to support plugin development on .net core.
+
+
 This encompases the contents of the following nuget packages:
 
 [Microsoft.PowerPlatform.Cds.Client](https://www.nuget.org/packages/Microsoft.PowerPlatform.Cds.Client)
@@ -16,7 +23,8 @@ This encompases the contents of the following nuget packages:
 [Microsoft.PowerPlatform.Cds.Client.Dynamics](https://www.nuget.org/packages/Microsoft.PowerPlatform.Cds.Client.Dynamics)
 -
 [Microsoft.Dynamics.Sdk.Messages](https://www.nuget.org/packages/Microsoft.Dynamics.Sdk.Messages)
--
+
+
 This library is and its supporting assemblies are a revision and update of the Microsoft.Xrm.Tooling.Connector.CrmServiceClient and the underlying Microsoft.Xrm.Sdk.Client libraries. 
 
 We are using this effort to for a few key things we have wanted to get done for a number of years, 
