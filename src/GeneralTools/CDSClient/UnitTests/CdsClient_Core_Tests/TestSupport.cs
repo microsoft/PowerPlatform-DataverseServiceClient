@@ -1,10 +1,14 @@
 ﻿using Microsoft.Crm.Sdk.Messages;
+using Microsoft.PowerPlatform.Cds.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
+using Microsoft.Xrm.Sdk.Organization;
+using Microsoft.Xrm.Sdk.WebServiceClient;
 using Moq;
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Text;
 
 namespace CdsClient_Core_UnitTests
@@ -19,8 +23,24 @@ namespace CdsClient_Core_UnitTests
         #endregion
 
 
+        #region BoilerPlate
+        public void SetupMockAndSupport( out Mock<IOrganizationService> moqOrgSvc , out Mock<MoqHttpMessagehander> moqHttpHandler , out CdsServiceClient cdsServiceClient )
+        {
+            var orgSvc = new Mock<IOrganizationService>();
+            var fakHttpMethodHander = new Mock<MoqHttpMessagehander> { CallBase = true };
+            var httpClientHandeler = new HttpClient(fakHttpMethodHander.Object, false);
+            SetupWhoAmIHandlers(orgSvc);
+            SetupMetadataHandlersForAccount(orgSvc);
+            CdsServiceClient cli = new CdsServiceClient(orgSvc.Object, httpClientHandeler, new Version("9.1.2.0"));
+
+            moqOrgSvc = orgSvc;
+            moqHttpHandler = fakHttpMethodHander;
+            cdsServiceClient = cli; 
+        }
+        #endregion
+
         #region PreSetupResponses
-        public void SetupWhoAmIHandlers(Mock<IOrganizationService> orgSvc)
+        private void SetupWhoAmIHandlers(Mock<IOrganizationService> orgSvc)
         {
             // Who Am I Response 
             var whoAmIResponse = new WhoAmIResponse();
@@ -30,13 +50,43 @@ namespace CdsClient_Core_UnitTests
             whoAmIResponse.Results.Add("OrganizationId", _OrganizationId);
 
             orgSvc.Setup(req => req.Execute(It.IsAny<WhoAmIRequest>())).Returns(whoAmIResponse);
+
+            string _baseWebApiUriFormat = @"{0}/api/data/v{1}/";
+            string _baseSoapOrgUriFormat = @"{0}/XRMServices/2011/Organization.svc";
+            string directConnectUri = "https://testorg.crm.dynamics.com";
+
+            EndpointCollection ep = new EndpointCollection();
+            ep.Add(EndpointType.WebApplication, directConnectUri);
+            ep.Add(EndpointType.OrganizationDataService, string.Format(_baseWebApiUriFormat, directConnectUri, "9.1"));
+            ep.Add(EndpointType.OrganizationService, string.Format(_baseSoapOrgUriFormat, directConnectUri));
+
+            OrganizationDetail d = new OrganizationDetail();
+            d.FriendlyName = "DIRECTSET";
+            d.OrganizationId = _OrganizationId;
+            d.OrganizationVersion = "9.1.2.0";
+            d.State = OrganizationState.Enabled;
+            d.UniqueName = "HOLD";
+            d.UrlName = "HOLD";
+            System.Reflection.PropertyInfo proInfo = d.GetType().GetProperty("Endpoints");
+            if (proInfo != null)
+            {
+                proInfo.SetValue(d, ep, null);
+            }
+
+            RetrieveCurrentOrganizationResponse rawResp = new RetrieveCurrentOrganizationResponse();
+            rawResp.ResponseName = "RetrieveCurrentOrganization";
+            rawResp.Results.AddOrUpdateIfNotNull("Detail", d);
+            RetrieveCurrentOrganizationResponse CurrentOrgResp = (RetrieveCurrentOrganizationResponse)rawResp;
+
+            orgSvc.Setup(f => f.Execute(It.IsAny<RetrieveCurrentOrganizationRequest>())).Returns(CurrentOrgResp);
         }
 
-        public void SetupMetadataHandlersForAccount(Mock<IOrganizationService> orgSvc)
+        private void SetupMetadataHandlersForAccount(Mock<IOrganizationService> orgSvc)
         {
             EntityMetadata entityMetadata = new EntityMetadata();
             entityMetadata.LogicalName = "account";
             entityMetadata.SchemaName = "account";
+            entityMetadata.EntitySetName = "accounts";
             entityMetadata.DisplayName = new Label("Account", 1033);
             entityMetadata.DisplayName.UserLocalizedLabel = new LocalizedLabel("Account", 1033);
             entityMetadata.DisplayCollectionName = new Label("Accounts", 1033);
@@ -58,6 +108,7 @@ namespace CdsClient_Core_UnitTests
 
             orgSvc.Setup(f => f.Execute(It.IsAny<RetrieveEntityRequest>())).Returns(retrieveEntityResponse);
             orgSvc.Setup(f => f.Execute(It.IsAny<RetrieveAllEntitiesRequest>())).Returns(retrieveAllEntitiesResponse);
+
         }
 
         #endregion

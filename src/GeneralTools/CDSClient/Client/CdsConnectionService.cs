@@ -224,6 +224,11 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		public Guid? CallerAADObjectId { get; set; }
 
 		/// <summary>
+		/// httpclient that is in use for this connection 
+		/// </summary>
+		internal HttpClient WebApiHttpClient { get; set; }
+
+		/// <summary>
 		/// This ID is used to support CDS Telemetry when trouble shooting SDK based errors.
 		/// When Set by the caller, all CDS API Actions executed by this client will be tracked under a single session id for later troubleshooting. 
 		/// For example, you are able to group all actions in a given run of your client ( seveal creates / reads and such ) under a given tracking id that is shared on all requests. 
@@ -255,6 +260,11 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// Cached Authority
 		/// </summary>
 		internal string Authority { get { return _authority; } }
+
+		/// <summary>
+		///  AAD authentication context
+		/// </summary>
+		internal AuthenticationContext AuthContext { get { return _authenticationContext; } }
 
 		/// <summary>
 		/// Cached userid
@@ -397,12 +407,12 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <summary>
 		/// Returns the endpoint collection for the connected org. 
 		/// </summary>
-		internal EndpointCollection ConnectedOrgPublishedEndpoints { get; private set; }
+		internal EndpointCollection ConnectedOrgPublishedEndpoints { get; set; }
 
 		/// <summary>
 		/// Version Number of the organization, if null Discovery service process was not run or the value returned was unreadable. 
 		/// </summary>
-		internal Version OrganizationVersion { get; private set; }
+		internal Version OrganizationVersion { get; set; }
 
 		/// <summary>
 		/// Organization ID of connected org. 
@@ -502,6 +512,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			_testSupportIOrg = testIOrganziationSvc;
 			logEntry = new CdsTraceLogger();
 			isLogEntryCreatedLocaly = true;
+			RefreshInstanceDetails(testIOrganziationSvc, null); 
 		}
 
 		/// <summary>
@@ -534,6 +545,9 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			UseExternalConnection = true;
 			GenerateCacheKeys(true);
 			_eAuthType = AuthenticationType.OAuth;
+
+			// Setup instance specific httpHandler
+			WebApiHttpClient = new HttpClient(); 
 		}
 
 		/// <summary>
@@ -609,6 +623,9 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			_targetInstanceUriToConnectTo = instanceToConnectToo;
 			_isDefaultCredsLoginForOAuth = useDefaultCreds;
 			GenerateCacheKeys(useUniqueCacheName);
+
+			// Setup instance specific httpHandler
+			WebApiHttpClient = new HttpClient();
 		}
 
 		/// <summary>
@@ -672,6 +689,10 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			_certificateThumbprint = certThumbprint;
 			_certificateStoreLocation = certStoreName;
 			GenerateCacheKeys(useUniqueCacheName);
+
+			// Setup instance specific httpHandler
+			WebApiHttpClient = new HttpClient();
+
 		}
 
 		/// <summary>
@@ -1336,6 +1357,9 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			TenantId = sourceClient.TenantId;
 			EnvironmentId = sourceClient.EnvironmentId;
 			GetAccessToken = sourceClient.GetAccessToken;
+			_authority = sourceClient.CdsConnectionSvc.AuthContext == null
+							? string.Empty
+							: sourceClient.CdsConnectionSvc.AuthContext.Authority;
 		}
 
 		#region WebAPI Interface Utilities
@@ -1353,7 +1377,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <param name="contentType">content type to use when calling into the remote host</param>
 		/// <param name="sessionTrackingId">Session Tracking ID to assoicate with the request.</param>
 		/// <returns></returns>
-		internal static async Task<HttpResponseMessage> ExecuteHttpRequestAsync(string uri, HttpMethod method, string body = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken), CdsTraceLogger logSink = null, Guid? requestTrackingId = null, string contentType = default(string), Guid? sessionTrackingId = null , bool suppressDebugMessage = false)
+		internal static async Task<HttpResponseMessage> ExecuteHttpRequestAsync(string uri, HttpMethod method, string body = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken), CdsTraceLogger logSink = null, Guid? requestTrackingId = null, string contentType = default(string), Guid? sessionTrackingId = null , bool suppressDebugMessage = false , HttpClient providedHttpClient = null)
 		{
 			bool isLogEntryCreatedLocaly = false;
 			if (logSink == null)
@@ -1429,11 +1453,22 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 					if (!suppressDebugMessage)
 						logSink.Log(string.Format("Begin Sending request to {3} {0} : {2}RequestID={1}", _httpRequest.RequestUri.AbsolutePath, RequestId, sessionTrackingId.HasValue && sessionTrackingId.Value != Guid.Empty ? $" SessionID={sessionTrackingId.Value.ToString()} : " : "" , method), TraceEventType.Verbose);
-					using (HttpClient httpCli = new HttpClient())
+
+					if (providedHttpClient != null)
 					{
 						logDt.Restart();
-						_httpResponse = await httpCli.SendAsync(_httpRequest, cancellationToken).ConfigureAwait(false);
+						_httpResponse = await providedHttpClient.SendAsync(_httpRequest, cancellationToken).ConfigureAwait(false);
 						logDt.Stop();
+					}
+					else
+					{
+						// Fall though logic to deal with an Http client not being passed in. 
+						using (HttpClient httpCli = new HttpClient())
+						{
+							logDt.Restart();
+							_httpResponse = await httpCli.SendAsync(_httpRequest, cancellationToken).ConfigureAwait(false);
+							logDt.Stop();
+						}
 					}
 					HttpStatusCode _statusCode = _httpResponse.StatusCode;
 					if (!suppressDebugMessage)
@@ -2949,13 +2984,16 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				}
 			}
 
-			return _svcWebClientProxy.HeaderToken;
+			if (_svcWebClientProxy != null)
+				return _svcWebClientProxy.HeaderToken;
+			else
+				return string.Empty; // this can happen when running via tests 
 
 		}
 
 #region IDisposable Support
 		/// <summary>
-		/// Reset disposed state to handel this object being pulled from cache. 
+		/// Reset disposed state to handle this object being pulled from cache. 
 		/// </summary>
 		private void ResetDisposedState()
 		{

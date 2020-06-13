@@ -298,8 +298,14 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				case "create":
 				case "update":
 				case "delete":
-					return true; 
-
+					return true;
+				case "upsert":
+					// avoid bug in WebAPI around Support for key's as EntityRefeances //TODO: TEMP
+					Xrm.Sdk.Messages.UpsertRequest upsert = (Xrm.Sdk.Messages.UpsertRequest)req;
+					if (upsert.Target.KeyAttributes?.Any(a => a.Value is string) != true)
+						return false;
+					else
+						return true; 
 				default:
 					return false;
 			}
