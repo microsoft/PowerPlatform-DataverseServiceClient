@@ -14,6 +14,8 @@ using System.Diagnostics;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using CdsClient_Core_UnitTests;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace CdsClient_Core_Tests
 {
@@ -28,9 +30,11 @@ namespace CdsClient_Core_Tests
         [Fact]
         public void ExecuteCrmOrganizationRequest()
         {
-            var orgSvc = new Mock<IOrganizationService>();
-            testSupport.SetupWhoAmIHandlers(orgSvc); 
-            CdsServiceClient cli = new CdsServiceClient(orgSvc.Object);
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
             var rsp = (WhoAmIResponse)cli.ExecuteCdsOrganizationRequest(new WhoAmIRequest());
 
             // Validate that the user ID sent in is the UserID that comes out. 
@@ -38,29 +42,100 @@ namespace CdsClient_Core_Tests
         }
 
         [Fact]
+        public void ExecuteMessageTests()
+        {
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
+
+            // Test that Retrieve Org is working .
+            var orgData = cli.Execute(new RetrieveCurrentOrganizationRequest() { AccessType = Microsoft.Xrm.Sdk.Organization.EndpointAccessType.Default });
+            Assert.NotNull(orgData);
+        }
+
+
+        [Fact]
         public void DeleteRequestTests()
         {
-            var orgSvc = new Mock<IOrganizationService>();
-            testSupport.SetupWhoAmIHandlers(orgSvc);
-            CdsServiceClient cli = new CdsServiceClient(orgSvc.Object);
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
 
+
+            // Setup handlers to deal with both orgRequest and WebAPI request.             
+            fakHttpMethodHander.Setup(s => s.Send(It.Is<HttpRequestMessage>(f => f.Method.ToString().Equals("delete", StringComparison.OrdinalIgnoreCase)))).Returns(new HttpResponseMessage(System.Net.HttpStatusCode.OK));
             orgSvc.Setup(f => f.Execute(It.Is<DeleteRequest>(p => p.Target.LogicalName.Equals("account") && p.Target.Id.Equals(testSupport._DefaultId)))).Returns(new DeleteResponse());
-
+            
             bool rslt = cli.ExecuteCdsEntityDeleteRequest("account", testSupport._DefaultId);
             Assert.True(rslt);
 
             rslt = cli.DeleteEntity("account", testSupport._DefaultId);
             Assert.True(rslt);
-
         }
+
+
+        [Fact]
+        public void CreateRequestTests()
+        {
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
+
+            // Set up Responses 
+            CreateResponse testCreate = new CreateResponse();
+            testCreate.Results.AddOrUpdateIfNotNull("accountid", testSupport._DefaultId);
+            testCreate.Results.AddOrUpdateIfNotNull("id", testSupport._DefaultId);
+
+
+            HttpResponseMessage createRespMsg = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+            createRespMsg.Headers.Add("Location", $"https://deploymenttarget02.crm.dynamics.com/api/data/v9.1/accounts({testSupport._DefaultId})");
+            createRespMsg.Headers.Add("OData-EntityId", $"https://deploymenttarget02.crm.dynamics.com/api/data/v9.1/accounts({testSupport._DefaultId})");
+
+            // Setup handlers to deal with both orgRequest and WebAPI request.             
+            fakHttpMethodHander.Setup(s => s.Send(It.Is<HttpRequestMessage>(f => f.Method.ToString().Equals("post", StringComparison.OrdinalIgnoreCase)))).Returns(createRespMsg);
+            orgSvc.Setup(f => f.Execute(It.Is<CreateRequest>(p => p.Target.LogicalName.Equals("account")))).Returns(testCreate);
+
+
+            // Setup request 
+            // use create operation to setup request 
+            Dictionary<string, CdsDataTypeWrapper> newFields = new Dictionary<string, CdsDataTypeWrapper>();
+            newFields.Add("name", new CdsDataTypeWrapper("CrudTestAccount", CdsFieldType.String));
+
+            Entity acctEntity = new Entity("account");
+            acctEntity.Attributes.Add("name", "CrudTestAccount");
+
+            Guid respId = Guid.Empty;
+
+            // Test entity create
+            var response = cli.ExecuteCdsOrganizationRequest(new CreateRequest() { Target = acctEntity }, useWebAPI: false);
+            Assert.NotNull(response);
+            respId = ((CreateResponse)response).id;
+            Assert.Equal(testSupport._DefaultId, respId); 
+
+            // Test low level create
+            respId = cli.Create(acctEntity);
+            Assert.Equal(testSupport._DefaultId, respId);
+
+            // Test Helper create
+            respId = cli.CreateNewRecord("account", newFields);
+            Assert.Equal(testSupport._DefaultId, respId);
+        }
+
 
         [Fact]
         public void GetCurrentUser()
         {
-            var orgSvc = new Mock<IOrganizationService>();
-            testSupport.SetupWhoAmIHandlers(orgSvc);
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
 
-            CdsServiceClient cli = new CdsServiceClient(orgSvc.Object);
+
             var rsp01 = cli.GetMyCdsUserId();
 
             // Validate that the user ID sent in is the UserID that comes out. 
@@ -70,9 +145,11 @@ namespace CdsClient_Core_Tests
         [Fact]
         public void BatchTest()
         {
-            var orgSvc = new Mock<IOrganizationService>();
-            CdsServiceClient cli = new CdsServiceClient(orgSvc.Object);
-            testSupport.SetupWhoAmIHandlers(orgSvc);
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
 
             CreateResponse createResponse = new CreateResponse();
             createResponse.Results = new ParameterCollection();
@@ -128,9 +205,10 @@ namespace CdsClient_Core_Tests
         [Fact]
         public void CreateEntityAssociationTest()
         {
-            var orgSvc = new Mock<IOrganizationService>();
-            CdsServiceClient cli = new CdsServiceClient(orgSvc.Object);
-            testSupport.SetupWhoAmIHandlers(orgSvc);
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
 
             AssociateEntitiesResponse associateEntitiesResponse = new AssociateEntitiesResponse();
             orgSvc.Setup(f => f.Execute(It.IsAny<AssociateEntitiesRequest>())).Returns(associateEntitiesResponse);
@@ -142,10 +220,12 @@ namespace CdsClient_Core_Tests
         [Fact]
         public void CreateMultiEntityAssociationTest()
         {
-            var orgSvc = new Mock<IOrganizationService>();
-            CdsServiceClient cli = new CdsServiceClient(orgSvc.Object);
-            testSupport.SetupWhoAmIHandlers(orgSvc);
-            
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
+
             AssociateResponse associateEntitiesResponse = new AssociateResponse();
             orgSvc.Setup(f => f.Execute(It.IsAny<AssociateRequest>())).Returns(associateEntitiesResponse);
 
@@ -161,9 +241,11 @@ namespace CdsClient_Core_Tests
         [Fact]
         public void AssignEntityToUserTest()
         {
-            var orgSvc = new Mock<IOrganizationService>();
-            CdsServiceClient cli = new CdsServiceClient(orgSvc.Object);
-            testSupport.SetupWhoAmIHandlers(orgSvc);
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
 
             AssignResponse assignResponse = new AssignResponse(); 
             orgSvc.Setup(f => f.Execute(It.IsAny<AssignRequest>())).Returns(assignResponse);
@@ -176,9 +258,10 @@ namespace CdsClient_Core_Tests
         [Fact]
         public void SendSingleEmailTest()
         {
-            var orgSvc = new Mock<IOrganizationService>();
-            CdsServiceClient cli = new CdsServiceClient(orgSvc.Object);
-            testSupport.SetupWhoAmIHandlers(orgSvc);
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
 
             SendEmailResponse sendEmailResponse = new SendEmailResponse();
             orgSvc.Setup(f => f.Execute(It.IsAny<SendEmailRequest>())).Returns(sendEmailResponse);
@@ -190,10 +273,11 @@ namespace CdsClient_Core_Tests
         [Fact]
         public void GetEntityDisplayNameTest()
         {
-            var orgSvc = new Mock<IOrganizationService>();
-            CdsServiceClient cli = new CdsServiceClient(orgSvc.Object);
-            testSupport.SetupWhoAmIHandlers(orgSvc);
-            testSupport.SetupMetadataHandlersForAccount(orgSvc);
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
 
             // Test for plural name 
             string response = cli.GetEntityDisplayNamePlural("account");
@@ -220,10 +304,11 @@ namespace CdsClient_Core_Tests
         [Fact]
         public void GetEntityTypeCodeTest()
         {
-            var orgSvc = new Mock<IOrganizationService>();
-            CdsServiceClient cli = new CdsServiceClient(orgSvc.Object);
-            testSupport.SetupWhoAmIHandlers(orgSvc);
-            testSupport.SetupMetadataHandlersForAccount(orgSvc);
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
 
             string entityName = "account";
             string result = cli.GetEntityTypeCode(entityName);
@@ -234,10 +319,11 @@ namespace CdsClient_Core_Tests
         [Fact]
         public void ResetLocalMetadataCacheTest()
         {
-            var orgSvc = new Mock<IOrganizationService>();
-            CdsServiceClient cli = new CdsServiceClient(orgSvc.Object);
-            testSupport.SetupWhoAmIHandlers(orgSvc);
-            testSupport.SetupMetadataHandlersForAccount(orgSvc);
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
 
             cli.ResetLocalMetadataCache("account");
         }

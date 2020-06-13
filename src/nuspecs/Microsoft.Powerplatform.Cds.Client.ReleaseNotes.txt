@@ -9,6 +9,11 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time. 
 
 ++CURRENTRELEASEID++
+ Fixed Authority property data loss post clone process
+ Added temp logic to run upsert requests that have anything other than string keys via the Native OrgAPI vs webAPI, this is a workaround for an open issue with the webAPI where it does not support none string key's on upsert(patch) requests that result in a create operation.
+ Rerouted CdsServiceClient Helpers to use WebAPI path for CUD requests. 
+
+0.2.2-Alpha: 
 Several updates to Create / Update / Delete operations to move the underlying features over to use the WebAPI. 
 Please report any bugs that you run into with this.  This has been "mostly" tested with our current test suite, however we have not full tested all data type translation at this point. 
 

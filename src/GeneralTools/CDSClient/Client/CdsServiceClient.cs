@@ -586,16 +586,21 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// Internal constructor used for testing. 
         /// </summary>
         /// <param name="orgSvc"></param>
-        internal CdsServiceClient(IOrganizationService orgSvc)
+        /// <param name="httpClient"></param>
+        /// <param name="targetVersion"></param>
+        internal CdsServiceClient(IOrganizationService orgSvc , HttpClient httpClient, Version targetVersion = null)
         {
             _TestOrgSvcInterface = orgSvc;
             logEntry = new CdsTraceLogger();
             CdsConnectionSvc = new CdsConnectionService(orgSvc);
-            _BatchManager = new BatchManager(logEntry);
+            CdsConnectionSvc.WebApiHttpClient = httpClient;
+            
+            if ( targetVersion != null)
+                CdsConnectionSvc.OrganizationVersion = targetVersion;
 
+            _BatchManager = new BatchManager(logEntry);
             metadataUtlity = new MetadataUtility(this);
             dynamicAppUtility = new DynamicEntityUtility(this, metadataUtlity);
-
         }
 
         /// <summary>
@@ -1564,8 +1569,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
             if (AddRequestToBatch(batchId, createReq, entityName, string.Format(CultureInfo.InvariantCulture, "Request for Create on {0} queued", entityName)))
                 return Guid.Empty;
-
-            createResp = (CreateResponse)CdsCommand_Execute(createReq, entityName);
+            
+            createResp = (CreateResponse)ExecuteCdsOrganizationRequest(createReq, entityName, useWebAPI: true);
             if (createResp != null)
             {
                 return createResp.id;
@@ -1617,6 +1622,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             #endregion
 
             uEnt.Attributes.AddRange(PropertyList.ToArray());
+            uEnt.Id = id; 
 
             UpdateRequest req = new UpdateRequest();
             req.Target = uEnt;
@@ -1629,7 +1635,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             if (AddRequestToBatch(batchId, req, string.Format(CultureInfo.InvariantCulture, "Updating {0} : {1}", entityName, id.ToString()), string.Format(CultureInfo.InvariantCulture, "Request for update on {0} queued", entityName)))
                 return false;
 
-            UpdateResponse resp = (UpdateResponse)CdsCommand_Execute(req, string.Format(CultureInfo.InvariantCulture, "Updating {0} : {1}", entityName, id.ToString()));
+            UpdateResponse resp = (UpdateResponse)ExecuteCdsOrganizationRequest(req, string.Format(CultureInfo.InvariantCulture, "Updating {0} : {1}", entityName, id.ToString()), useWebAPI: true);
             if (resp == null)
                 return false;
             else
@@ -1726,7 +1732,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             if (AddRequestToBatch(batchId, req, string.Format(CultureInfo.InvariantCulture, "Trying to Delete. Entity = {0}, ID = {1}", entityType, entityId), string.Format(CultureInfo.InvariantCulture, "Request to Delete. Entity = {0}, ID = {1} Queued", entityType, entityId)))
                 return false;
 
-            DeleteResponse resp = (DeleteResponse)CdsCommand_Execute(req, string.Format(CultureInfo.InvariantCulture, "Trying to Delete. Entity = {0}, ID = {1}", entityType, entityId));
+            DeleteResponse resp = (DeleteResponse)ExecuteCdsOrganizationRequest(req, string.Format(CultureInfo.InvariantCulture, "Trying to Delete. Entity = {0}, ID = {1}", entityType, entityId), useWebAPI: true);
             if (resp != null)
             {
                 // Clean out the cache if the account happens to be stored in there. 
@@ -4821,6 +4827,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         {
             if (req != null)
             {
+                useWebAPI = Utilities.IsRequestValidForTranslationToWebAPI(req) ? useWebAPI : false;
                 if (!useWebAPI)
                 {
                     return CdsCommand_Execute(req, logMessageTag);
@@ -4840,7 +4847,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
         private OrganizationResponse CdsCommand_WebAPIProcess_Execute(OrganizationRequest req, string logMessageTag)
         {
-            if (Utilities.IsRequestValidForTranslationToWebAPI(req))
+            if (Utilities.IsRequestValidForTranslationToWebAPI(req)) // THIS WILL GET REMOVED AT SOME POINT, TEMP FOR TRANSTION  //TODO:REMOVE ON COMPELTE
             {
                 HttpMethod methodToExecute = HttpMethod.Get;
                 Entity cReq = null;
@@ -4866,26 +4873,67 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     var EntSetname = EntityData.EntitySetName;
                     // generate webAPI Create request. 
                     string postUri = string.Empty;
+                    string requestName = req.RequestName.ToLower();
 
-                    if (req.RequestName.Equals("create", StringComparison.OrdinalIgnoreCase))
+                    switch (requestName)
                     {
-                        methodToExecute = HttpMethod.Post;
+                        case "create":
+                            methodToExecute = HttpMethod.Post;
+                            break;
+                        case "update":
+                        case "upsert":
+                            methodToExecute = new HttpMethod("Patch");
+                            break;
+                        case "delete":
+                            methodToExecute = HttpMethod.Delete;
+                            break;
+                        default:
+                            // Abort request
+                            logEntry.Log("Execute Organization Request failed, WebAPI is only supported for Create, Upsert, Update, and Delete message types at this time.", TraceEventType.Error);
+                            return null;
+                    }
+
+                    if ( methodToExecute != HttpMethod.Post)
+                    {
+                        if (cReq.KeyAttributes?.Any() == true)
+                        {
+
+                        string keycollection = string.Empty;
+                            foreach (var itm in cReq.KeyAttributes)
+                            {
+                                if (itm.Value is EntityReference er)
+                                {
+                                    keycollection += $"_{itm.Key}_value='{er.Id.ToString("P")}',";
+
+                                    //IEnumerable<string> keys = cReq.KeyAttributes.Select(s => $"_{s.Key}_value='{((EntityReference)s.Value).Id.ToString().Replace("'", "''")}'");
+                                    //keycollection += $"{EntityData.EntitySetName}({string.Join("&", keys)})";
+
+                                    //if (cReq.Id != Guid.Empty)
+                                    //{
+                                    //    var s2 = EntityData.EntitySetName + cReq.Id.ToString("P");
+                                    //}
+
+
+                                    //// Add support for ER for KEY. 
+                                    //keycollection += $"{itm.Key}@odata.bind='{$"/{metadataUtlity.GetEntityMetadata(Xrm.Sdk.Metadata.EntityFilters.Entity, er.LogicalName).EntitySetName}({er.Id})"}',";
+                                }
+                                else 
+                                {
+                                    keycollection += $"{itm.Key}='{itm.Value}',";
+                                }
+                            }
+                            keycollection = keycollection.Remove(keycollection.Length - 1); // remove trailing , 
+                            postUri = $"{EntityData.EntitySetName}({keycollection})";
+                        }
+                        else
+                        {
+                            postUri = $"{EntityData.EntitySetName}({cReq.Id})";
+                        }
+                    }
+                    else
+                    {
+                        // its just a post. 
                         postUri = $"{EntityData.EntitySetName}";
-                    }
-                    else if (req.RequestName.Equals("update", StringComparison.OrdinalIgnoreCase))
-                    {
-                        methodToExecute = new HttpMethod("Patch");
-                        postUri = $"{EntityData.EntitySetName}({cReq.Id})";
-                    }
-                    else if (req.RequestName.Equals("delete", StringComparison.OrdinalIgnoreCase))
-                    {
-                        methodToExecute = HttpMethod.Delete;
-                        postUri = $"{EntityData.EntitySetName}({cReq.Id})";
-                    }else
-                    {
-                        // Abort request
-                        logEntry.Log("Execute Organization Request failed, WebAPI is only supported for Create, Update, Delete message types at this time.", TraceEventType.Error);
-                        return null;
                     }
 
                     string bodyOfRequest = string.Empty;
@@ -4900,7 +4948,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     headers.Add("Prefer", new List<string>() { "odata.include-annotations=*" });
 
                     var sResp = CdsCommand_WebExecute(postUri, bodyOfRequest, methodToExecute, headers, "application/json", logMessageTag).Result;
-                    if (sResp.IsSuccessStatusCode)
+                    if (sResp != null && sResp.IsSuccessStatusCode)
                     {
                         if (req is CreateRequest)
                         {
@@ -5561,7 +5609,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                         ), TraceEventType.Verbose);
                 try
                 {
-                    resp = await CdsConnectionService.ExecuteHttpRequestAsync(TargetUri.ToString(), method, body: body, customHeaders: customHeaders, logSink: logEntry, contentType: contentType, requestTrackingId: requestTrackingId, sessionTrackingId: SessionTrackingId.HasValue ? SessionTrackingId.Value : Guid.Empty, suppressDebugMessage:true).ConfigureAwait(false);
+                    resp = await CdsConnectionService.ExecuteHttpRequestAsync(TargetUri.ToString(), method, body: body, customHeaders: customHeaders, logSink: logEntry, contentType: contentType, requestTrackingId: requestTrackingId, sessionTrackingId: SessionTrackingId.HasValue ? SessionTrackingId.Value : Guid.Empty, suppressDebugMessage:true , providedHttpClient:CdsConnectionSvc.WebApiHttpClient).ConfigureAwait(false);
 
                     logDt.Stop();
                     logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Executed Command - {0}{2}: {4}RequestID={3} : duration={1}",
@@ -6118,7 +6166,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// <returns>Response object</returns>
         public OrganizationResponse Execute(OrganizationRequest request)
         {
-            OrganizationResponse resp = ExecuteCdsOrganizationRequest(request, string.Format("Execute ({0}) request to CDS from IOrganizationService", request.RequestName));
+            OrganizationResponse resp = ExecuteCdsOrganizationRequest(request, string.Format("Execute ({0}) request to CDS from IOrganizationService", request.RequestName) , useWebAPI:true);
             if (resp == null)
                 throw LastCdsException;
             return resp;

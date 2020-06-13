@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Xunit;
+using System.Net.Http;
 
 namespace CdsClient_Core_UnitTests
 {
@@ -20,10 +21,11 @@ namespace CdsClient_Core_UnitTests
         [Fact]
         public void CloseQuoteTest()
         {
-            var orgSvc = new Mock<IOrganizationService>();
-            testSupport.SetupWhoAmIHandlers(orgSvc);
-            CdsServiceClient cli = new CdsServiceClient(orgSvc.Object);
-
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null; 
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli); 
+            
             orgSvc.Setup(f => f.Execute(It.Is<CloseQuoteRequest>(p => p.QuoteClose is Entity && ((Entity)p.QuoteClose).GetAttributeValue<string>("name").Equals("MyName", StringComparison.OrdinalIgnoreCase)))).Returns(new CloseQuoteResponse());
             orgSvc.Setup(f => f.Execute(It.Is<WinQuoteRequest>(p => p.QuoteClose is Entity && ((Entity)p.QuoteClose).GetAttributeValue<string>("name").Equals("MyName", StringComparison.OrdinalIgnoreCase)))).Returns(new WinQuoteResponse());
 
@@ -70,9 +72,11 @@ namespace CdsClient_Core_UnitTests
         [Fact]
         public void CloseOpportunityTest()
         {
-            var orgSvc = new Mock<IOrganizationService>();
-            testSupport.SetupWhoAmIHandlers(orgSvc);
-            CdsServiceClient cli = new CdsServiceClient(orgSvc.Object);
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
 
             orgSvc.Setup(f => f.Execute(It.Is<WinOpportunityRequest>(p => p.OpportunityClose is Entity && ((Entity)p.OpportunityClose).GetAttributeValue<string>("name").Equals("MyName", StringComparison.OrdinalIgnoreCase)))).Returns(new WinOpportunityResponse());
             orgSvc.Setup(f => f.Execute(It.Is<LoseOpportunityRequest>(p => p.OpportunityClose is Entity && ((Entity)p.OpportunityClose).GetAttributeValue<string>("name").Equals("MyName", StringComparison.OrdinalIgnoreCase)))).Returns(new LoseOpportunityResponse());
@@ -119,9 +123,11 @@ namespace CdsClient_Core_UnitTests
         [Fact]
         public void CloseIncidentTest()
         {
-            var orgSvc = new Mock<IOrganizationService>();
-            testSupport.SetupWhoAmIHandlers(orgSvc);
-            CdsServiceClient cli = new CdsServiceClient(orgSvc.Object);
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
 
             orgSvc.Setup(f => f.Execute(It.Is<CloseIncidentRequest>(p => p.IncidentResolution is Entity && ((Entity)p.IncidentResolution).GetAttributeValue<string>("name").Equals("MyName", StringComparison.OrdinalIgnoreCase)))).Returns(new CloseIncidentResponse());
 
@@ -164,9 +170,11 @@ namespace CdsClient_Core_UnitTests
         [Fact]
         public void CancelSalesOrderTest()
         {
-            var orgSvc = new Mock<IOrganizationService>();
-            testSupport.SetupWhoAmIHandlers(orgSvc);
-            CdsServiceClient cli = new CdsServiceClient(orgSvc.Object);
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
 
             orgSvc.Setup(f => f.Execute(It.Is<CancelSalesOrderRequest>(p => p.OrderClose is Entity && ((Entity)p.OrderClose).GetAttributeValue<string>("name").Equals("MyName", StringComparison.OrdinalIgnoreCase)))).Returns(new CancelSalesOrderResponse());
 
@@ -214,9 +222,11 @@ namespace CdsClient_Core_UnitTests
         [Fact]
         public void CloseTroubleTicketTest()
         {
-            var orgSvc = new Mock<IOrganizationService>();
-            testSupport.SetupWhoAmIHandlers(orgSvc);
-            CdsServiceClient cli = new CdsServiceClient(orgSvc.Object);
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
 
             orgSvc.Setup(f => f.Execute(It.Is<CloseIncidentRequest>(p => p.IncidentResolution is Entity && ((Entity)p.IncidentResolution).GetAttributeValue<string>("subject").Equals("Subject", StringComparison.OrdinalIgnoreCase)))).Returns(new CloseIncidentResponse());
 
