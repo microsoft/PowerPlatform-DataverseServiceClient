@@ -2329,6 +2329,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 						_ADALAsmVersion = AdalAsm.GetName().Version;
 				}
 
+				logSink.Log($"GetAuthorityFromTargetService - ADAL Version : {_ADALAsmVersion.ToString()}");
 				AuthenticationParameters foundAuthority;
 				if (_ADALAsmVersion != null && _ADALAsmVersion >= Version.Parse("5.0.0.0"))
 				{
@@ -2368,7 +2369,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			 var result = (Task<AuthenticationParameters>)typeof(AuthenticationParameters)
 			   .GetMethod("CreateFromResourceUrlAsync").Invoke(null, new[] { targetServiceUrl });
 
-			return result.Result;
+			return result.ConfigureAwait(false).GetAwaiter().GetResult();
 		}
 
 		/// <summary>
@@ -2382,7 +2383,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			var result = (Task<AuthenticationParameters>)typeof(AuthenticationParameters)
 				.GetMethod("CreateFromUrlAsync").Invoke(null, new[] { targetServiceUrl });
 
-			return result.Result;
+			return result.ConfigureAwait(false).GetAwaiter().GetResult(); ;
 		}
 
 		/// <summary>

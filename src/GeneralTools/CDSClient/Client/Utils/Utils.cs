@@ -353,7 +353,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 					}
 					else if (value is Money moneyValue)
 					{
-						value = moneyValue.Value.ToString();
+						value = moneyValue.Value;
 					}
 					else if (value is bool boolValue)
 					{
