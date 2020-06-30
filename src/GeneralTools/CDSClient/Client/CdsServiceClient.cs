@@ -4650,15 +4650,15 @@ namespace Microsoft.PowerPlatform.Cds.Client
                         break;
 
                     case CdsFieldType.Decimal:
-                        PropertyList.Add(new KeyValuePair<string, object>(Field.Key, (decimal)Field.Value.Value));
+                        PropertyList.Add(new KeyValuePair<string, object>(Field.Key, Convert.ToDecimal(Field.Value.Value)));
                         break;
 
                     case CdsFieldType.Float:
-                        PropertyList.Add(new KeyValuePair<string, object>(Field.Key, (double)Field.Value.Value));
+                        PropertyList.Add(new KeyValuePair<string, object>(Field.Key, Convert.ToDouble(Field.Value.Value)));
                         break;
 
                     case CdsFieldType.Money:
-                        PropertyList.Add(new KeyValuePair<string, object>(Field.Key, new Money((decimal)Field.Value.Value)));
+                        PropertyList.Add(new KeyValuePair<string, object>(Field.Key, new Money(Convert.ToDecimal(Field.Value.Value))));
                         break;
 
                     case CdsFieldType.Number:

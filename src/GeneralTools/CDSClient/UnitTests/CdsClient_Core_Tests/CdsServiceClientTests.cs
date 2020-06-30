@@ -126,6 +126,74 @@ namespace CdsClient_Core_Tests
             Assert.Equal(testSupport._DefaultId, respId);
         }
 
+        [Fact]
+        public void DataTypeParsingTest()
+        {
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
+
+            // Set up Responses 
+            CreateResponse testCreate = new CreateResponse();
+            testCreate.Results.AddOrUpdateIfNotNull("accountid", testSupport._DefaultId);
+            testCreate.Results.AddOrUpdateIfNotNull("id", testSupport._DefaultId);
+
+
+            HttpResponseMessage createRespMsg = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+            createRespMsg.Headers.Add("Location", $"https://deploymenttarget02.crm.dynamics.com/api/data/v9.1/accounts({testSupport._DefaultId})");
+            createRespMsg.Headers.Add("OData-EntityId", $"https://deploymenttarget02.crm.dynamics.com/api/data/v9.1/accounts({testSupport._DefaultId})");
+
+            // Setup handlers to deal with both orgRequest and WebAPI request.             
+            fakHttpMethodHander.Setup(s => s.Send(It.Is<HttpRequestMessage>(f => f.Method.ToString().Equals("post", StringComparison.OrdinalIgnoreCase)))).Returns(createRespMsg);
+            orgSvc.Setup(f => f.Execute(It.Is<CreateRequest>(p => p.Target.LogicalName.Equals("account")))).Returns(testCreate);
+
+            // Setup request for all datatypes
+            // use create operation to setup request 
+            Dictionary<string, CdsDataTypeWrapper> newFields = new Dictionary<string, CdsDataTypeWrapper>();
+            newFields.Add("name", new CdsDataTypeWrapper("CrudTestAccount", CdsFieldType.String));
+            newFields.Add("Field01", new CdsDataTypeWrapper(false, CdsFieldType.Boolean));
+            newFields.Add("Field02", new CdsDataTypeWrapper(testSupport._DefaultId, CdsFieldType.Customer , "parentaccount"));
+            newFields.Add("Field03", new CdsDataTypeWrapper(DateTime.UtcNow, CdsFieldType.DateTime));
+            newFields.Add("Field04", new CdsDataTypeWrapper(64, CdsFieldType.Decimal));
+            newFields.Add("Field05", new CdsDataTypeWrapper(1.001, CdsFieldType.Float));
+            newFields.Add("Field06", new CdsDataTypeWrapper(testSupport._DefaultId, CdsFieldType.Key));
+            newFields.Add("Field07", new CdsDataTypeWrapper(testSupport._DefaultId, CdsFieldType.Lookup, "parentaccount"));
+            newFields.Add("Field08", new CdsDataTypeWrapper(50, CdsFieldType.Money));
+            newFields.Add("Field09", new CdsDataTypeWrapper(100, CdsFieldType.Number));
+            newFields.Add("Field010", new CdsDataTypeWrapper(20, CdsFieldType.Picklist));
+            newFields.Add("Field011", new CdsDataTypeWrapper("RawValue", CdsFieldType.Raw));
+            newFields.Add("Field012", new CdsDataTypeWrapper(testSupport._DefaultId, CdsFieldType.UniqueIdentifier));
+
+            Entity acctEntity = new Entity("account");
+            acctEntity.Attributes.Add("name", "CrudTestAccount");
+            acctEntity.Attributes.Add("Field01",  false);
+            acctEntity.Attributes.Add("Field02",  new EntityReference("parentaccount" , testSupport._DefaultId));
+            acctEntity.Attributes.Add("Field03",  DateTime.UtcNow);
+            acctEntity.Attributes.Add("Field04",  64);
+            acctEntity.Attributes.Add("Field05",  1.001);
+            acctEntity.Attributes.Add("Field08",  50);
+            acctEntity.Attributes.Add("Field09",  100);
+            acctEntity.Attributes.Add("Field010", new OptionSetValue(20));
+
+            // Test Helper create
+            var respId = cli.CreateNewRecord("account", newFields);
+            Assert.Equal(testSupport._DefaultId, respId);
+
+            // Test entity create
+            var response = cli.ExecuteCdsOrganizationRequest(new CreateRequest() { Target = acctEntity }, useWebAPI: false);
+            Assert.NotNull(response);
+            respId = ((CreateResponse)response).id;
+            Assert.Equal(testSupport._DefaultId, respId);
+
+            // Test low level create
+            respId = cli.Create(acctEntity);
+            Assert.Equal(testSupport._DefaultId, respId);
+
+
+        }
+
 
         [Fact]
         public void GetCurrentUser()

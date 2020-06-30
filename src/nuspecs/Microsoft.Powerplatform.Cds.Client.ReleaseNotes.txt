@@ -9,6 +9,11 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time. 
 
 ++CURRENTRELEASEID++
+Fixed missing ConfigureAwait on ADAL Authority acquire flow. 
+Added some additional logging to understand what version of ADAL is being used. 
+Fixed an issue with translation of Money types to WebAPI requests. 
+
+0.2.5-Alpha:
  Fixed Authority property data loss post clone process
  Added temp logic to run upsert requests that have anything other than string keys via the Native OrgAPI vs webAPI, this is a workaround for an open issue with the webAPI where it does not support none string key's on upsert(patch) requests that result in a create operation.
  Rerouted CdsServiceClient Helpers to use WebAPI path for CUD requests. 
