@@ -9,6 +9,9 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time. 
 
 ++CURRENTRELEASEID++
+Fixed an issue with sovereign cloud discovery reference data that would prevent a future login control from picking the correct global discovery server. 
+
+0.2.7-Alpha: 
 Fixed missing ConfigureAwait on ADAL Authority acquire flow. 
 Added some additional logging to understand what version of ADAL is being used. 
 Fixed an issue with translation of Money types to WebAPI requests. 
