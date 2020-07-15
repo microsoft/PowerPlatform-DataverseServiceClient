@@ -5,6 +5,9 @@ Notice:
     We have not stabilized on NameSpace or Class names with this package as of yet and things will change as we move though the preview.
 
 ++CURRENTRELEASEID++
+Update to internal support libraries.
+
+0.2.8-Alpha
     No Updates here. 
     
 0.2.2-Alpha: 
