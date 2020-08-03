@@ -2,6 +2,7 @@
   <!-- dotnetCore specific msbuild properties: -->
   <PropertyGroup Condition="'$(ProjectSpecificFx)' == ''">
     <TargetFrameworks>net462;net472;net48;netcoreapp3.0;netcoreapp3.1</TargetFrameworks>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <PropertyGroup>

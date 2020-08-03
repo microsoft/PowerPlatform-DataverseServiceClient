@@ -365,7 +365,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 					}
 					else if (value is null)
 					{
-						value = "";
+						value = null;
 					}
 				}
 				expandoObject.Add(key, value);
