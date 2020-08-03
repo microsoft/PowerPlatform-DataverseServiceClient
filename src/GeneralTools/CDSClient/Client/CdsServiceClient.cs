@@ -56,6 +56,18 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// </summary>
         internal CdsTraceLogger logEntry;
 
+        /// <summary>
+        /// Enabled Log Capture in memory
+        /// This capability enables logs that would normally be sent to your configured
+        /// </summary>
+        public static bool InMemoryLogCollectionEnabled { get; set; } = Utils.AppSettingsHelper.GetAppSetting<bool>("InMemoryLogCollectionEnabled", false);
+
+        /// <summary>
+        /// This is the number of minuets that logs will be retained before being purged from memory. Default is 5 min.
+        /// This capability controls how long the log cache is kept in memory. 
+        /// </summary>
+        public static TimeSpan InMemoryLogCollectionTimeOutMinutes { get; set; } = Utils.AppSettingsHelper.GetAppSettingTimeSpan("InMemoryLogCollectionTimeOutMinutes", Utils.AppSettingsHelper.TimeSpanFromKey.Minutes, new TimeSpan(0, 0, 5, 0));
+
 
         /// <summary>
         /// CDS Web Service Connector layer
@@ -591,7 +603,11 @@ namespace Microsoft.PowerPlatform.Cds.Client
         internal CdsServiceClient(IOrganizationService orgSvc , HttpClient httpClient, Version targetVersion = null)
         {
             _TestOrgSvcInterface = orgSvc;
-            logEntry = new CdsTraceLogger();
+            logEntry = new CdsTraceLogger()
+            {
+                NumeberOfMinuetsToRetainInMemoryLogs = new TimeSpan(0,10,0),
+                EnabledInMemoryLogCapture = true
+            };
             CdsConnectionSvc = new CdsConnectionService(orgSvc);
             CdsConnectionSvc.WebApiHttpClient = httpClient;
             
@@ -981,7 +997,13 @@ namespace Microsoft.PowerPlatform.Cds.Client
             )
         {
 
-            logEntry = new CdsTraceLogger();
+            logEntry = new CdsTraceLogger
+            {
+                // Set initial properties
+                EnabledInMemoryLogCapture = InMemoryLogCollectionEnabled,
+                NumeberOfMinuetsToRetainInMemoryLogs = InMemoryLogCollectionTimeOutMinutes
+            }; 
+
             CdsConnectionSvc = null;
 
 #if (NETCOREAPP3_0 || NETCOREAPP3_1)
@@ -1130,6 +1152,20 @@ namespace Microsoft.PowerPlatform.Cds.Client
         #endregion
 
         #region Public General Interfaces
+
+        /// <summary>
+        /// Enabled only if InMemoryLogCollectionEnabled is true. 
+        /// Return all logs currently stored for the cdsserviceclient in queue.
+        /// </summary>
+        public IEnumerable<Tuple<DateTime, string>> GetAllLogs()
+        {
+            IEnumerable<Tuple<DateTime, string>> source1 = logEntry == null ? Enumerable.Empty<Tuple<DateTime, string>>() : logEntry.Logs;
+            IEnumerable<Tuple<DateTime, string>> source2 = this.CdsConnectionSvc == null
+                ? Enumerable.Empty<Tuple<DateTime, string>>()
+                : this.CdsConnectionSvc.GetAllLogs();
+            return source1.Union(source2);
+        }
+
 
         /// <summary>
         /// Clone, 'Clones" the current CDS Service client with a new connection to CDS. 

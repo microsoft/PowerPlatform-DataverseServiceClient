@@ -8,7 +8,10 @@ Notice:
         https://docs.microsoft.com/en-us/dotnet/api/microsoft.crm.sdk.messages?view=dynamics-general-ce-9
 
 ++CURRENTRELEASEID++
-Update to internal support libraries - fixes casting issue with messages in this library
+    No Updates here. 
+
+0.2.14-Alpha:
+    Update to internal support libraries - fixes casting issue with messages in this library
 
 0.2.8-Alpha
     No Updates here. 

@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.ServiceModel;
 using Microsoft.Xrm.Sdk;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace Microsoft.PowerPlatform.Cds.Client
 {
@@ -36,6 +37,23 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		{
 			get { return "Microsoft.PowerPlatform.Cds.Client.CdsServiceClient"; }
 		}
+
+		/// <summary>
+		/// Collection of logs captured to date. 
+		/// </summary>
+		public ConcurrentQueue<Tuple<DateTime, string>> Logs { get; private set; } = new ConcurrentQueue<Tuple<DateTime, string>>();
+
+		/// <summary>
+		/// Defines to the maximum amount of time in Minuets that logs will be kept in memory before being purged
+		/// </summary>
+		public TimeSpan NumeberOfMinuetsToRetainInMemoryLogs { get; set; } = new TimeSpan(0, 0, 5, 0);
+
+		/// <summary>
+		/// Enables or disabled in-memory log capture. 
+		/// Default is false. 
+		/// </summary>
+		public bool EnabledInMemoryLogCapture { get; set; } = false;
+
 		#endregion
 
 		#region Public Methods
@@ -68,6 +86,16 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			_ActiveExceptionsList.Clear(); 
 		}
 
+		/// <summary>
+		/// Clears log cache.
+		/// </summary>
+		public void ClearLogCache()
+		{
+			if (Logs != null)
+			{
+				Logs = new ConcurrentQueue<Tuple<DateTime, string>>();
+			}
+		}
 
 		/// <summary>
 		/// Log a Message 
@@ -85,7 +113,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <param name="eventType"></param>
 		public override void Log(string message, TraceEventType eventType)
 		{
-			Source.TraceEvent(eventType, (int)eventType, message);
+			TraceEvent(TraceEventType.Information, (int)TraceEventType.Information, message);
 			if (eventType == TraceEventType.Error)
 			{
 				Log(message, eventType, new Exception(message));
@@ -114,7 +142,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			if (!(exception != null && _ActiveExceptionsList.Contains(exception))) // Skip this line if its allready been done. 
 				GetExceptionDetail(exception, detailedDump, 0, lastMessage);
 
-			Source.TraceEvent(eventType, (int)eventType, detailedDump.ToString());
+			TraceEvent(eventType, (int)eventType, detailedDump.ToString());
 			if (eventType == TraceEventType.Error)
 			{
 				base.LastError.Append(lastMessage.ToString());
@@ -140,7 +168,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			StringBuilder detailedDump = new StringBuilder();
 			StringBuilder lastMessage = new StringBuilder();
 			GetExceptionDetail(exception, detailedDump, 0, lastMessage);
-			Source.TraceEvent(TraceEventType.Error, (int)TraceEventType.Error, detailedDump.ToString());
+			TraceEvent(TraceEventType.Error, (int)TraceEventType.Error, detailedDump.ToString());
 			base.LastError.Append(lastMessage.ToString());
 			LastException = exception;
 
@@ -148,6 +176,48 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 			detailedDump.Clear();
 			lastMessage.Clear();
+		}
+
+		/// <summary>
+		/// Logs data to memory. 
+		/// </summary>
+		/// <param name="eventType"></param>
+		/// <param name="id"></param>
+		/// <param name="message"></param>
+		private void TraceEvent(TraceEventType eventType, int id, string message)
+		{
+			Source.TraceEvent(eventType, id, message);
+
+			if (EnabledInMemoryLogCapture)
+			{
+				Logs.Enqueue(Tuple.Create<DateTime, string>(DateTime.UtcNow,
+					string.Format(CultureInfo.InvariantCulture, "[{0}][{1}] {2}", eventType, id, message)));
+
+				DateTime expireDateTime = DateTime.UtcNow.Subtract(NumeberOfMinuetsToRetainInMemoryLogs);
+				bool CleanUpLog = true;
+				while (CleanUpLog)
+				{
+					Tuple<DateTime, string> peekOut = null;
+					if (Logs.TryPeek(out peekOut))
+					{
+						if (peekOut.Item1 <= expireDateTime)
+						{
+							Tuple<DateTime, string> tos;
+							Logs.TryDequeue(out tos);
+							Debug.WriteLine($"Flushing LogEntry from memory: {tos.Item2}");  // Write flush events out to debug log. 
+							tos = null;
+						}
+						else
+						{
+							CleanUpLog = false;
+						}
+					}
+					else
+					{
+						CleanUpLog = false;
+					}
+				}
+			}
 		}
 
 		#endregion

@@ -286,6 +286,16 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		private CdsTraceLogger logEntry { get; set; }
 
 		/// <summary>
+		/// Returns Logs from this process. 
+		/// </summary>
+		/// <returns></returns>
+		internal IEnumerable<Tuple<DateTime, string>> GetAllLogs()
+		{
+			return this.logEntry == null ? Enumerable.Empty<Tuple<DateTime, string>>() : this.logEntry.Logs;
+		}
+
+
+		/// <summary>
 		/// if set to true, the log provider is set locally
 		/// </summary>
 		public bool isLogEntryCreatedLocaly { get; set; }
