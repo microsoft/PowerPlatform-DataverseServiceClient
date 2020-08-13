@@ -8,7 +8,7 @@ Current release notes:
 [Microsoft.Dynamics.Sdk.Messages](src/nuspecs/Microsoft.Dynamics.Sdk.Messages.ReleaseNotes.txt)
 
 ## Overview
-This repositiry contains the code for the Microsoft.PowerPlatform.Cds.Client and its supporting assemblies and classes. 
+This repository contains the code for the Microsoft.PowerPlatform.Cds.Client and its supporting assemblies and classes. 
 
 **IMPORTANT NOTE**
 
