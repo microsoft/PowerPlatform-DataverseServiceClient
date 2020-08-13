@@ -9,6 +9,9 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time. 
 
 ++CURRENTRELEASEID++
+Fixed issue when CUD via WebAPI when entity contains a entity referance that is a polymorphic referance. ( IE customer data type ) 
+
+0.2.15-Alpha:
 Corrected a bug in Org request to WebAPI operation when attempting to set fields to null values. 
 Added initial support for in memory log capture support. 
 
