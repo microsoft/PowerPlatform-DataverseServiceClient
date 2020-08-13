@@ -57,19 +57,6 @@ namespace Microsoft.PowerPlatform.Cds.Client
         internal CdsTraceLogger logEntry;
 
         /// <summary>
-        /// Enabled Log Capture in memory
-        /// This capability enables logs that would normally be sent to your configured
-        /// </summary>
-        public static bool InMemoryLogCollectionEnabled { get; set; } = Utils.AppSettingsHelper.GetAppSetting<bool>("InMemoryLogCollectionEnabled", false);
-
-        /// <summary>
-        /// This is the number of minuets that logs will be retained before being purged from memory. Default is 5 min.
-        /// This capability controls how long the log cache is kept in memory. 
-        /// </summary>
-        public static TimeSpan InMemoryLogCollectionTimeOutMinutes { get; set; } = Utils.AppSettingsHelper.GetAppSettingTimeSpan("InMemoryLogCollectionTimeOutMinutes", Utils.AppSettingsHelper.TimeSpanFromKey.Minutes, new TimeSpan(0, 0, 5, 0));
-
-
-        /// <summary>
         /// CDS Web Service Connector layer
         /// </summary>
         internal CdsConnectionService CdsConnectionSvc;
@@ -173,6 +160,18 @@ namespace Microsoft.PowerPlatform.Cds.Client
         #endregion
 
         #region Properties
+
+        /// <summary>
+        /// Enabled Log Capture in memory
+        /// This capability enables logs that would normally be sent to your configured
+        /// </summary>
+        public static bool InMemoryLogCollectionEnabled { get; set; } = Utils.AppSettingsHelper.GetAppSetting<bool>("InMemoryLogCollectionEnabled", false);
+
+        /// <summary>
+        /// This is the number of minuets that logs will be retained before being purged from memory. Default is 5 min.
+        /// This capability controls how long the log cache is kept in memory. 
+        /// </summary>
+        public static TimeSpan InMemoryLogCollectionTimeOutMinutes { get; set; } = Utils.AppSettingsHelper.GetAppSettingTimeSpan("InMemoryLogCollectionTimeOutMinutes", Utils.AppSettingsHelper.TimeSpanFromKey.Minutes, TimeSpan.FromMinutes(5));
 
         /// <summary>
         /// Gets or sets max retry count.
@@ -605,7 +604,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             _TestOrgSvcInterface = orgSvc;
             logEntry = new CdsTraceLogger()
             {
-                NumeberOfMinuetsToRetainInMemoryLogs = new TimeSpan(0,10,0),
+                LogRetentionDuration = new TimeSpan(0,10,0),
                 EnabledInMemoryLogCapture = true
             };
             CdsConnectionSvc = new CdsConnectionService(orgSvc);
@@ -1001,7 +1000,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             {
                 // Set initial properties
                 EnabledInMemoryLogCapture = InMemoryLogCollectionEnabled,
-                NumeberOfMinuetsToRetainInMemoryLogs = InMemoryLogCollectionTimeOutMinutes
+                LogRetentionDuration = InMemoryLogCollectionTimeOutMinutes
             }; 
 
             CdsConnectionSvc = null;
@@ -4975,7 +4974,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     string bodyOfRequest = string.Empty;
                     if (cReq.Attributes != null && cReq.Attributes.Count > 0)
                     {
-                        var requestBodyObject = Utilities.ToExpandoObject(cReq.Attributes, metadataUtlity);
+                        var requestBodyObject = Utilities.ToExpandoObject(cReq.LogicalName, cReq.Attributes, metadataUtlity);
                         bodyOfRequest = Newtonsoft.Json.JsonConvert.SerializeObject(requestBodyObject);
                     }
 

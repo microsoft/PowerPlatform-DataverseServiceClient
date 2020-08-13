@@ -316,7 +316,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <param name="entityAttributes"></param>
 		/// <param name="mUtil"></param>
 		/// <returns></returns>
-		internal static ExpandoObject ToExpandoObject(AttributeCollection entityAttributes , MetadataUtility mUtil)
+		internal static ExpandoObject ToExpandoObject(string entityName, AttributeCollection entityAttributes , MetadataUtility mUtil)
 		{
 			dynamic expando = new ExpandoObject();
 			var expandoObject = ((IDictionary<string, object>)(expando));
@@ -328,7 +328,19 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				var key = keyValuePair.Key;
 				if (value is EntityReference entityReference)
 				{
-					key = $"{key}@odata.bind";
+					// Get Lookup attribute metadata for the ER to check for polymorphic relationship. 
+					var attributeInfo = mUtil.GetAttributeMetadata(entityName, key);
+					if ( attributeInfo is Xrm.Sdk.Metadata.LookupAttributeMetadata attribData)
+                    {
+						if ( attribData?.Targets?.Count() > 1 )
+                        {
+							key = $"{key}_{entityReference.LogicalName}@odata.bind";
+						}
+						else
+                        {
+							key = $"{key}@odata.bind";
+						}
+					}
 					value = $"/{mUtil.GetEntityMetadata(Xrm.Sdk.Metadata.EntityFilters.Entity, entityReference.LogicalName).EntitySetName}({entityReference.Id})";
 				}
 				else

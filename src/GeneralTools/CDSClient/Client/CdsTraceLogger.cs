@@ -46,7 +46,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <summary>
 		/// Defines to the maximum amount of time in Minuets that logs will be kept in memory before being purged
 		/// </summary>
-		public TimeSpan NumeberOfMinuetsToRetainInMemoryLogs { get; set; } = new TimeSpan(0, 0, 5, 0);
+		public TimeSpan LogRetentionDuration { get; set; } = TimeSpan.FromMinutes(5);
 
 		/// <summary>
 		/// Enables or disabled in-memory log capture. 
@@ -193,7 +193,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				Logs.Enqueue(Tuple.Create<DateTime, string>(DateTime.UtcNow,
 					string.Format(CultureInfo.InvariantCulture, "[{0}][{1}] {2}", eventType, id, message)));
 
-				DateTime expireDateTime = DateTime.UtcNow.Subtract(NumeberOfMinuetsToRetainInMemoryLogs);
+				DateTime expireDateTime = DateTime.UtcNow.Subtract(LogRetentionDuration);
 				bool CleanUpLog = true;
 				while (CleanUpLog)
 				{
