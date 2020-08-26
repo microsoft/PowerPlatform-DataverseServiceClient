@@ -10,7 +10,9 @@
 
   <PropertyGroup>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <DocumentationFile>$(OutDir)\Microsoft.PowerPlatform.Cds.Client.xml</DocumentationFile>
   </PropertyGroup>
+
 
   <ItemGroup>
     <Compile Remove="UnitTestBehaviors\**" />

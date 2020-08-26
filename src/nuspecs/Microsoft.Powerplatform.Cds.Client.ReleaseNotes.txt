@@ -9,7 +9,20 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time. 
 
 ++CURRENTRELEASEID++
-Fixed issue when CUD via WebAPI when entity contains a entity referance that is a polymorphic referance. ( IE customer data type ) 
+***BREAKING CHANGE***
+Renamed Exception CdsConnectionException to CdsClientConnectionException.  No other change to the Exception
+***
+Improved handling of cached connection retrieval failures from memory when an invalid object is returned. 
+Fixed a bug where a WebAPI navigation property did not match with its metadata descriptor.
+Fixed Retry delay issue when making calls to the CDS WebAPI – thanks to GIT user stvonolf for the catch of this issue.
+Added new Exception, CdsClientOperationException - this will be used when an exception is raised via the CDSClient when CDSClient is using WebAPI.
+Added IntelliSense Doc Support
+Added support for bypassing custom Plug-in Execution during SDK Operation.  
+    This is a special use capability that requires a specialized permission in the CDS infrastructure to use. 
+    Currently this is only permitted for use by users that have the System Administrator Security Role.
+
+0.2.16-Alpha:
+Fixed issue when CUD via WebAPI when entity contains a entity reference that is a polymorphic reference. ( IE customer data type ) 
 
 0.2.15-Alpha:
 Corrected a bug in Org request to WebAPI operation when attempting to set fields to null values. 

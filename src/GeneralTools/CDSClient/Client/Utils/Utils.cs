@@ -9,6 +9,7 @@ using Microsoft.PowerPlatform.Cds.Client.Model;
 using Microsoft.Xrm.Sdk.Discovery;
 using Microsoft.Xrm.Sdk;
 using System.Dynamic;
+using Microsoft.PowerPlatform.Cds.Client.Utils;
 
 namespace Microsoft.PowerPlatform.Cds.Client
 {
@@ -315,6 +316,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// </summary>
 		/// <param name="entityAttributes"></param>
 		/// <param name="mUtil"></param>
+		/// <param name="entityName"></param>
 		/// <returns></returns>
 		internal static ExpandoObject ToExpandoObject(string entityName, AttributeCollection entityAttributes , MetadataUtility mUtil)
 		{
@@ -328,19 +330,27 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				var key = keyValuePair.Key;
 				if (value is EntityReference entityReference)
 				{
-					// Get Lookup attribute metadata for the ER to check for polymorphic relationship. 
-					var attributeInfo = mUtil.GetAttributeMetadata(entityName, key);
-					if ( attributeInfo is Xrm.Sdk.Metadata.LookupAttributeMetadata attribData)
-                    {
-						if ( attribData?.Targets?.Count() > 1 )
-                        {
-							key = $"{key}_{entityReference.LogicalName}@odata.bind";
-						}
-						else
-                        {
-							key = $"{key}@odata.bind";
-						}
+					// Get Lookup attribute meta data for the ER to check for polymorphic relationship. 
+					var attributeInfo = mUtil.GetAttributeMetadata(entityName, key.ToLower());
+					if (attributeInfo is Xrm.Sdk.Metadata.LookupAttributeMetadata attribData)
+					{
+						// Now get relationship to make sure we use the correct name. 
+						var eData = mUtil.GetEntityMetadata(Xrm.Sdk.Metadata.EntityFilters.Relationships, entityName);
+						var ERNavName = eData.ManyToOneRelationships.FirstOrDefault(w => w.ReferencingAttribute.Equals(attribData.LogicalName) &&
+																				w.ReferencedEntity.Equals(entityReference.LogicalName))
+																				?.ReferencingEntityNavigationPropertyName;
+						if (!string.IsNullOrEmpty(ERNavName))
+							key = ERNavName;
+
+						// Populate Key property
+						key = $"{key}@odata.bind";
 					}
+					else if (attributeInfo == null)
+					{
+						// Fault here. 
+						throw new CdsClientOperationException($"Entity Reference {key.ToLower()} was not found for entity {entityName}.", null);
+					}
+
 					value = $"/{mUtil.GetEntityMetadata(Xrm.Sdk.Metadata.EntityFilters.Entity, entityReference.LogicalName).EntitySetName}({entityReference.Id})";
 				}
 				else
@@ -452,6 +462,22 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			/// Header requiring Cache Consistency Server side. 
 			/// </summary>
 			public static readonly string FORCE_CONSISTENCY = "Consistency";
+
+			/// <summary>
+			/// This key used to indicate if the custom plugins need to be bypassed during the execution of the request.
+			/// </summary>
+			public const string BYPASSCUSTOMPLUGINEXECUTION = "BypassCustomPluginExecution";
+
+			/// <summary>
+			/// key used to apply the operation to a given solution. 
+			/// </summary>
+			public const string SOLUTIONUNIQUENAME = "SolutionUniqueName";
+
+			/// <summary>
+			/// CDS Platform Property Prefix
+			/// </summary>
+			public const string CDSHEADERPROPERTYPREFIX = "MSCRM.";
+
 		}
 
 	}

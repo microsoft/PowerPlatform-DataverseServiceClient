@@ -113,12 +113,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// Defaulted to true.
 		/// </summary>
 		private bool _enableCookieRelay = Utils.AppSettingsHelper.GetAppSetting<bool>("PreferConnectionAffinity", true);
-
-		/// <summary>
-		///  switch for actions that should run only once. 
-		/// </summary>
-		//private bool firstPass = true;
-
+		
 		/// <summary>
 		/// last Authentication Response from oAuth. 
 		/// </summary>
@@ -761,7 +756,21 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		{
 			// try to get the object from Memory . 
 			if (!string.IsNullOrEmpty(_ServiceCACHEName))
-				ConnectionObject = (CdsConnectionService)System.Runtime.Caching.MemoryCache.Default[_ServiceCACHEName];
+			{
+				try
+				{
+					var objProspectiveCachedClient = System.Runtime.Caching.MemoryCache.Default[_ServiceCACHEName];
+					if (objProspectiveCachedClient != null && objProspectiveCachedClient is CdsConnectionService)
+						ConnectionObject = (CdsConnectionService)objProspectiveCachedClient;
+					else
+						ConnectionObject = null;
+				}
+				catch(Exception ex)
+                {
+					logEntry?.Log("Failed to get cached service object from memory", TraceEventType.Warning, ex);
+					ConnectionObject = null;
+				}
+			}
 			else
 				ConnectionObject = null;
 			if (ConnectionObject == null)
@@ -773,6 +782,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 				if (!string.IsNullOrEmpty(_ServiceCACHEName))
 				{
+					if (System.Runtime.Caching.MemoryCache.Default.Contains(_ServiceCACHEName))
+						System.Runtime.Caching.MemoryCache.Default.Remove(_ServiceCACHEName);
 					// Cache the Service for 5 min. 
 					System.Runtime.Caching.MemoryCache.Default.Add(_ServiceCACHEName, this, DateTime.Now.AddMinutes(5));
 				}
@@ -1386,6 +1397,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <param name="requestTrackingId">ID of the request if set by an external caller</param>
 		/// <param name="contentType">content type to use when calling into the remote host</param>
 		/// <param name="sessionTrackingId">Session Tracking ID to assoicate with the request.</param>
+		/// <param name="providedHttpClient"></param>
+		/// <param name="suppressDebugMessage"></param>
 		/// <returns></returns>
 		internal static async Task<HttpResponseMessage> ExecuteHttpRequestAsync(string uri, HttpMethod method, string body = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken), CdsTraceLogger logSink = null, Guid? requestTrackingId = null, string contentType = default(string), Guid? sessionTrackingId = null , bool suppressDebugMessage = false , HttpClient providedHttpClient = null)
 		{
@@ -2517,7 +2530,9 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			OrganizationVersion = null;
 			try
 			{
-				OrganizationVersion = new Version(orgdata.OrganizationVersion);
+				Version tempVer = null; 
+				if ( Version.TryParse(orgdata.OrganizationVersion, out tempVer)) 
+					OrganizationVersion = tempVer;
 			}
 			catch { };
 
@@ -2696,7 +2711,6 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// Iterates through the list of CRM online Discovery Servers to find one that knows the user. 
 		/// </summary>
 		/// <param name="onlineServerList"></param>
-		/// <param name="useO365Servers"></param>
 		private CdsOrgList FindCdsDiscoveryServer(CdsDiscoveryServers onlineServerList)
 		{
 			CdsOrgList orgsList = new CdsOrgList();

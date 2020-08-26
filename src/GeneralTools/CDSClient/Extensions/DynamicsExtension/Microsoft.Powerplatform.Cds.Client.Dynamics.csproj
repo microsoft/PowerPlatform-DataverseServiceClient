@@ -9,6 +9,7 @@
 
   <PropertyGroup>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <DocumentationFile>$(OutDir)\Microsoft.PowerPlatform.Cds.Client.Dynamics.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

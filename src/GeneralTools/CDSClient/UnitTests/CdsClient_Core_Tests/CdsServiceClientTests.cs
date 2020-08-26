@@ -140,6 +140,18 @@ namespace CdsClient_Core_Tests
             testCreate.Results.AddOrUpdateIfNotNull("accountid", testSupport._DefaultId);
             testCreate.Results.AddOrUpdateIfNotNull("id", testSupport._DefaultId);
 
+            LookupAttributeMetadata lookupAttributeMeta1 = new LookupAttributeMetadata();
+            lookupAttributeMeta1.LogicalName = "field02";
+            lookupAttributeMeta1.Targets = new List<string>() { "account", "contact" }.ToArray();
+            RetrieveAttributeResponse attribfield02Resp = new RetrieveAttributeResponse();
+            attribfield02Resp.Results.AddOrUpdateIfNotNull("AttributeMetadata", lookupAttributeMeta1);
+
+            LookupAttributeMetadata lookupAttributeMeta2 = new LookupAttributeMetadata();
+            lookupAttributeMeta2.LogicalName = "field07";
+            lookupAttributeMeta2.Targets = new List<string>() { "account" }.ToArray();
+            RetrieveAttributeResponse attribfield07Resp = new RetrieveAttributeResponse();
+            attribfield07Resp.Results.AddOrUpdateIfNotNull("AttributeMetadata", lookupAttributeMeta2);
+
 
             HttpResponseMessage createRespMsg = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
             createRespMsg.Headers.Add("Location", $"https://deploymenttarget02.crm.dynamics.com/api/data/v9.1/accounts({testSupport._DefaultId})");
@@ -148,18 +160,20 @@ namespace CdsClient_Core_Tests
             // Setup handlers to deal with both orgRequest and WebAPI request.             
             fakHttpMethodHander.Setup(s => s.Send(It.Is<HttpRequestMessage>(f => f.Method.ToString().Equals("post", StringComparison.OrdinalIgnoreCase)))).Returns(createRespMsg);
             orgSvc.Setup(f => f.Execute(It.Is<CreateRequest>(p => p.Target.LogicalName.Equals("account")))).Returns(testCreate);
+            orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field02", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribfield02Resp);
+            orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field07", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribfield07Resp);
 
             // Setup request for all datatypes
             // use create operation to setup request 
             Dictionary<string, CdsDataTypeWrapper> newFields = new Dictionary<string, CdsDataTypeWrapper>();
             newFields.Add("name", new CdsDataTypeWrapper("CrudTestAccount", CdsFieldType.String));
             newFields.Add("Field01", new CdsDataTypeWrapper(false, CdsFieldType.Boolean));
-            newFields.Add("Field02", new CdsDataTypeWrapper(testSupport._DefaultId, CdsFieldType.Customer , "parentaccount"));
+            newFields.Add("Field02", new CdsDataTypeWrapper(testSupport._DefaultId, CdsFieldType.Customer , "account"));
             newFields.Add("Field03", new CdsDataTypeWrapper(DateTime.UtcNow, CdsFieldType.DateTime));
             newFields.Add("Field04", new CdsDataTypeWrapper(64, CdsFieldType.Decimal));
             newFields.Add("Field05", new CdsDataTypeWrapper(1.001, CdsFieldType.Float));
             newFields.Add("Field06", new CdsDataTypeWrapper(testSupport._DefaultId, CdsFieldType.Key));
-            newFields.Add("Field07", new CdsDataTypeWrapper(testSupport._DefaultId, CdsFieldType.Lookup, "parentaccount"));
+            newFields.Add("Field07", new CdsDataTypeWrapper(testSupport._DefaultId, CdsFieldType.Lookup, "account"));
             newFields.Add("Field08", new CdsDataTypeWrapper(50, CdsFieldType.Money));
             newFields.Add("Field09", new CdsDataTypeWrapper(100, CdsFieldType.Number));
             newFields.Add("Field010", new CdsDataTypeWrapper(20, CdsFieldType.Picklist));

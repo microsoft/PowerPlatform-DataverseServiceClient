@@ -9,6 +9,8 @@ using System.ServiceModel;
 using Microsoft.Xrm.Sdk;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using Microsoft.Rest;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PowerPlatform.Cds.Client
 {
@@ -139,15 +141,25 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			lastMessage.AppendLine(message); // Added to fix missing last error line. 
 			detailedDump.AppendLine(message); // Added to fix missing error line. 
 
-			if (!(exception != null && _ActiveExceptionsList.Contains(exception))) // Skip this line if its allready been done. 
+			if (!(exception != null && _ActiveExceptionsList.Contains(exception))) // Skip this line if its already been done. 
 				GetExceptionDetail(exception, detailedDump, 0, lastMessage);
 
 			TraceEvent(eventType, (int)eventType, detailedDump.ToString());
 			if (eventType == TraceEventType.Error)
 			{
 				base.LastError.Append(lastMessage.ToString());
-				if (!(exception != null && _ActiveExceptionsList.Contains(exception))) // Skip this line if its allready been done. 
-					LastException = exception;
+				if (!(exception != null && _ActiveExceptionsList.Contains(exception))) // Skip this line if its already been done. 
+				{
+					// check and or alter the exception is its and HTTPOperationExecption. 
+					if (exception is HttpOperationException httpOperationException)
+					{
+						JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
+						Utils.CdsClientOperationException webApiExcept = new Utils.CdsClientOperationException(string.IsNullOrEmpty(contentBody["error"]["message"]?.ToString()) ? "Not Provided" : GetFirstLineFromString(contentBody["error"]["message"]?.ToString()).Trim(), httpOperationException);
+						LastException = webApiExcept;
+					}
+					else
+						LastException = exception;
+				}
 			}
 			_ActiveExceptionsList.Add(exception); 
 
@@ -307,61 +319,34 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				}
 				else
 				{
-					//			if (objException is FaultException<DeploymentServiceFault>)
-					//{
-					//	FaultException<DeploymentServiceFault> DeploymentFault = (FaultException<DeploymentServiceFault>)objException;
-					//	FormatExceptionMessage(
-					//	DeploymentFault.Source != null ? DeploymentFault.Source.ToString().Trim() : "Not Provided",
-					//	DeploymentFault.TargetSite != null ? DeploymentFault.TargetSite.Name.ToString() : "Not Provided",
-					//	DeploymentFault.Detail != null ? string.Format(CultureInfo.InvariantCulture, "Message: {0}\nErrorCode: {1}\n", DeploymentFault.Detail.Message, DeploymentFault.Detail.ErrorCode) :
-					//	string.IsNullOrEmpty(DeploymentFault.Message) ? "Not Provided" : DeploymentFault.Message.ToString().Trim(),
-					//	string.IsNullOrEmpty(DeploymentFault.StackTrace) ? "Not Provided" : DeploymentFault.StackTrace.ToString().Trim()
-					//	, sw, level);
+					if (objException is HttpOperationException httpOperationException)
+					{
+						JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
+						
+						FormatExceptionMessage(
+						httpOperationException.Source != null ? httpOperationException.Source.ToString().Trim() : "Not Provided",
+						httpOperationException.TargetSite != null ? httpOperationException.TargetSite.Name?.ToString() : "Not Provided",
+						string.IsNullOrEmpty(contentBody["error"]["message"]?.ToString()) ? "Not Provided" : GetFirstLineFromString(contentBody["error"]["message"]?.ToString()).Trim(),
+						string.IsNullOrEmpty(contentBody["error"]["stacktrace"]?.ToString()) ? "Not Provided" : contentBody["error"]["stacktrace"]?.ToString().Trim()
+						, sw, level);
 
-					//	lastErrorMsg.Append(DeploymentFault.Detail != null ? DeploymentFault.Detail.Message :
-					//	string.IsNullOrEmpty(DeploymentFault.Message) ? string.Empty : DeploymentFault.Message.ToString().Trim());
+						lastErrorMsg.Append(string.IsNullOrEmpty(httpOperationException.Message) ? "Not Provided" : httpOperationException.Message.ToString().Trim());
 
-					//	if (lastErrorMsg.Length > 0 && (DeploymentFault.InnerException != null || DeploymentFault.Detail != null && DeploymentFault.Detail.InnerFault != null))
-					//		lastErrorMsg.Append(" => ");
-
-					//	level++;
-					//	if ((DeploymentFault.InnerException != null || DeploymentFault.Detail != null && DeploymentFault.Detail.InnerFault != null))
-					//		GetExceptionDetail(DeploymentFault.Detail != null && DeploymentFault.Detail.InnerFault != null ? DeploymentFault.Detail.InnerFault : (object)DeploymentFault.InnerException,
-					//		sw, level, lastErrorMsg);
-
-					//	return;
-
-					//}
-					//else
-					//				if (objException is DeploymentServiceFault)
-					//{
-					//	DeploymentServiceFault oFault = (DeploymentServiceFault)objException;
-
-					//	StringBuilder errorText = new StringBuilder();
-					//	if (oFault.ErrorDetails != null && oFault.ErrorDetails.Count > 0)
-					//		foreach (var er in oFault.ErrorDetails)
-					//		{
-					//			errorText.AppendLine(string.Format(CultureInfo.InvariantCulture, "\t{0} raising error : {1}", er.Key, er.Value));
-					//		}
-
-					//	FormatDeploymentFaultMessage(
-					//	string.IsNullOrEmpty(oFault.Message) ? "Not Provided" : oFault.Message.ToString().Trim(),
-					//	oFault.Timestamp.ToString(),
-					//	oFault.ErrorCode.ToString(), errorText.ToString(), sw, level);
-
-					//	level++;
-
-					//	lastErrorMsg.Append(oFault.Message);
-					//	if (lastErrorMsg.Length > 0 && oFault.InnerFault != null)
-					//		lastErrorMsg.Append(" => ");
-
-					//	if (oFault.InnerFault != null)
-					//		GetExceptionDetail(oFault.InnerFault, sw, level, lastErrorMsg);
-
-					//	return;
-
-					//}
-					//else
+						// WebEx currently only returns 1 leve of error. 
+						var InnerError = contentBody["error"]["innererror"];
+						if (lastErrorMsg.Length > 0 && InnerError != null)
+						{
+							level++;
+							lastErrorMsg.Append(" => ");
+							FormatExceptionMessage(
+								httpOperationException.Source != null ? httpOperationException.Source.ToString().Trim() : "Not Provided",
+								httpOperationException.TargetSite != null ? httpOperationException.TargetSite.Name?.ToString() : "Not Provided",
+								string.IsNullOrEmpty(InnerError["message"]?.ToString()) ? "Not Provided" : GetFirstLineFromString(InnerError["message"]?.ToString()).Trim(),
+								string.IsNullOrEmpty(InnerError["stacktrace"]?.ToString()) ? "Not Provided" : InnerError["stacktrace"]?.ToString().Trim()
+								, sw, level);
+						}
+					}
+					else
 					if (objException is Exception)
 					{
 						Exception generalEx = (Exception)objException;
@@ -385,6 +370,21 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			}
 			return;
 		}
+
+		/// <summary>
+		/// returns the first line from the text block. 
+		/// </summary>
+		/// <param name="textBlock"></param>
+		/// <returns></returns>
+		internal static string GetFirstLineFromString(string textBlock)
+        {
+			if (!string.IsNullOrEmpty(textBlock))
+			{
+				if (textBlock.Contains(Environment.NewLine))
+					return textBlock.Substring(0, textBlock.IndexOf(Environment.NewLine)); 
+			}
+			return textBlock;
+        }
 
 		/// <summary>
 		/// Formats the detail collection from a service exception. 
@@ -451,31 +451,6 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			sw.AppendLine("Trace\t: " + traceText);
 			sw.AppendLine("======================================================================================================================");
 		}
-
-		/// <summary>
-		/// Formats an Exception specific to an Deployment fault.
-		/// </summary>
-		/// <param name="message">Exception Message</param>
-		/// <param name="timeOfEvent">Time occurred</param>
-		/// <param name="errorCode">Error code of message</param>
-		/// <param name="traceTextList">Message Text</param>
-		/// <param name="sw">Writer to write too</param>
-		/// <param name="level">Depth</param>
-		private static void FormatDeploymentFaultMessage(string message, string timeOfEvent, string errorCode, string traceTextList, StringBuilder sw, int level)
-		{
-			if (level != 0)
-				sw.AppendLine(string.Format(CultureInfo.InvariantCulture, "Inner Exception Level {0}\t: ", level));
-			sw.AppendLine("==DeploymentServiceFault Info==========================================================================================");
-			sw.AppendLine("Error\t: " + message);
-			sw.AppendLine("Time\t: " + timeOfEvent);
-			sw.AppendLine("ErrorCode\t: " + errorCode);
-			sw.AppendLine("Date\t: " + DateTime.Now.ToShortDateString());
-			sw.AppendLine("Time\t: " + DateTime.Now.ToLongTimeString());
-			sw.AppendLine("Error Items:");
-			sw.AppendLine(traceTextList);
-			sw.AppendLine("======================================================================================================================");
-		}
-
 	}
 
 	/// <summary> 
