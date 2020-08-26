@@ -45,9 +45,18 @@
   </metadata>
   <files>
     <file src="{signedBinDir}\{configuration}\CdsClient\netcoreapp3.1\Microsoft.PowerPlatform.Cds.Client.Dynamics.dll" target="lib\netcoreapp3.1\Microsoft.PowerPlatform.Cds.Client.Dynamics.dll" />
+    <file src="{signedBinDir}\{configuration}\CdsClient\netcoreapp3.1\Microsoft.PowerPlatform.Cds.Client.Dynamics.xml" target="lib\netcoreapp3.1\Microsoft.PowerPlatform.Cds.Client.Dynamics.xml" />
+
     <file src="{signedBinDir}\{configuration}\CdsClient\netcoreapp3.0\Microsoft.PowerPlatform.Cds.Client.Dynamics.dll" target="lib\netcoreapp3.0\Microsoft.PowerPlatform.Cds.Client.Dynamics.dll" />
+    <file src="{signedBinDir}\{configuration}\CdsClient\netcoreapp3.0\Microsoft.PowerPlatform.Cds.Client.Dynamics.xml" target="lib\netcoreapp3.0\Microsoft.PowerPlatform.Cds.Client.Dynamics.xml" />
+
     <file src="{signedBinDir}\{configuration}\CdsClient\net472\Microsoft.PowerPlatform.Cds.Client.Dynamics.dll" target="lib\net472\Microsoft.PowerPlatform.Cds.Client.Dynamics.dll" />
+    <file src="{signedBinDir}\{configuration}\CdsClient\net472\Microsoft.PowerPlatform.Cds.Client.Dynamics.xml" target="lib\net472\Microsoft.PowerPlatform.Cds.Client.Dynamics.xml" />
+
     <file src="{signedBinDir}\{configuration}\CdsClient\net462\Microsoft.PowerPlatform.Cds.Client.Dynamics.dll" target="lib\net462\Microsoft.PowerPlatform.Cds.Client.Dynamics.dll" />
+    <file src="{signedBinDir}\{configuration}\CdsClient\net462\Microsoft.PowerPlatform.Cds.Client.Dynamics.xml" target="lib\net462\Microsoft.PowerPlatform.Cds.Client.Dynamics.xml" />
+
     <file src="{signedBinDir}\{configuration}\CdsClient\net48\Microsoft.PowerPlatform.Cds.Client.Dynamics.dll" target="lib\net48\Microsoft.PowerPlatform.Cds.Client.Dynamics.dll" />
+    <file src="{signedBinDir}\{configuration}\CdsClient\net48\Microsoft.PowerPlatform.Cds.Client.Dynamics.xml" target="lib\net48\Microsoft.PowerPlatform.Cds.Client.Dynamics.xml" />
   </files>
 </package>

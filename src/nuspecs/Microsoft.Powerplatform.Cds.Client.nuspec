@@ -151,25 +151,31 @@
   </metadata>
   <files>
     <file src="{signedBinDir}\{configuration}\CdsClient\netcoreapp3.1\Microsoft.PowerPlatform.Cds.Client.dll" target="lib\netcoreapp3.1\Microsoft.PowerPlatform.Cds.Client.dll" />
+    <file src="{signedBinDir}\{configuration}\CdsClient\netcoreapp3.1\Microsoft.PowerPlatform.Cds.Client.xml" target="lib\netcoreapp3.1\Microsoft.PowerPlatform.Cds.Client.xml" />
     <file src="{signedBinDir}\{configuration}\CdsClient\netcoreapp3.1\Microsoft.Cds.Sdk.dll" target="lib\netcoreapp3.1\Microsoft.Cds.Sdk.dll" />
     <file src="{signedBinDir}\{configuration}\CdsClient\netcoreapp3.1\Microsoft.Cds.Sdk.Proxy.dll" target="lib\netcoreapp3.1\Microsoft.Cds.Sdk.Proxy.dll" />
     <!--<file src="{signedBinDir}\{configuration}\CdsClient\netcoreapp3.0\Microsoft.PowerPlatform.Cds.Client.deps.json" target="lib\netcoreapp3.0\Microsoft.PowerPlatform.Cds.Client.deps.json" /> -->
     <!--<file src="{signedBinDir}\{configuration}\CdsClient\netcoreapp3.0\Microsoft.PowerPlatform.Cds.Client.dll.config" target="lib\netcoreapp3.0\Microsoft.PowerPlatform.Cds.Client.dll.config" /> -->
     <file src="{signedBinDir}\{configuration}\CdsClient\netcoreapp3.0\Microsoft.PowerPlatform.Cds.Client.dll" target="lib\netcoreapp3.0\Microsoft.PowerPlatform.Cds.Client.dll" />
+    <file src="{signedBinDir}\{configuration}\CdsClient\netcoreapp3.0\Microsoft.PowerPlatform.Cds.Client.xml" target="lib\netcoreapp3.0\Microsoft.PowerPlatform.Cds.Client.xml" />
     <file src="{signedBinDir}\{configuration}\CdsClient\netcoreapp3.0\Microsoft.Cds.Sdk.dll" target="lib\netcoreapp3.0\Microsoft.Cds.Sdk.dll" />
     <file src="{signedBinDir}\{configuration}\CdsClient\netcoreapp3.0\Microsoft.Cds.Sdk.Proxy.dll" target="lib\netcoreapp3.0\Microsoft.Cds.Sdk.Proxy.dll" />
     <!--<file src="{signedBinDir}\{configuration}\CdsClient\net48\Microsoft.PowerPlatform.Cds.Client.dll.config" target="lib\net48\Microsoft.PowerPlatform.Cds.Client.dll.config" />-->
+    <file src="{signedBinDir}\{configuration}\CdsClient\net48\Microsoft.PowerPlatform.Cds.Client.dll" target="lib\net48\Microsoft.PowerPlatform.Cds.Client.dll" />
+    <file src="{signedBinDir}\{configuration}\CdsClient\net48\Microsoft.PowerPlatform.Cds.Client.xml" target="lib\net48\Microsoft.PowerPlatform.Cds.Client.xml" />
     <file src="{signedBinDir}\{configuration}\CdsClient\net48\Microsoft.Cds.Sdk.dll" target="lib\net48\Microsoft.Cds.Sdk.dll" />
     <file src="{signedBinDir}\{configuration}\CdsClient\net48\Microsoft.Cds.Sdk.Proxy.dll" target="lib\net48\Microsoft.Cds.Sdk.Proxy.dll" />
-    <file src="{signedBinDir}\{configuration}\CdsClient\net48\Microsoft.PowerPlatform.Cds.Client.dll" target="lib\net48\Microsoft.PowerPlatform.Cds.Client.dll" />
     <!--<file src="{signedBinDir}\{configuration}\CdsClient\net472\Microsoft.PowerPlatform.Cds.Client.dll.config" target="lib\net472\Microsoft.PowerPlatform.Cds.Client.dll.config" />-->
+    <file src="{signedBinDir}\{configuration}\CdsClient\net472\Microsoft.PowerPlatform.Cds.Client.dll" target="lib\net472\Microsoft.PowerPlatform.Cds.Client.dll" />
+    <file src="{signedBinDir}\{configuration}\CdsClient\net472\Microsoft.PowerPlatform.Cds.Client.xml" target="lib\net472\Microsoft.PowerPlatform.Cds.Client.xml" />
     <file src="{signedBinDir}\{configuration}\CdsClient\net472\Microsoft.Cds.Sdk.dll" target="lib\net472\Microsoft.Cds.Sdk.dll" />
     <file src="{signedBinDir}\{configuration}\CdsClient\net472\Microsoft.Cds.Sdk.Proxy.dll" target="lib\net472\Microsoft.Cds.Sdk.Proxy.dll" />
-    <file src="{signedBinDir}\{configuration}\CdsClient\net472\Microsoft.PowerPlatform.Cds.Client.dll" target="lib\net472\Microsoft.PowerPlatform.Cds.Client.dll" />
     <!-- <file src="{signedBinDir}\{configuration}\CdsClient\net462\Microsoft.PowerPlatform.Cds.Client.dll.config" target="lib\net462\Microsoft.PowerPlatform.Cds.Client.dll.config" /> -->
+    <file src="{signedBinDir}\{configuration}\CdsClient\net462\Microsoft.PowerPlatform.Cds.Client.dll" target="lib\net462\Microsoft.PowerPlatform.Cds.Client.dll" />
+    <file src="{signedBinDir}\{configuration}\CdsClient\net462\Microsoft.PowerPlatform.Cds.Client.xml" target="lib\net462\Microsoft.PowerPlatform.Cds.Client.xml" />
     <file src="{signedBinDir}\{configuration}\CdsClient\net462\Microsoft.Cds.Sdk.dll" target="lib\net462\Microsoft.Cds.Sdk.dll" />
     <file src="{signedBinDir}\{configuration}\CdsClient\net462\Microsoft.Cds.Sdk.Proxy.dll" target="lib\net462\Microsoft.Cds.Sdk.Proxy.dll" />
-    <file src="{signedBinDir}\{configuration}\CdsClient\net462\Microsoft.PowerPlatform.Cds.Client.dll" target="lib\net462\Microsoft.PowerPlatform.Cds.Client.dll" />
+
     <file src="{licenseDir}\Other Redistributable.txt" target="lib\net462\Other Redistributable.txt" />
     <file src="{licenseDir}\Third Party Notices for Dynamics 365 SDK.docx" target="lib\net462\Third Party Notices for Dynamics 365 SDK.docx" />
   </files>

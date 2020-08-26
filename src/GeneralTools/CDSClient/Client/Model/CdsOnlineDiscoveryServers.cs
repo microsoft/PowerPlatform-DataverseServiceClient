@@ -102,7 +102,6 @@ namespace Microsoft.PowerPlatform.Cds.Client.Model
 		/// Finds a Server by Name in the List or return null. 
 		/// </summary>
 		/// <param name="shortName">Short Name of the server you are looking for</param>
-		/// <param name="isO365">if set, uses the office 365 server list.</param>
 		/// <returns>CdsDiscoveryServer Data or Null</returns>
 		public CdsDiscoveryServer GetServerByShortName(string shortName)
 		{
@@ -130,7 +129,6 @@ namespace Microsoft.PowerPlatform.Cds.Client.Model
 		/// Finds the server short name by server uri
 		/// </summary>
 		/// <param name="serverDisplayName">Name of the Server to find</param>
-		/// <param name="isO365">if set, uses the office 365 server list.</param>
 		/// <returns></returns>
 		public string GetServerShortNameByDisplayName(string serverDisplayName)
 		{

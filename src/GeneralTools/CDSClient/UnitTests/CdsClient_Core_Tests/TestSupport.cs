@@ -91,10 +91,39 @@ namespace CdsClient_Core_UnitTests
             entityMetadata.DisplayName.UserLocalizedLabel = new LocalizedLabel("Account", 1033);
             entityMetadata.DisplayCollectionName = new Label("Accounts", 1033);
             entityMetadata.DisplayCollectionName.UserLocalizedLabel = new LocalizedLabel("Accounts", 1033);
-            System.Reflection.PropertyInfo proInfo = entityMetadata.GetType().GetProperty("ObjectTypeCode");
+
+            //entityMetadata.ManyToOneRelationships
+            var ManyToOneRels = new List<OneToManyRelationshipMetadata>() {
+            new OneToManyRelationshipMetadata()
+            {
+                ReferencingAttribute = "field02",
+                ReferencedEntity = "account",
+                ReferencingEntityNavigationPropertyName = "field02_account"
+            },
+            new OneToManyRelationshipMetadata()
+            {
+                ReferencingAttribute = "field02",
+                ReferencedEntity = "contact",
+                ReferencingEntityNavigationPropertyName = "field02_contact"
+            },
+            new OneToManyRelationshipMetadata()
+            {
+                ReferencingAttribute = "field07",
+                ReferencedEntity = "account",
+                ReferencingEntityNavigationPropertyName = "field07account"
+            }           
+            };
+
+            System.Reflection.PropertyInfo proInfo = entityMetadata.GetType().GetProperty("ManyToOneRelationships");
             if (proInfo != null)
             {
-                proInfo.SetValue(entityMetadata, 1, null);
+                proInfo.SetValue(entityMetadata, ManyToOneRels.ToArray(), null);
+            };
+
+            System.Reflection.PropertyInfo proInfo1 = entityMetadata.GetType().GetProperty("ObjectTypeCode");
+            if (proInfo1 != null)
+            {
+                proInfo1.SetValue(entityMetadata, 1, null);
             }
 
             RetrieveEntityResponse retrieveEntityResponse = new RetrieveEntityResponse();
