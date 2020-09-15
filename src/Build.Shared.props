@@ -1,0 +1,88 @@
+<Project>
+  <!-- msbuild properties shared for dotnetCore and .NET classic projects: -->
+  <PropertyGroup>
+    <PackageVersion_AppInsights>2.9.1</PackageVersion_AppInsights>
+    <PackageVersion_Adal>3.19.8</PackageVersion_Adal>
+    <PackageVersion_CdsSdk>4.5.2071</PackageVersion_CdsSdk>
+    <PackageVersion_CDSServerNuget>4.5.3122</PackageVersion_CDSServerNuget>
+    <PackageVersion_Newtonsoft>10.0.3</PackageVersion_Newtonsoft>
+    <PackageVersion_RestClientRuntime>2.3.20</PackageVersion_RestClientRuntime>
+    <PackageVersion_XrmSdk>9.0.2.25</PackageVersion_XrmSdk>
+    <!-- Test: -->
+    <PackageVersion_Moq>4.13.1</PackageVersion_Moq>
+    <PackageVersion_XUnit>2.4.1</PackageVersion_XUnit>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- this property must be re-defined in individual .csprojs or a .props file per component area -->
+    <ComponentAreaName Condition="'$(ComponentAreaName)' == ''">FORGOT-To-Set-ComponentAreaName</ComponentAreaName>    
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <!-- These variables define the object and binary roots, respectively. -->
+    <RepoRoot>$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine($(MSBuildThisFileDirectory), ".."))))</RepoRoot>
+    <OutputRootDir Condition=" '$(OutputRootDir)' == '' ">$(RepoRoot)\bin\$(Configuration)\$(ComponentAreaName)\$(TargetFramework)</OutputRootDir>
+    <OutputRootDir>$(OutputRootDir.TrimEnd({'\\'}))</OutputRootDir>
+    <!-- These variables are the ones that the standard MSBuild targets recognize. -->
+    <OutDir Condition=" '$(OutDir)' =='' ">$([System.IO.Path]::Combine($(OutputRootDir), $(RelativeOutputPath)))</OutDir>
+    <!-- OutDir requires a trailing slash to prevent MSB8004 warning -->
+    <OutDir>$(OutDir.TrimEnd("\\"))\</OutDir>
+    <!-- Ensures OutputPath always matches OutDir -->
+    <OutputPath>$(OutDir)</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(SignAssembly)' == 'true'">
+    <AssemblyOriginatorKeyFile>$(RepoRoot)\build\crmKey\35MSSharedLib1024.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>true</DelaySign>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DefineConstants>TRACE</DefineConstants>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <Optimize>false</Optimize>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <DefineConstants>TRACE</DefineConstants>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'CRMINTERNAL|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineConstants>DEBUG;TRACE;CRMINTERNAL</DefineConstants>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Enable_Telemetry)' == 'true' " >
+    <DefineConstants>$(DefineConstants);PROD_CUSTOMER_TELEMETRY</DefineConstants>
+  </PropertyGroup>
+</Project>

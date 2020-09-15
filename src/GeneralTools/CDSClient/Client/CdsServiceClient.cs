@@ -4982,33 +4982,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     {
                         if (cReq.KeyAttributes?.Any() == true)
                         {
-
-                        string keycollection = string.Empty;
-                            foreach (var itm in cReq.KeyAttributes)
-                            {
-                                if (itm.Value is EntityReference er)
-                                {
-                                    keycollection += $"_{itm.Key}_value='{er.Id.ToString("P")}',";
-
-                                    //IEnumerable<string> keys = cReq.KeyAttributes.Select(s => $"_{s.Key}_value='{((EntityReference)s.Value).Id.ToString().Replace("'", "''")}'");
-                                    //keycollection += $"{EntityData.EntitySetName}({string.Join("&", keys)})";
-
-                                    //if (cReq.Id != Guid.Empty)
-                                    //{
-                                    //    var s2 = EntityData.EntitySetName + cReq.Id.ToString("P");
-                                    //}
-
-
-                                    //// Add support for ER for KEY. 
-                                    //keycollection += $"{itm.Key}@odata.bind='{$"/{metadataUtlity.GetEntityMetadata(Xrm.Sdk.Metadata.EntityFilters.Entity, er.LogicalName).EntitySetName}({er.Id})"}',";
-                                }
-                                else 
-                                {
-                                    keycollection += $"{itm.Key}='{itm.Value}',";
-                                }
-                            }
-                            keycollection = keycollection.Remove(keycollection.Length - 1); // remove trailing , 
-                            postUri = $"{EntityData.EntitySetName}({keycollection})";
+                            postUri = $"{EntityData.EntitySetName}({Utilities.ParseAltKeyCollection(cReq.KeyAttributes)})";
                         }
                         else
                         {
@@ -5042,15 +5016,77 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     if (req.Parameters.ContainsKey(Utilities.CDSRequestHeaders.SOLUTIONUNIQUENAME))
                     {
                         if (req.Parameters[Utilities.CDSRequestHeaders.SOLUTIONUNIQUENAME].GetType() == typeof(string) &&
-                             !String.IsNullOrEmpty((string)req.Parameters[Utilities.CDSRequestHeaders.BYPASSCUSTOMPLUGINEXECUTION]))
+                             !String.IsNullOrEmpty((string)req.Parameters[Utilities.CDSRequestHeaders.SOLUTIONUNIQUENAME]))
                         {
                             solutionUniqueNameHeaderValue = req.Parameters[Utilities.CDSRequestHeaders.SOLUTIONUNIQUENAME].ToString();
                         }
                     }
 
-                    // Execute request 
+                    bool? suppressDuplicateDetection = null;
+                    if (req.Parameters.ContainsKey(Utilities.CDSRequestHeaders.SUPPRESSDUPLICATEDETECTION))
+                    {
+                        if (req.Parameters[Utilities.CDSRequestHeaders.SUPPRESSDUPLICATEDETECTION].GetType() == typeof(bool) &&
+                            (bool)req.Parameters[Utilities.CDSRequestHeaders.SUPPRESSDUPLICATEDETECTION])
+                        {
+                            suppressDuplicateDetection = true; 
+                        }
+                    }
+
+                    string tagValue = string.Empty;
+                    if (req.Parameters.ContainsKey(Utilities.CDSRequestHeaders.TAG))
+                    {
+                        if (req.Parameters[Utilities.CDSRequestHeaders.TAG].GetType() == typeof(string) &&
+                             !String.IsNullOrEmpty((string)req.Parameters[Utilities.CDSRequestHeaders.TAG]))
+                        {
+                            tagValue = req.Parameters[Utilities.CDSRequestHeaders.TAG].ToString();
+                        }
+                    }
+
+                    string rowVersion = string.Empty;
+                    string IfMatchHeaderTag = string.Empty;
+                    if ( req.Parameters.ContainsKey(Utilities.CDSRequestHeaders.CONCURRENCYBEHAVIOR) && 
+                        (ConcurrencyBehavior)req.Parameters[Utilities.CDSRequestHeaders.CONCURRENCYBEHAVIOR] != ConcurrencyBehavior.Default)
+                    {
+                        // Found concurrency flag. 
+                        if (!string.IsNullOrEmpty(cReq.RowVersion))
+                        {
+                            rowVersion = cReq.RowVersion;
+                            // Now manage behavior. 
+                            // if IfRowVersionMatches == Upsert/update/Delete should only work if record exists by rowRowVersion. == If-Match + RowVersion. 
+                            // If AlwaysOverwrite == Upsert/update/Delete should only work if record exists at all == No IF-MatchTag. 
+                            if ((ConcurrencyBehavior)req.Parameters[Utilities.CDSRequestHeaders.CONCURRENCYBEHAVIOR] == ConcurrencyBehavior.AlwaysOverwrite)
+                            {
+                                IfMatchHeaderTag = "If-Match";
+                                rowVersion = "*";
+                            }
+                            if ((ConcurrencyBehavior)req.Parameters[Utilities.CDSRequestHeaders.CONCURRENCYBEHAVIOR] == ConcurrencyBehavior.IfRowVersionMatches)
+                            {
+                                IfMatchHeaderTag = "If-Match";
+                            }
+                        }
+                        else
+                        {
+                            CdsClientOperationException opEx = new CdsClientOperationException("Request Failed, RowVersion is missing and is required when ConcurrencyBehavior is set to a value other then Default.");
+                            logEntry.Log(opEx);
+                            return null;
+                        }
+                    }
+
+                    // Setup headers. 
                     Dictionary<string, List<string>> headers = new Dictionary<string, List<string>>();
                     headers.Add("Prefer", new List<string>() { "odata.include-annotations=*" });
+
+                    if (!string.IsNullOrEmpty(IfMatchHeaderTag))
+                    {
+                        if (rowVersion != "*")
+                        {
+                            headers.Add(IfMatchHeaderTag, new List<string>() { $"W/\"{rowVersion}\"" });
+                        }
+                        else
+                        {
+                            headers.Add(IfMatchHeaderTag, new List<string>() { $"*" });
+                        }
+                    }
 
                     if (bypassPluginExecution && ConnectedOrgVersion >= _minAllowBypassCustomPluginVersion)
                     {
@@ -5062,6 +5098,28 @@ namespace Microsoft.PowerPlatform.Cds.Client
                         headers.Add($"{Utilities.CDSRequestHeaders.CDSHEADERPROPERTYPREFIX}{Utilities.CDSRequestHeaders.SOLUTIONUNIQUENAME}", new List<string>() { solutionUniqueNameHeaderValue });
                     }
 
+                    if (suppressDuplicateDetection.HasValue)
+                    {
+                        headers.Add($"{Utilities.CDSRequestHeaders.CDSHEADERPROPERTYPREFIX}{Utilities.CDSRequestHeaders.SUPPRESSDUPLICATEDETECTION}", new List<string>() { "true" });
+                    }
+
+                    string addedQueryParams = ""; 
+                    // modify post URI
+                    if (!string.IsNullOrEmpty(tagValue))
+                    {
+                        //UriBuilder uriBuilder = new UriBuilder(postUri);
+                        var paramValues = System.Web.HttpUtility.ParseQueryString(addedQueryParams);
+                        paramValues.Add($"{Utilities.CDSRequestHeaders.TAG}", tagValue);
+                        addedQueryParams = paramValues.ToString();
+                    }
+
+                    // add queryParms to the PostUri. 
+                    if (!string.IsNullOrEmpty(addedQueryParams))
+                    {
+                        postUri = $"{postUri}?{addedQueryParams}"; 
+                    }
+
+                    // Execute request 
                     var sResp = CdsCommand_WebExecute(postUri, bodyOfRequest, methodToExecute, headers, "application/json", logMessageTag).Result;
                     if (sResp != null && sResp.IsSuccessStatusCode)
                     {
@@ -5606,7 +5664,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             defaultODataHeaders.Add("Accept", "application/json");
             defaultODataHeaders.Add("OData-MaxVersion", "4.0");
             defaultODataHeaders.Add("OData-Version", "4.0");
-            defaultODataHeaders.Add("If-None-Match", "");
+            //defaultODataHeaders.Add("If-None-Match", "");
 
             // Supported Version Check. 
             if (!(ConnectedOrgVersion > _minWebAPISupportedVersion))

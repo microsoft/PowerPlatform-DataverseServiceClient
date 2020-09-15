@@ -5,6 +5,9 @@ Notice:
     We have not stabilized on NameSpace or Class names with this package as of yet and things will change as we move though the preview.
 
 ++CURRENTRELEASEID++
+    No updates here. 
+
+0.2.17-Alpha:
 Added IntelliSense Doc Support
 Added support for bypassing custom Plug-in Execution during SDK Operation.  
     This is a special use capability that requires a specialized permission in the CDS infrastructure to use. 

@@ -351,7 +351,19 @@ namespace Microsoft.PowerPlatform.Cds.Client
 						throw new CdsClientOperationException($"Entity Reference {key.ToLower()} was not found for entity {entityName}.", null);
 					}
 
-					value = $"/{mUtil.GetEntityMetadata(Xrm.Sdk.Metadata.EntityFilters.Entity, entityReference.LogicalName).EntitySetName}({entityReference.Id})";
+					string entityReferanceValue = string.Empty; 
+					// process ER Value
+					if (entityReference.KeyAttributes?.Any() == true)
+					{
+						entityReferanceValue = ParseAltKeyCollection(entityReference.KeyAttributes);
+					}
+                    else
+                    {
+						entityReferanceValue = entityReference.Id.ToString();
+					}
+
+
+					value = $"/{mUtil.GetEntityMetadata(Xrm.Sdk.Metadata.EntityFilters.Entity, entityReference.LogicalName).EntitySetName}({entityReferanceValue})";
 				}
 				else
 				{
@@ -395,6 +407,27 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			return ((ExpandoObject)(expandoObject));
 		}
 
+		/// <summary>
+		/// Parses Key attribute collection for alt key support. 
+		/// </summary>
+		/// <param name="keyValues">alt key's for object</param>
+		/// <returns>webAPI compliant key string</returns>
+		internal static string ParseAltKeyCollection (KeyAttributeCollection keyValues)
+        {
+			string keycollection = string.Empty;
+			foreach (var itm in keyValues)
+			{
+				if (itm.Value is EntityReference er)
+				{
+					keycollection += $"_{itm.Key}_value='{er.Id.ToString("P")}',";
+				}
+				else
+				{
+					keycollection += $"{itm.Key}='{itm.Value}',";
+				}
+			}
+			return keycollection.Remove(keycollection.Length - 1); // remove trailing , 
+		}
 		/// <summary>
 		/// List of entities to retry retrieves on. 
 		/// </summary>
@@ -470,8 +503,26 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 			/// <summary>
 			/// key used to apply the operation to a given solution. 
+			/// See: https://docs.microsoft.com/powerapps/developer/common-data-service/org-service/use-messages#passing-optional-parameters-with-a-request
 			/// </summary>
 			public const string SOLUTIONUNIQUENAME = "SolutionUniqueName";
+
+			/// <summary>
+			/// used to apply duplicate detection behavior to a given request. 
+			/// See: https://docs.microsoft.com/powerapps/developer/common-data-service/org-service/use-messages#passing-optional-parameters-with-a-request
+			/// </summary>
+			public const string SUPPRESSDUPLICATEDETECTION = "SuppressDuplicateDetection";
+
+			/// <summary>
+			/// used to pass data though CDS to a plugin or downstream system on a request. 
+			/// See: https://docs.microsoft.com/en-us/powerapps/developer/common-data-service/org-service/use-messages#add-a-shared-variable-from-the-organization-service
+			/// </summary>
+			public const string TAG = "tag";
+
+			/// <summary>
+			/// used to identify concurrencybehavior property in an organization request. 
+			/// </summary>
+			public const string CONCURRENCYBEHAVIOR = "ConcurrencyBehavior";
 
 			/// <summary>
 			/// CDS Platform Property Prefix

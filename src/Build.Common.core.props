@@ -9,6 +9,12 @@
     <Features>IOperation</Features>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="obj\**" />
+    <EmbeddedResource Remove="obj\**" />
+    <None Remove="obj\**" />
+  </ItemGroup>
+
   <Import Project=".\Build.Shared.props" />
 
 </Project>
