@@ -9,6 +9,10 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time. 
 
 ++CURRENTRELEASEID++
+Added support for Alternate key use on entity references as part of Create Update Delete Operations running over the webAPI. 
+Added concurrency support to Create Update Delete Operations running over the webAPI. 
+
+0.2.17-Alpha:
 ***BREAKING CHANGE***
 Renamed Exception CdsConnectionException to CdsClientConnectionException.  No other change to the Exception
 ***

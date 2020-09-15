@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup Condition="'$(TargetFrameworks)' == ''">
+    <TargetFrameworks Condition="'$(OutputType)' == 'Exe'">netcoreapp3.1;net462</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OutputType)' != 'Exe'">netstandard2.0</TargetFrameworks>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Features>IOperation</Features>
+  </PropertyGroup>
+
+  <Import Project=".\Build.Shared.props" />
+
+</Project>
