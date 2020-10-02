@@ -542,6 +542,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 			if (_externalWebClientProxy != null)
 			{
+				AttachWebProxyHander(_externalWebClientProxy);
+
 				// Set timeouts. 
 				_externalWebClientProxy.InnerChannel.OperationTimeout = _MaxConnectionTimeout;
 				_externalWebClientProxy.Endpoint.Binding.SendTimeout = _MaxConnectionTimeout;
@@ -2579,7 +2581,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				}
 				_ActualCdsOrgUri = targetServiceUrl;
 				svcWebClientProxy = new OrganizationWebProxyClient(targetServiceUrl, true);
-				svcWebClientProxy.ChannelFactory.Opening += WebProxyChannelFactory_Opening;
+				AttachWebProxyHander(svcWebClientProxy);
 				svcWebClientProxy.HeaderToken = authToken;
 
 				if (svcWebClientProxy != null)
@@ -2596,6 +2598,16 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 			return svcWebClientProxy;
 		}
+
+		/// <summary>
+		/// This method us used to wire up the telemetry behaviors to the webProxy connection
+		/// </summary>
+		/// <param name="proxy">Connection proxy to attach telemetry too</param>
+		internal void AttachWebProxyHander (OrganizationWebProxyClient proxy )
+        {
+			proxy.ChannelFactory.Opening += WebProxyChannelFactory_Opening;
+		}
+
 
 		/// <summary>
 		/// Grab the Channel factory Open event and add the CrmHook Service behaviors. 

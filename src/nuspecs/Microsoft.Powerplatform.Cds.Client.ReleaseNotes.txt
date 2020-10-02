@@ -9,6 +9,10 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time. 
 
 ++CURRENTRELEASEID++
+Fixed an issue with .Clone not correctly supporting adding telemetry handlers to cloned connections
+
+0.2.23-Alpha:
+Adding Switzerland Geo to Regions List.
 Added support for Alternate key use on entity references as part of Create Update Delete Operations running over the webAPI. 
 Added concurrency support to Create Update Delete Operations running over the webAPI. 
 
