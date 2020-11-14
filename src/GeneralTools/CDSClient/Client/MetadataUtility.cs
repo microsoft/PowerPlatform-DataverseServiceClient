@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Messages;
+using System.Collections.Concurrent;
 
 namespace Microsoft.PowerPlatform.Cds.Client
 {
@@ -15,19 +16,19 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <summary>
 		/// MetadataCache object.
 		/// </summary>
-		private Dictionary<String, EntityMetadata> _entityMetadataCache = new Dictionary<String, EntityMetadata>();
+		private ConcurrentDictionary<String, EntityMetadata> _entityMetadataCache = new ConcurrentDictionary<String, EntityMetadata>();
 		/// <summary>
 		/// Attribute metadata cache object
 		/// </summary>
-		private Dictionary<String, AttributeMetadata> _attributeMetadataCache = new Dictionary<String, AttributeMetadata>();
+		private ConcurrentDictionary<String, AttributeMetadata> _attributeMetadataCache = new ConcurrentDictionary<String, AttributeMetadata>();
 		/// <summary>
 		/// Global option metadata cache object. 
 		/// </summary>
-		private Dictionary<String, OptionSetMetadata> _globalOptionMetadataCache = new Dictionary<String, OptionSetMetadata>();
+		private ConcurrentDictionary<String, OptionSetMetadata> _globalOptionMetadataCache = new ConcurrentDictionary<String, OptionSetMetadata>();
 		/// <summary>
 		/// Entity Name catch object
 		/// </summary>
-		private Dictionary<int, string> _entityNameCache = new Dictionary<int, string>();
+		private ConcurrentDictionary<int, string> _entityNameCache = new ConcurrentDictionary<int, string>();
 		/// <summary>
 		/// Lock object
 		/// </summary>
@@ -52,13 +53,17 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <param name="entityName"></param>
 		public void ClearCachedEntityMetadata(string entityName)
 		{
+			TouchMetadataDate();
 			// Not clearing the ETC ID's as they do not change... 
-			lock (_lockObject)
+			if (_entityMetadataCache.ContainsKey(entityName))
 			{
-				if (_entityMetadataCache.ContainsKey(entityName))
-					_entityMetadataCache.Remove(entityName);
-				if (_attributeMetadataCache.ContainsKey(entityName))
-					_attributeMetadataCache.Remove(entityName);
+				EntityMetadata removedEntData;
+				_entityMetadataCache.TryRemove(entityName, out removedEntData);
+			}
+			if (_attributeMetadataCache.ContainsKey(entityName))
+			{
+				AttributeMetadata removedAttribData;
+				_attributeMetadataCache.TryRemove(entityName, out removedAttribData);
 			}
 		}
 
@@ -82,21 +87,19 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			{
 				foreach (var entity in response.EntityMetadata)
 				{
-					lock (_lockObject)
-					{
-						if (_entityMetadataCache.ContainsKey(entity.LogicalName))
-							_entityMetadataCache[entity.LogicalName] = entity;  // Update local copy of the entity... 
-						else
-							_entityMetadataCache.Add(entity.LogicalName, entity);
+					if (_entityMetadataCache.ContainsKey(entity.LogicalName))
+						_entityMetadataCache[entity.LogicalName] = entity;  // Update local copy of the entity... 
+					else
+						_entityMetadataCache.TryAdd(entity.LogicalName, entity);
 
-						results.Add(entity);
-						// Preload the entity data catch as this has been called already 
-						if (_entityNameCache.ContainsKey(entity.ObjectTypeCode.Value))
-							continue;
-						else
-							_entityNameCache.Add(entity.ObjectTypeCode.Value, entity.LogicalName);
-					}
+					results.Add(entity);
+					// Preload the entity data catch as this has been called already 
+					if (_entityNameCache.ContainsKey(entity.ObjectTypeCode.Value))
+						continue;
+					else
+						_entityNameCache.TryAdd(entity.ObjectTypeCode.Value, entity.LogicalName);
 				}
+				TouchMetadataDate();
 			}
 
 			return results;
@@ -169,16 +172,13 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				if (response != null)
 				{
 					entityMetadata = response.EntityMetadata;
-					lock (_lockObject)
-					{
-						if (!_entityMetadataCache.ContainsKey(entityName))
-							_entityMetadataCache.Add(entityName, entityMetadata);
-						else
-							_entityMetadataCache[entityName] = entityMetadata;
+					if (!_entityMetadataCache.ContainsKey(entityName))
+						_entityMetadataCache.TryAdd(entityName, entityMetadata);
+					else
+						_entityMetadataCache[entityName] = entityMetadata;
 
-						if (!bSelectiveUpdate)
-							_metadataLastValidatedAt = DateTime.Now;
-					}
+					if (!bSelectiveUpdate)
+						TouchMetadataDate();
 				}
 			}
 			return entityMetadata;
@@ -204,20 +204,17 @@ namespace Microsoft.PowerPlatform.Cds.Client
 					RetrieveAllEntitiesResponse response = (RetrieveAllEntitiesResponse)svcAct.CdsCommand_Execute(request, "GetEntityLogicalName");
 					if (response != null)
 					{
-						lock (_lockObject)
+						foreach (EntityMetadata metadata in response.EntityMetadata)
 						{
-							foreach (EntityMetadata metadata in response.EntityMetadata)
-							{
-								_entityNameCache.Add(metadata.ObjectTypeCode.Value, metadata.LogicalName);
+							_entityNameCache.TryAdd(metadata.ObjectTypeCode.Value, metadata.LogicalName);
 
-								// reload metadata cache. 
-								if (_entityMetadataCache.ContainsKey(metadata.LogicalName))
-									continue;
-								else
-									_entityMetadataCache.Add(metadata.LogicalName, metadata);
-							}
-							_metadataLastValidatedAt = DateTime.Now;
+							// reload metadata cache. 
+							if (_entityMetadataCache.ContainsKey(metadata.LogicalName))
+								continue;
+							else
+								_entityMetadataCache.TryAdd(metadata.LogicalName, metadata);
 						}
+						TouchMetadataDate();
 					}
 				}
 			}
@@ -249,11 +246,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
 					if (response != null)
 					{
 						attributeMetadata = response.AttributeMetadata;
-						lock (_lockObject)
-						{
-							_attributeMetadataCache.Add(String.Format(CultureInfo.InvariantCulture, "{0}.{1}", entityName, attributeName), attributeMetadata);
-							_metadataLastValidatedAt = DateTime.Now;
-						}
+						_attributeMetadataCache.TryAdd(String.Format(CultureInfo.InvariantCulture, "{0}.{1}", entityName, attributeName), attributeMetadata);
+						_metadataLastValidatedAt = DateTime.UtcNow;
 					}
 				}
 			}
@@ -333,10 +327,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			{
 				if (response.OptionSetMetadata is OptionSetMetadata && (OptionSetMetadata)response.OptionSetMetadata != null)
 				{
-					lock (_lockObject)
-					{
-						_globalOptionMetadataCache.Add(optionSetName, (OptionSetMetadata)response.OptionSetMetadata);
-					}
+					_globalOptionMetadataCache.TryAdd(optionSetName, (OptionSetMetadata)response.OptionSetMetadata);
+					TouchMetadataDate();
 					return _globalOptionMetadataCache[optionSetName];
 				}
 			}
@@ -348,17 +340,22 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// </summary>
 		private void ValidateMetadata()
 		{
-			if (DateTime.Now.Subtract(_metadataLastValidatedAt).TotalHours > 1)
-			{
-				lock (_lockObject)
-				{
-					_metadataLastValidatedAt = DateTime.Now;
-					_attributeMetadataCache.Clear();
-					_entityMetadataCache.Clear();
-					_entityNameCache.Clear();
-					_globalOptionMetadataCache.Clear();
-				}
-			}
-		}
-	}
+			if (DateTime.UtcNow.Subtract(_metadataLastValidatedAt).TotalHours > 1)
+            {
+                TouchMetadataDate();
+                _attributeMetadataCache.Clear();
+                _entityMetadataCache.Clear();
+                _entityNameCache.Clear();
+                _globalOptionMetadataCache.Clear();
+            }
+        }
+
+        private void TouchMetadataDate()
+        {
+            lock (_lockObject)
+            {
+                _metadataLastValidatedAt = DateTime.UtcNow;
+            }
+        }
+    }
 }

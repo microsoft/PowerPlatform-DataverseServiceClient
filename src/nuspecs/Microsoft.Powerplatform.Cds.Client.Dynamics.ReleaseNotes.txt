@@ -5,7 +5,7 @@ Notice:
     We have not stabilized on NameSpace or Class names with this package as of yet and things will change as we move though the preview.
 
 ++CURRENTRELEASEID++
-    No updates here. 
+    Updated Core CDS Sdk assemblies 
 
 0.2.23-Alpha:
     No updates here. 

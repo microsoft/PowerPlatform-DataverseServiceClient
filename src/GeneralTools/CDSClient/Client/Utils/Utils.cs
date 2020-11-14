@@ -301,12 +301,14 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				case "delete":
 					return true;
 				case "upsert":
+					// Disabling WebAPI support for upsert right now due to issues with generating the response. 
+
 					// avoid bug in WebAPI around Support for key's as EntityRefeances //TODO: TEMP
-					Xrm.Sdk.Messages.UpsertRequest upsert = (Xrm.Sdk.Messages.UpsertRequest)req;
-					if (upsert.Target.KeyAttributes?.Any(a => a.Value is string) != true)
-						return false;
-					else
-						return true; 
+					//Xrm.Sdk.Messages.UpsertRequest upsert = (Xrm.Sdk.Messages.UpsertRequest)req;
+					//if (upsert.Target.KeyAttributes?.Any(a => a.Value is string) != true)
+					//	return false;
+					//else
+						//return true; 
 				default:
 					return false;
 			}
@@ -419,7 +421,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			{
 				if (itm.Value is EntityReference er)
 				{
-					keycollection += $"_{itm.Key}_value='{er.Id.ToString("P")}',";
+					keycollection += $"_{itm.Key}_value={er.Id.ToString("P")},";
 				}
 				else
 				{
@@ -530,6 +532,68 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			public const string CDSHEADERPROPERTYPREFIX = "MSCRM.";
 
 		}
+
+		/// <summary>
+		/// Minim Version numbers for various features of CDS API's. 
+		/// </summary>
+		internal static class CDSFeatureVersionMinimums
+		{
+			/// <summary>
+			/// Lowest server version that can be connected too. 
+			/// </summary>
+			internal static Version CDSVersionForThisAPI = new Version("5.0.9688.1533");
+
+			/// <summary>
+			/// Minimum version that supports batch Operations. 
+			/// </summary>
+			internal static Version BatchOperations = new Version("5.0.9690.3000");
+
+			/// <summary>
+			/// Minimum version that supports holding solutions. 
+			/// </summary>
+			internal static Version ImportHoldingSolution = new Version("7.2.0.9");
+
+			/// <summary>
+			/// Minimum version that supports the Internal Upgrade Flag
+			/// </summary>
+			internal static Version InternalUpgradeSolution = new Version("9.0.0.0");
+
+			/// <summary>
+			/// MinVersion that supports AAD Caller ID. 
+			/// </summary>
+			internal static Version AADCallerIDSupported = new Version("8.1.0.0");
+
+			/// <summary>
+			/// MinVersion that supports Session ID Telemetry Tracking. 
+			/// </summary>
+			internal static Version SessionTrackingSupported = new Version("9.0.2.0");
+
+			/// <summary>
+			/// MinVersion that supports Forcing Cache Sync. 
+			/// </summary>
+			internal static Version ForceConsistencySupported = new Version("9.1.0.0");
+
+			/// <summary>
+			/// Minimum version to allow plug in bypass param. 
+			/// </summary>
+			internal static Version AllowBypassCustomPlugin = new Version("9.1.0.20918");
+
+			/// <summary>
+			/// Minimum version supported by the Web API 
+			/// </summary>
+			internal static Version WebAPISupported = new Version("8.0.0.0");
+
+			/// <summary>
+			/// Minimum version supported for AsyncRibbonProcessing. 
+			/// </summary>
+			internal static Version AllowAsyncRibbonProcessing = new Version("9.1.0.15400");
+
+			/// <summary>
+			/// Minimum version supported for Passing Component data to CDS as part of solution deployment.. 
+			/// </summary>
+			internal static Version AllowComponetInfoProcessing = new Version("9.1.0.16547");
+		}
+
 
 	}
 }

@@ -5,7 +5,7 @@
     <ComponentAreaName>CdsClient</ComponentAreaName>
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
-  <Import Project="..\..\..\..\Build.Common.Core.props" />
+  <Import Project="..\..\..\..\Build.Common.core.props" />
 
   <PropertyGroup>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>

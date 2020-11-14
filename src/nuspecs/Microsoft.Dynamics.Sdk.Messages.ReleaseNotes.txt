@@ -8,7 +8,7 @@ Notice:
         https://docs.microsoft.com/en-us/dotnet/api/microsoft.crm.sdk.messages?view=dynamics-general-ce-9
 
 ++CURRENTRELEASEID++
-    No updates here. 
+    Updated Core CDS Sdk assemblies 
 
 0.2.23-Alpha:
     No updates here. 
