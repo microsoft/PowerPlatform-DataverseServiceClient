@@ -89,31 +89,6 @@ namespace Microsoft.PowerPlatform.Cds.Client
         private bool _disableConnectionLocking = false;
 
         /// <summary>
-        /// MinVersion that supports AAD Caller ID. 
-        /// </summary>
-        private Version _minAADCallerIDSupportedVersion = new Version("8.1.0.0");
-
-        /// <summary>
-        /// MinVersion that supports Session ID Telemetry Tracking. 
-        /// </summary>
-        private Version _minSessionTrackingSupportedVersion = new Version("9.0.2.0");
-
-        /// <summary>
-        /// MinVersion that supports Forcing Cache Sync. 
-        /// </summary>
-        private Version _minForceConsistencySupportedVersion = new Version("9.1.0.0");
-
-        /// <summary>
-        /// Minimum version to allow plugin bypass param. 
-        /// </summary>
-        private Version _minAllowBypassCustomPluginVersion = new Version("9.1.0.20918");
-
-        /// <summary>
-        /// Minimum version supported by the Web API 
-        /// </summary>
-        private Version _minWebAPISupportedVersion = new Version("8.0.0.0");
-
-        /// <summary>
         /// SDK Version property backer. 
         /// </summary>
         public string _sdkVersionProperty = null;
@@ -146,16 +121,6 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// Throttling - ErrorCode for Concurrency Limit Exceeded
         /// </summary>
         private const int ConcurrencyLimitExceededErrorCode = -2147015898;
-
-        /// <summary>
-        /// Parameter used to change the default layering behavior during solution import
-        /// </summary>
-        private const string DESIREDLAYERORDERPARAM = "DesiredLayerOrder";
-
-        /// <summary>
-        /// Parameter used to pass the solution name - Telemetry only
-        /// </summary>
-        private const string SOLUTIONNAMEPARAM = "SolutionName";
 
         /// <summary>
         /// Internal Organization Service Interface used for Testing
@@ -403,6 +368,11 @@ namespace Microsoft.PowerPlatform.Cds.Client
         public EndpointCollection ConnectedOrgPublishedEndpoints { get { if (CdsConnectionSvc != null) return CdsConnectionSvc.ConnectedOrgPublishedEndpoints; else return null; } }
 
         /// <summary>
+        /// OrganizationDetails for the currently connected environment.
+        /// </summary>
+        public OrganizationDetail OrganizationDetail { get { if (CdsConnectionSvc != null) return CdsConnectionSvc.ConnectedOrganizationDetail; else return null; } }
+
+        /// <summary>
         /// This is the connection lock object that is used to control connection access for various threads. This should be used if you are using the CDS queries via Linq to lock the connection 
         /// </summary>
         public object ConnectionLockObject { get { return _lockObject; } }
@@ -463,7 +433,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             }
             set
             {
-                if (CdsConnectionSvc != null && CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion >= _minAADCallerIDSupportedVersion))
+                if (CdsConnectionSvc != null && CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion >= Utilities.CDSFeatureVersionMinimums.AADCallerIDSupported))
                     CdsConnectionSvc.CallerAADObjectId = value;
                 else
                 {
@@ -495,7 +465,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
             set
             {
-                if (CdsConnectionSvc != null && CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion >= _minSessionTrackingSupportedVersion))
+                if (CdsConnectionSvc != null && CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion >= Utilities.CDSFeatureVersionMinimums.SessionTrackingSupported))
                     CdsConnectionSvc.SessionTrackingId = value;
                 else
                 {
@@ -527,7 +497,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             }
             set
             {
-                if (CdsConnectionSvc != null && CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion >= _minForceConsistencySupportedVersion))
+                if (CdsConnectionSvc != null && CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion >= Utilities.CDSFeatureVersionMinimums.ForceConsistencySupported))
                     CdsConnectionSvc.ForceServerCacheConsistency = value;
                 else
                 {
@@ -1054,8 +1024,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     if (fv != null)
                     {
                         Version fileVersion = new Version(fv.ProductVersion);
-                        Version minVersion = new Version("5.0.9688.1533");
-                        if (!(fileVersion >= minVersion))
+                        if (!(fileVersion >= Utilities.CDSFeatureVersionMinimums.CDSVersionForThisAPI))
                         {
                             logEntry.Log("!!WARNING!!! The version of the CDS product assemblies is less than the recommend version for this API; you must use version 5.0.9688.1533 or newer (Newer then the Oct-2011 service release)", TraceEventType.Warning);
                             logEntry.Log(string.Format(CultureInfo.InvariantCulture, "CDS Version found is {0}", fv.ProductVersion), TraceEventType.Warning);
@@ -1137,8 +1106,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                         CACHOBJECNAME = CdsConnectionSvc.ServiceCACHEName + ".LookupCache";
 
                         // Min supported version for batch operations. 
-                        Version minVersion = new Version("5.0.9690.3000");
-                        if (CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion >= minVersion))
+                        if (CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion >= Utilities.CDSFeatureVersionMinimums.BatchOperations))
                             _BatchManager = new BatchManager(logEntry);
                         else
                             logEntry.Log("Batch System disabled, CDS Server does not support this message call", TraceEventType.Information);
@@ -1164,13 +1132,19 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// </summary>
         public IEnumerable<Tuple<DateTime, string>> GetAllLogs()
         {
-            IEnumerable<Tuple<DateTime, string>> source1 = logEntry == null ? Enumerable.Empty<Tuple<DateTime, string>>() : logEntry.Logs;
-            IEnumerable<Tuple<DateTime, string>> source2 = this.CdsConnectionSvc == null
-                ? Enumerable.Empty<Tuple<DateTime, string>>()
-                : this.CdsConnectionSvc.GetAllLogs();
+            var source1 = logEntry == null ? Enumerable.Empty<Tuple<DateTime, string>>() : logEntry.Logs;
+            var source2 = CdsConnectionSvc == null ? Enumerable.Empty<Tuple<DateTime, string>>(): CdsConnectionSvc.GetAllLogs();
             return source1.Union(source2);
         }
 
+        /// <summary>
+        /// Enabled only if InMemoryLogCollectionEnabled is true. 
+        /// Return all logs currently stored for the cdsserviceclient in queue in string list format with [UTCDateTime][LogEntry].
+        /// </summary>
+        public string[] GetAllLogsAsStringList()
+        {
+            return GetAllLogs().OrderBy(x => x.Item1).Select(x => $"[{x.Item1:yyyy-MM-dd HH:mm:ss:fffffff}]{x.Item2}").ToArray();
+        }
 
         /// <summary>
         /// Clone, 'Clones" the current CDS Service client with a new connection to CDS. 
@@ -4818,7 +4792,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             if (batchId != Guid.Empty)
             {
                 // if request should bypass plugin exec.
-                if (bypassPluginExecution && ConnectedOrgVersion >= _minAllowBypassCustomPluginVersion)
+                if (bypassPluginExecution && ConnectedOrgVersion >= Utilities.CDSFeatureVersionMinimums.AllowBypassCustomPlugin)
                     req.Parameters.Add(Utilities.CDSRequestHeaders.BYPASSCUSTOMPLUGINEXECUTION, "true");
 
                 if (IsBatchOperationsAvailable)
@@ -5088,7 +5062,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                         }
                     }
 
-                    if (bypassPluginExecution && ConnectedOrgVersion >= _minAllowBypassCustomPluginVersion)
+                    if (bypassPluginExecution && ConnectedOrgVersion >= Utilities.CDSFeatureVersionMinimums.AllowBypassCustomPlugin)
                     {
                         headers.Add($"{Utilities.CDSRequestHeaders.CDSHEADERPROPERTYPREFIX}{Utilities.CDSRequestHeaders.BYPASSCUSTOMPLUGINEXECUTION}", new List<string>() { "true" });
                     }
@@ -5144,7 +5118,13 @@ namespace Microsoft.PowerPlatform.Cds.Client
                         else if (req is DeleteRequest)
                         {
                             return new DeleteResponse(); 
-                        } else
+                        }
+                        else if (req is UpsertRequest)
+                        {
+                            //var upsertReturn = new UpsertResponse();
+                            return null; 
+                        }
+                        else
                             return null;
                     }
                     else
@@ -5227,14 +5207,62 @@ namespace Microsoft.PowerPlatform.Cds.Client
                 return Guid.Empty;
             }
 
+            // determine if the system is connected to OnPrem
+            bool isConnectedToOnPrem = (CdsConnectionSvc.ConnectedOrganizationDetail != null && string.IsNullOrEmpty(CdsConnectionSvc.ConnectedOrganizationDetail.Geo));
+
             //Extract extra parameters if they exist
             string solutionName = string.Empty;
             LayerDesiredOrder desiredLayerOrder = null;
+            bool? asyncRibbonProcessing = null;
+            EntityCollection componetsToProcess = null;
 
             if (extraParameters != null)
             {
-                solutionName = extraParameters.ContainsKey(SOLUTIONNAMEPARAM) ? extraParameters[SOLUTIONNAMEPARAM].ToString() : string.Empty;
-                desiredLayerOrder = extraParameters.ContainsKey(DESIREDLAYERORDERPARAM) ? extraParameters[DESIREDLAYERORDERPARAM] as LayerDesiredOrder : null;
+                solutionName = extraParameters.ContainsKey(ImportSolutionProperties.SOLUTIONNAMEPARAM) ? extraParameters[ImportSolutionProperties.SOLUTIONNAMEPARAM].ToString() : string.Empty;
+                desiredLayerOrder = extraParameters.ContainsKey(ImportSolutionProperties.DESIREDLAYERORDERPARAM) ? extraParameters[ImportSolutionProperties.DESIREDLAYERORDERPARAM] as LayerDesiredOrder : null;
+                componetsToProcess = extraParameters.ContainsKey(ImportSolutionProperties.COMPONENTPARAMETERSPARAM) ? extraParameters[ImportSolutionProperties.COMPONENTPARAMETERSPARAM] as EntityCollection : null;
+
+                // Pick up the data from the request,  if the request has the AsyncRibbonProcessing flag, pick up the value of it. 
+                asyncRibbonProcessing = extraParameters.ContainsKey(ImportSolutionProperties.ASYNCRIBBONPROCESSING) ? extraParameters[ImportSolutionProperties.ASYNCRIBBONPROCESSING] as bool? : null;
+                // If the value is populated, and t
+                if (asyncRibbonProcessing != null && asyncRibbonProcessing.HasValue)
+                {
+                    if (isConnectedToOnPrem)
+                    {
+                        // Not supported for OnPrem. 
+                        // reset the asyncRibbonProcess to Null. 
+                        this.logEntry.Log($"ImportSolution request contains {ImportSolutionProperties.ASYNCRIBBONPROCESSING} property.  This is not valid for OnPremise deployments and will be removed", TraceEventType.Warning);
+                        asyncRibbonProcessing = null;
+                    }
+                    else
+                    {
+                        if ((CdsConnectionSvc.OrganizationVersion == null) || 
+                        (CdsConnectionSvc.OrganizationVersion != null && CdsConnectionSvc.OrganizationVersion < Utilities.CDSFeatureVersionMinimums.AllowAsyncRibbonProcessing))
+                        {
+                            // Not supported on this version of CDS 
+                            this.logEntry.Log($"ImportSolution request contains {ImportSolutionProperties.ASYNCRIBBONPROCESSING} property.  This request CDS version {Utilities.CDSFeatureVersionMinimums.AllowAsyncRibbonProcessing.ToString()} or above. This property will be removed", TraceEventType.Warning);
+                            asyncRibbonProcessing = null;
+                        }
+                    }
+                }
+
+                if (componetsToProcess != null)
+                {
+                    if (isConnectedToOnPrem)
+                    {
+                        this.logEntry.Log($"ImportSolution request contains {ImportSolutionProperties.COMPONENTPARAMETERSPARAM} property.  This is not valid for OnPremise deployments and will be removed", TraceEventType.Warning);
+                        componetsToProcess = null;
+                    }
+                    else
+                    {
+                        if (CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion <= Utilities.CDSFeatureVersionMinimums.AllowComponetInfoProcessing))
+                        {
+                            // Not supported on this version of CDS 
+                            this.logEntry.Log($"ImportSolution request contains {ImportSolutionProperties.COMPONENTPARAMETERSPARAM} property.  This request CDS version {Utilities.CDSFeatureVersionMinimums.AllowComponetInfoProcessing.ToString()} or above. This property will be removed", TraceEventType.Warning);
+                            componetsToProcess = null;
+                        }
+                    }
+                }
             }
 
             string solutionNameForLogging = string.IsNullOrWhiteSpace(solutionName) ? string.Empty : string.Concat(solutionName, " - ");
@@ -5267,6 +5295,18 @@ namespace Microsoft.PowerPlatform.Cds.Client
                         logEntry.Log(string.Format(CultureInfo.InvariantCulture, "{0}DesiredLayerOrder clause present: Type: {1}, Solutions: {2}", solutionNameForLogging, desiredLayerOrder.Type, solutionsInHint), TraceEventType.Verbose);
                     }
 
+                    if (asyncRibbonProcessing != null && asyncRibbonProcessing == true)
+                    {
+                        SolutionImportRequest.AsyncRibbonProcessing = true;
+                        SolutionImportRequest.SkipQueueRibbonJob = true;
+                        logEntry.Log(string.Format(CultureInfo.InvariantCulture, "{0} AsyncRibbonProcessing: {1}", solutionNameForLogging, true), TraceEventType.Verbose);
+                    }
+
+                    if (componetsToProcess != null)
+                    {
+                        SolutionImportRequest.ComponentParameters = componetsToProcess;
+                    }
+
                     if (IsBatchOperationsAvailable)
                     {
                         // Support for features added in UR12
@@ -5276,8 +5316,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     if (importAsHoldingSolution)  // If Import as Holding is set.. 
                     {
                         // Check for Min version of CDS for support of Import as Holding solution. 
-                        Version minVersion = new Version("7.2.0.9");
-                        if (CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion >= minVersion))
+                        if (CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion >= Utilities.CDSFeatureVersionMinimums.ImportHoldingSolution))
                         {
                             // Use Parameters to add the property here to support the underlying Xrm API on the incorrect version. 
                             SolutionImportRequest.Parameters.Add("HoldingSolution", importAsHoldingSolution);
@@ -5287,7 +5326,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     // Set IsInternalUpgrade flag on request only for upgrade scenario for V9 only.
                     if (isInternalUpgrade)
                     {
-                        if (CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion >= new Version("9.0.0.0")))
+                        if (CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion >= Utilities.CDSFeatureVersionMinimums.InternalUpgradeSolution))
                         {
                             SolutionImportRequest.Parameters["IsInternalUpgrade"] = true;
                         }
@@ -5405,7 +5444,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     }
 
                     // if request should bypass plugin exec.
-                    if (bypassPluginExecution && ConnectedOrgVersion >= _minAllowBypassCustomPluginVersion)
+                    if (bypassPluginExecution && ConnectedOrgVersion >= Utilities.CDSFeatureVersionMinimums.AllowBypassCustomPlugin)
                         req.Parameters.Add(Utilities.CDSRequestHeaders.BYPASSCUSTOMPLUGINEXECUTION, "true");
 
                     logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Execute Command - {0}{1}: RequestID={2} {3}",
@@ -5667,7 +5706,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             //defaultODataHeaders.Add("If-None-Match", "");
 
             // Supported Version Check. 
-            if (!(ConnectedOrgVersion > _minWebAPISupportedVersion))
+            if (!(ConnectedOrgVersion > Utilities.CDSFeatureVersionMinimums.WebAPISupported))
             {
                 logEntry.Log(string.Format("Web API Service is not supported by the CdsServiceClient in {0} version of XRM", ConnectedOrgVersion), TraceEventType.Error, new InvalidOperationException(string.Format("Web API Service is not supported by the CdsServiceClient in {0} version of XRM", ConnectedOrgVersion)));
                 return null;

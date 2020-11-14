@@ -9,6 +9,14 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time. 
 
 ++CURRENTRELEASEID++
+Rerouted all Upsert Request to use OrganizationService API. 
+Added new InMemory Logging Options to support returning Logs captured either as Array of Tuples or a string list. 
+Added new public property for OrganizationDetail Information called "OrganizationDetail" for the currently connected environment.
+Added new enum for ImportSolution additional property options called "ImportSolutionProperties" - this contains valid options for additional properties for the ImportSolution handler
+Fixed an issue with telemetry for the client that was using incorrect format for useragent content
+Updated Core CDS Sdk assemblies 
+
+0.2.24-Alpha:
 Fixed an issue with .Clone not correctly supporting adding telemetry handlers to cloned connections
 
 0.2.23-Alpha:

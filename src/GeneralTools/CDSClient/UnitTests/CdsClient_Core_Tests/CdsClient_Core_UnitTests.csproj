@@ -3,12 +3,12 @@
   <PropertyGroup>
     <ProjectSpecificFx>true</ProjectSpecificFx>
     <!-- only test with one of the Classic and Core frameworks each -->
-    <TargetFrameworks>net462;netcoreapp3.0</TargetFrameworks>
+    <TargetFrameworks>net462;netcoreapp3.1</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
     <ComponentAreaName>CdsClient-Tests</ComponentAreaName>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
-  <Import Project="..\..\..\..\Build.Common.Core.props" />
+  <Import Project="..\..\..\..\Build.Common.core.props" />
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Cds.CoreAssemblies.Internal" Version="$(PackageVersion_CDSServerNuget)" />
@@ -22,6 +22,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Client\Microsoft.PowerPlatform.Cds.Client.csproj" />
     <ProjectReference Include="..\..\Extensions\DynamicsExtension\Microsoft.PowerPlatform.Cds.Client.Dynamics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="TestMaterial\EnvVarsSample_1_0_0_2.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

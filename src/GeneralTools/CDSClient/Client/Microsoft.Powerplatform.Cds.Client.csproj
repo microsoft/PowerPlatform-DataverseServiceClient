@@ -6,7 +6,7 @@
     <SignAssembly>true</SignAssembly>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
-  <Import Project="..\..\..\Build.Common.Core.props" />
+  <Import Project="..\..\..\Build.Common.core.props" />
 
   <PropertyGroup>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>

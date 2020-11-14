@@ -5,7 +5,7 @@
     <SignAssembly>true</SignAssembly>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
-  <Import Project="..\..\..\..\Build.Common.Core.props" />
+  <Import Project="..\..\..\..\Build.Common.core.props" />
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Dynamics.Sdk.Messages.Internal" Version="$(PackageVersion_CDSServerNuget)" />

@@ -22,7 +22,6 @@ namespace CdsClient_Core_UnitTests
         public Guid _DefaultId = Guid.Parse("0A2E187D-0946-4FF8-B894-3391D4569CCC");
         #endregion
 
-
         #region BoilerPlate
         public void SetupMockAndSupport( out Mock<IOrganizationService> moqOrgSvc , out Mock<MoqHttpMessagehander> moqHttpHandler , out CdsServiceClient cdsServiceClient )
         {
@@ -64,6 +63,7 @@ namespace CdsClient_Core_UnitTests
             d.FriendlyName = "DIRECTSET";
             d.OrganizationId = _OrganizationId;
             d.OrganizationVersion = "9.1.2.0";
+            d.Geo = "NAM";
             d.State = OrganizationState.Enabled;
             d.UniqueName = "HOLD";
             d.UrlName = "HOLD";

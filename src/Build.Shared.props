@@ -3,8 +3,8 @@
   <PropertyGroup>
     <PackageVersion_AppInsights>2.9.1</PackageVersion_AppInsights>
     <PackageVersion_Adal>3.19.8</PackageVersion_Adal>
-    <PackageVersion_CdsSdk>4.5.4487</PackageVersion_CdsSdk>
-    <PackageVersion_CDSServerNuget>4.5.4487</PackageVersion_CDSServerNuget>
+    <PackageVersion_CdsSdk>4.6.875-weekly-2011.2</PackageVersion_CdsSdk>
+    <PackageVersion_CDSServerNuget>4.6.875-weekly-2011.2</PackageVersion_CDSServerNuget>
     <PackageVersion_Newtonsoft>10.0.3</PackageVersion_Newtonsoft>
     <PackageVersion_RestClientRuntime>2.3.20</PackageVersion_RestClientRuntime>
     <PackageVersion_XrmSdk>9.0.2.25</PackageVersion_XrmSdk>
@@ -33,7 +33,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(SignAssembly)' == 'true'">
-    <AssemblyOriginatorKeyFile>$(RepoRoot)\build\crmKey\35MSSharedLib1024.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(RepoRoot)\build\crmkey\35MSSharedLib1024.snk</AssemblyOriginatorKeyFile>
     <DelaySign>true</DelaySign>
   </PropertyGroup>
 

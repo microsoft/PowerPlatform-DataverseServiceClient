@@ -16,6 +16,7 @@ using Microsoft.Xrm.Sdk.Metadata;
 using CdsClient_Core_UnitTests;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace CdsClient_Core_Tests
 {
@@ -382,6 +383,36 @@ namespace CdsClient_Core_Tests
             Assert.Equal("account", response);
 
         }
+
+
+        [Fact]
+        public void ImportSolutionTest_AsyncRibbon_ComponetProcessor()
+        {
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
+            ImportSolutionResponse importResponse = new ImportSolutionResponse();
+            orgSvc.Setup(f => f.Execute(It.Is<ImportSolutionRequest>(
+                (p) => 
+                    p.CustomizationFile != null && 
+                    p.AsyncRibbonProcessing.Equals(true) &&
+                    p.ComponentParameters != null))).Returns(importResponse);
+
+            string SampleSolutionPath = Path.Combine("TestMaterial", "EnvVarsSample_1_0_0_2.zip");
+
+            EntityCollection entCollection = new EntityCollection(); 
+
+            Dictionary<string, object> importParams = new Dictionary<string, object>();
+            importParams.Add(ImportSolutionProperties.ASYNCRIBBONPROCESSING, true);
+            importParams.Add(ImportSolutionProperties.COMPONENTPARAMETERSPARAM, entCollection);
+            Guid importId = Guid.Empty;
+            var result = cli.ImportSolutionToCds(SampleSolutionPath, out importId, activatePlugIns: true, extraParameters: importParams);
+
+            Assert.NotEqual(result, Guid.Empty); 
+        }
+
 
         [Fact]
         public void GetEntityTypeCodeTest()

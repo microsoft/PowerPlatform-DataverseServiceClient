@@ -310,6 +310,11 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		internal string InternetProtocalToUse { get { return _InternetProtocalToUse; } set { _InternetProtocalToUse = value; } }
 
 		/// <summary>
+		/// returns the connected organization detail object. 
+		/// </summary>
+		internal OrganizationDetail ConnectedOrganizationDetail { get { return _OrgDetail; } }
+
+		/// <summary>
 		/// 
 		/// </summary>
 		internal AuthenticationType AuthenticationTypeInUse
@@ -1438,11 +1443,14 @@ namespace Microsoft.PowerPlatform.Cds.Client
 						}
 
 						// Add User Agent and request id to send. 
-						string Agent = string.Empty;
+						string Agent = "Unknown";
 						if (AppDomain.CurrentDomain != null)
 						{
 							Agent = AppDomain.CurrentDomain.FriendlyName;
 						}
+						Agent = $"{Agent} (CdsSvcClient:{Environs.FileVersion})";
+
+
 						if (!_httpRequest.Headers.Contains(Utilities.CDSRequestHeaders.USER_AGENT_HTTP_HEADER))
 							_httpRequest.Headers.TryAddWithoutValidation(Utilities.CDSRequestHeaders.USER_AGENT_HTTP_HEADER, string.IsNullOrEmpty(Agent) ? "" : Agent);
 
