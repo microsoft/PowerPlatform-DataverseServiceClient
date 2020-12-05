@@ -115,7 +115,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <param name="eventType"></param>
 		public override void Log(string message, TraceEventType eventType)
 		{
-			TraceEvent(TraceEventType.Information, (int)TraceEventType.Information, message);
+			TraceEvent(eventType, (int)eventType, message);
 			if (eventType == TraceEventType.Error)
 			{
 				Log(message, eventType, new Exception(message));

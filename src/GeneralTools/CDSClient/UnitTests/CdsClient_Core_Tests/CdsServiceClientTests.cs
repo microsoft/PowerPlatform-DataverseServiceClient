@@ -16,7 +16,9 @@ using Microsoft.Xrm.Sdk.Metadata;
 using CdsClient_Core_UnitTests;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Xunit.Abstractions;
 using System.IO;
+using Microsoft.PowerPlatform.Cds.Client.Auth;
 
 namespace CdsClient_Core_Tests
 {
@@ -25,8 +27,18 @@ namespace CdsClient_Core_Tests
         #region SharedVars
 
         TestSupport testSupport = new TestSupport();
-
+        ITestOutputHelper outputListner;
         #endregion
+
+        public CdsClientTests(ITestOutputHelper output)
+        {
+            outputListner = output;
+
+            TraceControlSettings.TraceLevel = System.Diagnostics.SourceLevels.Verbose;
+            TraceConsoleSupport traceConsoleSupport = new TraceConsoleSupport(outputListner);
+            TraceControlSettings.CloseListeners(); 
+            TraceControlSettings.AddTraceListener(traceConsoleSupport);
+        }
 
         [Fact]
         public void ExecuteCrmOrganizationRequest()
@@ -454,5 +466,174 @@ namespace CdsClient_Core_Tests
         //    bool result = cli.CreateOrUpdatePickListElement("account", "name", lst, 1, true);
 
         //}
+
+        #region LiveConnectedTests
+
+        [SkippableConnectionTestAttribute]
+        [Trait("Category", "Live Connect Required")]
+        public void ConnectUsingServiceIdentity_ClientSecret_CtorV1()
+        {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
+            string Conn_AppID = System.Environment.GetEnvironmentVariable("XUNITCONNTESTAPPID");
+            string Conn_Secret = System.Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET");
+            string Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
+
+            // Connection params. 
+            CdsServiceClient client = new CdsServiceClient(new Uri(Conn_Url), Conn_AppID, Conn_Secret, true);
+            Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
+
+            // Validate connection
+            ValidateConnection(client);
+        }
+
+        [SkippableConnectionTestAttribute]
+        [Trait("Category", "Live Connect Required")]
+        public void ConnectUsingServiceIdentity_ClientSecret_CtorV2()
+        {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
+            string Conn_AppID = System.Environment.GetEnvironmentVariable("XUNITCONNTESTAPPID");
+            string Conn_Secret = System.Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET");
+            string Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
+
+            // connection params + secure string. 
+            CdsServiceClient client = new CdsServiceClient(new Uri(Conn_Url), Conn_AppID, CdsServiceClient.MakeSecureString(Conn_Secret), true);
+            Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
+
+            // Validate connection
+            ValidateConnection(client);
+        }
+
+        [SkippableConnectionTestAttribute]
+        [Trait("Category", "Live Connect Required")]
+        public void ConnectUsingServiceIdentity_ClientSecret_ConStr()
+        {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
+            string Conn_AppID = System.Environment.GetEnvironmentVariable("XUNITCONNTESTAPPID");
+            string Conn_Secret = System.Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET");
+            string Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
+
+            // Connection string; 
+            string connStr = $"AuthType=ClientSecret;AppId={Conn_AppID};ClientSecret={Conn_Secret};Url={Conn_Url}";
+            CdsServiceClient client = new CdsServiceClient(connStr);
+            Assert.True(client.IsReady, "Failed to Create Connection via Connection string");
+            
+            // Validate connection
+            ValidateConnection(client);
+        }
+
+
+
+
+        /// <summary>
+        /// This Tests connection for UID/PW via connection string - direct connect.
+        /// </summary>
+        [SkippableConnectionTestAttribute]
+        [Trait("Category", "Live Connect Required")]
+        public void ConnectUsingUserIdentity_UIDPW_ConStr()
+        {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
+            string Conn_UserName = System.Environment.GetEnvironmentVariable("XUNITCONNTESTUSERID");
+            string Conn_PW = System.Environment.GetEnvironmentVariable("XUNITCONNTESTPW");
+            string Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
+
+            // Connection string - Direct connect using Sample ApplicationID's
+            string connStr = $"AuthType=OAuth;Username={Conn_UserName};Password={Conn_PW};Url={Conn_Url};AppId={testSupport._SampleAppID.ToString()};RedirectUri={testSupport._SampleAppRedirect.ToString()};TokenCacheStorePath=c:\\MyTokenCache;LoginPrompt=Never";
+            CdsServiceClient client = new CdsServiceClient(connStr);
+            Assert.True(client.IsReady, "Failed to Create Connection via Connection string");
+            
+            // Validate connection
+            ValidateConnection(client);
+        }
+
+        /// <summary>
+        /// This Tests connection for UID/PW via constructor - uses discovery to locate instance.
+        /// </summary>
+        [SkippableConnectionTestAttribute]
+        [Trait("Category", "Live Connect Required")]
+        public void ConnectUsingUserIdentity_UIDPW_CtorV1_Discovery()
+        {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
+            string Conn_UserName = System.Environment.GetEnvironmentVariable("XUNITCONNTESTUSERID");
+            string Conn_PW = System.Environment.GetEnvironmentVariable("XUNITCONNTESTPW");
+            string Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
+
+            //Connection params. 
+            string onlineRegion = string.Empty;
+            string orgName = string.Empty;
+            bool isOnPrem = false;
+            Utilities.GetOrgnameAndOnlineRegionFromServiceUri(new Uri(Conn_Url), out onlineRegion, out orgName, out isOnPrem);
+
+            Assert.NotNull(onlineRegion);
+            Assert.NotNull(orgName);
+            Assert.False(isOnPrem); 
+
+            Uri orgUri = new Uri(Conn_Url);
+            string hostName = orgUri.Host.Split('.')[0]; 
+
+            CdsServiceClient client = new CdsServiceClient(Conn_UserName, CdsServiceClient.MakeSecureString(Conn_PW), onlineRegion, hostName, true,null, CdsConnectionStringProcessor.sampleClientId, new Uri(CdsConnectionStringProcessor.sampleRedirectUrl), PromptBehavior.Never);
+            Assert.True(client.IsReady, "Failed to Create Connection via Constructor - Discovery");
+
+            // Validate connection
+            ValidateConnection(client);
+        }
+
+        /// <summary>
+        /// This Tests connection for UID/PW via constructor - uses Direct Connect.
+        /// </summary>
+        [SkippableConnectionTestAttribute]
+        [Trait("Category", "Live Connect Required")]
+        public void ConnectUsingUserIdentity_UIDPW_CtorV2()
+        {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
+            string Conn_UserName = System.Environment.GetEnvironmentVariable("XUNITCONNTESTUSERID");
+            string Conn_PW = System.Environment.GetEnvironmentVariable("XUNITCONNTESTPW");
+            string Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
+
+            // Connection params. 
+            CdsServiceClient client = new CdsServiceClient(Conn_UserName, CdsServiceClient.MakeSecureString(Conn_PW),new Uri(Conn_Url), true, CdsConnectionStringProcessor.sampleClientId, new Uri(CdsConnectionStringProcessor.sampleRedirectUrl), PromptBehavior.Never);
+            Assert.True(client.IsReady, "Failed to Create Connection via Constructor - Direct Connect");
+
+            // Validate connection
+            ValidateConnection(client);
+        }
+
+
+        #region connectionValidationHelper
+
+        private void ValidateConnection(CdsServiceClient client)
+        {
+            // Validate it 
+            var rslt = client.Execute(new WhoAmIRequest());
+            Assert.IsType<WhoAmIResponse>(rslt);
+
+            // Clone it. - Validate use
+            using (CdsServiceClient client2 = client.Clone())
+            {
+                rslt = client2.Execute(new WhoAmIRequest());
+                Assert.IsType<WhoAmIResponse>(rslt);
+            }
+
+            // Create clone chain an break linkage. 
+            CdsServiceClient client3 = client.Clone();
+            CdsServiceClient client4 = client3.Clone();
+            rslt = client3.Execute(new WhoAmIRequest());
+            Assert.IsType<WhoAmIResponse>(rslt);
+            // dispose client3 explicitly
+            client3.Dispose();
+            rslt = client4.Execute(new WhoAmIRequest());
+            Assert.IsType<WhoAmIResponse>(rslt);
+            client4.Dispose();
+        }
+
+        #endregion
+
+        #endregion
+
     }
 }

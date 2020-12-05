@@ -17,7 +17,6 @@ using Microsoft.Xrm.Sdk.Discovery;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Xrm.Sdk.WebServiceClient;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -25,6 +24,8 @@ using System.Net.Http;
 using Microsoft.Rest;
 using Microsoft.PowerPlatform.Cds.Client.Utils;
 using Newtonsoft.Json.Linq;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.PowerPlatform.Cds.Client.Auth;
 
 namespace Microsoft.PowerPlatform.Cds.Client
 {
@@ -81,10 +82,10 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// </summary>
         private BatchManager _BatchManager = null;
 
-        /// <summary>
-        /// To cache the token
-        /// </summary>
-        private static CdsServiceClientTokenCache _CdsServiceClientTokenCache;
+        ///// <summary>
+        ///// To cache the token
+        ///// </summary>
+        //private static CdsServiceClientTokenCache _CdsServiceClientTokenCache;
 
         private bool _disableConnectionLocking = false;
 
@@ -284,7 +285,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     CdsConnectionSvc.AuthenticationTypeInUse == AuthenticationType.ExternalTokenManagement ||
                     CdsConnectionSvc.AuthenticationTypeInUse == AuthenticationType.ClientSecret))
                 {
-                    return CdsConnectionSvc.RefreshWebProxyClientToken().Result;
+                    return CdsConnectionSvc.RefreshWebProxyClientTokenAsync().Result;
                 }
                 else
                     return string.Empty;
@@ -612,8 +613,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
         public CdsServiceClient(OrganizationWebProxyClient externalOrgWebProxyClient)
         {
             CreateCdsServiceConnection(null, AuthenticationType.OAuth, string.Empty, string.Empty, string.Empty, null, string.Empty,
-                MakeSecureString(string.Empty), string.Empty, string.Empty, string.Empty, false, false, null, null, string.Empty, null,
-                PromptBehavior.Auto, string.Empty, externalOrgWebProxyClient);
+                MakeSecureString(string.Empty), string.Empty, string.Empty, string.Empty, false, false, null, string.Empty, null,
+                PromptBehavior.Auto, externalOrgWebProxyClient);
         }
 
         /// <summary>
@@ -631,12 +632,15 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
             CreateCdsServiceConnection(
                    null, AuthenticationType.ExternalTokenManagement, string.Empty, string.Empty, string.Empty, null,
-                   string.Empty, null, string.Empty, string.Empty, string.Empty, true, useUniqueInstance, null, null,
-                   string.Empty, null, PromptBehavior.Never, string.Empty, null, string.Empty, StoreName.My, null, instanceUrl);
+                   string.Empty, null, string.Empty, string.Empty, string.Empty, true, useUniqueInstance, null,
+                   string.Empty, null, PromptBehavior.Never, null, string.Empty, StoreName.My, null, instanceUrl);
         }
 
         /// <summary>
-        /// Log in with OAuth for online connections.
+        /// Log in with OAuth for online connections,
+        /// <para>
+        /// Utilizes the discovery system to resolve the correct endpoint to use given the provided server orgName, user name and password. 
+        /// </para>
         /// </summary>
         /// <param name="userId">User Id supplied</param>
         /// <param name="password">Password for login</param>
@@ -644,25 +648,40 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// <param name="orgName">Name of the organization to connect</param>
         /// <param name="useUniqueInstance">if set, will force the system to create a unique connection</param>
         /// <param name="orgDetail">CDS Org Detail object, this is is returned from a query to the CDS Discovery Server service. not required.</param>
-        /// <param name="user">The user identifier.</param>
         /// <param name="clientId">The registered client Id on Azure portal.</param>
         /// <param name="redirectUri">The redirect URI application will be redirected post OAuth authentication.</param>
         /// <param name="promptBehavior">The prompt Behavior.</param>
-        /// <param name="tokenCachePath">The token cache path where token cache file is placed.</param>
-        /// <param name="externalOrgWebProxyClient">The proxy for OAuth.</param>
         /// <param name="useDefaultCreds">(optional) If true attempts login using current user ( Online ) </param>
         public CdsServiceClient(string userId, SecureString password, string regionGeo, string orgName, bool useUniqueInstance, OrganizationDetail orgDetail,
-                UserIdentifier user, string clientId, Uri redirectUri, string tokenCachePath, OrganizationWebProxyClient externalOrgWebProxyClient, PromptBehavior promptBehavior = PromptBehavior.Auto, bool useDefaultCreds = false)
+                string clientId, Uri redirectUri, PromptBehavior promptBehavior = PromptBehavior.Auto, bool useDefaultCreds = false)
         {
-            if ((externalOrgWebProxyClient == null) && (string.IsNullOrEmpty(clientId) || redirectUri == null))
-            {
-                throw new ArgumentOutOfRangeException("authType",
-                    "When using OAuth Authentication without an external specified proxy, you have to specify clientId and redirectUri.");
-            }
             CreateCdsServiceConnection(
                     null, AuthenticationType.OAuth, string.Empty, string.Empty, orgName, null,
-                    userId, password, string.Empty, regionGeo, string.Empty, true, useUniqueInstance, orgDetail, user,
-                    clientId, redirectUri, promptBehavior, tokenCachePath, externalOrgWebProxyClient, useDefaultCreds: useDefaultCreds);
+                    userId, password, string.Empty, regionGeo, string.Empty, true, useUniqueInstance, orgDetail,
+                    clientId, redirectUri, promptBehavior, null, useDefaultCreds: useDefaultCreds);
+        }
+
+        /// <summary>
+        /// Log in with OAuth for online connections,
+        /// <para>
+        /// Will attempt to connect directly to the URL provided for the API endpoint. 
+        /// </para>
+        /// </summary>
+        /// <param name="userId">User Id supplied</param>
+        /// <param name="password">Password for login</param>
+        /// <param name="useUniqueInstance">if set, will force the system to create a unique connection</param>
+        /// <param name="clientId">The registered client Id on Azure portal.</param>
+        /// <param name="redirectUri">The redirect URI application will be redirected post OAuth authentication.</param>
+        /// <param name="promptBehavior">The prompt Behavior.</param>
+        /// <param name="useDefaultCreds">(optional) If true attempts login using current user ( Online ) </param>
+        /// <param name="cdsHostUri">API or Instance URI to access the CDS environment.</param>
+        public CdsServiceClient(string userId, SecureString password, Uri cdsHostUri,  bool useUniqueInstance, 
+                string clientId, Uri redirectUri, PromptBehavior promptBehavior = PromptBehavior.Auto, bool useDefaultCreds = false)
+        {
+            CreateCdsServiceConnection(
+                    null, AuthenticationType.OAuth, string.Empty, string.Empty, null, null,
+                    userId, password, string.Empty, null, string.Empty, true, useUniqueInstance, null,
+                    clientId, redirectUri, promptBehavior, null, useDefaultCreds: useDefaultCreds, instanceUrl: cdsHostUri);
         }
 
         /// <summary>
@@ -671,31 +690,22 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// <param name="userId">User Id supplied</param>
         /// <param name="password">Password for login</param>
         /// <param name="domain">Domain</param>
-        /// <param name="homeRealm">Name of the organization to connect</param>
         /// <param name="hostName">Host name of the server that is hosting the CDS web service</param>
         /// <param name="port">Port number on the CDS Host Server ( usually 444 )</param>
         /// <param name="orgName">Organization name for the CDS Instance.</param>
         /// <param name="useSsl">if true, https:// used</param>
         /// <param name="useUniqueInstance">if set, will force the system to create a unique connection</param>
         /// <param name="orgDetail">CDS Org Detail object, this is returned from a query to the CDS Discovery Server service. not required.</param>
-        /// <param name="user">The user identifier.</param>
         /// <param name="clientId">The registered client Id on Azure portal.</param>
         /// <param name="redirectUri">The redirect URI application will be redirected post OAuth authentication.</param>
         /// <param name="promptBehavior">The prompt Behavior.</param>
-        /// <param name="tokenCachePath">The token cache path where token cache file is placed.</param>
-        /// <param name="externalOrgWebProxyClient">The proxy for OAuth.</param>
-        public CdsServiceClient(string userId, SecureString password, string domain, string homeRealm, string hostName, string port, string orgName, bool useSsl, bool useUniqueInstance,
-                OrganizationDetail orgDetail, UserIdentifier user, string clientId, Uri redirectUri, string tokenCachePath, OrganizationWebProxyClient externalOrgWebProxyClient, PromptBehavior promptBehavior = PromptBehavior.Auto)
+        public CdsServiceClient(string userId, SecureString password, string domain, string hostName, string port, string orgName, bool useSsl, bool useUniqueInstance,
+                OrganizationDetail orgDetail, string clientId, Uri redirectUri, PromptBehavior promptBehavior = PromptBehavior.Auto)
         {
-            if ((externalOrgWebProxyClient == null) && (string.IsNullOrEmpty(clientId) || redirectUri == null))
-            {
-                throw new ArgumentOutOfRangeException("authType",
-                    "When using OAuth Authentication without an external specified proxy, you have to specify clientId and redirectUri.");
-            }
             CreateCdsServiceConnection(
                     null, AuthenticationType.OAuth, hostName, port, orgName, null,
                     userId, password, domain, string.Empty, string.Empty, useSsl, useUniqueInstance, orgDetail,
-                    user, clientId, redirectUri, promptBehavior, tokenCachePath, externalOrgWebProxyClient);
+                    clientId, redirectUri, promptBehavior, null);
         }
 
         /// <summary>
@@ -730,7 +740,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             CreateCdsServiceConnection(
                     null, AuthenticationType.Certificate, string.Empty, string.Empty, orgName, null,
                     string.Empty, null, string.Empty, string.Empty, string.Empty, useSsl, useUniqueInstance, orgDetail,
-                    null, clientId, redirectUri, PromptBehavior.Never, tokenCachePath, null, certificateThumbPrint, certificateStoreName, certificate, instanceUrl);
+                    clientId, redirectUri, PromptBehavior.Never, null, certificateThumbPrint, certificateStoreName, certificate, instanceUrl);
         }
 
 
@@ -746,9 +756,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// <param name="orgDetail">CDS Org Detail object, this is is returned from a query to the CDS Discovery Server service. not required.</param>
         /// <param name="clientId">The registered client Id on Azure portal.</param>
         /// <param name="redirectUri">The redirect URI application will be redirected post OAuth authentication.</param>
-        /// <param name="tokenCachePath">The token cache path where token cache file is placed.</param>
         public CdsServiceClient(X509Certificate2 certificate, StoreName certificateStoreName, string certificateThumbPrint, Uri instanceUrl, bool useUniqueInstance, OrganizationDetail orgDetail,
-                string clientId, Uri redirectUri, string tokenCachePath)
+                string clientId, Uri redirectUri)
         {
             if ((string.IsNullOrEmpty(clientId)))
             {
@@ -764,8 +773,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
             CreateCdsServiceConnection(
                     null, AuthenticationType.Certificate, string.Empty, string.Empty, string.Empty, null,
-                    string.Empty, null, string.Empty, string.Empty, string.Empty, true, useUniqueInstance, orgDetail, null,
-                    clientId, redirectUri, PromptBehavior.Never, tokenCachePath, null, certificateThumbPrint, certificateStoreName, certificate, instanceUrl);
+                    string.Empty, null, string.Empty, string.Empty, string.Empty, true, useUniqueInstance, orgDetail,
+                    clientId, redirectUri, PromptBehavior.Never, null, certificateThumbPrint, certificateStoreName, certificate, instanceUrl);
         }
 
 
@@ -776,14 +785,13 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// <param name="clientId">The registered client Id on Azure portal.</param>
         /// <param name="clientSecret">Client Secret for Client Id.</param>
         /// <param name="useUniqueInstance">Use unique instance or reuse current connection.</param>
-        /// <param name="tokenCachePath">The token cache path where token cache file is placed.</param>
-        public CdsServiceClient(Uri instanceUrl, string clientId, string clientSecret, bool useUniqueInstance, string tokenCachePath)
+        public CdsServiceClient(Uri instanceUrl, string clientId, string clientSecret, bool useUniqueInstance)
         {
             CreateCdsServiceConnection(null,
                 AuthenticationType.ClientSecret,
                 string.Empty, string.Empty, string.Empty, null, string.Empty,
                 MakeSecureString(clientSecret), string.Empty, string.Empty, string.Empty, true, useUniqueInstance,
-                null, null, clientId, null, PromptBehavior.Never, tokenCachePath, null, null, instanceUrl: instanceUrl);
+                null, clientId, null, PromptBehavior.Never, null, null, instanceUrl: instanceUrl);
         }
 
         /// <summary>
@@ -792,15 +800,14 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// <param name="instanceUrl">Direct URL of CDS instance to connect too.</param>
         /// <param name="clientId">The registered client Id on Azure portal.</param>
         /// <param name="clientSecret">Client Secret for Client Id.</param>
-        /// <param name="tokenCachePath">The token cache path where token cache file is placed.</param>
         /// <param name="useUniqueInstance">Use unique instance or reuse current connection.</param>
-        public CdsServiceClient(Uri instanceUrl, string clientId, SecureString clientSecret, bool useUniqueInstance, string tokenCachePath)
+        public CdsServiceClient(Uri instanceUrl, string clientId, SecureString clientSecret, bool useUniqueInstance)
         {
             CreateCdsServiceConnection(null,
                 AuthenticationType.ClientSecret,
                 string.Empty, string.Empty, string.Empty, null, string.Empty,
                 clientSecret, string.Empty, string.Empty, string.Empty, true, useUniqueInstance,
-                null, null, clientId, null, PromptBehavior.Never, tokenCachePath, null, null, instanceUrl: instanceUrl);
+                null, clientId, null, PromptBehavior.Never, null, null, instanceUrl: instanceUrl);
         }
 
         /// <summary>
@@ -857,7 +864,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
                     CreateCdsServiceConnection(null, parsedCdsCon.AuthenticationType, hostname, port, orgName, networkCredentials, userId,
                                                 MakeSecureString(password), domainname, onlineRegion, homesRealm, useSsl, parsedCdsCon.UseUniqueConnectionInstance,
-                                                    null, parsedCdsCon.UserIdentifier, clientId, redirectUri, parsedCdsCon.PromptBehavior, parsedCdsCon.TokenCacheStorePath, instanceUrl: parsedCdsCon.SkipDiscovery ? parsedCdsCon.ServiceUri : null, useDefaultCreds: parsedCdsCon.UseCurrentUser);
+                                                    null, clientId, redirectUri, parsedCdsCon.PromptBehavior, instanceUrl: parsedCdsCon.SkipDiscovery ? parsedCdsCon.ServiceUri : null, useDefaultCreds: parsedCdsCon.UseCurrentUser);
                     break;
                 case AuthenticationType.Certificate:
                     hostname = parsedCdsCon.IsOnPremOauth ? hostname : string.Empty; // 
@@ -876,7 +883,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
                     CreateCdsServiceConnection(null, parsedCdsCon.AuthenticationType, hostname, port, orgName, null, string.Empty,
                                                 null, string.Empty, onlineRegion, string.Empty, useSsl, parsedCdsCon.UseUniqueConnectionInstance,
-                                                    null, null, clientId, redirectUri, PromptBehavior.Never, parsedCdsCon.TokenCacheStorePath, null, parsedCdsCon.CertThumbprint, targetStoreName, instanceUrl: parsedCdsCon.ServiceUri);
+                                                    null, clientId, redirectUri, PromptBehavior.Never, null, parsedCdsCon.CertThumbprint, targetStoreName, instanceUrl: parsedCdsCon.ServiceUri);
 
                     break;
                 case AuthenticationType.ClientSecret:
@@ -891,7 +898,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
                     CreateCdsServiceConnection(null, parsedCdsCon.AuthenticationType, hostname, port, orgName, null, string.Empty,
                                                  MakeSecureString(parsedCdsCon.ClientSecret), string.Empty, onlineRegion, string.Empty, useSsl, parsedCdsCon.UseUniqueConnectionInstance,
-                                                    null, null, clientId, redirectUri, PromptBehavior.Never, parsedCdsCon.TokenCacheStorePath, null, null, instanceUrl: parsedCdsCon.ServiceUri);
+                                                    null, clientId, redirectUri, PromptBehavior.Never, null, null, instanceUrl: parsedCdsCon.ServiceUri);
 
                     break;
             }
@@ -907,8 +914,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
         internal CdsServiceClient(OrganizationWebProxyClient externalOrgWebProxyClient, bool isCloned = true , AuthenticationType orginalAuthType = AuthenticationType.OAuth)
         {
             CreateCdsServiceConnection(null, orginalAuthType, string.Empty, string.Empty, string.Empty, null, string.Empty,
-                MakeSecureString(string.Empty), string.Empty, string.Empty, string.Empty, false, false, null, null, string.Empty, null,
-                PromptBehavior.Auto, string.Empty, externalOrgWebProxyClient, isCloned: isCloned);
+                MakeSecureString(string.Empty), string.Empty, string.Empty, string.Empty, false, false, null, string.Empty, null,
+                PromptBehavior.Auto,  externalOrgWebProxyClient, isCloned: isCloned);
         }
 
 
@@ -930,11 +937,9 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// <param name="useSsl">if true, https:// used</param>
         /// <param name="useUniqueInstance">if set, will force the system to create a unique connection</param>
         /// <param name="orgDetail">CDS Org Detail object, this is is returned from a query to the CDS Discovery Server service. not required.</param>
-        /// <param name="user">The user identifier.</param>
         /// <param name="clientId">Registered Client Id on Azure</param>
         /// <param name="promptBehavior">Default Prompt Behavior</param>
         /// <param name="redirectUri">Registered redirect uri for ADAL to return</param>
-        /// <param name="tokenCachePath">Token cache path where the token shall be stored for persistent storage</param>
         /// <param name="externalOrgWebProxyClient">OAuth related web proxy client</param>
         /// <param name="certificate">Certificate to use during login</param>
         /// <param name="certificateStoreName">StoreName to look in for certificate identified by certificateThumbPrint</param>
@@ -957,11 +962,9 @@ namespace Microsoft.PowerPlatform.Cds.Client
             bool useSsl,
             bool useUniqueInstance,
             OrganizationDetail orgDetail,
-            UserIdentifier user = null,
             string clientId = "",
             Uri redirectUri = null,
             PromptBehavior promptBehavior = PromptBehavior.Auto,
-            string tokenCachePath = "",
             OrganizationWebProxyClient externalOrgWebProxyClient = null,
             string certificateThumbPrint = "",
             StoreName certificateStoreName = StoreName.My,
@@ -980,17 +983,6 @@ namespace Microsoft.PowerPlatform.Cds.Client
             }; 
 
             CdsConnectionSvc = null;
-
-#if (NETCOREAPP3_0 || NETCOREAPP3_1)
-			if (requestedAuthType == AuthenticationType.OAuth)
-			{
-				IsReady = false;
-                Utils.CdsClientConnectionException connExcept = new Utils.CdsClientConnectionException("Unsupported Connection request", 
-                    new NotSupportedException("User/Password flows are not supported in .net core based client at this time."));
-                logEntry.Log(connExcept);
-                throw connExcept; 
-            }
-#endif
 
             // Handel Direct Set from Login control. 
             if (instanceUrl == null && orgDetail != null)
@@ -1050,9 +1042,16 @@ namespace Microsoft.PowerPlatform.Cds.Client
             {
                 if (requestedAuthType == AuthenticationType.ExternalTokenManagement)
                 {
-                    CdsConnectionSvc = new CdsConnectionService(requestedAuthType, instanceUrl, useUniqueInstance, orgDetail, clientId, redirectUri, certificateThumbPrint, certificateStoreName, certificate, tokenCachePath, hostName, port, false, logEntry);
+                    CdsConnectionSvc = new CdsConnectionService(
+                            requestedAuthType, 
+                            instanceUrl, 
+                            useUniqueInstance, 
+                            orgDetail, clientId, 
+                            redirectUri, certificateThumbPrint, 
+                            certificateStoreName, certificate, hostName, port, false,logSink:logEntry);
+
                     if (GetAccessToken != null)
-                        CdsConnectionSvc.GetAccessToken = GetAccessToken;
+                        CdsConnectionSvc.GetAccessTokenAsync = GetAccessToken;
                     else
                     {
                         // Should not get here,  however..
@@ -1065,20 +1064,20 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     if (requestedAuthType == AuthenticationType.OAuth)
                     {
                         if (!String.IsNullOrEmpty(hostName))
-                            CdsConnectionSvc = new CdsConnectionService(requestedAuthType, orgName, userId, password, Geo, useUniqueInstance, orgDetail, user, clientId, redirectUri, promptBehavior, tokenCachePath, hostName, port, true, instanceToConnectToo: instanceUrl, logSink: logEntry, useDefaultCreds: useDefaultCreds);
+                            CdsConnectionSvc = new CdsConnectionService(requestedAuthType, orgName, userId, password, Geo, useUniqueInstance, orgDetail, clientId, redirectUri, promptBehavior, hostName, port, true, instanceToConnectToo: instanceUrl, logSink: logEntry, useDefaultCreds: useDefaultCreds);
                         else
-                            CdsConnectionSvc = new CdsConnectionService(requestedAuthType, orgName, userId, password, Geo, useUniqueInstance, orgDetail, user, clientId, redirectUri, promptBehavior, tokenCachePath, hostName, port, false, instanceToConnectToo: instanceUrl, logSink: logEntry, useDefaultCreds: useDefaultCreds);
+                            CdsConnectionSvc = new CdsConnectionService(requestedAuthType, orgName, userId, password, Geo, useUniqueInstance, orgDetail, clientId, redirectUri, promptBehavior,hostName, port, false, instanceToConnectToo: instanceUrl, logSink: logEntry, useDefaultCreds: useDefaultCreds);
                     }
                     else if (requestedAuthType == AuthenticationType.Certificate)
                     {
-                        CdsConnectionSvc = new CdsConnectionService(requestedAuthType, instanceUrl, useUniqueInstance, orgDetail, clientId, redirectUri, certificateThumbPrint, certificateStoreName, certificate, tokenCachePath, hostName, port, !String.IsNullOrEmpty(hostName), logSink: logEntry);
+                        CdsConnectionSvc = new CdsConnectionService(requestedAuthType, instanceUrl, useUniqueInstance, orgDetail, clientId, redirectUri, certificateThumbPrint, certificateStoreName, certificate, hostName, port, !String.IsNullOrEmpty(hostName), logSink: logEntry);
                     }
                     else if (requestedAuthType == AuthenticationType.ClientSecret)
                     {
                         if (!String.IsNullOrEmpty(hostName))
-                            CdsConnectionSvc = new CdsConnectionService(requestedAuthType, orgName, userId, password, Geo, useUniqueInstance, orgDetail, user, clientId, redirectUri, promptBehavior, tokenCachePath, hostName, port, true, instanceToConnectToo: instanceUrl, logSink: logEntry, useDefaultCreds: useDefaultCreds);
+                            CdsConnectionSvc = new CdsConnectionService(requestedAuthType, orgName, userId, password, Geo, useUniqueInstance, orgDetail, clientId, redirectUri, promptBehavior, hostName, port, true, instanceToConnectToo: instanceUrl, logSink: logEntry, useDefaultCreds: useDefaultCreds);
                         else
-                            CdsConnectionSvc = new CdsConnectionService(requestedAuthType, orgName, userId, password, Geo, useUniqueInstance, orgDetail, user, clientId, redirectUri, promptBehavior, tokenCachePath, hostName, port, false, instanceToConnectToo: instanceUrl, logSink: logEntry, useDefaultCreds: useDefaultCreds);
+                            CdsConnectionSvc = new CdsConnectionService(requestedAuthType, orgName, userId, password, Geo, useUniqueInstance, orgDetail, clientId, redirectUri, promptBehavior, hostName, port, false, instanceToConnectToo: instanceUrl, logSink: logEntry, useDefaultCreds: useDefaultCreds);
                     }
                 }
             }
@@ -1218,22 +1217,19 @@ namespace Microsoft.PowerPlatform.Cds.Client
         #region CDS DiscoveryServerMethods
 
         /// <summary>
-        /// Discovers the organizations.  can be used against regional discoveyr endpoints. 
+        /// Discovers the organizations against an On-Premises deployment.
         /// </summary>
         /// <param name="discoveryServiceUri">The discovery service URI.</param>
         /// <param name="clientCredentials">The client credentials.</param>
-        /// <param name="user">The user identifier.</param>
         /// <param name="clientId">The client Id.</param>
         /// <param name="redirectUri">The redirect uri.</param>
         /// <param name="promptBehavior">The prompt behavior.</param>
-        /// <param name="tokenCachePath">The token cache path where token cache file is placed.</param>
-        /// <param name="isOnPrem">The deployment type: OnPrem or Online.</param>
         /// <param name="authority">The authority provider for OAuth tokens. Unique if any already known.</param>
         /// <param name="useDefaultCreds">(Optional) if specified, tries to use the current user</param>
         /// <returns>A collection of organizations</returns>
-        public static OrganizationDetailCollection DiscoverOrganizations(Uri discoveryServiceUri, ClientCredentials clientCredentials, UserIdentifier user, string clientId, Uri redirectUri, string tokenCachePath, bool isOnPrem, string authority, PromptBehavior promptBehavior = PromptBehavior.Auto, bool useDefaultCreds = false)
+        public static async Task<OrganizationDetailCollection> DiscoverOnPremiseOrganizationsAsync(Uri discoveryServiceUri, ClientCredentials clientCredentials, string clientId, Uri redirectUri, string authority, PromptBehavior promptBehavior = PromptBehavior.Auto, bool useDefaultCreds = false)
         {
-            return CdsConnectionService.DiscoverOrganizations(discoveryServiceUri, clientCredentials, user, clientId, redirectUri, promptBehavior, tokenCachePath, isOnPrem, authority, useDefaultCreds: useDefaultCreds);
+            return await CdsConnectionService.DiscoverOrganizationsAsync(discoveryServiceUri, clientCredentials, clientId, redirectUri, promptBehavior, isOnPrem:true , authority, useDefaultCreds: useDefaultCreds);
         }
 
         /// <summary>
@@ -1241,18 +1237,53 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// </summary>
         /// <param name="discoveryServiceUri">The discovery service URI.</param>
         /// <param name="clientCredentials">The client credentials.</param>
-        /// <param name="user">The user identifier.</param>
         /// <param name="clientId">The client Id.</param>
         /// <param name="redirectUri">The redirect uri.</param>
         /// <param name="promptBehavior">The prompt behavior.</param>
-        /// <param name="tokenCachePath">The token cache path where token cache file is placed.</param>
         /// <param name="isOnPrem">The deployment type: OnPrem or Online.</param>
         /// <param name="authority">The authority provider for OAuth tokens. Unique if any already known.</param>
         /// <param name="useDefaultCreds">(Optional) if specified, tries to use the current user</param>
         /// <returns>A collection of organizations</returns>
-        public static OrganizationDetailCollection DiscoverGlobalOrganizations(Uri discoveryServiceUri, ClientCredentials clientCredentials, UserIdentifier user, string clientId, Uri redirectUri, string tokenCachePath, bool isOnPrem, string authority, PromptBehavior promptBehavior = PromptBehavior.Auto, bool useDefaultCreds = false)
+        public static async Task<OrganizationDetailCollection> DiscoverOnlineOrganizationsAsync(Uri discoveryServiceUri, ClientCredentials clientCredentials, string clientId, Uri redirectUri, bool isOnPrem, string authority, PromptBehavior promptBehavior = PromptBehavior.Auto, bool useDefaultCreds = false)
         {
-            return CdsConnectionService.DiscoverOrganizations(discoveryServiceUri, clientCredentials, user, clientId, redirectUri, promptBehavior, tokenCachePath, isOnPrem, authority, useGlobalDisco: true, useDefaultCreds: useDefaultCreds);
+            return await CdsConnectionService.DiscoverOrganizationsAsync(discoveryServiceUri, clientCredentials, clientId, redirectUri, promptBehavior, isOnPrem, authority, useGlobalDisco: true, useDefaultCreds: useDefaultCreds);
+        }
+
+        /// <summary>
+        ///  Discovers Organizations Using the global discovery service.
+        ///  <para>Provides a User ID / Password flow for authentication to the online discovery system.
+        ///  You can also provide the discovery instance you wish to use, or not pass it.  If you do not specify a discovery region, the commercial global region is used</para>
+        /// </summary>
+        /// <param name="userId">User ID to login with</param>
+        /// <param name="password">Password to use to login with</param>
+        /// <param name="discoServer">(Optional) URI of the discovery server</param>
+        /// <param name="clientId">The client Id.</param>
+        /// <param name="redirectUri">The redirect uri.</param>
+        /// <param name="promptBehavior">The prompt behavior.</param>
+        /// <param name="isOnPrem">The deployment type: OnPrem or Online.</param>
+        /// <param name="authority">The authority provider for OAuth tokens. Unique if any already known.</param>
+        /// <param name="useDefaultCreds">(Optional) if specified, tries to use the current user</param>
+        /// <returns>A collection of organizations</returns>
+        public static async Task<OrganizationDetailCollection> DiscoverOnlineOrganizationsAsync(string userId, string password, string clientId, Uri redirectUri, bool isOnPrem, string authority, PromptBehavior promptBehavior = PromptBehavior.Auto, bool useDefaultCreds = false, Model.CdsDiscoveryServer discoServer = null)
+        {
+            Uri discoveryUriToUse = null;
+            if (discoServer != null && discoServer.RequiresRegionalDiscovery)
+            {
+                // use the specified regional discovery server. 
+                discoveryUriToUse = discoServer.RegionalGlobalDiscoveryServer;
+            }
+            else
+            {
+                // default commercial cloud discovery server
+                discoveryUriToUse = new Uri(CdsConnectionService.GlobalDiscoveryAllInstancesUri);
+            }
+
+            // create credentials. 
+            ClientCredentials clientCredentials = new ClientCredentials();
+            clientCredentials.UserName.UserName = userId;
+            clientCredentials.UserName.Password = password;
+
+            return await CdsConnectionService.DiscoverOrganizationsAsync(discoveryUriToUse, clientCredentials, clientId, redirectUri, promptBehavior, isOnPrem, authority, useGlobalDisco: true, useDefaultCreds: useDefaultCreds);
         }
 
         /// <summary>
@@ -1261,12 +1292,12 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// <param name="discoveryServiceUri">Global discovery base URI to use to connect too,  if null will utilize the commercial Global Discovery Server.</param>
         /// <param name="tokenProviderFunction">Function that will provide access token to the discovery call.</param>
         /// <returns></returns>
-        public static async Task<OrganizationDetailCollection> DiscoverGlobalOrganizations(Func<string,  Task<string>> tokenProviderFunction , Uri discoveryServiceUri = null)
+        public static async Task<OrganizationDetailCollection> DiscoverOnlineOrganizationsAsync(Func<string,  Task<string>> tokenProviderFunction , Uri discoveryServiceUri = null)
         {
             if (discoveryServiceUri == null)
                 discoveryServiceUri = new Uri(CdsConnectionService.GlobalDiscoveryAllInstancesUri); // use commercial GD
 
-            return await CdsConnectionService.DiscoverGlobalOrganizations(discoveryServiceUri, tokenProviderFunction);
+            return await CdsConnectionService.DiscoverGlobalOrganizationsAsync(discoveryServiceUri, tokenProviderFunction);
         }
 
         #endregion
@@ -4369,9 +4400,11 @@ namespace Microsoft.PowerPlatform.Cds.Client
         public static bool RemoveOAuthTokenCache(string tokenCachePath = "")
         {
             //If tokenCachePath is not supplied it will take from the constructor  of token cache and delete the file.
-            if (_CdsServiceClientTokenCache == null)
-                _CdsServiceClientTokenCache = new CdsServiceClientTokenCache(tokenCachePath);
-            return _CdsServiceClientTokenCache.Clear(tokenCachePath);
+            //if (_CdsServiceClientTokenCache == null)
+            //    _CdsServiceClientTokenCache = new CdsServiceClientTokenCache(tokenCachePath);
+            //return _CdsServiceClientTokenCache.Clear(tokenCachePath);
+            //TODO: Update for new Token cache providers. 
+            return false; 
         }
 
         #endregion
@@ -4862,7 +4895,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     queryString = baseQueryString;
             }
 
-            var result = CdsCommand_WebExecute(queryString, body, method, customHeaders, contentType, string.Empty).Result;
+            var result = CdsCommand_WebExecuteAsync(queryString, body, method, customHeaders, contentType, string.Empty).Result;
             if (result == null)
                 throw LastCdsException;
             else
@@ -5094,7 +5127,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     }
 
                     // Execute request 
-                    var sResp = CdsCommand_WebExecute(postUri, bodyOfRequest, methodToExecute, headers, "application/json", logMessageTag).Result;
+                    var sResp = CdsCommand_WebExecuteAsync(postUri, bodyOfRequest, methodToExecute, headers, "application/json", logMessageTag).Result;
                     if (sResp != null && sResp.IsSuccessStatusCode)
                     {
                         if (req is CreateRequest)
@@ -5688,7 +5721,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// <param name="contentType">Content Type to pass in if executing a post request</param>
         /// <param name="requestTrackingId"></param>
         /// <returns></returns>
-        internal async Task<HttpResponseMessage> CdsCommand_WebExecute(string queryString, string body, HttpMethod method, Dictionary<string, List<string>> customHeaders, string contentType, string errorStringCheck, Guid requestTrackingId = default(Guid))
+        internal async Task<HttpResponseMessage> CdsCommand_WebExecuteAsync(string queryString, string body, HttpMethod method, Dictionary<string, List<string>> customHeaders, string contentType, string errorStringCheck, Guid requestTrackingId = default(Guid))
         {
             Stopwatch logDt = new Stopwatch();
             int retryCount = 0;
@@ -5785,7 +5818,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
             // Add authorization header. 
             if (!customHeaders.ContainsKey(Utilities.CDSRequestHeaders.AUTHORIZATION_HEADER))
-                customHeaders.Add(Utilities.CDSRequestHeaders.AUTHORIZATION_HEADER, new List<string>() { string.Format("Bearer {0}", await CdsConnectionSvc.RefreshWebProxyClientToken()) });
+                customHeaders.Add(Utilities.CDSRequestHeaders.AUTHORIZATION_HEADER, new List<string>() { string.Format("Bearer {0}", await CdsConnectionSvc.RefreshWebProxyClientTokenAsync()) });
 
             // Add tracking headers
             // Request id
@@ -5831,7 +5864,18 @@ namespace Microsoft.PowerPlatform.Cds.Client
                         ), TraceEventType.Verbose);
                 try
                 {
-                    resp = await CdsConnectionService.ExecuteHttpRequestAsync(TargetUri.ToString(), method, body: body, customHeaders: customHeaders, logSink: logEntry, contentType: contentType, requestTrackingId: requestTrackingId, sessionTrackingId: SessionTrackingId.HasValue ? SessionTrackingId.Value : Guid.Empty, suppressDebugMessage:true , providedHttpClient:CdsConnectionSvc.WebApiHttpClient).ConfigureAwait(false);
+                    resp = await CdsConnectionService.ExecuteHttpRequestAsync(
+                            TargetUri.ToString(), 
+                            method, 
+                            body: body, 
+                            customHeaders: customHeaders, 
+                            logSink: logEntry, 
+                            contentType: contentType, 
+                            requestTrackingId: requestTrackingId, 
+                            sessionTrackingId: SessionTrackingId.HasValue ? SessionTrackingId.Value : Guid.Empty, 
+                            suppressDebugMessage:true , 
+                            providedHttpClient: CdsConnectionSvc.WebApiHttpClient == null ? ClientServiceProviders.Instance.GetService<IHttpClientFactory>().CreateClient("CdsHttpClientFactory") : CdsConnectionSvc.WebApiHttpClient
+                            ).ConfigureAwait(false);
 
                     logDt.Stop();
                     logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Executed Command - {0}{2}: {4}RequestID={3} : duration={1}",
@@ -6459,8 +6503,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
             {
                 if (disposing)
                 {
-                    if (_CdsServiceClientTokenCache != null)
-                        _CdsServiceClientTokenCache.Dispose();
+                    //if (_CdsServiceClientTokenCache != null)
+                    //    _CdsServiceClientTokenCache.Dispose();
 
 
                     if (logEntry != null)

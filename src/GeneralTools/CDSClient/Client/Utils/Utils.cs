@@ -457,6 +457,26 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
+		/// Creates or Adds scopes and returns the current scope 
+		/// </summary>
+		/// <param name="scopeToAdd"></param>
+		/// <param name="currentScopes"></param>
+		/// <returns></returns>
+		internal static List<string> AddScope(string scopeToAdd, List<string> currentScopes = null)
+		{
+			if (currentScopes == null)
+				currentScopes = new List<string>();
+
+			if (!currentScopes.Contains(scopeToAdd))
+			{
+				currentScopes.Add(scopeToAdd);
+			}
+
+			return currentScopes;
+		}
+
+
+		/// <summary>
 		/// Request Headers used by comms to CDS
 		/// </summary>
 		internal static class CDSRequestHeaders

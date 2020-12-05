@@ -16,7 +16,7 @@ This repository contains the code for the Microsoft.PowerPlatform.Cds.Client and
 This is due to a set of dependencies on nuget packages that are internally available only.  At some point in the future, we will expose the supporting nuget packages when we have updated our server infrastructure to support plugin development on .net core.
 
 
-This encompases the contents of the following nuget packages:
+This encompasses the contents of the following nuget packages:
 
 [Microsoft.PowerPlatform.Cds.Client](https://www.nuget.org/packages/Microsoft.PowerPlatform.Cds.Client)
 -
@@ -39,13 +39,12 @@ Alpha means that we can and will change the api surface, namepaces and behavior 
 
 We encourage you to read the release notes we provide with each nuget packages. As with most of our Nuget packages that are intended as tools or for developer consumption, we extensively comment in release notes. 
 
-At this time: 
+At this time: (12/05/2020)
 The alpha version of the SDK libs supports the following and has the following notices: 
 
 * .net full framework 4.6.2, 4.7.2, 4.8 and .net core 3.0, 3.1 
-* We are supporting only Client Secret / Cert flows for .net core.  On .net framework additionally we support OAuth User flows
-* We are shipping the initial drop using ADAL.net for the Auth Lib.   We MAY change to use MSAL shortly 
-* MSAL would enabled us to support User Interactive flows on .net core. 
+* We now support all authentication types from CrmServiceClient, ( Client\Secret, Client\Cert, UID\PW Noninteractive, UID\PW interactive.)
+* MSAL Port has been completed,  this Lib is now using MSAL 4.3+
 * The Namespaces of areas WILL change.  We do not know what they will change too just yet but they will change before we “release” this.
 * The Assembly Names Will likely change at least once more. 
 * The Message types that are part of the client have been reduced to CDS Core server messages only.  Things like “QualifyLeadRequest” have been removed to their own Nuget package ( Microsoft.Dynamics.Sdk.Messages ) 
