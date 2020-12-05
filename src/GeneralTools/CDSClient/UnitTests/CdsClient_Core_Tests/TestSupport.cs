@@ -20,6 +20,8 @@ namespace CdsClient_Core_UnitTests
         public Guid _BusinessUnitId = Guid.Parse("6446AAF1-8435-4CBD-8872-F81BD0D69444");
         public Guid _OrganizationId = Guid.Parse("D6A74182-AD30-4879-99B4-F85BAA2909E9");
         public Guid _DefaultId = Guid.Parse("0A2E187D-0946-4FF8-B894-3391D4569CCC");
+        public Guid _SampleAppID = Guid.Parse("51f81489-12ee-4a9e-aaae-a2591f45987d");
+        public Uri _SampleAppRedirect = new Uri("app://58145B91-0C36-4500-8554-080854F2AC97");
         #endregion
 
         #region BoilerPlate

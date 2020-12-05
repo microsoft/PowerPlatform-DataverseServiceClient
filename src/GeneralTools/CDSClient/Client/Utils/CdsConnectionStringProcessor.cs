@@ -8,7 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.ServiceModel.Description;
 using Microsoft.PowerPlatform.Cds.Client.Model;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.PowerPlatform.Cds.Client.Auth;
 
 namespace Microsoft.PowerPlatform.Cds.Client
 {
@@ -72,14 +72,14 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			internal set;
 		}
 
-		/// <summary>
-		/// OAuth User Identifier
-		/// </summary>
-		public UserIdentifier UserIdentifier
-		{
-			get;
-			internal set;
-		}
+		///// <summary>
+		///// OAuth User Identifier
+		///// </summary>
+		//public UserIdentifier UserIdentifier
+		//{
+		//	get;
+		//	internal set;
+		//}
 
 		/// <summary>
 		/// Domain of User
@@ -257,7 +257,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				bool.TryParse(requireNewInstance, out useUniqueConnection);
 			UseUniqueConnectionInstance = useUniqueConnection;
 			
-			UserIdentifier = !string.IsNullOrWhiteSpace(UserId) ? new UserIdentifier(UserId, UserIdentifierType.OptionalDisplayableId) : null;
+			//UserIdentifier = !string.IsNullOrWhiteSpace(UserId) ? new UserIdentifier(UserId, UserIdentifierType.OptionalDisplayableId) : null;
 
 			AuthenticationType authenticationType;
 			if (Enum.TryParse(authType, out authenticationType))

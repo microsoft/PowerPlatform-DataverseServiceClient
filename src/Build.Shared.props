@@ -3,6 +3,7 @@
   <PropertyGroup>
     <PackageVersion_AppInsights>2.9.1</PackageVersion_AppInsights>
     <PackageVersion_Adal>3.19.8</PackageVersion_Adal>
+    <PackageVersion_MSAL>4.8.2</PackageVersion_MSAL>
     <PackageVersion_CdsSdk>4.6.875-weekly-2011.2</PackageVersion_CdsSdk>
     <PackageVersion_CDSServerNuget>4.6.875-weekly-2011.2</PackageVersion_CDSServerNuget>
     <PackageVersion_Newtonsoft>10.0.3</PackageVersion_Newtonsoft>

@@ -1,5 +1,4 @@
 using Microsoft.Crm.Sdk.Messages;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Discovery;
@@ -25,6 +24,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using Microsoft.Identity.Client;
+using Microsoft.PowerPlatform.Cds.Client.Auth;
 
 namespace Microsoft.PowerPlatform.Cds.Client
 {
@@ -93,14 +94,10 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		private string _ServiceCACHEName = "Microsoft.PowerPlatform.Cds.Client.CdsService"; // this is the base cache key name that will be used to cache the service. 
 
 		//OAuth Params
-		private static bool _ADALLoggingSet = false;        // Switch to see if we need to add logging. 
-		private static Version _ADALAsmVersion = null;      // Version of the ADAL Lib in use. 
-		private UserIdentifier _user;                       // user to login with
 		private string _clientId;                           // client id to register your application for OAuth
 		private Uri _redirectUri;                           // uri specifying the redirection uri post OAuth auth
 		private PromptBehavior _promptBehavior;             // prompt behavior
 		private string _tokenCachePath;                     // user specified token cache file path  
-		private AuthenticationContext _authenticationContext; // unique authentication context used to login for tenant
 		private string _resource;                           // Resource to connect to
 		private bool _isOnPremOAuth = false;                // Identifies whether the connection is for OnPrem or Online Deployment for OAuth
 		private static string _authority;                   //cached authority reading from credential manager
@@ -113,11 +110,6 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// Defaulted to true.
 		/// </summary>
 		private bool _enableCookieRelay = Utils.AppSettingsHelper.GetAppSetting<bool>("PreferConnectionAffinity", true);
-		
-		/// <summary>
-		/// last Authentication Response from oAuth. 
-		/// </summary>
-		private AuthenticationResult _oAuthar;
 
 		/// <summary>
 		/// TimeSpan used to control the offset of the token reacquire behavior for none user Auth flows. 
@@ -188,12 +180,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// Max connection timeout property 
 		/// </summary>
 		private static TimeSpan _MaxConnectionTimeout = Utils.AppSettingsHelper.GetAppSettingTimeSpan("MaxCdsConnectionTimeOutMinutes", Utils.AppSettingsHelper.TimeSpanFromKey.Minutes, new TimeSpan(0, 0, 2, 0));
-
-		/// <summary>
-		/// Pointer to Host System which can return the access token. 
-		/// </summary>
-		private Func<string> GetAccessTokenFromParent;
-
+		
 		/// <summary>
 		/// Tenant ID
 		/// </summary>
@@ -204,10 +191,34 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// </summary>
 		private string _EnvironmentId;
 
+		/// <summary>
+		/// TestHelper for Testing sim. 
+		/// </summary>
 		private IOrganizationService _testSupportIOrg;
 		#endregion
 
 		#region Properties
+
+		/// ************** MSAL Properties ****************
+
+		/// <summary>
+		/// MSAL Object, Can be either a PublicClient or a Confidential Client, depending on Context. 
+		/// </summary>
+		internal object _MsalAuthClient = null;
+
+		/// <summary>
+		/// This is carries the result of the token authentication flow to optimize token retrieval. 
+		/// </summary>
+		internal AuthenticationResult _authenticationResultContainer = null;
+
+		/// <summary>
+		/// Selected user located as a result, used to optimize token acquire on second round. 
+		/// </summary>
+		internal IAccount _userAccount = null;
+
+		// ********* End MSAL Properties ********
+
+
 		/// <summary>
 		/// When true, indicates the construction is coming from a clone process. 
 		/// </summary>
@@ -259,7 +270,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <summary>
 		///  AAD authentication context
 		/// </summary>
-		internal AuthenticationContext AuthContext { get { return _authenticationContext; } }
+		internal AuthenticationResult AuthContext { get { return _authenticationResultContainer; } }
 
 		/// <summary>
 		/// Cached userid
@@ -332,17 +343,9 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		{
 			get
 			{
-				if (_externalWebClientProxy != null)
-				{
-					if (GetAccessTokenFromParent != null)
-						_externalWebClientProxy.HeaderToken = GetAccessTokenFromParent();
-
-					return _externalWebClientProxy;
-				}
-
 				if (_svcWebClientProxy != null)
 				{
-					RefreshWebProxyClientToken().GetAwaiter().GetResult(); // Only call this if the connection is not null
+					RefreshWebProxyClientTokenAsync().GetAwaiter().GetResult(); // Only call this if the connection is not null
 					try
 					{
 						if (!_svcWebClientProxy.Endpoint.EndpointBehaviors.Contains(typeof(CdsServiceTelemetryBehaviors)))
@@ -485,7 +488,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// Function to call to get access token for the current operation.
 		/// Set based on constructor call and is specifice to the instance of the CdsClient that was created.
 		/// </summary>
-		internal Func<string, Task<string>> GetAccessToken { get; set; }
+		internal Func<string, Task<string>> GetAccessTokenAsync { get; set; }
 
 		/// <summary>
 		/// returns the format string for the baseWebAPI 
@@ -557,9 +560,6 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			UseExternalConnection = true;
 			GenerateCacheKeys(true);
 			_eAuthType = AuthenticationType.OAuth;
-
-			// Setup instance specific httpHandler
-			WebApiHttpClient = new HttpClient(); 
 		}
 
 		/// <summary>
@@ -572,11 +572,9 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <param name="crmOnlineRegion">CrmOnlineRegion</param>
 		/// <param name="useUniqueCacheName">flag that will tell the instance to create a Unique Name for the CRM Cache Objects.</param>
 		/// <param name="orgDetail">CRM Org Detail object, this is is returned from a query to the CRM Discovery Server service. not required.</param>
-		/// <param name="user">Identifies the user who is logging in</param>
 		/// <param name="clientId">Client Id of the registered application.</param>
 		/// <param name="redirectUri">RedirectUri for the application redirecting to</param>
 		/// <param name="promptBehavior">Whether to prompt when no username/password</param>
-		/// <param name="tokenCachePath">Token Cache Path supplied for storing OAuth tokens</param>
 		/// <param name="hostName">Hostname to connect to</param>
 		/// <param name="port">Port to connect to</param>
 		/// <param name="onPrem">Token Cache Path supplied for storing OAuth tokens</param>
@@ -591,11 +589,9 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			string crmOnlineRegion,
 			bool useUniqueCacheName,        // tells the system to create a unique cache name for this instance. 
 			OrganizationDetail orgDetail,
-			UserIdentifier user,            // User Identifier for unique user
 			string clientId,                // The client Id of the client registered with Azure
 			Uri redirectUri,                // The redirectUri telling the redirect login window 
 			PromptBehavior promptBehavior,  // The prompt behavior for ADAL library
-			string tokenCachePath,          // Tells the client connection to bypass all discovery server behaviors and use this detail object
 			string hostName,                // Host name to connect to
 			string port,                    // Port used to connect to
 			bool onPrem,
@@ -624,20 +620,16 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			_LivePass = livePass;
 			_CdsOnlineRegion = crmOnlineRegion;
 			_OrgDetail = orgDetail;
-			_user = user;
 			_clientId = clientId;
 			_redirectUri = redirectUri;
 			_promptBehavior = promptBehavior;
-			_tokenCachePath = tokenCachePath;
+			_tokenCachePath = string.Empty;  //TODO: Remove / Replace
 			_hostname = hostName;
 			_port = port;
 			_isOnPremOAuth = onPrem;
 			_targetInstanceUriToConnectTo = instanceToConnectToo;
 			_isDefaultCredsLoginForOAuth = useDefaultCreds;
 			GenerateCacheKeys(useUniqueCacheName);
-
-			// Setup instance specific httpHandler
-			WebApiHttpClient = new HttpClient();
 		}
 
 		/// <summary>
@@ -648,7 +640,6 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <param name="orgDetail">CRM Org Detail object, this is is returned from a query to the CRM Discovery Server service. not required.</param>
 		/// <param name="clientId">Client Id of the registered application.</param>
 		/// <param name="redirectUri">RedirectUri for the application redirecting to</param>
-		/// <param name="tokenCachePath">Token Cache Path supplied for storing OAuth tokens</param>
 		/// <param name="hostName">Hostname to connect to</param>
 		/// <param name="port">Port to connect to</param>
 		/// <param name="onPrem">Modifies system behavior for ADAL based auth for OnPrem</param>
@@ -667,7 +658,6 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			string certThumbprint,          // thumb print of the certificate to use
 			StoreName certStoreName,        // Where to find the Certificate identified by the thumb print. 
 			X509Certificate2 certifcate,    // loaded and configured certificate to use. 
-			string tokenCachePath,          // Tells the client connection to bypass all discovery server behaviors and use this detail object
 			string hostName,                // Host name to connect to
 			string port,                    // Port used to connect to
 			bool onPrem,
@@ -693,7 +683,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			_OrgDetail = orgDetail;
 			_clientId = clientId;
 			_redirectUri = redirectUri;
-			_tokenCachePath = tokenCachePath;
+			_tokenCachePath = string.Empty;
 			_hostname = hostName;
 			_port = port;
 			_isOnPremOAuth = onPrem;
@@ -701,10 +691,6 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			_certificateThumbprint = certThumbprint;
 			_certificateStoreLocation = certStoreName;
 			GenerateCacheKeys(useUniqueCacheName);
-
-			// Setup instance specific httpHandler
-			WebApiHttpClient = new HttpClient();
-
 		}
 
 		/// <summary>
@@ -730,7 +716,6 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				unqueInstance = true; // this instance is unique. 
 				_authority = string.Empty;
 				_userId = null;
-				_authenticationContext = null;
 				Guid guID = Guid.NewGuid();
 				_ServiceCACHEName = _ServiceCACHEName + guID.ToString(); // Creating a unique instance name for the cache object. 
 			}
@@ -783,7 +768,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			if (ConnectionObject == null)
 			{
 				// No Service found.. Init the Service and try to bring it online. 
-				IOrganizationService LocalCdsSvc = InitCdsService().Result;
+				IOrganizationService LocalCdsSvc = InitCdsServiceAsync().Result;
 				if (LocalCdsSvc == null)
 					return null;
 
@@ -820,7 +805,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// Initialize a Connection to CDS 
 		/// </summary>
 		/// <returns></returns>
-		private async Task<IOrganizationService> InitCdsService()
+		private async Task<IOrganizationService> InitCdsServiceAsync()
 		{
 			// CDS Service Endpoint to work with 
 			IOrganizationService cdsService = null;
@@ -949,13 +934,13 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 								if (_eAuthType == AuthenticationType.OAuth)
 								{
-									orgs = DiscoverOrganizations(uCrmUrl, _UserClientCred, _user, _clientId, _redirectUri, _promptBehavior, _tokenCachePath, true, _authority, logEntry);
+									orgs = await DiscoverOrganizationsAsync(uCrmUrl, _UserClientCred, _clientId, _redirectUri, _promptBehavior, true, _authority, logEntry);
 								}
 								else
 								{
 									if (_eAuthType == AuthenticationType.Certificate)
 									{
-										orgs = DiscoverOrganizations(uCrmUrl, _certificateOfConnection, _clientId, _tokenCachePath, true, _authority, logEntry);
+										orgs = await DiscoverOrganizationsAsync(uCrmUrl, _certificateOfConnection, _clientId, true, _authority, logEntry);
 									}
 								}
 
@@ -985,7 +970,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 								orgDetail = _OrgDetail; // Assign to passed in value. 
 
 							// Try to connect to CRM here. 
-							cdsService = await ConnectAndInitCdsOrgService(orgDetail, true, uUserHomeRealm);
+							cdsService = await ConnectAndInitCdsOrgServiceAsync(orgDetail, true, uUserHomeRealm);
 
 							if (cdsService == null)
 							{
@@ -1037,7 +1022,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 							// Given Direct Url.. connect to the Direct URL
 							if (_targetInstanceUriToConnectTo != null)
 							{
-								cdsService = await DoDirectLogin();
+								cdsService = await DoDirectLoginAsync();
 							}
 						}
 						#endregion
@@ -1060,7 +1045,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 							if (_OrgDetail == null && _targetInstanceUriToConnectTo != null)
 							{
 								// User provided a direct link to login
-								cdsService = await DoDirectLogin();
+								cdsService = await DoDirectLoginAsync();
 							}
 							else
 							{
@@ -1068,14 +1053,14 @@ namespace Microsoft.PowerPlatform.Cds.Client
 								try
 								{
 
-									CdsOrgList orgList = FindCdsDiscoveryServer(onlineServerList);
+									CdsOrgList orgList = await FindCdsDiscoveryServerAsync(onlineServerList);
 
 									if (orgList.OrgsList != null && orgList.OrgsList.Count > 0)
 									{
 										logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Found {0} Org(s)", orgList.OrgsList.Count), TraceEventType.Information);
 										if (orgList.OrgsList.Count == 1)
 										{
-											cdsService = await ConnectAndInitCdsOrgService(orgList.OrgsList.First().OrgDetail, false, null);
+											cdsService = await ConnectAndInitCdsOrgServiceAsync(orgList.OrgsList.First().OrgDetail, false, null);
 											if (cdsService != null)
 											{
 												cdsService = (OrganizationWebProxyClient)cdsService;
@@ -1098,7 +1083,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 												{
 													// Found it .. 
 													logEntry.Log(string.Format(CultureInfo.InvariantCulture, "found User Org = {0} in results", _organization), TraceEventType.Information);
-													cdsService = await ConnectAndInitCdsOrgService(orgDetail.OrgDetail, false, null);
+													cdsService = await ConnectAndInitCdsOrgServiceAsync(orgDetail.OrgDetail, false, null);
 													if (cdsService != null)
 													{
 														cdsService = (OrganizationWebProxyClient)cdsService;
@@ -1208,11 +1193,11 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 		}
 
-		/// <summary>
-		/// Executes a direct login using the current configuration. 
-		/// </summary>
-		/// <returns></returns>
-		private async Task<IOrganizationService> DoDirectLogin()
+        /// <summary>
+        /// Executes a direct login using the current configuration. 
+        /// </summary>
+        /// <returns></returns>
+        private async Task<IOrganizationService> DoDirectLoginAsync()
 		{
 			logEntry.Log("Direct Login Process Started", TraceEventType.Verbose);
 			Stopwatch sw = new Stopwatch();
@@ -1228,7 +1213,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			orgDetail.OrgDetail = new OrganizationDetail();
 			orgDetail.OrgDetail.Endpoints[EndpointType.OrganizationService] = _targetInstanceUriToConnectTo.ToString();
 
-			cdsService = await ConnectAndInitCdsOrgService(orgDetail.OrgDetail, false, null);
+			cdsService = await ConnectAndInitCdsOrgServiceAsync(orgDetail.OrgDetail, false, null);
 			if (cdsService != null)
 			{
 				RefreshInstanceDetails(cdsService, _targetInstanceUriToConnectTo);
@@ -1381,13 +1366,14 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			OrganizationId = sourceClient.ConnectedOrgId;
 			CustomerOrganization = sourceClient.ConnectedOrgUniqueName;
 			_ActualCdsOrgUri = sourceClient.CdsConnectOrgUriActual;
-			GetAccessTokenFromParent = () => sourceClient.CurrentAccessToken;
+			_MsalAuthClient = sourceClient.CdsConnectionSvc._MsalAuthClient;
+			_authenticationResultContainer = sourceClient.CdsConnectionSvc._authenticationResultContainer;
 			TenantId = sourceClient.TenantId;
 			EnvironmentId = sourceClient.EnvironmentId;
-			GetAccessToken = sourceClient.GetAccessToken;
-			_authority = sourceClient.CdsConnectionSvc.AuthContext == null
-							? string.Empty
-							: sourceClient.CdsConnectionSvc.AuthContext.Authority;
+			GetAccessTokenAsync = sourceClient.GetAccessToken;
+			//_authority = sourceClient.CdsConnectionSvc.AuthContext == null
+			//				? string.Empty
+			//				: sourceClient.CdsConnectionSvc.AuthContext.Authority;
 		}
 
 		#region WebAPI Interface Utilities
@@ -1575,6 +1561,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		//		return null;
 		//}
 
+		/*
 		/// <summary>
 		/// Forming version tagged UriBuilder
 		/// </summary>
@@ -1608,6 +1595,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 			return versionTaggedUriBuilder;
 		}
+		
 
 		/// <summary>
 		/// Obtaining authentication context
@@ -1744,23 +1732,23 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			return _authenticationResult;
 		}
 
+		*/
+
 		/// <summary>
 		/// Discovers the organizations (OAuth Specific)
 		/// </summary>
 		/// <param name="discoveryServiceUri">The discovery service uri.</param>
 		/// <param name="clientCredentials">The client credentials.</param>
-		/// <param name="user">The user identifier.</param>
 		/// <param name="clientId">The client id of registered Azure app.</param>
 		/// <param name="redirectUri">The redirect uri.</param>
 		/// <param name="promptBehavior">The prompt behavior for ADAL library.</param>
-		/// <param name="tokenCachePath">The token cache path.</param>
 		/// <param name="isOnPrem">Determines whether onprem or </param>
 		/// <param name="authority">The authority identifying the registered tenant</param>
 		/// <param name="logSink">(optional) Initialized CdsTraceLogger Object</param>
 		/// <param name="useGlobalDisco">Use the global disco path. </param>
 		/// <param name="useDefaultCreds">(optional) If true attempts login using current user</param>
 		/// <returns>The list of organizations discovered.</returns>
-		public static OrganizationDetailCollection DiscoverOrganizations(Uri discoveryServiceUri, ClientCredentials clientCredentials, UserIdentifier user, string clientId, Uri redirectUri, PromptBehavior promptBehavior, string tokenCachePath, bool isOnPrem, string authority, CdsTraceLogger logSink = null, bool useGlobalDisco = false, bool useDefaultCreds = false)
+		internal static async Task<OrganizationDetailCollection> DiscoverOrganizationsAsync(Uri discoveryServiceUri, ClientCredentials clientCredentials, string clientId, Uri redirectUri, PromptBehavior promptBehavior, bool isOnPrem, string authority, CdsTraceLogger logSink = null, bool useGlobalDisco = false, bool useDefaultCreds = false)
 		{
 			bool isLogEntryCreatedLocaly = false;
 			if (logSink == null)
@@ -1773,11 +1761,10 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			{
 				logSink.Log("DiscoverOrganizations - Called using user of MFA Auth for : " + discoveryServiceUri.ToString());
 				if (!useGlobalDisco)
-					return DiscoverOrganizations_Internal(discoveryServiceUri, clientCredentials, null, user, clientId, redirectUri, promptBehavior, tokenCachePath, isOnPrem, authority, useDefaultCreds, logSink);
+					return await DiscoverOrganizations_InternalAsync(discoveryServiceUri, clientCredentials, null, clientId, redirectUri, promptBehavior, isOnPrem, authority, useDefaultCreds, logSink);
 				else
 				{
-					var a = DiscoverGlobalOrganizations(discoveryServiceUri, clientCredentials, null, user, clientId, redirectUri, promptBehavior, tokenCachePath, isOnPrem, authority, logSink, useDefaultCreds: useDefaultCreds);
-					return a;
+					return await DiscoverGlobalOrganizationsAsync(discoveryServiceUri, clientCredentials, null, clientId, redirectUri, promptBehavior, isOnPrem, authority, logSink, useDefaultCreds: useDefaultCreds);
 				}
 
 			}
@@ -1794,13 +1781,12 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <param name="discoveryServiceUri">The discovery service uri.</param>
 		/// <param name="loginCertificate">The certificate to use to login</param>
 		/// <param name="clientId">The client id of registered Azure app.</param>
-		/// <param name="tokenCachePath">The token cache path.</param>
 		/// <param name="isOnPrem">Determines whether onprem or </param>
 		/// <param name="authority">The authority identifying the registered tenant</param>
 		/// <param name="logSink">(optional) Initialized CdsTraceLogger Object</param>
 		/// <param name="useDefaultCreds">(optional) If true, attempts login with current user.</param>
 		/// <returns>The list of organizations discovered.</returns>
-		public static OrganizationDetailCollection DiscoverOrganizations(Uri discoveryServiceUri, X509Certificate2 loginCertificate, string clientId, string tokenCachePath, bool isOnPrem, string authority, CdsTraceLogger logSink = null, bool useDefaultCreds = false)
+		internal static async Task<OrganizationDetailCollection> DiscoverOrganizationsAsync(Uri discoveryServiceUri, X509Certificate2 loginCertificate, string clientId, bool isOnPrem, string authority, CdsTraceLogger logSink = null, bool useDefaultCreds = false)
 		{
 			bool isLogEntryCreatedLocaly = false;
 			if (logSink == null)
@@ -1811,7 +1797,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			try
 			{
 				logSink.Log("DiscoverOrganizations - Called using Certificate Auth for : " + discoveryServiceUri.ToString());
-				return DiscoverOrganizations_Internal(discoveryServiceUri, null, loginCertificate, null, clientId, null, PromptBehavior.Never, tokenCachePath, isOnPrem, authority, useDefaultCreds, logSink);
+				return await DiscoverOrganizations_InternalAsync(discoveryServiceUri, null, loginCertificate, clientId, null, PromptBehavior.Never, isOnPrem, authority, useDefaultCreds, logSink);
 			}
 			finally
 			{
@@ -1828,7 +1814,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <param name="tokenProviderFunction">Pointer to the token provider handler</param>
 		/// <param name="logSink">Logging endpoint (optional)</param>
 		/// <returns>Populated OrganizationDetailCollection or Null.</returns>
-		internal static async Task<OrganizationDetailCollection> DiscoverGlobalOrganizations(Uri discoveryServiceUri, Func<string, Task<string>> tokenProviderFunction , CdsTraceLogger logSink = null)
+		internal static async Task<OrganizationDetailCollection> DiscoverGlobalOrganizationsAsync(Uri discoveryServiceUri, Func<string, Task<string>> tokenProviderFunction , CdsTraceLogger logSink = null)
 		{
 			bool isLogEntryCreatedLocaly = false;
 			if (logSink == null)
@@ -1849,7 +1835,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			{
 				logSink.Log("DiscoverOrganizations - : " + discoveryServiceUri.ToString());
 				string AuthToken = await tokenProviderFunction(discoveryServiceUri.ToString());
-				return await QueryGlobalDiscovery(AuthToken, discoveryServiceUri, logSink); 
+				return await QueryGlobalDiscoveryAsync(AuthToken, discoveryServiceUri, logSink); 
 			}
 			finally
 			{
@@ -1864,19 +1850,16 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <param name="discoveryServiceUri">The discovery service uri.</param>
 		/// <param name="clientCredentials">The client credentials.</param>
 		/// <param name="loginCertificate">The Certificate used to login</param>
-		/// <param name="user">The user identifier.</param>
 		/// <param name="clientId">The client id of registered Azure app.</param>
 		/// <param name="redirectUri">The redirect uri.</param>
 		/// <param name="promptBehavior">The prompt behavior for ADAL library.</param>
-		/// <param name="tokenCachePath">The token cache path.</param>
 		/// <param name="isOnPrem">Determines whether onprem or </param>
 		/// <param name="authority">The authority identifying the registered tenant</param>
 		/// <param name="logSink">(optional) Initialized CdsTraceLogger Object</param>
 		/// <param name="useDefaultCreds">(optional) If true, tries to login with current users credentials</param>
 		/// <returns>The list of organizations discovered.</returns>
-		private static OrganizationDetailCollection DiscoverOrganizations_Internal(Uri discoveryServiceUri, ClientCredentials clientCredentials, X509Certificate2 loginCertificate, UserIdentifier user, string clientId, Uri redirectUri, PromptBehavior promptBehavior, string tokenCachePath, bool isOnPrem, string authority, bool useDefaultCreds = false, CdsTraceLogger logSink = null)
+		private static async Task<OrganizationDetailCollection> DiscoverOrganizations_InternalAsync(Uri discoveryServiceUri, ClientCredentials clientCredentials, X509Certificate2 loginCertificate, string clientId, Uri redirectUri, PromptBehavior promptBehavior, bool isOnPrem, string authority, bool useDefaultCreds = false, CdsTraceLogger logSink = null)
 		{
-			AuthenticationContext authContext = null;
 			bool createdLogSource = false;
 			Stopwatch dtStartQuery = new Stopwatch();
 			try
@@ -1898,7 +1881,11 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				string resource = string.Empty; // not used here..
 
 				// Execute Authentication Request and return token And ServiceURI
-				authToken = ExecuteAuthenticateServiceProcess(discoveryServiceUri, clientCredentials, loginCertificate, user, clientId, redirectUri, promptBehavior, tokenCachePath, isOnPrem, authority, out targetServiceUrl, out authContext, out resource, out user, logSink, useDefaultCreds: useDefaultCreds);
+				IAccount user = null;
+				object msalAuthClientOut = null;
+				ExecuteAuthenticationResults authRequestResult = await AuthProcessor.ExecuteAuthenticateServiceProcessAsync(discoveryServiceUri, clientCredentials, loginCertificate, clientId, redirectUri, promptBehavior, isOnPrem, authority, null, logSink: logSink, useDefaultCreds: useDefaultCreds, addVersionInfoToUri: false);
+				AuthenticationResult authenticationResult = null;
+				authToken = authRequestResult.GetAuthTokenAndProperties(out authenticationResult, out targetServiceUrl, out msalAuthClientOut, out authority, out resource, out user);
 
 				svcDiscoveryProxy = new DiscoveryWebProxyClient(targetServiceUrl);
 				svcDiscoveryProxy.HeaderToken = authToken;
@@ -1935,10 +1922,11 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			{
 				if (dtStartQuery.IsRunning) dtStartQuery.Stop();
 
-				if (authContext != null && authContext.TokenCache is CdsServiceClientTokenCache)
-					((CdsServiceClientTokenCache)authContext.TokenCache).Dispose();
+				//TODO:// UPDATE TOKEN CACHE CLEAN UP.
+				//if (authContext != null && authContext.TokenCache is CdsServiceClientTokenCache)
+				//	((CdsServiceClientTokenCache)authContext.TokenCache).Dispose();
 
-				if (createdLogSource) // Only dispose it if it was created localy. 
+				if (createdLogSource) // Only dispose it if it was created locally. 
 					logSink.Dispose();
 			}
 		}
@@ -1949,20 +1937,17 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <param name="discoveryServiceUri">The discovery service uri.</param>
 		/// <param name="clientCredentials">The client credentials.</param>
 		/// <param name="loginCertificate">The Certificate used to login</param>
-		/// <param name="user">The user identifier.</param>
 		/// <param name="clientId">The client id of registered Azure app.</param>
 		/// <param name="redirectUri">The redirect uri.</param>
 		/// <param name="promptBehavior">The prompt behavior for ADAL library.</param>
-		/// <param name="tokenCachePath">The token cache path.</param>
 		/// <param name="isOnPrem">Determines whether onprem or </param>
 		/// <param name="authority">The authority identifying the registered tenant</param>
 		/// <param name="logSink">(optional) Initialized CdsTraceLogger Object</param>
 		/// <param name="useGlobalDisco">(optional) utilize Global discovery service</param>
 		/// <param name="useDefaultCreds">(optional) if true, attempts login with the current users credentials</param>
 		/// <returns>The list of organizations discovered.</returns>
-		private static OrganizationDetailCollection DiscoverGlobalOrganizations(Uri discoveryServiceUri, ClientCredentials clientCredentials, X509Certificate2 loginCertificate, UserIdentifier user, string clientId, Uri redirectUri, PromptBehavior promptBehavior, string tokenCachePath, bool isOnPrem, string authority, CdsTraceLogger logSink = null, bool useGlobalDisco = false, bool useDefaultCreds = false)
+		private static async Task<OrganizationDetailCollection> DiscoverGlobalOrganizationsAsync(Uri discoveryServiceUri, ClientCredentials clientCredentials, X509Certificate2 loginCertificate, string clientId, Uri redirectUri, PromptBehavior promptBehavior, bool isOnPrem, string authority, CdsTraceLogger logSink = null, bool useGlobalDisco = false, bool useDefaultCreds = false)
 		{
-			AuthenticationContext authContext = null;
 			bool createdLogSource = false;
 			try
 			{
@@ -1999,16 +1984,22 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 				// Execute Authentication Request and return token And ServiceURI
 				//Uri targetResourceRequest = new Uri(string.Format("{0}://{1}/api/discovery/", discoveryServiceUri.Scheme , discoveryServiceUri.DnsSafeHost)); 
-				authToken = ExecuteAuthenticateServiceProcess(authChallengeUri, clientCredentials, loginCertificate, user, clientId, redirectUri, promptBehavior, tokenCachePath, isOnPrem, authority, out targetServiceUrl, out authContext, out resource, out user, logSink, useDefaultCreds: useDefaultCreds, addVersionInfoToUri:false);
+				IAccount user = null;
+				object msalAuthClientOut = null;
+				AuthenticationResult authenticationResult = null;
+				ExecuteAuthenticationResults authRequestResult = await AuthProcessor.ExecuteAuthenticateServiceProcessAsync(authChallengeUri, clientCredentials, loginCertificate, clientId, redirectUri, promptBehavior, isOnPrem, authority, null, logSink:logSink, useDefaultCreds: useDefaultCreds, addVersionInfoToUri:false);
+				authToken = authRequestResult.GetAuthTokenAndProperties(out authenticationResult, out targetServiceUrl, out msalAuthClientOut, out authority, out resource, out user);
+
 
 				// Get the GD Info and return. 
-				return QueryGlobalDiscovery(authToken, discoveryServiceUri, logSink).Result;
+				return await QueryGlobalDiscoveryAsync(authToken, discoveryServiceUri, logSink);
 
 			}
 			finally
 			{
-				if (authContext != null && authContext.TokenCache is CdsServiceClientTokenCache)
-					((CdsServiceClientTokenCache)authContext.TokenCache).Dispose();
+				//TODO: CLEAN UP TOKEN CACHE
+				//if (authContext != null && authContext.TokenCache is CdsServiceClientTokenCache)
+				//	((CdsServiceClientTokenCache)authContext.TokenCache).Dispose();
 
 				if (createdLogSource) // Only dispose it if it was created localy. 
 					logSink.Dispose();
@@ -2022,7 +2013,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <param name="discoveryServiceUri"></param>
 		/// <param name="logSink"></param>
 		/// <returns></returns>
-		private static async Task<OrganizationDetailCollection> QueryGlobalDiscovery(string authToken, Uri discoveryServiceUri, CdsTraceLogger logSink = null)
+		private static async Task<OrganizationDetailCollection> QueryGlobalDiscoveryAsync(string authToken, Uri discoveryServiceUri, CdsTraceLogger logSink = null)
 		{
 			bool createdLogSource = false;
 
@@ -2100,328 +2091,6 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				if (createdLogSource) // Only dispose it if it was created locally. 
 					logSink.Dispose();
 			}
-		}
-
-
-		/// <summary>
-		/// Executes Authentication against a service 
-		/// </summary>
-		/// <param name="serviceUrl"></param>
-		/// <param name="clientCredentials"></param>
-		/// <param name="user"></param>
-		/// <param name="clientId"></param>
-		/// <param name="redirectUri"></param>
-		/// <param name="promptBehavior"></param>
-		/// <param name="tokenCachePath"></param>
-		/// <param name="isOnPrem"></param>
-		/// <param name="authority"></param>
-		/// <param name="targetServiceUrl"></param>
-		/// <param name="authContext"></param>
-		/// <param name="resource"></param>
-		/// <param name="userCert">Certificate of provided to login with</param>
-		/// <param name="userIdent">UserIdent Determined by authentication request</param>
-		/// <param name="logSink">(optional) Initialized CdsTraceLogger Object</param>
-		/// <param name="useDefaultCreds">(optional) if set, tries to login as the current user.</param>
-		/// <param name="clientSecret"></param>
-		/// <param name="addVersionInfoToUri">indicates if the serviceURI should be updated to include the /web?sdk version</param>
-		/// <returns>JWT Token for the requested Resource and user/app</returns>
-		private static string ExecuteAuthenticateServiceProcess(Uri serviceUrl, ClientCredentials clientCredentials, X509Certificate2 userCert, UserIdentifier user, string clientId, Uri redirectUri, PromptBehavior promptBehavior, string tokenCachePath, bool isOnPrem, string authority, out Uri targetServiceUrl, out AuthenticationContext authContext, out string resource, out UserIdentifier userIdent, CdsTraceLogger logSink = null, bool useDefaultCreds = false, SecureString clientSecret = null , bool addVersionInfoToUri = true)
-		{
-			if (!_ADALLoggingSet)
-			{
-				// Attach Logger
-				LoggerCallbackHandler.LogCallback = Utils.ADALLoggerCallBack.Log;
-				_ADALLoggingSet = true;
-
-			}
-
-			string authToken = string.Empty;
-			authContext = null;
-			bool createdLogSource = false;
-			userIdent = user; // Set default property. 
-			try
-			{
-				if (logSink == null)
-				{
-					// when set, the log source is locally created. 
-					createdLogSource = true;
-					logSink = new CdsTraceLogger();
-				}
-
-				string Authority = string.Empty;
-
-				bool clientCredentialsCheck = clientCredentials != null && clientCredentials.UserName != null && !string.IsNullOrEmpty(clientCredentials.UserName.UserName) && !string.IsNullOrEmpty(clientCredentials.UserName.Password);
-				resource = serviceUrl.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped);
-				if (!resource.EndsWith("/"))
-					resource += "/";
-
-				if (addVersionInfoToUri)
-					targetServiceUrl = GetUriBuilderWithVersion(serviceUrl).Uri;
-				else
-					targetServiceUrl = serviceUrl;
-
-				if (!clientCredentialsCheck && !string.IsNullOrWhiteSpace(authority))
-				{
-					//Overriding the tenant specific authority if clientCredentials are null
-					Authority = authority;
-				}
-				else
-				{
-					AuthenticationParameters ap = GetAuthorityFromTargetService(targetServiceUrl, logSink);
-					if (ap != null)
-					{
-						Authority = ap.Authority;
-						if (ap.Resource != null)
-							resource = ap.Resource;
-						else
-							logSink.Log("AuthenticateService - Resource URI is null", TraceEventType.Warning);
-					}
-					else
-						throw new ArgumentNullException("Authority", "Need a non-empty authority");
-				}
-
-				logSink.Log("AuthenticateService - found authority with name " + (string.IsNullOrEmpty(Authority) ? "<Not Provided>" : Authority));
-				logSink.Log("AuthenticateService - found resource with name " + (string.IsNullOrEmpty(resource) ? "<Not Provided>" : resource));
-
-
-				authContext = ObtainAuthenticationContext(Authority, !isOnPrem, tokenCachePath);
-				if (null == authContext)
-				{
-					throw new Exception("Organizations response is not properly initialized.");
-				}
-
-				AuthenticationResult _authenticationResult = null;
-
-				if (userCert != null || clientSecret != null)
-				{
-					if (userCert != null)
-					{
-						// execute certificate flow 
-						logSink.Log("ObtainAccessToken - CERT", TraceEventType.Verbose);
-						_authenticationResult = ObtainAccessToken(authContext, resource, clientId, userCert);
-					}
-					else
-					{
-						if (clientSecret != null)
-						{
-							logSink.Log("ObtainAccessToken - Client Secret", TraceEventType.Verbose);
-#if (NET462 || NET472 || NET48) 
-							_authenticationResult = ObtainAccessToken(authContext, resource, clientId, clientSecret);
-#else
-							_authenticationResult = ObtainAccessToken(authContext, resource, clientId, clientSecret.ToUnsecureString());
-#endif
-						}
-						else
-							throw new Exception("Invalid Cert or Client Secret Auth flow");
-					}
-				}
-				else
-				{
-					// Execute user flows. 
-					if (clientCredentialsCheck && !useDefaultCreds)
-					{
-#if (NET462 || NET472 || NET48) 
-						logSink.Log("ObtainAccessToken - CRED", TraceEventType.Verbose);
-						_authenticationResult = ObtainAccessToken(authContext, resource, clientId, clientCredentials);
-#endif
-					}
-					else
-					{
-						if (useDefaultCreds)
-						{
-							logSink.Log("ObtainAccessToken - DEFAULT CREDS", TraceEventType.Verbose);
-							_authenticationResult = ObtainAccessTokenCurrentUser(authContext, resource, clientId, clientCredentials);
-
-						}
-						else
-						{
-#if (NET462 || NET472 || NET48) 
-							logSink.Log(string.Format("ObtainAccessToken - PROMPT - Behavior: {0}", promptBehavior), TraceEventType.Verbose);
-							_authenticationResult = ObtainAccessToken(authContext, resource, clientId, redirectUri, promptBehavior, user);
-#endif
-						}
-					}
-					//Assigning the authority to ref object to pass back to ConnMgr to store the latest Authority in Credential Manager.
-					authority = authContext.Authority;
-				}
-
-				if (_authenticationResult != null && _authenticationResult.UserInfo != null)
-				{
-					//To use same userId while connecting to OrgService (ConnectAndInitCrmOrgService)
-					_userId = _authenticationResult.UserInfo.DisplayableId;
-
-					// added to deal with N users logging in on the same machine user account. 
-					if (user == null)
-					{
-						if (_authenticationResult.UserInfo.DisplayableId != null)
-							userIdent = new UserIdentifier(_authenticationResult.UserInfo.DisplayableId, UserIdentifierType.RequiredDisplayableId);
-					}
-					else
-						userIdent = user;
-				}
-
-				_authority = authContext.Authority;//To use same authority while connecting to OrgService (ConnectAndInitCrmOrgService)
-
-				if (null == _authenticationResult)
-				{
-					throw new ArgumentNullException("AuthenticationResult", "Need a non-empty authority");
-				}
-				authToken = _authenticationResult.AccessToken;
-			}
-			catch (AggregateException ex)
-			{
-				if (ex.InnerException is AdalException)
-				{
-					ProcessAdalExecption(serviceUrl, clientCredentials, userCert, out user, clientId, redirectUri, promptBehavior, tokenCachePath, isOnPrem, authority, out targetServiceUrl, out authContext, out resource, logSink, useDefaultCreds, out authToken, (AdalException)ex.InnerException);
-				}
-				else
-				{
-					logSink.Log("ERROR REQUESTING Token FROM THE Authentication context - General ADAL Error", TraceEventType.Error, ex);
-					logSink.Log(ex);
-					throw;
-				}
-			}
-			catch (AdalException ex)
-			{ 
-				ProcessAdalExecption(serviceUrl, clientCredentials, userCert, out user, clientId, redirectUri, promptBehavior, tokenCachePath, isOnPrem, authority, out targetServiceUrl, out authContext, out resource, logSink, useDefaultCreds, out authToken, ex);
-			}
-			catch (System.Exception ex)
-			{
-				logSink.Log("ERROR REQUESTING Token FROM THE Authentication context", TraceEventType.Error);
-				logSink.Log(ex);
-				throw;
-			}
-			finally
-			{
-				// Do not dispose the auth context here as its passed back out. 
-
-				if (createdLogSource) // Only dispose it if it was created locally. 
-					logSink.Dispose();
-			}
-			return authToken;
-		}
-
-		/// <summary>
-		/// Process ADAL execption and provide common handlers. 
-		/// </summary>
-		/// <param name="serviceUrl"></param>
-		/// <param name="clientCredentials"></param>
-		/// <param name="userCert"></param>
-		/// <param name="user"></param>
-		/// <param name="clientId"></param>
-		/// <param name="redirectUri"></param>
-		/// <param name="promptBehavior"></param>
-		/// <param name="tokenCachePath"></param>
-		/// <param name="isOnPrem"></param>
-		/// <param name="authority"></param>
-		/// <param name="targetServiceUrl"></param>
-		/// <param name="authContext"></param>
-		/// <param name="resource"></param>
-		/// <param name="logSink"></param>
-		/// <param name="useDefaultCreds"></param>
-		/// <param name="authToken"></param>
-		/// <param name="adalEx"></param>
-		private static void ProcessAdalExecption(Uri serviceUrl, ClientCredentials clientCredentials, X509Certificate2 userCert, out UserIdentifier user, string clientId, Uri redirectUri, PromptBehavior promptBehavior, string tokenCachePath, bool isOnPrem, string authority, out Uri targetServiceUrl, out AuthenticationContext authContext, out string resource, CdsTraceLogger logSink, bool useDefaultCreds, out string authToken, AdalException adalEx)
-		{
-			if (adalEx.ErrorCode.Equals("interaction_required", StringComparison.OrdinalIgnoreCase) ||
-				adalEx.ErrorCode.Equals("user_password_expired", StringComparison.OrdinalIgnoreCase) ||
-				adalEx.ErrorCode.Equals("password_required_for_managed_user", StringComparison.OrdinalIgnoreCase))
-			{
-				logSink.Log("ERROR REQUESTING Token FROM THE Authentication context - USER intervention required", TraceEventType.Warning);
-				// ADAL wants the User to do something,, determine if we are able to see a user
-				if (promptBehavior == PromptBehavior.Always || promptBehavior == PromptBehavior.Auto)
-				{
-					// Switch to MFA user mode..
-					user = new UserIdentifier(clientCredentials.UserName.UserName, UserIdentifierType.OptionalDisplayableId);
-					authToken = ExecuteAuthenticateServiceProcess(serviceUrl, null, userCert, user, clientId, redirectUri, promptBehavior, tokenCachePath, isOnPrem, authority, out targetServiceUrl, out authContext, out resource, out user, logSink, useDefaultCreds: useDefaultCreds);
-				}
-				else
-				{
-					logSink.Log("ERROR REQUESTING Token FROM THE Authentication context - USER intervention required but not permitted by prompt behavior", TraceEventType.Error, adalEx);
-					throw adalEx;
-				}
-			}
-			else
-			{
-				logSink.Log("ERROR REQUESTING Token FROM THE Authentication context - General ADAL Error", TraceEventType.Error, adalEx);
-				throw adalEx;
-			}
-		}
-
-		/// <summary>
-		/// Get the Authority and Support data from the requesting system using a sync call. 
-		/// </summary>
-		/// <param name="targetServiceUrl">Resource URL</param>
-		/// <param name="logSink">Log tracer</param>
-		/// <returns>Populated AuthenticationParameters or null</returns>
-		private static AuthenticationParameters GetAuthorityFromTargetService(Uri targetServiceUrl, CdsTraceLogger logSink)
-		{
-			try
-			{
-				// if using ADAL > 4.x  return.. // else remove oauth2/authorize from the authority
-				if (_ADALAsmVersion == null)
-				{
-					// initial setup to get the ADAL version 
-					var AdalAsm = System.Reflection.Assembly.GetAssembly(typeof(IPlatformParameters));
-					if (AdalAsm != null)
-						_ADALAsmVersion = AdalAsm.GetName().Version;
-				}
-
-				logSink.Log($"GetAuthorityFromTargetService - ADAL Version : {_ADALAsmVersion.ToString()}");
-				AuthenticationParameters foundAuthority;
-				if (_ADALAsmVersion != null && _ADALAsmVersion >= Version.Parse("5.0.0.0"))
-				{
-					foundAuthority = CreateFromUrlAsync(targetServiceUrl);
-				}
-				else
-				{
-					foundAuthority = CreateFromResourceUrlAsync(targetServiceUrl);
-				}
-
-				if (_ADALAsmVersion != null && _ADALAsmVersion > Version.Parse("4.0.0.0"))
-				{
-					foundAuthority.Authority = foundAuthority.Authority.Replace("oauth2/authorize", "");
-				}
-
-				return foundAuthority;
-			}
-			catch (Exception ex)
-			{
-				if (logSink != null)
-				{
-					logSink.Log(ex);
-				}
-				throw ex;
-			}
-
-			//return null;
-		}
-
-		/// <summary>
-		/// Creates authentication parameters from the address of the resource.
-		/// </summary>
-		/// <param name="targetServiceUrl">Resource URL</param>
-		/// <returns>AuthenticationParameters object containing authentication parameters</returns>
-		private static AuthenticationParameters CreateFromResourceUrlAsync(Uri targetServiceUrl)
-		{
-			 var result = (Task<AuthenticationParameters>)typeof(AuthenticationParameters)
-			   .GetMethod("CreateFromResourceUrlAsync").Invoke(null, new[] { targetServiceUrl });
-
-			return result.ConfigureAwait(false).GetAwaiter().GetResult();
-		}
-
-		/// <summary>
-		/// Creates authentication parameters from the address of the resource.
-		/// Invoked for ADAL 5+ which changed the method used to retrieve authentication parameters.
-		/// </summary>
-		/// <param name="targetServiceUrl">Resource URL</param>
-		/// <returns>AuthenticationParameters object containing authentication parameters</returns>
-		private static AuthenticationParameters CreateFromUrlAsync(Uri targetServiceUrl)
-		{
-			var result = (Task<AuthenticationParameters>)typeof(AuthenticationParameters)
-				.GetMethod("CreateFromUrlAsync").Invoke(null, new[] { targetServiceUrl });
-
-			return result.ConfigureAwait(false).GetAwaiter().GetResult(); ;
 		}
 
 		/// <summary>
@@ -2518,7 +2187,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <param name="IsOnPrem">True if called from the OnPrem Branch</param>
 		/// <param name="homeRealmUri"> URI of the users Home Realm or null</param>
 		[SuppressMessage("Microsoft.Usage", "CA9888:DisposeObjectsCorrectly", MessageId = "proxy")]
-		private async Task<IOrganizationService> ConnectAndInitCdsOrgService(OrganizationDetail orgdata, bool IsOnPrem, Uri homeRealmUri)
+		private async Task<IOrganizationService> ConnectAndInitCdsOrgServiceAsync(OrganizationDetail orgdata, bool IsOnPrem, Uri homeRealmUri)
 		{
 			//_ActualOrgDetailUsed = orgdata; 
 			_ActualCdsOrgUri = BuildOrgConnectUri(orgdata);
@@ -2547,28 +2216,26 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			catch { };
 
 			OrganizationWebProxyClient svcWebClientProxy = null;
-			if (_eAuthType == AuthenticationType.OAuth || _eAuthType == AuthenticationType.Certificate || _eAuthType == AuthenticationType.ExternalTokenManagement || _eAuthType == AuthenticationType.ClientSecret)
+			if (_eAuthType == AuthenticationType.OAuth 
+				|| _eAuthType == AuthenticationType.Certificate 
+				|| _eAuthType == AuthenticationType.ExternalTokenManagement 
+				|| _eAuthType == AuthenticationType.ClientSecret)
 			{
 				string resource = string.Empty;
 				string Authority = string.Empty;
 
 				Uri targetServiceUrl = null;
+				
 				string authToken = string.Empty;
-
-				//Creating UserIdentifier with user who got authenticated during DiscoveryService.
-				if (_user == null && _userId != null)
-				{
-					_user = new UserIdentifier(_userId, UserIdentifierType.RequiredDisplayableId);
-				}
 
 				if (_eAuthType == AuthenticationType.ExternalTokenManagement)
 				{
 					// Call External hook here. 
 					try
 					{
-						targetServiceUrl = targetServiceUrl = GetUriBuilderWithVersion(_ActualCdsOrgUri).Uri;
-						if (GetAccessToken != null)
-							authToken = await GetAccessToken(targetServiceUrl.ToString());
+						targetServiceUrl = targetServiceUrl = AuthProcessor.GetUriBuilderWithVersion(_ActualCdsOrgUri).Uri;
+						if (GetAccessTokenAsync != null)
+							authToken = await GetAccessTokenAsync(targetServiceUrl.ToString());
 
 						if (string.IsNullOrEmpty(authToken))
 						{
@@ -2585,7 +2252,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				else
 				{
 					// Execute Authentication Request and return token And ServiceURI
-					authToken = ExecuteAuthenticateServiceProcess(_ActualCdsOrgUri, _UserClientCred, _certificateOfConnection, _user, _clientId, _redirectUri, _promptBehavior, _tokenCachePath, IsOnPrem, _authority, out targetServiceUrl, out _authenticationContext, out _resource, out _user, logEntry, useDefaultCreds: _isDefaultCredsLoginForOAuth, clientSecret: _eAuthType == AuthenticationType.ClientSecret ? _LivePass : null);
+					ExecuteAuthenticationResults authRequestResult = await AuthProcessor.ExecuteAuthenticateServiceProcessAsync(_ActualCdsOrgUri, _UserClientCred, _certificateOfConnection,_clientId, _redirectUri, _promptBehavior, IsOnPrem, _authority, _MsalAuthClient, logEntry, useDefaultCreds: _isDefaultCredsLoginForOAuth, clientSecret: _eAuthType == AuthenticationType.ClientSecret ? _LivePass : null);
+					authToken = authRequestResult.GetAuthTokenAndProperties(out _authenticationResultContainer, out targetServiceUrl, out _MsalAuthClient, out _authority, out _resource, out _userAccount);
 				}
 				_ActualCdsOrgUri = targetServiceUrl;
 				svcWebClientProxy = new OrganizationWebProxyClient(targetServiceUrl, true);
@@ -2731,7 +2399,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// Iterates through the list of CRM online Discovery Servers to find one that knows the user. 
 		/// </summary>
 		/// <param name="onlineServerList"></param>
-		private CdsOrgList FindCdsDiscoveryServer(CdsDiscoveryServers onlineServerList)
+		private async Task<CdsOrgList> FindCdsDiscoveryServerAsync(CdsDiscoveryServers onlineServerList)
 		{
 			CdsOrgList orgsList = new CdsOrgList();
 			OrganizationDetailCollection col = null;
@@ -2751,12 +2419,12 @@ namespace Microsoft.PowerPlatform.Cds.Client
 							if (svr.RegionalGlobalDiscoveryServer == null)
 							{
 								logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Trying Discovery Server, ({1}) URI is = {0}", svr.DiscoveryServer.ToString(), svr.DisplayName), TraceEventType.Information);
-								col = QueryLiveDiscoveryServer(svr.DiscoveryServer); // Defaults to not using GD. 
+								col = await QueryLiveDiscoveryServerAsync(svr.DiscoveryServer); // Defaults to not using GD. 
 							}
 							else
 							{
 								logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Trying Regional Global Discovery Server, ({1}) URI is = {0}", svr.RegionalGlobalDiscoveryServer.ToString(), svr.DisplayName), TraceEventType.Information);
-								QueryOnlineServersList(onlineServerList.OSDPServers, col, orgsList, svr.DiscoveryServer, svr.RegionalGlobalDiscoveryServer);
+								await QueryOnlineServersListAsync(onlineServerList.OSDPServers, col, orgsList, svr.DiscoveryServer, svr.RegionalGlobalDiscoveryServer);
 								//col = QueryLiveDiscoveryServer(svr.DiscoveryServer); // Defaults to not using GD. 
 								return orgsList;
 							}
@@ -2767,12 +2435,12 @@ namespace Microsoft.PowerPlatform.Cds.Client
 							{
 								// OAuth, and GD is allowed. 
 								logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Trying Global Discovery Server ({0}) and filtering to region {1}", GlobalDiscoveryAllInstancesUri, _CdsOnlineRegion), TraceEventType.Information);
-								QueryOnlineServersList(onlineServerList.OSDPServers, col, orgsList, svr.DiscoveryServer);
+								await QueryOnlineServersListAsync(onlineServerList.OSDPServers, col, orgsList, svr.DiscoveryServer);
 								return orgsList;
 							}
 							else
 							{
-								col = QueryLiveDiscoveryServer(svr.DiscoveryServer);
+								col = await QueryLiveDiscoveryServerAsync(svr.DiscoveryServer);
 								if (col != null)
 									AddOrgToOrgList(col, svr.DisplayName, svr.DiscoveryServer, ref orgsList);
 							}
@@ -2787,7 +2455,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				if (_eAuthType == AuthenticationType.OAuth)
 				{
 					// use GD. 
-					col = QueryLiveDiscoveryServer(new Uri(GlobalDiscoveryAllInstancesUri), true);
+					col = await QueryLiveDiscoveryServerAsync(new Uri(GlobalDiscoveryAllInstancesUri), true);
 					if (col != null)
 					{
 						bool isOnPrem = false;
@@ -2800,7 +2468,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 					return orgsList;
 				}
 				else
-					QueryOnlineServersList(onlineServerList.OSDPServers, col, orgsList);
+					await QueryOnlineServersListAsync(onlineServerList.OSDPServers, col, orgsList);
 			}
 			else
 			{
@@ -2822,7 +2490,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <param name="orgsList"></param>
 		/// <param name="trimToDiscoveryUri">Forces the results to be trimmed to this region when present</param>
 		/// <param name="globalDiscoUriToUse">Overriding Global Discovery URI</param>
-		private void QueryOnlineServersList(ObservableCollection<CdsDiscoveryServer> svrs, OrganizationDetailCollection col, CdsOrgList orgsList, Uri trimToDiscoveryUri = null, Uri globalDiscoUriToUse = null)
+		private async Task<bool> QueryOnlineServersListAsync(ObservableCollection<CdsDiscoveryServer> svrs, OrganizationDetailCollection col, CdsOrgList orgsList, Uri trimToDiscoveryUri = null, Uri globalDiscoUriToUse = null)
 		{
 			// CHANGE HERE FOR GLOBAL DISCO ----
 			// Execute Global Discovery
@@ -2832,17 +2500,19 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				logEntry.Log(string.Format("Trying Global Discovery Server, ({1}) URI is = {0}", gdUriToUse.ToString(), "Global Discovery"), TraceEventType.Information);
 				try
 				{
-					col = QueryLiveDiscoveryServer(gdUriToUse, true);
+					col = await QueryLiveDiscoveryServerAsync(gdUriToUse, true);
 				}
 				catch (MessageSecurityException)
 				{
 					logEntry.Log(string.Format("MessageSecurityException while trying to connect Discovery Server, ({1}) URI is = {0}", gdUriToUse.ToString(), "Global Discovery"), TraceEventType.Warning);
 					col = null;
+					return false;
 				}
 				catch (Exception ex)
 				{
 					logEntry.Log(string.Format("Exception while trying to connect Discovery Server, ({1}) URI is = {0}", gdUriToUse.ToString(), "Global Discovery"), TraceEventType.Error, ex);
 					col = null;
+					return false;
 				}
 
 				// if we have results.. add them to the AddOrgToOrgList object. ( need to iterate over the objects to match region to result. ) 
@@ -2871,7 +2541,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 						logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Trying Live Discovery Server, ({1}) URI is = {0}", svr.DiscoveryServer.ToString(), svr.DisplayName), TraceEventType.Information);
 
-						col = QueryLiveDiscoveryServer(svr.DiscoveryServer);
+						col = await QueryLiveDiscoveryServerAsync(svr.DiscoveryServer);
 						if (col != null)
 							AddOrgToOrgList(col, svr.DisplayName, svr.DiscoveryServer, ref orgsList);
 					}
@@ -2879,14 +2549,17 @@ namespace Microsoft.PowerPlatform.Cds.Client
 					{
 						logEntry.Log(string.Format("MessageSecurityException while trying to connect Discovery Server, ({1}) URI is = {0}", svr.DiscoveryServer.ToString(), svr.DisplayName), TraceEventType.Warning);
 						col = null;
+						return false;
 					}
 					catch (Exception)
 					{
 						logEntry.Log(string.Format("Exception while trying to connect Discovery Server, ({1}) URI is = {0}", svr.DiscoveryServer.ToString(), svr.DisplayName), TraceEventType.Error);
 						col = null;
+						return false;
 					}
 				}
 			}
+			return true;
 		}
 
 
@@ -2896,20 +2569,20 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <param name="discoServer"></param>
 		/// <param name="useGlobal">when try, uses global discovery</param>
 		/// <returns></returns>
-		private OrganizationDetailCollection QueryLiveDiscoveryServer(Uri discoServer, bool useGlobal = false)
+		private async Task<OrganizationDetailCollection> QueryLiveDiscoveryServerAsync(Uri discoServer, bool useGlobal = false)
 		{
 			logEntry.Log("QueryLiveDiscoveryServer()", TraceEventType.Start);
 			try
 			{
 				if (_eAuthType == AuthenticationType.OAuth || _eAuthType == AuthenticationType.ClientSecret)
 				{
-					return DiscoverOrganizations(discoServer, _UserClientCred, _user, _clientId, _redirectUri, _promptBehavior, _tokenCachePath, false, _authority, logEntry, useGlobalDisco: useGlobal);
+					return await DiscoverOrganizationsAsync(discoServer, _UserClientCred, _clientId, _redirectUri, _promptBehavior, false, _authority, logEntry, useGlobalDisco: useGlobal);
 				}
 				else
 				{
 					if (_eAuthType == AuthenticationType.Certificate)
 					{
-						return DiscoverOrganizations(discoServer, _certificateOfConnection, _clientId, _tokenCachePath, false, _authority, logEntry);
+						return await DiscoverOrganizationsAsync(discoServer, _certificateOfConnection, _clientId, false, _authority, logEntry);
 					}
 
 					return null; 
@@ -2960,61 +2633,31 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <summary>
 		/// Refresh web proxy client token
 		/// </summary>
-		internal async Task<string> RefreshWebProxyClientToken()
+		internal async Task<string> RefreshWebProxyClientTokenAsync()
 		{
-			if (GetAccessTokenFromParent != null)
-				return GetAccessTokenFromParent();
-
-			if (_authenticationContext != null && !string.IsNullOrEmpty(_resource) && !string.IsNullOrEmpty(_clientId))
+			if (_authenticationResultContainer != null && !string.IsNullOrEmpty(_resource) && !string.IsNullOrEmpty(_clientId))
 			{
-				if (_isCalledbyExecuteRequest && _promptBehavior != PromptBehavior.Never)
-				{
-					_isCalledbyExecuteRequest = false;
-
-#if (NET462 || NET472 || NET48) 
-					// token cache check is skipped here as all userID based flows could require change in MFA or token status at any time, 
-					// thus turning control over to AAD Libs to decide treatment. 
-					var ar = ObtainAccessToken(_authenticationContext, _resource, _clientId, _redirectUri, PromptBehavior.Auto, _user);
-					_oAuthar = ar;
-					_svcWebClientProxy.HeaderToken = ar.AccessToken;
-#endif
-				}
-				else
-				{
-					// Check to see if the token is still valid, it so , abort and send request back. 
-					if (_oAuthar != null && _oAuthar.ExpiresOn.ToUniversalTime() > DateTime.UtcNow.Add(_tokenOffSetTimeSpan))
-						return _oAuthar.AccessToken;
-
-					if (_eAuthType == AuthenticationType.Certificate)
-					{
-						var ar = ObtainAccessToken(_authenticationContext, _resource, _clientId, _certificateOfConnection);
-						_svcWebClientProxy.HeaderToken = ar.AccessToken;
-						_oAuthar = ar;
+				if (_MsalAuthClient is IPublicClientApplication pClient)
+                {
+					// this is a user based application. 
+					if (_isCalledbyExecuteRequest && _promptBehavior != PromptBehavior.Never)
+                    {
+						_isCalledbyExecuteRequest = false;
+						_authenticationResultContainer = await AuthProcessor.ObtainAccessTokenAsync(pClient, _authenticationResultContainer.Scopes.ToList(), _authenticationResultContainer.Account, _promptBehavior, _UserClientCred, _isDefaultCredsLoginForOAuth , logEntry);
 					}
 					else
-					{
-						if (_eAuthType == AuthenticationType.ClientSecret)
-						{
-#if (NET462 || NET472 || NET48) 
-							var ar = ObtainAccessToken(_authenticationContext, _resource, _clientId, _LivePass);
-#else
-							var ar = ObtainAccessToken(_authenticationContext, _resource, _clientId, _LivePass.ToUnsecureString());
-#endif
-							_svcWebClientProxy.HeaderToken = ar.AccessToken;
-							_oAuthar = ar;
-						}
-						else
-						{
-#if (NET462 || NET472 || NET48) 
-							// If is user ID Auth / and prompt behavior is set to Never, then treat as a 'service' connection. 
-							// thus if MFA / or User token status is changed by AAD, then fault out using AAD flows. 
-							var ar = ObtainAccessToken(_authenticationContext, _resource, _clientId, _redirectUri, _promptBehavior, _user);
-							_svcWebClientProxy.HeaderToken = ar.AccessToken;
-							_oAuthar = ar;
-#endif
-						}
+                    {
+						_authenticationResultContainer = await AuthProcessor.ObtainAccessTokenAsync(pClient, _authenticationResultContainer.Scopes.ToList(), _authenticationResultContainer.Account, _promptBehavior, _UserClientCred, _isDefaultCredsLoginForOAuth, logEntry);
 					}
 				}
+				else
+                {
+					if (_MsalAuthClient is IConfidentialClientApplication cClient)
+					{
+						_authenticationResultContainer = await AuthProcessor.ObtainAccessTokenAsync(cClient, _authenticationResultContainer.Scopes.ToList(), logEntry);
+					}
+                }
+				_svcWebClientProxy.HeaderToken = _authenticationResultContainer.AccessToken;
 			}
 
 			if (_eAuthType == AuthenticationType.ExternalTokenManagement)
@@ -3022,8 +2665,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				// Call External hook here. 
 				try
 				{
-					if (GetAccessToken != null)
-						_svcWebClientProxy.HeaderToken = await GetAccessToken(_ActualCdsOrgUri.ToString());
+					if (GetAccessTokenAsync != null)
+						_svcWebClientProxy.HeaderToken = await GetAccessTokenAsync(_ActualCdsOrgUri.ToString());
 					else
 						throw new Exception("External Authentication Requested but not configured correctly. Faulted In Request Access Token 004");
 									  
@@ -3063,14 +2706,15 @@ namespace Microsoft.PowerPlatform.Cds.Client
 						if (logEntry != null)
 							logEntry.Dispose();
 					}
-
-					if (_authenticationContext != null && _authenticationContext.TokenCache != null)
-					{
-						if (_authenticationContext.TokenCache is CdsServiceClientTokenCache)
-						{
-							((CdsServiceClientTokenCache)_authenticationContext.TokenCache).Dispose();
-						}
-					}
+					
+					//TODO: REMOVE ONCE MEM TEST COMPELTES CLEAN. 
+					//if (_authenticationContext != null && _authenticationContext.TokenCache != null)
+					//{
+					//	if (_authenticationContext.TokenCache is CdsServiceClientTokenCache)
+					//	{
+					//		((CdsServiceClientTokenCache)_authenticationContext.TokenCache).Dispose();
+					//	}
+					//}
 
 					if (unqueInstance)
 					{

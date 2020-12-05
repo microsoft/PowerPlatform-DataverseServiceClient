@@ -1,4 +1,4 @@
-﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
+﻿using Microsoft.Identity.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +10,7 @@ namespace Microsoft.PowerPlatform.Cds.Client.Utils
     /// <summary>
     /// This class will be used to support hooking into ADAL 3.x+ Call back logic. 
     /// </summary>
-    internal static class ADALLoggerCallBack
+    internal static class ADALLoggerCallBack 
     {
         private static CdsTraceLogger _logEntry;
 
@@ -33,8 +33,7 @@ namespace Microsoft.PowerPlatform.Cds.Client.Utils
 
             if (!EnabledPIILogging.HasValue)
             {
-                EnabledPIILogging = Utils.AppSettingsHelper.GetAppSetting("LogADALPII", false);
-                LoggerCallbackHandler.PiiLoggingEnabled = EnabledPIILogging.Value;
+                EnabledPIILogging = true;//Utils.AppSettingsHelper.GetAppSetting("LogADALPII", false);
                 _logEntry.Log($"Setting ADAL PII Logging Feature to {EnabledPIILogging.Value}", System.Diagnostics.TraceEventType.Information);
             }
 
@@ -49,7 +48,7 @@ namespace Microsoft.PowerPlatform.Cds.Client.Utils
 
             switch (level)
             {
-                case LogLevel.Information:
+                case LogLevel.Info:
                         _logEntry.Log(message , System.Diagnostics.TraceEventType.Information);
                     break;
                 case LogLevel.Verbose:
@@ -65,5 +64,6 @@ namespace Microsoft.PowerPlatform.Cds.Client.Utils
                     break;
             }
         }
+
     }
 }

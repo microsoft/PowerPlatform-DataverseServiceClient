@@ -1,5 +1,5 @@
 Notice: 
-    This package is an ALPHA release. - Use at your own risk.
+    This package is in a public ALPHA release.
     This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8, .net core 3.0 and 3.1 
     We have not stabilized on NameSpace or Class names with this package as of yet and things will change as we move though the preview.
     General Documentation is the same as CrmServiceClient and can be found here: 
@@ -9,6 +9,23 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time. 
 
 ++CURRENTRELEASEID++
+***** Breaking Changes *****
+
+MSAL Port completed.
+    Auth processes have been ported to MSAL.
+    UserID/PW flows are now enabled on .net core for login where possible ( per AAD security rules and host OS)
+    Auth flow Logging capture is still under development. 
+
+Authentication constructors are now updated to remove some ADAL.net patterns
+Removed Token Cache path from constructors and ignore on connection string at this time
+    Token Cache handle support will be revisited, however if you have a pressing need, we recommend you use the external token management constructor in the mean time and self manage that. 
+    For now, only MSAL In-Memory support will be provided for token cache 
+Refactored to support Shared HTTPClientFactory for WebAPI connections to cut down on some noise for folks that are doing repeated logins. 
+Refactored code a bit to help with clarity on various functional areas. 
+Renamed/Refactored Discovery methods to as Async methods. 
+
+
+0.2.31-Alpha:
 Rerouted all Upsert Request to use OrganizationService API. 
 Added new InMemory Logging Options to support returning Logs captured either as Array of Tuples or a string list. 
 Added new public property for OrganizationDetail Information called "OrganizationDetail" for the currently connected environment.

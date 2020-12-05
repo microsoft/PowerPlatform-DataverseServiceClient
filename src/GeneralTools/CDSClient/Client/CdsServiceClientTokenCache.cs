@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using System.IO;
 using System.Security.Cryptography;
 using System.Diagnostics;
+using Microsoft.Identity.Client;
 
 namespace Microsoft.PowerPlatform.Cds.Client
 {
 	/// <summary>
 	/// Primary implementation of TokenCache
 	/// </summary>
-	internal class CdsServiceClientTokenCache : TokenCache, IDisposable
+	internal class CdsServiceClientTokenCache : IDisposable
 	{
 		private CdsTraceLogger logEntry;
 
@@ -27,7 +27,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// Constructor with Parameter cacheFilePath
 		/// </summary>
 		/// <param name="cacheFilePath"></param>
-		public CdsServiceClientTokenCache(string cacheFilePath)
+		/// <param name="tokenCache"></param>
+		public CdsServiceClientTokenCache(ITokenCache tokenCache , string cacheFilePath)
 		{
 			logEntry = new CdsTraceLogger();
 
@@ -36,18 +37,25 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			{
 				_cacheFilePath = cacheFilePath;
 
-				// Try to encrypt some data to test if Protect is available. 
-				try
-				{
-#pragma warning disable CS0618 // Type or member is obsolete
-					ProtectedData.Protect(this.Serialize(), null, DataProtectionScope.CurrentUser);
-#pragma warning restore CS0618 // Type or member is obsolete
-				}
-				catch (Exception ex)
-				{
-					_UseLocalFileEncryption = false;
-					logEntry.Log("Encryption System not available in this environment", TraceEventType.Warning, ex);
-				}
+				// Register MSAL event handlers.
+				tokenCache.SetBeforeAccess(BeforeAccessNotification);
+				tokenCache.SetAfterAccess(AfterAccessNotification);
+
+				// Need to revist this for adding support for other cache providers: 
+				// https://docs.microsoft.com/en-us/azure/active-directory/develop/msal-net-token-cache-serialization 
+
+				//				// Try to encrypt some data to test if Protect is available. 
+				//				try
+				//				{
+				//#pragma warning disable CS0618 // Type or member is obsolete
+				//					ProtectedData.Protect(this.Serialize(), null, DataProtectionScope.CurrentUser);
+				//#pragma warning restore CS0618 // Type or member is obsolete
+				//				}
+				//				catch (Exception ex)
+				//				{
+				//					_UseLocalFileEncryption = false;
+				//					logEntry.Log("Encryption System not available in this environment", TraceEventType.Warning, ex);
+				//				}
 
 
 				// Create token cache file if one does not already exist.
@@ -92,35 +100,35 @@ namespace Microsoft.PowerPlatform.Cds.Client
 					}
 				}
 
-				// Register ADAL event handlers.
-				this.AfterAccess = AfterAccessNotification;
-				this.BeforeAccess = BeforeAccessNotification;
+				//// Register ADAL event handlers.
+				//this.AfterAccess = AfterAccessNotification;
+				//this.BeforeAccess = BeforeAccessNotification;
 
-				lock (_fileLocker)
-				{
-					try
-					{
-						// Read token from the persistent store and supply it to ADAL's in memory cache.
-						if (_UseLocalFileEncryption)
-#pragma warning disable CS0618 // Type or member is obsolete
-							this.Deserialize(File.Exists(_cacheFilePath) && File.ReadAllBytes(_cacheFilePath).Length != 0
-								? ProtectedData.Unprotect(File.ReadAllBytes(_cacheFilePath), null, DataProtectionScope.CurrentUser)
-								: null);
-#pragma warning restore CS0618 // Type or member is obsolete
-						else
-#pragma warning disable CS0618 // Type or member is obsolete
-							this.Deserialize(File.Exists(_cacheFilePath) && File.ReadAllBytes(_cacheFilePath).Length != 0
-								? File.ReadAllBytes(_cacheFilePath) : null);
-#pragma warning restore CS0618 // Type or member is obsolete
-					}
-					catch (Exception ex)
-					{
-						// Failed to access Local token cache file.. 
-						// Delete it. 
-						logEntry.Log("Failed to access token cache file, resetting the token cache file", TraceEventType.Warning, ex);
-						Clear(_cacheFilePath);
-					}
-				}
+//				lock (_fileLocker)
+//				{
+//					try
+//					{
+//						// Read token from the persistent store and supply it to ADAL's in memory cache.
+//						if (_UseLocalFileEncryption)
+//#pragma warning disable CS0618 // Type or member is obsolete
+//							this.Deserialize(File.Exists(_cacheFilePath) && File.ReadAllBytes(_cacheFilePath).Length != 0
+//								? ProtectedData.Unprotect(File.ReadAllBytes(_cacheFilePath), null, DataProtectionScope.CurrentUser)
+//								: null);
+//#pragma warning restore CS0618 // Type or member is obsolete
+//						else
+//#pragma warning disable CS0618 // Type or member is obsolete
+//							this.Deserialize(File.Exists(_cacheFilePath) && File.ReadAllBytes(_cacheFilePath).Length != 0
+//								? File.ReadAllBytes(_cacheFilePath) : null);
+//#pragma warning restore CS0618 // Type or member is obsolete
+//					}
+//					catch (Exception ex)
+//					{
+//						// Failed to access Local token cache file.. 
+//						// Delete it. 
+//						logEntry.Log("Failed to access token cache file, resetting the token cache file", TraceEventType.Warning, ex);
+//						Clear(_cacheFilePath);
+//					}
+//				}
 			}
 
 		}
@@ -146,7 +154,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			try
 			{
 				//clear in-memory cache.
-				base.Clear();
+				//base.Clear();
 				// check if already exist or not
 				if (File.Exists(deletePath))
 				{
@@ -171,22 +179,18 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <param name="args"></param>
 		private void BeforeAccessNotification(TokenCacheNotificationArgs args)
 		{
-			if (!this.HasStateChanged) return; // if the token state has not changed... skip this step. 
+			if (!args.HasStateChanged) return; // if the token state has not changed... skip this step. 
 
 			lock (_fileLocker)
 			{
 				// Read token from persistent store and supply it to ADAL's in memory cache.
 				if (_UseLocalFileEncryption)
-#pragma warning disable CS0618 // Type or member is obsolete
-					this.Deserialize(File.Exists(_cacheFilePath) && File.ReadAllBytes(_cacheFilePath).Length != 0
+					args.TokenCache.DeserializeMsalV3(File.Exists(_cacheFilePath) && File.ReadAllBytes(_cacheFilePath).Length != 0
 					? ProtectedData.Unprotect(File.ReadAllBytes(_cacheFilePath), null, DataProtectionScope.CurrentUser)
 					: null);
-#pragma warning restore CS0618 // Type or member is obsolete
 				else
-#pragma warning disable CS0618 // Type or member is obsolete
-					this.Deserialize(File.Exists(_cacheFilePath) && File.ReadAllBytes(_cacheFilePath).Length != 0
+					args.TokenCache.DeserializeMsalV3(File.Exists(_cacheFilePath) && File.ReadAllBytes(_cacheFilePath).Length != 0
 					? File.ReadAllBytes(_cacheFilePath) : null);
-#pragma warning restore CS0618 // Type or member is obsolete
 			}
 		}
 
@@ -197,7 +201,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		private void AfterAccessNotification(TokenCacheNotificationArgs args)
 		{
 			// If the access operation resulted in a cache update.
-			if (!this.HasStateChanged) return;
+			if (!args.HasStateChanged) return;
 
 			lock (_fileLocker)
 			{
@@ -205,15 +209,11 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				{
 					// Reflect token changes in the persistent store.
 					if (_UseLocalFileEncryption)
-#pragma warning disable CS0618 // Type or member is obsolete
-						File.WriteAllBytes(_cacheFilePath, ProtectedData.Protect(this.Serialize(), null, DataProtectionScope.CurrentUser));
-#pragma warning restore CS0618 // Type or member is obsolete
+						File.WriteAllBytes(_cacheFilePath, ProtectedData.Protect(args.TokenCache.SerializeMsalV3(), null, DataProtectionScope.CurrentUser));
 					else
-#pragma warning disable CS0618 // Type or member is obsolete
-						File.WriteAllBytes(_cacheFilePath, this.Serialize());
-#pragma warning restore CS0618 // Type or member is obsolete
+						File.WriteAllBytes(_cacheFilePath, args.TokenCache.SerializeMsalV3());
 					// once the write operation took place, restore the HasStateChanged bit to false.
-					this.HasStateChanged = false;
+					//args.HasStateChanged = false;
 				}
 				catch (Exception exception)
 				{
