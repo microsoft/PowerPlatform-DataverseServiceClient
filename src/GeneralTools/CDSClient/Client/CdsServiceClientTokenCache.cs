@@ -19,7 +19,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		private object _fileLocker = new object();
 		/// <summary>
 		/// Flag to control if the protected data API should be used.
-		/// this flag needs to be disabled if running under Azure WebApp contexts as they do not provide access to the encryption feature. 
+		/// this flag needs to be disabled if running under Azure WebApp contexts as they do not provide access to the encryption feature.
 		/// </summary>
 		private bool _UseLocalFileEncryption = true;
 
@@ -226,7 +226,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		private bool disposedValue = false; // To detect redundant calls
 
 		/// <summary>
-		/// Cleaning up the object. 
+		/// Cleaning up the object.
 		/// </summary>
 		/// <param name="disposing"></param>
 		protected virtual void Dispose(bool disposing)

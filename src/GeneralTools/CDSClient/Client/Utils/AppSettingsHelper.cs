@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Microsoft.PowerPlatform.Cds.Client.Utils
 {
 	/// <summary>
-	/// Manages reading settings from app.config of associated files. 
+	/// Manages reading settings from app.config of associated files.
 	/// </summary>
 	internal static class AppSettingsHelper
 	{
@@ -38,7 +38,7 @@ namespace Microsoft.PowerPlatform.Cds.Client.Utils
 					isLogEntryCreatedLocaly = true;
 				}
 				logSink.Log($"Failed to read {key} from AppSettings, failed with message: {ex.Message}.  Using default value", System.Diagnostics.TraceEventType.Warning);
-				return defaultValue; 
+				return defaultValue;
 			}
 			finally
 			{
@@ -60,7 +60,7 @@ namespace Microsoft.PowerPlatform.Cds.Client.Utils
 		}
 
 		/// <summary>
-		/// Picks up a string value from the app config and converts it to the string value version based on the format provided. 
+		/// Picks up a string value from the app config and converts it to the string value version based on the format provided.
 		/// </summary>
 		/// <param name="key">Key to lookup from the appconfig</param>
 		/// <param name="format">TimeSpan format to convert from ( "d" = days, "m" = Minuets , "h" = hours , "s" = seconds , "ms" = Milliseconds ) </param>
@@ -114,7 +114,7 @@ namespace Microsoft.PowerPlatform.Cds.Client.Utils
 		}
 
 		/// <summary>
-		/// Formatting Value for Text to TimeSpan conversion. 
+		/// Formatting Value for Text to TimeSpan conversion.
 		/// </summary>
 		public enum TimeSpanFromKey
 		{

@@ -142,7 +142,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// returns ( if possible ) the org detail for a given organization name from the list of orgs in discovery 
+		/// returns ( if possible ) the org detail for a given organization name from the list of orgs in discovery
 		/// </summary>
 		/// <param name="orgList">OrgList to Parse though</param>
 		/// <param name="organizationName">Name to find</param>
@@ -163,7 +163,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// returns ( if possible ) the org detail for a given organization name from the list of orgs in discovery 
+		/// returns ( if possible ) the org detail for a given organization name from the list of orgs in discovery
 		/// </summary>
 		/// <param name="orgList">OrgList to Parse though</param>
 		/// <param name="organizationName">Name to find</param>
@@ -184,7 +184,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Parses an OrgURI to determine what the supporting discovery server is. 
+		/// Parses an OrgURI to determine what the supporting discovery server is.
 		/// </summary>
 		/// <param name="serviceUri">Service Uri to parse</param>
 		/// <param name="Geo">Geo Code for region (Optional)</param>
@@ -196,7 +196,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			if (IsValidOnlineHost(serviceUri))
 			{
 				// Check for Geo code and to make sure that the region is not on our internal list. 
-				if (!string.IsNullOrEmpty(Geo) 
+				if (!string.IsNullOrEmpty(Geo)
 					&& !(serviceUri.Host.ToUpperInvariant().Contains("CRMLIVETIE.COM")
 					|| serviceUri.Host.ToUpperInvariant().Contains("CRMLIVETODAY.COM"))
 					)
@@ -246,7 +246,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			else
 			{
 				isOnPrem = true;
-				return null; 
+				return null;
 			}
 			return null;
 
@@ -287,7 +287,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 		/// <summary>
 		/// Determines if the request type can be translated to WebAPI
-		/// This is a temp method to support the staged transition to the webAPI and will be removed or reintegrated with the overall pipeline at some point in the future. 
+		/// This is a temp method to support the staged transition to the webAPI and will be removed or reintegrated with the overall pipeline at some point in the future.
 		/// </summary>
 		/// <param name="req"></param>
 		/// <returns></returns>
@@ -314,7 +314,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			}
 		}
 		/// <summary>
-		/// Parses an attribute array into a object that can be used to create a JSON request. 
+		/// Parses an attribute array into a object that can be used to create a JSON request.
 		/// </summary>
 		/// <param name="entityAttributes"></param>
 		/// <param name="mUtil"></param>
@@ -353,7 +353,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 						throw new CdsClientOperationException($"Entity Reference {key.ToLower()} was not found for entity {entityName}.", null);
 					}
 
-					string entityReferanceValue = string.Empty; 
+					string entityReferanceValue = string.Empty;
 					// process ER Value
 					if (entityReference.KeyAttributes?.Any() == true)
 					{
@@ -410,7 +410,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Parses Key attribute collection for alt key support. 
+		/// Parses Key attribute collection for alt key support.
 		/// </summary>
 		/// <param name="keyValues">alt key's for object</param>
 		/// <returns>webAPI compliant key string</returns>
@@ -431,12 +431,12 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			return keycollection.Remove(keycollection.Length - 1); // remove trailing , 
 		}
 		/// <summary>
-		/// List of entities to retry retrieves on. 
+		/// List of entities to retry retrieves on.
 		/// </summary>
 		private static List<string> _autoRetryRetrieveEntityList = null;
 
 		/// <summary>
-		/// if the Incoming query has an entity on the retry list, returns true.  else returns false. 
+		/// if the Incoming query has an entity on the retry list, returns true.  else returns false.
 		/// </summary>
 		/// <param name="queryStringToParse">string containing entity name to check against</param>
 		/// <returns>true if found, false if not</returns>
@@ -451,13 +451,13 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 			foreach (var itm in _autoRetryRetrieveEntityList)
 			{
-				if (queryStringToParse.Contains(itm)) return true; 
+				if (queryStringToParse.Contains(itm)) return true;
 			}
 			return false;
 		}
 
 		/// <summary>
-		/// Creates or Adds scopes and returns the current scope 
+		/// Creates or Adds scopes and returns the current scope
 		/// </summary>
 		/// <param name="scopeToAdd"></param>
 		/// <param name="currentScopes"></param>
@@ -486,19 +486,19 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			/// </summary>
 			public static readonly string USER_AGENT_HTTP_HEADER = "User-Agent";
 			/// <summary>
-			/// Session ID used to track all operations associated with a given group of calls. 
+			/// Session ID used to track all operations associated with a given group of calls.
 			/// </summary>
 			public static readonly string X_MS_CLIENT_SESSION_ID = "x-ms-client-session-id";
 			/// <summary>
-			/// PerRequest ID used to track a specific request. 
+			/// PerRequest ID used to track a specific request.
 			/// </summary>
 			public static readonly string X_MS_CLIENT_REQUEST_ID = "x-ms-client-request-id";
 			/// <summary>
-			/// Content type of WebAPI request. 
+			/// Content type of WebAPI request.
 			/// </summary>
 			public static readonly string CONTENT_TYPE = "Content-Type";
 			/// <summary>
-			/// Header loaded with the AADObjectID of the user to impersonate 
+			/// Header loaded with the AADObjectID of the user to impersonate
 			/// </summary>
 			public static readonly string AAD_CALLER_OBJECT_ID_HTTP_HEADER = "CallerObjectId";
 			/// <summary>
@@ -510,11 +510,11 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			/// </summary>
 			public static readonly string AUTHORIZATION_HEADER = "Authorization";
 			/// <summary>
-			/// Header requesting the connection be kept alive. 
+			/// Header requesting the connection be kept alive.
 			/// </summary>
 			public static readonly string CONNECTION_KEEP_ALIVE = "Keep-Alive";
 			/// <summary>
-			/// Header requiring Cache Consistency Server side. 
+			/// Header requiring Cache Consistency Server side.
 			/// </summary>
 			public static readonly string FORCE_CONSISTENCY = "Consistency";
 
@@ -524,25 +524,25 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			public const string BYPASSCUSTOMPLUGINEXECUTION = "BypassCustomPluginExecution";
 
 			/// <summary>
-			/// key used to apply the operation to a given solution. 
+			/// key used to apply the operation to a given solution.
 			/// See: https://docs.microsoft.com/powerapps/developer/common-data-service/org-service/use-messages#passing-optional-parameters-with-a-request
 			/// </summary>
 			public const string SOLUTIONUNIQUENAME = "SolutionUniqueName";
 
 			/// <summary>
-			/// used to apply duplicate detection behavior to a given request. 
+			/// used to apply duplicate detection behavior to a given request.
 			/// See: https://docs.microsoft.com/powerapps/developer/common-data-service/org-service/use-messages#passing-optional-parameters-with-a-request
 			/// </summary>
 			public const string SUPPRESSDUPLICATEDETECTION = "SuppressDuplicateDetection";
 
 			/// <summary>
-			/// used to pass data though CDS to a plugin or downstream system on a request. 
+			/// used to pass data though CDS to a plugin or downstream system on a request.
 			/// See: https://docs.microsoft.com/en-us/powerapps/developer/common-data-service/org-service/use-messages#add-a-shared-variable-from-the-organization-service
 			/// </summary>
 			public const string TAG = "tag";
 
 			/// <summary>
-			/// used to identify concurrencybehavior property in an organization request. 
+			/// used to identify concurrencybehavior property in an organization request.
 			/// </summary>
 			public const string CONCURRENCYBEHAVIOR = "ConcurrencyBehavior";
 
@@ -554,22 +554,22 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Minim Version numbers for various features of CDS API's. 
+		/// Minim Version numbers for various features of CDS API's.
 		/// </summary>
 		internal static class CDSFeatureVersionMinimums
 		{
 			/// <summary>
-			/// Lowest server version that can be connected too. 
+			/// Lowest server version that can be connected too.
 			/// </summary>
 			internal static Version CDSVersionForThisAPI = new Version("5.0.9688.1533");
 
 			/// <summary>
-			/// Minimum version that supports batch Operations. 
+			/// Minimum version that supports batch Operations.
 			/// </summary>
 			internal static Version BatchOperations = new Version("5.0.9690.3000");
 
 			/// <summary>
-			/// Minimum version that supports holding solutions. 
+			/// Minimum version that supports holding solutions.
 			/// </summary>
 			internal static Version ImportHoldingSolution = new Version("7.2.0.9");
 
@@ -579,37 +579,37 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			internal static Version InternalUpgradeSolution = new Version("9.0.0.0");
 
 			/// <summary>
-			/// MinVersion that supports AAD Caller ID. 
+			/// MinVersion that supports AAD Caller ID.
 			/// </summary>
 			internal static Version AADCallerIDSupported = new Version("8.1.0.0");
 
 			/// <summary>
-			/// MinVersion that supports Session ID Telemetry Tracking. 
+			/// MinVersion that supports Session ID Telemetry Tracking.
 			/// </summary>
 			internal static Version SessionTrackingSupported = new Version("9.0.2.0");
 
 			/// <summary>
-			/// MinVersion that supports Forcing Cache Sync. 
+			/// MinVersion that supports Forcing Cache Sync.
 			/// </summary>
 			internal static Version ForceConsistencySupported = new Version("9.1.0.0");
 
 			/// <summary>
-			/// Minimum version to allow plug in bypass param. 
+			/// Minimum version to allow plug in bypass param.
 			/// </summary>
 			internal static Version AllowBypassCustomPlugin = new Version("9.1.0.20918");
 
 			/// <summary>
-			/// Minimum version supported by the Web API 
+			/// Minimum version supported by the Web API
 			/// </summary>
 			internal static Version WebAPISupported = new Version("8.0.0.0");
 
 			/// <summary>
-			/// Minimum version supported for AsyncRibbonProcessing. 
+			/// Minimum version supported for AsyncRibbonProcessing.
 			/// </summary>
 			internal static Version AllowAsyncRibbonProcessing = new Version("9.1.0.15400");
 
 			/// <summary>
-			/// Minimum version supported for Passing Component data to CDS as part of solution deployment.. 
+			/// Minimum version supported for Passing Component data to CDS as part of solution deployment..
 			/// </summary>
 			internal static Version AllowComponetInfoProcessing = new Version("9.1.0.16547");
 		}

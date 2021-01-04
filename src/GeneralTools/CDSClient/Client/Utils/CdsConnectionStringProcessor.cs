@@ -13,8 +13,8 @@ using Microsoft.PowerPlatform.Cds.Client.Auth;
 namespace Microsoft.PowerPlatform.Cds.Client
 {
 	/// <summary>
-	/// Stores Parsed connection info from the use of a CDS connection string. 
-	/// This is only populated when the CDS Connection string object is used, this is read only. 
+	/// Stores Parsed connection info from the use of a CDS connection string.
+	/// This is only populated when the CDS Connection string object is used, this is read only.
 	/// </summary>
 	internal class CdsConnectionStringProcessor
 	{
@@ -120,7 +120,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		internal string CertThumbprint { get; set; }
 
 		/// <summary>
-		/// if set to true, then the org URI should be used directly. 
+		/// if set to true, then the org URI should be used directly.
 		/// </summary>
 		internal bool SkipDiscovery { get; set; }
 
@@ -188,12 +188,12 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// When true, specifies a unique instance of the connection should be created. 
+		/// When true, specifies a unique instance of the connection should be created.
 		/// </summary>
 		public bool UseUniqueConnectionInstance { get; internal set; }
 
 		/// <summary>
-		/// When set to true and oAuth Mode ( not Cert ) attempts to run the login using the current user identity. 
+		/// When set to true and oAuth Mode ( not Cert ) attempts to run the login using the current user identity.
 		/// </summary>
 		public bool UseCurrentUser { get; set; }
 
@@ -256,7 +256,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			if (!string.IsNullOrEmpty(requireNewInstance))
 				bool.TryParse(requireNewInstance, out useUniqueConnection);
 			UseUniqueConnectionInstance = useUniqueConnection;
-			
+
 			//UserIdentifier = !string.IsNullOrWhiteSpace(UserId) ? new UserIdentifier(UserId, UserIdentifierType.OptionalDisplayableId) : null;
 
 			AuthenticationType authenticationType;
@@ -333,7 +333,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 
 		/// <summary>
-		/// Parse the connection sting 
+		/// Parse the connection sting
 		/// </summary>
 		/// <param name="connectionString"></param>
 		/// <returns></returns>

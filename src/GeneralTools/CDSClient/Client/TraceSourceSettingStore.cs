@@ -21,7 +21,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		public static void AddTraceSettingsToStore(TraceSourceSetting listnerSettings)
 		{
@@ -35,7 +35,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		/// <param name="sourceName"></param>
 		/// <returns></returns>

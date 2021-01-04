@@ -22,7 +22,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// </summary>
 		private ConcurrentDictionary<String, AttributeMetadata> _attributeMetadataCache = new ConcurrentDictionary<String, AttributeMetadata>();
 		/// <summary>
-		/// Global option metadata cache object. 
+		/// Global option metadata cache object.
 		/// </summary>
 		private ConcurrentDictionary<String, OptionSetMetadata> _globalOptionMetadataCache = new ConcurrentDictionary<String, OptionSetMetadata>();
 		/// <summary>
@@ -34,7 +34,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// </summary>
 		private static Object _lockObject = new Object();
 		/// <summary>
-		/// Last time Entity data was validated. 
+		/// Last time Entity data was validated.
 		/// </summary>
 		private DateTime _metadataLastValidatedAt;
 
@@ -106,7 +106,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Returns Entity Metadata for requested entity. 
+		/// Returns Entity Metadata for requested entity.
 		/// Applies returns all data available based on CRM version type
 		/// </summary>
 		/// <param name="entityName">Name of the Entity, data is being requested on</param>
@@ -223,7 +223,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		/// <param name="entityName"></param>
 		/// <param name="attributeName"></param>
@@ -255,7 +255,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		/// <param name="entityName"></param>
 		/// <returns></returns>
@@ -281,7 +281,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		/// <param name="entityName"></param>
 		/// <returns></returns>
@@ -304,7 +304,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Retrieve Global OptionSet Information. 
+		/// Retrieve Global OptionSet Information.
 		/// </summary>
 		/// <param name="optionSetName"></param>
 		/// <returns></returns>
@@ -336,7 +336,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		private void ValidateMetadata()
 		{

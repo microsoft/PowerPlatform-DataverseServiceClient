@@ -15,17 +15,17 @@ namespace Microsoft.PowerPlatform.Cds.Client.Model
 	public class CdsDiscoveryServers : INotifyPropertyChanged , IDisposable
 	{
 		/// <summary>
-		/// CRM Log entry 
+		/// CRM Log entry
 		/// </summary>
 		CdsTraceLogger logger = null;
 
 		/// <summary>
-		/// Contains the list of Office 365 CRM enabled Discovery Servers 
+		/// Contains the list of Office 365 CRM enabled Discovery Servers
 		/// </summary>
 		private ObservableCollection<CdsDiscoveryServer> _OSDPServers = new ObservableCollection<CdsDiscoveryServer>();
 
 		/// <summary>
-		/// Public Property to Access Office 365 discovery servers 
+		/// Public Property to Access Office 365 discovery servers
 		/// </summary>
 		public ObservableCollection<CdsDiscoveryServer> OSDPServers { get { return _OSDPServers; } set { if (value != _OSDPServers) _OSDPServers = value; NotifyPropertyChanged("OSDPServers"); } }
 
@@ -75,7 +75,7 @@ namespace Microsoft.PowerPlatform.Cds.Client.Model
 		}
 
 		/// <summary>
-		/// Parses an OrgURI to determine what the supporting discovery server is. 
+		/// Parses an OrgURI to determine what the supporting discovery server is.
 		/// </summary>
 		/// <param name="orgUri"></param>
 		/// <returns></returns>
@@ -100,7 +100,7 @@ namespace Microsoft.PowerPlatform.Cds.Client.Model
 		}
 
 		/// <summary>
-		/// Finds a Server by Name in the List or return null. 
+		/// Finds a Server by Name in the List or return null.
 		/// </summary>
 		/// <param name="shortName">Short Name of the server you are looking for</param>
 		/// <returns>CdsDiscoveryServer Data or Null</returns>
@@ -113,8 +113,8 @@ namespace Microsoft.PowerPlatform.Cds.Client.Model
 		}
 
 		/// <summary>
-		/// Finds a Server Info by GEO Code.  Note NorthAmerica and GCC cannot be located this way. 
-		/// to use with NA you must short name,  NorthAmerica for NAM and NorthAmerica2 for GCC. 
+		/// Finds a Server Info by GEO Code.  Note NorthAmerica and GCC cannot be located this way.
+		/// to use with NA you must short name,  NorthAmerica for NAM and NorthAmerica2 for GCC.
 		/// </summary>
 		/// <param name="geoCode">GEO of Discovery Instance you are looking for</param>
 		/// <returns>CdsDiscoveryServer Data or Null</returns>
@@ -165,7 +165,7 @@ namespace Microsoft.PowerPlatform.Cds.Client.Model
 		private bool disposedValue = false; // To detect redundant calls
 
 		/// <summary>
-		/// Clean up 
+		/// Clean up
 		/// </summary>
 		/// <param name="disposing"></param>
 		protected virtual void Dispose(bool disposing)
@@ -202,7 +202,7 @@ namespace Microsoft.PowerPlatform.Cds.Client.Model
 	#region CrmOnlineDiscoServerListing for WPF Controls
 
 	/// <summary>
-	/// Describes a discovery server that can be used to determine what organizations a user is a member of. 
+	/// Describes a discovery server that can be used to determine what organizations a user is a member of.
 	/// </summary>
 	public class CdsDiscoveryServer : INotifyPropertyChanged
 	{
@@ -258,7 +258,7 @@ namespace Microsoft.PowerPlatform.Cds.Client.Model
 			ShortName = serverInfo.ShortName;
 			RequiresRegionalDiscovery = serverInfo.RequiresRegionalDiscovery;
 			RegionalGlobalDiscoveryServer = serverInfo.RegionalGlobalDiscoveryUri;
-			GeoCode = serverInfo.GeoCode; 
+			GeoCode = serverInfo.GeoCode;
 		}
 
 		#region INotifyPropertyChanged

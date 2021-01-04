@@ -36,8 +36,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// </summary>
 		Number,
 		/// <summary>
-		/// Ref Type for CDS,  Creates an EntityReference 
-		/// You need to provide a Guid as a value, and a the name of an entity for the lookup key 
+		/// Ref Type for CDS,  Creates an EntityReference
+		/// You need to provide a Guid as a value, and a the name of an entity for the lookup key
 		/// </summary>
 		Customer,
 		/// <summary>
@@ -45,8 +45,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// </summary>
 		Key,
 		/// <summary>
-		/// Ref Type for CDS,  Creates an EntityReference 
-		/// You need to provide a Guid as a value, and a the name of an entity for the lookup key 
+		/// Ref Type for CDS,  Creates an EntityReference
+		/// You need to provide a Guid as a value, and a the name of an entity for the lookup key
 		/// </summary>
 		Lookup,
 		/// <summary>
@@ -71,7 +71,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 	}
 
 	/// <summary>
-	/// Contains a variable definition. 
+	/// Contains a variable definition.
 	/// </summary>
 	public class CdsDataTypeWrapper
 	{
@@ -98,7 +98,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		{ }
 
 		/// <summary>
-		/// Create a new CDS Data Type 
+		/// Create a new CDS Data Type
 		/// </summary>
 		/// <param name="data">Data to Set</param>
 		/// <param name="CdsFieldType">Type of Data to Set</param>
@@ -110,7 +110,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Create a new CDS Data Type 
+		/// Create a new CDS Data Type
 		/// </summary>
 		/// <param name="data">Data to Set</param>
 		/// <param name="CdsFieldType">Type of Data to Set</param>

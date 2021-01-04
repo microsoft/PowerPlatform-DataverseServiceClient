@@ -128,7 +128,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		public string ShortName { get; set; }
 
 		/// <summary>
-		/// Sets the restricted status of the instance. ( restricted means it is not in the global discovery servers ) 
+		/// Sets the restricted status of the instance. ( restricted means it is not in the global discovery servers )
 		/// </summary>
 		public bool RequiresRegionalDiscovery { get; set; }
 
@@ -138,7 +138,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		public Uri RegionalGlobalDiscoveryUri { get; set; }
 
 		/// <summary>
-		/// Geo Code 
+		/// Geo Code
 		/// </summary>
 		public string GeoCode { get; set; }
 
@@ -152,7 +152,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			// defaulting to null 
 			RegionalGlobalDiscoveryUri = null;
 			// Default to null. 
-			GeoCode = null; 
+			GeoCode = null;
 		}
 	}
 
@@ -301,7 +301,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// this is the connect infor for the 1box config for EDOG env. 
+		/// this is the connect infor for the 1box config for EDOG env.
 		/// </summary>
 		public ServerInfo Crm1BoxTest
 		{

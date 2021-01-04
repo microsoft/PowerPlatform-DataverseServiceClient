@@ -30,7 +30,7 @@ using Microsoft.PowerPlatform.Cds.Client.Auth;
 namespace Microsoft.PowerPlatform.Cds.Client
 {
 	/// <summary>
-	///  Decision switch for the sort of Auth to login to CDS with 
+	///  Decision switch for the sort of Auth to login to CDS with
 	/// </summary>
 	public enum AuthenticationType
 	{
@@ -84,12 +84,12 @@ namespace Microsoft.PowerPlatform.Cds.Client
 															 //private OrganizationDetail _ActualOrgDetailUsed;     // Org Detail that was used by the Auth system when it created the proxy. 
 
 		/// <summary>
-		/// This is the actual CDS OrgURI used to connect, which could be influenced by the host name given during the connect process. 
+		/// This is the actual CDS OrgURI used to connect, which could be influenced by the host name given during the connect process.
 		/// </summary>
 		private Uri _ActualCdsOrgUri;
 
-		private string _LiveID;                             
-		private SecureString _LivePass;                      
+		private string _LiveID;
+		private SecureString _LivePass;
 		private string _CdsOnlineRegion;                    // Region of Cds Online to use. 
 		private string _ServiceCACHEName = "Microsoft.PowerPlatform.Cds.Client.CdsService"; // this is the base cache key name that will be used to cache the service. 
 
@@ -106,35 +106,35 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		private bool _isDefaultCredsLoginForOAuth = false;  //Flag indicating that the user is trying to login with the current user id. 
 
 		/// <summary>
-		/// If set to true, will relay any received cookie back to the server. 
+		/// If set to true, will relay any received cookie back to the server.
 		/// Defaulted to true.
 		/// </summary>
 		private bool _enableCookieRelay = Utils.AppSettingsHelper.GetAppSetting<bool>("PreferConnectionAffinity", true);
 
 		/// <summary>
-		/// TimeSpan used to control the offset of the token reacquire behavior for none user Auth flows. 
+		/// TimeSpan used to control the offset of the token reacquire behavior for none user Auth flows.
 		/// </summary>
 		private readonly TimeSpan _tokenOffSetTimeSpan = new TimeSpan(0, 2, 0);
 
 		/// <summary>
-		/// if Set to true then the connection is for one use and should be cleand out of cache when completed. 
+		/// if Set to true then the connection is for one use and should be cleand out of cache when completed.
 		/// </summary>
 		private bool unqueInstance = false;
 		/// <summary>
-		/// when certificate Auth is used,  this is the certificate that is used to execute the connection. 
+		/// when certificate Auth is used,  this is the certificate that is used to execute the connection.
 		/// </summary>
 		private X509Certificate2 _certificateOfConnection;
 		/// <summary>
-		/// ThumbPrint of the Certificate to use. 
+		/// ThumbPrint of the Certificate to use.
 		/// </summary>
 		private string _certificateThumbprint;
 		/// <summary>
-		/// Location where the certificate identified by the Certificate thumb print can be found. 
+		/// Location where the certificate identified by the Certificate thumb print can be found.
 		/// </summary>
 		private StoreName _certificateStoreLocation = StoreName.My;
 
 		/// <summary>
-		/// Uri that will be used to connect to Cds for Cert Auth. 
+		/// Uri that will be used to connect to Cds for Cert Auth.
 		/// </summary>
 		private Uri _targetInstanceUriToConnectTo = null;
 
@@ -153,7 +153,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		private readonly string WebApiUriFormat = @"{0}://{1}/api/data/v{2}/";
 
 		/// <summary>
-		/// format string for Global discovery WebAPI 
+		/// format string for Global discovery WebAPI
 		/// </summary>
 		private static readonly string _baseWebApiUriFormat = @"{0}/api/data/v{1}/";
 
@@ -167,7 +167,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// </summary>
 		private static readonly string _commercialGlobalDiscoBaseWebAPIUriFormat = "https://globaldisco.crm.dynamics.com/api/discovery/v{0}/{1}";
 		/// <summary>
-		/// version of the globaldiscovery service. 
+		/// version of the globaldiscovery service.
 		/// </summary>
 		private static readonly string _globlaDiscoVersion = "2.0";
 
@@ -177,10 +177,10 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		private Guid _OrganizationId;
 
 		/// <summary>
-		/// Max connection timeout property 
+		/// Max connection timeout property
 		/// </summary>
 		private static TimeSpan _MaxConnectionTimeout = Utils.AppSettingsHelper.GetAppSettingTimeSpan("MaxCdsConnectionTimeOutMinutes", Utils.AppSettingsHelper.TimeSpanFromKey.Minutes, new TimeSpan(0, 0, 2, 0));
-		
+
 		/// <summary>
 		/// Tenant ID
 		/// </summary>
@@ -192,7 +192,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		private string _EnvironmentId;
 
 		/// <summary>
-		/// TestHelper for Testing sim. 
+		/// TestHelper for Testing sim.
 		/// </summary>
 		private IOrganizationService _testSupportIOrg;
 		#endregion
@@ -202,17 +202,17 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// ************** MSAL Properties ****************
 
 		/// <summary>
-		/// MSAL Object, Can be either a PublicClient or a Confidential Client, depending on Context. 
+		/// MSAL Object, Can be either a PublicClient or a Confidential Client, depending on Context.
 		/// </summary>
 		internal object _MsalAuthClient = null;
 
 		/// <summary>
-		/// This is carries the result of the token authentication flow to optimize token retrieval. 
+		/// This is carries the result of the token authentication flow to optimize token retrieval.
 		/// </summary>
 		internal AuthenticationResult _authenticationResultContainer = null;
 
 		/// <summary>
-		/// Selected user located as a result, used to optimize token acquire on second round. 
+		/// Selected user located as a result, used to optimize token acquire on second round.
 		/// </summary>
 		internal IAccount _userAccount = null;
 
@@ -220,7 +220,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 
 		/// <summary>
-		/// When true, indicates the construction is coming from a clone process. 
+		/// When true, indicates the construction is coming from a clone process.
 		/// </summary>
 		internal bool IsAClone { get; set; }
 
@@ -230,30 +230,30 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		public Guid? CallerAADObjectId { get; set; }
 
 		/// <summary>
-		/// httpclient that is in use for this connection 
+		/// httpclient that is in use for this connection
 		/// </summary>
 		internal HttpClient WebApiHttpClient { get; set; }
 
 		/// <summary>
 		/// This ID is used to support CDS Telemetry when trouble shooting SDK based errors.
-		/// When Set by the caller, all CDS API Actions executed by this client will be tracked under a single session id for later troubleshooting. 
-		/// For example, you are able to group all actions in a given run of your client ( seveal creates / reads and such ) under a given tracking id that is shared on all requests. 
-		/// providing this ID when when reporting a problem will aid in trouble shooting your issue. 
+		/// When Set by the caller, all CDS API Actions executed by this client will be tracked under a single session id for later troubleshooting.
+		/// For example, you are able to group all actions in a given run of your client ( seveal creates / reads and such ) under a given tracking id that is shared on all requests.
+		/// providing this ID when when reporting a problem will aid in trouble shooting your issue.
 		/// </summary>
 		internal Guid? SessionTrackingId { get; set; }
 
 		/// <summary>
 		/// This will force the server to refresh the current metadata cache with current DB config.
-		/// Note, that this is a performance impacting event. Use of this flag will slow down operations server side as the server is required to check for consistency on each API call executed. 
+		/// Note, that this is a performance impacting event. Use of this flag will slow down operations server side as the server is required to check for consistency on each API call executed.
 		/// </summary>
 		internal bool ForceServerCacheConsistency { get; set; }
 
 		/// <summary>
-		/// returns the URL to global discovery for querying all instances. 
+		/// returns the URL to global discovery for querying all instances.
 		/// </summary>
 		internal static string GlobalDiscoveryAllInstancesUri { get { return string.Format(_commercialGlobalDiscoBaseWebAPIUriFormat, _globlaDiscoVersion, "Instances"); } }
 		/// <summary>
-		/// Format string for calling global disco for a specific instance. 
+		/// Format string for calling global disco for a specific instance.
 		/// </summary>
 		private static string GlobalDiscoveryInstanceUriFormat { get { return string.Format(_commercialGlobalDiscoBaseWebAPIUriFormat, _globlaDiscoVersion, "Instances({0})"); } }
 
@@ -287,12 +287,12 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Logging provider for CdsConnectionServiceobject. 
+		/// Logging provider for CdsConnectionServiceobject.
 		/// </summary>
 		private CdsTraceLogger logEntry { get; set; }
 
 		/// <summary>
-		/// Returns Logs from this process. 
+		/// Returns Logs from this process.
 		/// </summary>
 		/// <returns></returns>
 		internal IEnumerable<Tuple<DateTime, string>> GetAllLogs()
@@ -307,7 +307,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		public bool isLogEntryCreatedLocaly { get; set; }
 
 		/// <summary>
-		/// Get and Set of network credentials... 
+		/// Get and Set of network credentials...
 		/// </summary>
 		internal System.Net.NetworkCredential CdsServiceAccessCredential
 		{
@@ -321,12 +321,12 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		internal string InternetProtocalToUse { get { return _InternetProtocalToUse; } set { _InternetProtocalToUse = value; } }
 
 		/// <summary>
-		/// returns the connected organization detail object. 
+		/// returns the connected organization detail object.
 		/// </summary>
 		internal OrganizationDetail ConnectedOrganizationDetail { get { return _OrgDetail; } }
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		internal AuthenticationType AuthenticationTypeInUse
 		{
@@ -378,7 +378,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Gets / Set the CDS Hostname that the web service is listening on. 
+		/// Gets / Set the CDS Hostname that the web service is listening on.
 		/// </summary>
 		internal string CdsHostName
 		{
@@ -388,7 +388,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 
 		/// <summary>
-		/// Returns the Current CDS User. 
+		/// Returns the Current CDS User.
 		/// </summary>
 		internal WhoAmIResponse CdsUser
 		{
@@ -397,8 +397,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Returns the Actual URI used to connect to CDS. 
-		/// this URI could be influenced by user defined variables. 
+		/// Returns the Actual URI used to connect to CDS.
+		/// this URI could be influenced by user defined variables.
 		/// </summary>
 		internal Uri CdsConnectOrgUriActual { get { return _ActualCdsOrgUri; } }
 
@@ -408,27 +408,27 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		internal Uri CdsConnectODataBaseUriActual { get; set; }
 
 		/// <summary>
-		/// Flag indicating that the an External connection to CDS is used to connect. 
+		/// Flag indicating that the an External connection to CDS is used to connect.
 		/// </summary>
 		internal bool UseExternalConnection = false;
 
 		/// <summary>
-		/// Returns the friendly name of the connected org. 
+		/// Returns the friendly name of the connected org.
 		/// </summary>
 		internal string ConnectedOrgFriendlyName { get; private set; }
 
 		/// <summary>
-		/// Returns the endpoint collection for the connected org. 
+		/// Returns the endpoint collection for the connected org.
 		/// </summary>
 		internal EndpointCollection ConnectedOrgPublishedEndpoints { get; set; }
 
 		/// <summary>
-		/// Version Number of the organization, if null Discovery service process was not run or the value returned was unreadable. 
+		/// Version Number of the organization, if null Discovery service process was not run or the value returned was unreadable.
 		/// </summary>
 		internal Version OrganizationVersion { get; set; }
 
 		/// <summary>
-		/// Organization ID of connected org. 
+		/// Organization ID of connected org.
 		/// </summary>
 		internal Guid OrganizationId
 		{
@@ -466,7 +466,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Gets or sets the Environment Id. 
+		/// Gets or sets the Environment Id.
 		/// </summary>
 		internal string EnvironmentId
 		{
@@ -491,13 +491,13 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		internal Func<string, Task<string>> GetAccessTokenAsync { get; set; }
 
 		/// <summary>
-		/// returns the format string for the baseWebAPI 
+		/// returns the format string for the baseWebAPI
 		/// </summary>
 		internal string BaseWebAPIDataFormat { get { return _baseWebApiUriFormat; } }
 
 		/// <summary>
 		/// Gets or Sets the Max Connection timeout for the connection to CDS/XRM
-		/// default is 2min. 
+		/// default is 2min.
 		/// </summary>
 		internal static TimeSpan MaxConnectionTimeout
 		{
@@ -506,7 +506,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Gets or sets the value to enabled cookie relay on this connection. 
+		/// Gets or sets the value to enabled cookie relay on this connection.
 		/// </summary>
 		internal bool EnableCookieRelay
 		{
@@ -525,7 +525,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			_testSupportIOrg = testIOrganziationSvc;
 			logEntry = new CdsTraceLogger();
 			isLogEntryCreatedLocaly = true;
-			RefreshInstanceDetails(testIOrganziationSvc, null); 
+			RefreshInstanceDetails(testIOrganziationSvc, null);
 		}
 
 		/// <summary>
@@ -694,7 +694,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Loges into CDS using the supplied parameters. 
+		/// Loges into CDS using the supplied parameters.
 		/// </summary>
 		/// <returns></returns>
 		public bool DoLogin(out CdsConnectionService ConnectionObject)
@@ -741,7 +741,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 		/// <summary>
 		/// Try's to gets the Cached CDS Service from memory.
-		/// on Failure, Initialize a New instance. 
+		/// on Failure, Initialize a New instance.
 		/// </summary>
 		/// <returns></returns>
 		private IOrganizationService GetCachedCDSService(out CdsConnectionService ConnectionObject)
@@ -795,14 +795,14 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				}
 				catch (Exception ex)
 				{
-					logEntry.Log("Failed to Create a connection to CDS", TraceEventType.Error , ex); 
+					logEntry.Log("Failed to Create a connection to CDS", TraceEventType.Error , ex);
 					return null;
 				}
 			}
 		}
 
 		/// <summary>
-		/// Initialize a Connection to CDS 
+		/// Initialize a Connection to CDS
 		/// </summary>
 		/// <returns></returns>
 		private async Task<IOrganizationService> InitCdsServiceAsync()
@@ -977,10 +977,10 @@ namespace Microsoft.PowerPlatform.Cds.Client
 								logEntry.Log("Failed to connect to CDS", TraceEventType.Error);
 								return null;
 							}
-							
+
 							if (_eAuthType == AuthenticationType.OAuth || _eAuthType == AuthenticationType.Certificate || _eAuthType == AuthenticationType.ClientSecret)
 								cdsService = (OrganizationWebProxyClient)cdsService;
-							
+
 							#endregion
 
 						}
@@ -1140,7 +1140,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				}
 
 				return (IOrganizationService)cdsService;
-				
+
 			}
 			#region Login / Discovery Server Exception handlers
 
@@ -1194,7 +1194,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
         /// <summary>
-        /// Executes a direct login using the current configuration. 
+        /// Executes a direct login using the current configuration.
         /// </summary>
         /// <returns></returns>
         private async Task<IOrganizationService> DoDirectLoginAsync()
@@ -1241,7 +1241,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 
 		/// <summary>
-		/// Refresh the organization instance details. 
+		/// Refresh the organization instance details.
 		/// </summary>
 		/// <param name="cdsService">CdsConnectionSvc</param>
 		/// <param name="uriOfInstance">Instance URL</param>
@@ -1309,7 +1309,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Get current user info. 
+		/// Get current user info.
 		/// </summary>
 		/// <param name="trackingID"></param>
 		/// <param name="cdsService"></param>
@@ -1353,7 +1353,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Sets Properties on the cloned instance. 
+		/// Sets Properties on the cloned instance.
 		/// </summary>
 		/// <param name="sourceClient">Source instance to clone from</param>
 		internal void SetClonedProperties(CdsServiceClient sourceClient)
@@ -1379,7 +1379,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		#region WebAPI Interface Utilities
 
 		/// <summary>
-		/// Makes a call to a web API to support request to XRM. 
+		/// Makes a call to a web API to support request to XRM.
 		/// </summary>
 		/// <param name="uri">URI of request target</param>
 		/// <param name="method">method being used</param>
@@ -1835,7 +1835,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			{
 				logSink.Log("DiscoverOrganizations - : " + discoveryServiceUri.ToString());
 				string AuthToken = await tokenProviderFunction(discoveryServiceUri.ToString());
-				return await QueryGlobalDiscoveryAsync(AuthToken, discoveryServiceUri, logSink); 
+				return await QueryGlobalDiscoveryAsync(AuthToken, discoveryServiceUri, logSink);
 			}
 			finally
 			{
@@ -2007,7 +2007,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Queries the global discovery service 
+		/// Queries the global discovery service
 		/// </summary>
 		/// <param name="authToken"></param>
 		/// <param name="discoveryServiceUri"></param>
@@ -2061,7 +2061,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 					d.State = (OrganizationState)Enum.Parse(typeof(OrganizationState), inst.State.ToString());
 					d.UniqueName = inst.UniqueName;
 					d.UrlName = inst.UrlName;
-					d.EnvironmentId = !string.IsNullOrEmpty(inst.EnvironmentId) ? inst.EnvironmentId : string.Empty; 
+					d.EnvironmentId = !string.IsNullOrEmpty(inst.EnvironmentId) ? inst.EnvironmentId : string.Empty;
 					d.Geo = !string.IsNullOrEmpty(inst.Region) ? inst.Region : string.Empty;
 					d.TenantId = !string.IsNullOrEmpty(inst.TenantId) ? inst.TenantId : string.Empty;
 					System.Reflection.PropertyInfo proInfo = d.GetType().GetProperty("Endpoints");
@@ -2161,7 +2161,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Used to locate the certificate in the store and return a collection of certificates that match the thumbprint. 
+		/// Used to locate the certificate in the store and return a collection of certificates that match the thumbprint.
 		/// </summary>
 		/// <param name="certificateThumbprint">Thumbprint to search for</param>
 		/// <param name="location">Where to search for on the machine</param>
@@ -2181,7 +2181,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 
 		/// <summary>
-		/// Connects too and initializes the CDS org Data service. 
+		/// Connects too and initializes the CDS org Data service.
 		/// </summary>
 		/// <param name="orgdata">Organization Data</param>
 		/// <param name="IsOnPrem">True if called from the OnPrem Branch</param>
@@ -2209,23 +2209,23 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			OrganizationVersion = null;
 			try
 			{
-				Version tempVer = null; 
-				if ( Version.TryParse(orgdata.OrganizationVersion, out tempVer)) 
+				Version tempVer = null;
+				if ( Version.TryParse(orgdata.OrganizationVersion, out tempVer))
 					OrganizationVersion = tempVer;
 			}
 			catch { };
 
 			OrganizationWebProxyClient svcWebClientProxy = null;
-			if (_eAuthType == AuthenticationType.OAuth 
-				|| _eAuthType == AuthenticationType.Certificate 
-				|| _eAuthType == AuthenticationType.ExternalTokenManagement 
+			if (_eAuthType == AuthenticationType.OAuth
+				|| _eAuthType == AuthenticationType.Certificate
+				|| _eAuthType == AuthenticationType.ExternalTokenManagement
 				|| _eAuthType == AuthenticationType.ClientSecret)
 			{
 				string resource = string.Empty;
 				string Authority = string.Empty;
 
 				Uri targetServiceUrl = null;
-				
+
 				string authToken = string.Empty;
 
 				if (_eAuthType == AuthenticationType.ExternalTokenManagement)
@@ -2286,7 +2286,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 
 		/// <summary>
-		/// Grab the Channel factory Open event and add the CrmHook Service behaviors. 
+		/// Grab the Channel factory Open event and add the CrmHook Service behaviors.
 		/// </summary>
 		/// <param name="sender">incoming ChannelFactory</param>
 		/// <param name="e">ignored</param>
@@ -2330,7 +2330,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 		/// <summary>
 		/// Builds the Organization Service Connect URI
-		/// - This is done, potentially replacing the original string, to deal with the discovery service returning an unusable string, for example, a DNS name that does not resolve. 
+		/// - This is done, potentially replacing the original string, to deal with the discovery service returning an unusable string, for example, a DNS name that does not resolve.
 		/// </summary>
 		/// <param name="orgdata">Org Data found from the Discovery Service.</param>
 		/// <returns>CRM Connection URI</returns>
@@ -2396,7 +2396,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Iterates through the list of CRM online Discovery Servers to find one that knows the user. 
+		/// Iterates through the list of CRM online Discovery Servers to find one that knows the user.
 		/// </summary>
 		/// <param name="onlineServerList"></param>
 		private async Task<CdsOrgList> FindCdsDiscoveryServerAsync(CdsDiscoveryServers onlineServerList)
@@ -2483,7 +2483,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Iterate over the discovery servers available. 
+		/// Iterate over the discovery servers available.
 		/// </summary>
 		/// <param name="svrs"></param>
 		/// <param name="col"></param>
@@ -2585,8 +2585,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
 						return await DiscoverOrganizationsAsync(discoServer, _certificateOfConnection, _clientId, false, _authority, logEntry);
 					}
 
-					return null; 
-					
+					return null;
+
 				}
 			}
 			catch (SecurityAccessDeniedException)
@@ -2615,7 +2615,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// Adds an Org to the List of Orgs
 		/// </summary>
 		/// <param name="organizationDetail"></param>
-		/// <param name="discoveryServer"></param>		
+		/// <param name="discoveryServer"></param>
 		/// <param name="orgList"></param>
 		private void AddOrgToOrgList(OrganizationDetail organizationDetail, string discoveryServer, ref CdsOrgList orgList)
 		{
@@ -2669,7 +2669,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 						_svcWebClientProxy.HeaderToken = await GetAccessTokenAsync(_ActualCdsOrgUri.ToString());
 					else
 						throw new Exception("External Authentication Requested but not configured correctly. Faulted In Request Access Token 004");
-									  
+
 				}
 				catch (Exception ex)
 				{
@@ -2686,7 +2686,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 #region IDisposable Support
 		/// <summary>
-		/// Reset disposed state to handle this object being pulled from cache. 
+		/// Reset disposed state to handle this object being pulled from cache.
 		/// </summary>
 		private void ResetDisposedState()
 		{
@@ -2706,7 +2706,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 						if (logEntry != null)
 							logEntry.Dispose();
 					}
-					
+
 					//TODO: REMOVE ONCE MEM TEST COMPELTES CLEAN. 
 					//if (_authenticationContext != null && _authenticationContext.TokenCache != null)
 					//{
@@ -2758,7 +2758,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 	internal static class SecureStringExtensions
 	{
 		/// <summary>
-		/// DeCrypt a Secure password 
+		/// DeCrypt a Secure password
 		/// </summary>
 		/// <param name="value"></param>
 		/// <returns></returns>

@@ -11,7 +11,7 @@ using System.Xml;
 namespace Microsoft.PowerPlatform.Cds.Client
 {
     /// <summary>
-    /// Adding support to Send the User Agent Header. 
+    /// Adding support to Send the User Agent Header.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses")]
     internal class CdsServiceTelemetryBehaviors : IEndpointBehavior, IClientMessageInspector
@@ -29,7 +29,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         #endregion
 
         /// <summary>
-        /// Constructor for building the hook to call into the platform. 
+        /// Constructor for building the hook to call into the platform.
         /// </summary>
         public CdsServiceTelemetryBehaviors(CdsConnectionService cli)
         {

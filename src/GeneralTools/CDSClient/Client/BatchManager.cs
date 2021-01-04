@@ -10,27 +10,27 @@ using System.Diagnostics.CodeAnalysis;
 namespace Microsoft.PowerPlatform.Cds.Client
 {
 	/// <summary>
-	/// This class manages batches for CDS execute Multiple. 
+	/// This class manages batches for CDS execute Multiple.
 	/// </summary>
 	internal sealed class BatchManager
 	{
 		#region Vars
 		/// <summary>
-		/// Collection of Batches in use. 
+		/// Collection of Batches in use.
 		/// </summary>
 		private Dictionary<Guid, RequestBatch> RequestBatches = null;
 
 		/// <summary>
-		/// Max number of concurrent batches allowed. 
+		/// Max number of concurrent batches allowed.
 		/// </summary>
 		private int MaxNumberOfBatches = 0;
 		/// <summary>
-		/// Max number of requests per batch allowed. 
+		/// Max number of requests per batch allowed.
 		/// </summary>
 		private int MaxNumberOfRequestsInABatch = 0;
 
 		/// <summary>
-		/// Local Log file. 
+		/// Local Log file.
 		/// </summary>
 		private CdsTraceLogger logger = null;
 
@@ -89,7 +89,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Returns a request batch by name. 
+		/// Returns a request batch by name.
 		/// </summary>
 		/// <param name="batchName">Name of the Batch. </param>
 		/// <returns></returns>
@@ -112,7 +112,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Add an item to batch. 
+		/// Add an item to batch.
 		/// </summary>
 		/// <param name="batchId">ID of the batch</param>
 		/// <param name="request">Organization Service Request to add to the batch</param>
@@ -149,7 +149,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Removes and releases the batch by ID. 
+		/// Removes and releases the batch by ID.
 		/// </summary>
 		/// <param name="batchId"></param>
 		public void RemoveBatch(Guid batchId)
@@ -161,22 +161,22 @@ namespace Microsoft.PowerPlatform.Cds.Client
 	}
 
 	/// <summary>
-	/// Container class for Batches. 
+	/// Container class for Batches.
 	/// </summary>
 	public sealed class RequestBatch
 	{
 		/// <summary>
-		/// ID of the batch. 
+		/// ID of the batch.
 		/// </summary>
 		public Guid BatchId { get; internal set; }
 
 		/// <summary>
-		/// DisplayName of the batch. 
+		/// DisplayName of the batch.
 		/// </summary>
 		public string BatchName { get; internal set; }
 
 		/// <summary>
-		/// Settings for this Execute Multiple Request. 
+		/// Settings for this Execute Multiple Request.
 		/// </summary>
 		public ExecuteMultipleSettings BatchRequestSettings { get; private set; }
 
@@ -187,12 +187,12 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		public List<BatchItemOrganizationRequest> BatchItems { get; set; }
 
 		/// <summary>
-		/// Results from the Batch. 
+		/// Results from the Batch.
 		/// </summary>
 		public ExecuteMultipleResponse BatchResults { get; set; }
 
 		/// <summary>
-		/// Status of the batch. 
+		/// Status of the batch.
 		/// </summary>
 		public BatchStatus Status { get; set; }
 
@@ -216,7 +216,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 	}
 	/// <summary>
-	/// Request object. 
+	/// Request object.
 	/// </summary>
 	public sealed class BatchItemOrganizationRequest
 	{
@@ -229,13 +229,13 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// </summary>
 		public Guid RequestReferenceNumber { get; set; }
 		/// <summary>
-		/// Request debug Message. 
+		/// Request debug Message.
 		/// </summary>
 		public string RequestDebugMessage { get; set; }
 	}
 
 	/// <summary>
-	/// Status of the batch. 
+	/// Status of the batch.
 	/// </summary>
 	public enum BatchStatus
 	{
@@ -248,7 +248,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// </summary>
 		Running,
 		/// <summary>
-		/// Batch has completed. 
+		/// Batch has completed.
 		/// </summary>
 		Complete
 	}

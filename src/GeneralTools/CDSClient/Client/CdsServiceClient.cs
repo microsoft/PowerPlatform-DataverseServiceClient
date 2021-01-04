@@ -30,7 +30,7 @@ using Microsoft.PowerPlatform.Cds.Client.Auth;
 namespace Microsoft.PowerPlatform.Cds.Client
 {
     /// <summary>
-    /// Primary implementation of the API interface for CDS. 
+    /// Primary implementation of the API interface for CDS.
     /// </summary>
     public sealed class CdsServiceClient : IOrganizationService, IDisposable
     {
@@ -38,22 +38,22 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 
         /// <summary>
-        /// Cached Object collection, used for pick lists and such. 
+        /// Cached Object collection, used for pick lists and such.
         /// </summary>
         private Dictionary<string, Dictionary<string, object>> _CachObject; //Cache object. 
 
         /// <summary>
-        /// List of CDS Language ID's 
+        /// List of CDS Language ID's
         /// </summary>
         private List<int> CdsLoadedLCIDList;
 
         /// <summary>
-        /// Name of the cache object. 
+        /// Name of the cache object.
         /// </summary>
         private string CACHOBJECNAME = ".LookupCache";
 
         /// <summary>
-        /// Logging object for the CDS Interface. 
+        /// Logging object for the CDS Interface.
         /// </summary>
         internal CdsTraceLogger logEntry;
 
@@ -73,12 +73,12 @@ namespace Microsoft.PowerPlatform.Cds.Client
         private MetadataUtility metadataUtlity = null;
 
         /// <summary>
-        /// This is an internal Lock object,  used to sync communication with CDS. 
+        /// This is an internal Lock object,  used to sync communication with CDS.
         /// </summary>
         internal object _lockObject = new object();
 
         /// <summary>
-        /// BatchManager for Execute Multiple. 
+        /// BatchManager for Execute Multiple.
         /// </summary>
         private BatchManager _BatchManager = null;
 
@@ -90,7 +90,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         private bool _disableConnectionLocking = false;
 
         /// <summary>
-        /// SDK Version property backer. 
+        /// SDK Version property backer.
         /// </summary>
         public string _sdkVersionProperty = null;
 
@@ -100,13 +100,13 @@ namespace Microsoft.PowerPlatform.Cds.Client
         private int _maxRetryCount = Utils.AppSettingsHelper.GetAppSetting("ApiOperationRetryCountOverride", 10);
 
         /// <summary>
-        /// Amount of time to wait between retries 
+        /// Amount of time to wait between retries
         /// </summary>
         private TimeSpan _retryPauseTime = Utils.AppSettingsHelper.GetAppSetting("ApiOperationRetryDelayOverride", new TimeSpan(0, 0, 0, 5));
 
         /// <summary>
-        /// Value used by the retry system while the code is running, 
-        /// this value can scale up and down based on throttling limits. 
+        /// Value used by the retry system while the code is running,
+        /// this value can scale up and down based on throttling limits.
         /// </summary>
         private TimeSpan _retryPauseTimeRunning;
 
@@ -140,7 +140,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
         /// <summary>
         /// This is the number of minuets that logs will be retained before being purged from memory. Default is 5 min.
-        /// This capability controls how long the log cache is kept in memory. 
+        /// This capability controls how long the log cache is kept in memory.
         /// </summary>
         public static TimeSpan InMemoryLogCollectionTimeOutMinutes { get; set; } = Utils.AppSettingsHelper.GetAppSettingTimeSpan("InMemoryLogCollectionTimeOutMinutes", Utils.AppSettingsHelper.TimeSpanFromKey.Minutes, TimeSpan.FromMinutes(5));
 
@@ -163,12 +163,12 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// if true the service is ready to accept requests. 
+        /// if true the service is ready to accept requests.
         /// </summary>
         public bool IsReady { get; private set; }
 
         /// <summary>
-        /// if true then Batch Operations are available. 
+        /// if true then Batch Operations are available.
         /// </summary>
         public bool IsBatchOperationsAvailable
         {
@@ -214,8 +214,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Gets or Sets the Max Connection Timeout for the connection. 
-        /// Default setting is 2 min, 
+        /// Gets or Sets the Max Connection Timeout for the connection.
+        /// Default setting is 2 min,
         /// this property can also be set via app.config/app.settings with the property MaxCdsConnectionTimeOutMinutes
         /// </summary>
         public static TimeSpan MaxConnectionTimeout
@@ -231,7 +231,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Authentication Type to use 
+        /// Authentication Type to use
         /// </summary>
         public AuthenticationType ActiveAuthenticationType
         {
@@ -272,8 +272,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Returns the current access token in Use to connect to CDS. 
-        /// Note: this is only available when a token based authentication process is in use. 
+        /// Returns the current access token in Use to connect to CDS.
+        /// Note: this is only available when a token based authentication process is in use.
         /// </summary>
         public string CurrentAccessToken
         {
@@ -293,7 +293,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Pointer to CDS Service. 
+        /// Pointer to CDS Service.
         /// </summary>
         internal IOrganizationService _CdsService
         {
@@ -344,27 +344,27 @@ namespace Microsoft.PowerPlatform.Cds.Client
         public string LastCdsError { get { if (logEntry != null) return logEntry.LastError; else return string.Empty; } }
 
         /// <summary>
-        /// Returns the Last Exception from CDS. 
+        /// Returns the Last Exception from CDS.
         /// </summary>
         public Exception LastCdsException { get { if (logEntry != null) return logEntry.LastException; else return null; } }
 
         /// <summary>
-        /// Returns the Actual URI used to connect to CDS. 
-        /// this URI could be influenced by user defined variables. 
+        /// Returns the Actual URI used to connect to CDS.
+        /// this URI could be influenced by user defined variables.
         /// </summary>
         public Uri CdsConnectOrgUriActual { get { if (CdsConnectionSvc != null) return CdsConnectionSvc.CdsConnectOrgUriActual; else return null; } }
 
         /// <summary>
-        /// Returns the friendly name of the connected org. 
+        /// Returns the friendly name of the connected org.
         /// </summary>
         public string ConnectedOrgFriendlyName { get { if (CdsConnectionSvc != null) return CdsConnectionSvc.ConnectedOrgFriendlyName; else return null; } }
         /// <summary>
-        /// 
-        /// Returns the unique name for the org that has been connected. 
+        ///
+        /// Returns the unique name for the org that has been connected.
         /// </summary>
         public string ConnectedOrgUniqueName { get { if (CdsConnectionSvc != null) return CdsConnectionSvc.CustomerOrganization; else return null; } }
         /// <summary>
-        /// Returns the endpoint collection for the connected org. 
+        /// Returns the endpoint collection for the connected org.
         /// </summary>
         public EndpointCollection ConnectedOrgPublishedEndpoints { get { if (CdsConnectionSvc != null) return CdsConnectionSvc.ConnectedOrgPublishedEndpoints; else return null; } }
 
@@ -374,29 +374,29 @@ namespace Microsoft.PowerPlatform.Cds.Client
         public OrganizationDetail OrganizationDetail { get { if (CdsConnectionSvc != null) return CdsConnectionSvc.ConnectedOrganizationDetail; else return null; } }
 
         /// <summary>
-        /// This is the connection lock object that is used to control connection access for various threads. This should be used if you are using the CDS queries via Linq to lock the connection 
+        /// This is the connection lock object that is used to control connection access for various threads. This should be used if you are using the CDS queries via Linq to lock the connection
         /// </summary>
         public object ConnectionLockObject { get { return _lockObject; } }
 
         /// <summary>
-        /// Returns the Version Number of the connected CDS organization. 
-        /// If access before the Organization is connected, value returned will be null or 0.0 
+        /// Returns the Version Number of the connected CDS organization.
+        /// If access before the Organization is connected, value returned will be null or 0.0
         /// </summary>
         public Version ConnectedOrgVersion { get { if (CdsConnectionSvc != null) return CdsConnectionSvc.OrganizationVersion; else return new Version(0, 0); } }
 
         /// <summary>
-        /// ID of the connected organization. 
+        /// ID of the connected organization.
         /// </summary>
         public Guid ConnectedOrgId { get { if (CdsConnectionSvc != null) return CdsConnectionSvc.OrganizationId; else return Guid.Empty; } }
 
         /// <summary>
-        /// Disabled internal cross thread safeties, this will gain much higher performance, however it places the requirements of thread safety on you, the developer. 
+        /// Disabled internal cross thread safeties, this will gain much higher performance, however it places the requirements of thread safety on you, the developer.
         /// </summary>
         public bool DisableCrossThreadSafeties { get { return _disableConnectionLocking; } set { _disableConnectionLocking = value; } }
 
         /// <summary>
         /// Returns the access token from the attached function.
-        /// This is set via the CdsServiceContructor that accepts a target url and a function to return an access token. 
+        /// This is set via the CdsServiceContructor that accepts a target url and a function to return an access token.
         /// </summary>
         internal Func<string, Task<string>> GetAccessToken { get; set; }
 
@@ -419,7 +419,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Gets or Sets the AAD Object ID of the caller. 
+        /// Gets or Sets the AAD Object ID of the caller.
         /// This is supported for Xrm 8.1 + only
         /// </summary>
         public Guid? CallerAADObjectId
@@ -449,9 +449,9 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
         /// <summary>
         /// This ID is used to support CDS Telemetry when trouble shooting SDK based errors.
-        /// When Set by the caller, all CDS API Actions executed by this client will be tracked under a single session id for later troubleshooting. 
-        /// For example, you are able to group all actions in a given run of your client ( several creates / reads and such ) under a given tracking id that is shared on all requests. 
-        /// providing this ID when reporting a problem will aid in trouble shooting your issue. 
+        /// When Set by the caller, all CDS API Actions executed by this client will be tracked under a single session id for later troubleshooting.
+        /// For example, you are able to group all actions in a given run of your client ( several creates / reads and such ) under a given tracking id that is shared on all requests.
+        /// providing this ID when reporting a problem will aid in trouble shooting your issue.
         /// </summary>
         public Guid? SessionTrackingId
         {
@@ -482,9 +482,9 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
         /// <summary>
         /// This will force the CDS server to refresh the current metadata cache with current DB config.
-        /// Note, that this is a performance impacting property. 
-        /// Use of this flag will slow down operations server side as the server is required to check for consistency of the platform metadata against disk on each API call executed. 
-        /// It is recommended to use this ONLY in conjunction with solution import or delete operations. 
+        /// Note, that this is a performance impacting property.
+        /// Use of this flag will slow down operations server side as the server is required to check for consistency of the platform metadata against disk on each API call executed.
+        /// It is recommended to use this ONLY in conjunction with solution import or delete operations.
         /// </summary>
         public bool ForceServerMetadataCacheConsistency
         {
@@ -513,7 +513,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Get the Client SDK version property 
+        /// Get the Client SDK version property
         /// </summary>
         public string SdkVersionProperty
         {
@@ -528,7 +528,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Gets the Tenant Id of the current connection. 
+        /// Gets the Tenant Id of the current connection.
         /// </summary>
         public Guid TenantId
         {
@@ -564,13 +564,13 @@ namespace Microsoft.PowerPlatform.Cds.Client
         #region Constructor and Setup methods
 
         /// <summary>
-        /// Default / Non accessible constructor 
+        /// Default / Non accessible constructor
         /// </summary>
         private CdsServiceClient()
         { }
 
         /// <summary>
-        /// Internal constructor used for testing. 
+        /// Internal constructor used for testing.
         /// </summary>
         /// <param name="orgSvc"></param>
         /// <param name="httpClient"></param>
@@ -585,7 +585,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             };
             CdsConnectionSvc = new CdsConnectionService(orgSvc);
             CdsConnectionSvc.WebApiHttpClient = httpClient;
-            
+
             if ( targetVersion != null)
                 CdsConnectionSvc.OrganizationVersion = targetVersion;
 
@@ -618,9 +618,9 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Creates an instance of CdsServiceClient who's authentication is managed by the caller. 
-        /// This requires the caller to implement a function that will accept the InstanceURI as a string will return the access token as a string on demand when the CdsServiceClient requires it. 
-        /// This approach is recommended when working with WebApplications or applications that are required to implement an on Behalf of flow for user authentication. 
+        /// Creates an instance of CdsServiceClient who's authentication is managed by the caller.
+        /// This requires the caller to implement a function that will accept the InstanceURI as a string will return the access token as a string on demand when the CdsServiceClient requires it.
+        /// This approach is recommended when working with WebApplications or applications that are required to implement an on Behalf of flow for user authentication.
         /// </summary>
         /// <param name="instanceUrl">URL of the CDS instance to connect too.</param>
         /// <param name="tokenProviderFunction">Function that will be called when the access token is require for interaction with CDS.  This function must accept a string (InstanceURI) and return a string (accesstoken) </param>
@@ -639,7 +639,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// <summary>
         /// Log in with OAuth for online connections,
         /// <para>
-        /// Utilizes the discovery system to resolve the correct endpoint to use given the provided server orgName, user name and password. 
+        /// Utilizes the discovery system to resolve the correct endpoint to use given the provided server orgName, user name and password.
         /// </para>
         /// </summary>
         /// <param name="userId">User Id supplied</param>
@@ -664,7 +664,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// <summary>
         /// Log in with OAuth for online connections,
         /// <para>
-        /// Will attempt to connect directly to the URL provided for the API endpoint. 
+        /// Will attempt to connect directly to the URL provided for the API endpoint.
         /// </para>
         /// </summary>
         /// <param name="userId">User Id supplied</param>
@@ -675,7 +675,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// <param name="promptBehavior">The prompt Behavior.</param>
         /// <param name="useDefaultCreds">(optional) If true attempts login using current user ( Online ) </param>
         /// <param name="cdsHostUri">API or Instance URI to access the CDS environment.</param>
-        public CdsServiceClient(string userId, SecureString password, Uri cdsHostUri,  bool useUniqueInstance, 
+        public CdsServiceClient(string userId, SecureString password, Uri cdsHostUri,  bool useUniqueInstance,
                 string clientId, Uri redirectUri, PromptBehavior promptBehavior = PromptBehavior.Auto, bool useDefaultCreds = false)
         {
             CreateCdsServiceConnection(
@@ -746,7 +746,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
         /// <summary>
         /// Log in with Certificate Auth OnLine connections.
-        /// This requires the org API URI. 
+        /// This requires the org API URI.
         /// </summary>
         /// <param name="certificate">Certificate to use during login</param>
         /// <param name="certificateStoreName">StoreName to look in for certificate identified by certificateThumbPrint</param>
@@ -779,7 +779,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 
         /// <summary>
-        /// ClientID \ ClientSecret Based Authentication flow. 
+        /// ClientID \ ClientSecret Based Authentication flow.
         /// </summary>
         /// <param name="instanceUrl">Direct URL of CDS instance to connect too.</param>
         /// <param name="clientId">The registered client Id on Azure portal.</param>
@@ -795,7 +795,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// ClientID \ ClientSecret Based Authentication flow, allowing for Secure Client ID passing. 
+        /// ClientID \ ClientSecret Based Authentication flow, allowing for Secure Client ID passing.
         /// </summary>
         /// <param name="instanceUrl">Direct URL of CDS instance to connect too.</param>
         /// <param name="clientId">The registered client Id on Azure portal.</param>
@@ -811,7 +811,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Parse the given connection string 
+        /// Parse the given connection string
         /// Connects to CDS using CreateCdsWebServiceConnection
         /// </summary>
         /// <param name="cdsConnectionString"></param>
@@ -826,10 +826,10 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
             string orgName = parsedCdsCon.Organization;
 
-            if ((parsedCdsCon.SkipDiscovery && parsedCdsCon.ServiceUri != null) && string.IsNullOrEmpty(orgName))  
+            if ((parsedCdsCon.SkipDiscovery && parsedCdsCon.ServiceUri != null) && string.IsNullOrEmpty(orgName))
                 // Orgname is mandatory if skip discovery is not passed
-                throw new ArgumentNullException("Cds Instance Name or URL name Required", 
-                        parsedCdsCon.IsOnPremOauth ? 
+                throw new ArgumentNullException("Cds Instance Name or URL name Required",
+                        parsedCdsCon.IsOnPremOauth ?
                         $"Unable to determine instance name to connect to from passed instance Uri, Uri does not match known online deployments." :
                         $"Unable to determine instance name to connect to from passed instance Uri. Uri does not match specification for OnPrem instances.");
 
@@ -980,7 +980,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                 // Set initial properties
                 EnabledInMemoryLogCapture = InMemoryLogCollectionEnabled,
                 LogRetentionDuration = InMemoryLogCollectionTimeOutMinutes
-            }; 
+            };
 
             CdsConnectionSvc = null;
 
@@ -1043,11 +1043,11 @@ namespace Microsoft.PowerPlatform.Cds.Client
                 if (requestedAuthType == AuthenticationType.ExternalTokenManagement)
                 {
                     CdsConnectionSvc = new CdsConnectionService(
-                            requestedAuthType, 
-                            instanceUrl, 
-                            useUniqueInstance, 
-                            orgDetail, clientId, 
-                            redirectUri, certificateThumbPrint, 
+                            requestedAuthType,
+                            instanceUrl,
+                            useUniqueInstance,
+                            orgDetail, clientId,
+                            redirectUri, certificateThumbPrint,
                             certificateStoreName, certificate, hostName, port, false,logSink:logEntry);
 
                     if (GetAccessToken != null)
@@ -1126,7 +1126,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         #region Public General Interfaces
 
         /// <summary>
-        /// Enabled only if InMemoryLogCollectionEnabled is true. 
+        /// Enabled only if InMemoryLogCollectionEnabled is true.
         /// Return all logs currently stored for the cdsserviceclient in queue.
         /// </summary>
         public IEnumerable<Tuple<DateTime, string>> GetAllLogs()
@@ -1137,7 +1137,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Enabled only if InMemoryLogCollectionEnabled is true. 
+        /// Enabled only if InMemoryLogCollectionEnabled is true.
         /// Return all logs currently stored for the cdsserviceclient in queue in string list format with [UTCDateTime][LogEntry].
         /// </summary>
         public string[] GetAllLogsAsStringList()
@@ -1146,8 +1146,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Clone, 'Clones" the current CDS Service client with a new connection to CDS. 
-        /// Clone only works for connections creating using OAuth Protocol. 
+        /// Clone, 'Clones" the current CDS Service client with a new connection to CDS.
+        /// Clone only works for connections creating using OAuth Protocol.
         /// </summary>
         /// <returns>returns an active CdsServiceClient or null</returns>
         public CdsServiceClient Clone()
@@ -1156,8 +1156,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Clone, 'Clones" the current CDS Service client with a new connection to CDS. 
-        /// Clone only works for connections creating using OAuth Protocol. 
+        /// Clone, 'Clones" the current CDS Service client with a new connection to CDS.
+        /// Clone only works for connections creating using OAuth Protocol.
         /// </summary>
         /// <param name="strongTypeAsm">Strong Type Assembly to reference as part of the create of the clone.</param>
         /// <returns></returns>
@@ -1203,7 +1203,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                 SvcClient.CallerId = CallerId;
                 SvcClient.MaxRetryCount = _maxRetryCount;
                 SvcClient.RetryPauseTime = _retryPauseTime;
-                SvcClient.GetAccessToken = GetAccessToken; 
+                SvcClient.GetAccessToken = GetAccessToken;
 
                 return SvcClient;
             }
@@ -1306,7 +1306,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
         #region Batch Interface methods.
         /// <summary>
-        /// Create a Batch Request for executing batch operations.  This returns an ID that will be used to identify a request as a batch request vs a "normal" request. 
+        /// Create a Batch Request for executing batch operations.  This returns an ID that will be used to identify a request as a batch request vs a "normal" request.
         /// </summary>
         /// <param name="batchName">Name of the Batch</param>
         /// <param name="returnResults">Should Results be returned</param>
@@ -1339,7 +1339,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Returns the batch id for a given batch name. 
+        /// Returns the batch id for a given batch name.
         /// </summary>
         /// <param name="batchName">Name of Batch</param>
         /// <returns></returns>
@@ -1371,7 +1371,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 
         /// <summary>
-        /// Returns the organization request at a give position 
+        /// Returns the organization request at a give position
         /// </summary>
         /// <param name="batchId">ID of the batch</param>
         /// <param name="position">Position</param>
@@ -1459,7 +1459,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Executes the batch command and then parses the retrieved items into a list. 
+        /// Executes the batch command and then parses the retrieved items into a list.
         /// If there exists a exception then the LastException would be filled with the first item that has the exception.
         /// </summary>
         /// <param name="batchId">ID of the batch to run</param>
@@ -1498,7 +1498,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 
         /// <summary>
-        /// Begins running the Batch command. 
+        /// Begins running the Batch command.
         /// </summary>
         /// <param name="batchId">ID of the batch to run</param>
         /// <returns>true if the batch begins, false if not. </returns>
@@ -1568,7 +1568,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         #endregion
 
         /// <summary>
-        /// Uses the dynamic entity patter to create a new entity 
+        /// Uses the dynamic entity patter to create a new entity
         /// </summary>
         /// <param name="entityName">Name of Entity To create</param>
         /// <param name="valueArray">Initial Values</param>
@@ -1616,7 +1616,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
             if (AddRequestToBatch(batchId, createReq, entityName, string.Format(CultureInfo.InvariantCulture, "Request for Create on {0} queued", entityName), bypassPluginExecution))
                 return Guid.Empty;
-            
+
             createResp = (CreateResponse)ExecuteCdsOrganizationRequestImpl(createReq, entityName, useWebAPI: true , bypassPluginExecution: bypassPluginExecution);
             if (createResp != null)
             {
@@ -1628,7 +1628,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Generic update entity 
+        /// Generic update entity
         /// </summary>
         /// <param name="entityName">String version of the entity name</param>
         /// <param name="keyFieldName">Key fieldname of the entity </param>
@@ -1670,7 +1670,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             #endregion
 
             uEnt.Attributes.AddRange(PropertyList.ToArray());
-            uEnt.Id = id; 
+            uEnt.Id = id;
 
             UpdateRequest req = new UpdateRequest();
             req.Target = uEnt;
@@ -1692,7 +1692,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 
         /// <summary>
-        /// Updates the State and Status of the Entity passed in. 
+        /// Updates the State and Status of the Entity passed in.
         /// </summary>
         /// <param name="entName">Name of the entity</param>
         /// <param name="id">Guid ID of the entity you are updating</param>
@@ -1707,7 +1707,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Updates the State and Status of the Entity passed in. 
+        /// Updates the State and Status of the Entity passed in.
         /// </summary>
         /// <param name="entName">Name of the entity</param>
         /// <param name="id">Guid ID of the entity you are updating</param>
@@ -1806,7 +1806,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Gets a list of accounts based on the search parameters. 
+        /// Gets a list of accounts based on the search parameters.
         /// </summary>
         /// <param name="entityName">CDS Entity Type Name to search</param>
         /// <param name="searchParameters">Array of Search Parameters</param>
@@ -1834,7 +1834,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 
         /// <summary>
-        /// Gets a list of accounts based on the search parameters. 
+        /// Gets a list of accounts based on the search parameters.
         /// </summary>
         /// <param name="entityName">CDS Entity Type Name to search</param>
         /// <param name="searchParameters">Array of Search Parameters</param>
@@ -1847,7 +1847,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         public Dictionary<string, Dictionary<string, object>> GetEntityDataBySearchParams(string entityName,
             List<CdsSearchFilter> searchParameters,
             LogicalSearchOperator searchOperator,
-            List<string> fieldList, Guid batchId = default(Guid), 
+            List<string> fieldList, Guid batchId = default(Guid),
             bool bypassPluginExecution = false)
         {
             string pgCookie = string.Empty;
@@ -1856,7 +1856,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Searches for data from an entity based on the search parameters. 
+        /// Searches for data from an entity based on the search parameters.
         /// </summary>
         /// <param name="entityName">Name of the entity to search </param>
         /// <param name="searchParameters">Array of Search Parameters</param>
@@ -2099,7 +2099,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 
         /// <summary>
-        /// Queries an Object via a M to M Link 
+        /// Queries an Object via a M to M Link
         /// </summary>
         /// <param name="returnEntityName">Name of the entity you want return data from</param>
         /// <param name="primarySearchParameters">Search Prams for the Return Entity</param>
@@ -2138,7 +2138,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Queries an Object via a M to M Link 
+        /// Queries an Object via a M to M Link
         /// </summary>
         /// <param name="returnEntityName">Name of the entity you want return data from</param>
         /// <param name="primarySearchParameters">Search Prams for the Return Entity</param>
@@ -2442,8 +2442,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Closes the Activity type specified. 
-        /// The Activity Entity type supports fax , letter , and phonecall 
+        /// Closes the Activity type specified.
+        /// The Activity Entity type supports fax , letter , and phonecall
         /// <para>*Note: This will default to using English names for Status. if you need to use Non-English, you should populate the names for completed for the status and state.</para>
         /// </summary>
         /// <param name="activityEntityType">Type of Activity you would like to close.. Supports fax, letter, phonecall</param>
@@ -2533,7 +2533,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Returns all Activities Related to a given Entity ID. 
+        /// Returns all Activities Related to a given Entity ID.
         /// Only Account, Contact and Opportunity entities are supported.
         /// </summary>
         /// <param name="searchEntity">Type of Entity to search against</param>
@@ -2571,7 +2571,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Returns all Activities Related to a given Entity ID. 
+        /// Returns all Activities Related to a given Entity ID.
         /// Only Account, Contact and Opportunity entities are supported.
         /// </summary>
         /// <param name="searchEntity">Type of Entity to search against</param>
@@ -2606,7 +2606,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Returns all Activities Related to a given Entity ID. 
+        /// Returns all Activities Related to a given Entity ID.
         /// Only Account, Contact and Opportunity entities are supported.
         /// </summary>
         /// <param name="searchEntity">Type of Entity to search against</param>
@@ -2644,7 +2644,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 
         /// <summary>
-        /// Returns all Activities Related to a given Entity ID. 
+        /// Returns all Activities Related to a given Entity ID.
         /// Only Account, Contact and Opportunity entities are supported.
         /// </summary>
         /// <param name="searchEntity">Type of Entity to search against</param>
@@ -2837,7 +2837,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Executes a named workflow on an object. 
+        /// Executes a named workflow on an object.
         /// </summary>
         /// <param name="workflowName">name of the workflow to run</param>
         /// <param name="id">ID to exec against</param>
@@ -3270,7 +3270,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 
         /// <summary>
-        /// Import Solution Async used Execute Async pattern to run a solution import. 
+        /// Import Solution Async used Execute Async pattern to run a solution import.
         /// </summary>
         /// <param name="solutionPath">Path to the Solution File</param>
         /// <param name="activatePlugIns">Activate Plugin's and workflows on the Solution </param>
@@ -3357,7 +3357,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
         /// <summary>
         /// <para>
-        /// Request CDS to install sample data shipped with Cds. Note this is process will take a few moments to execute.  
+        /// Request CDS to install sample data shipped with Cds. Note this is process will take a few moments to execute.
         /// <para>This method will return once the request has been submitted.</para>
         /// </para>
         /// </summary>
@@ -3388,7 +3388,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
         /// <summary>
         /// <para>
-        /// Request CDS to remove sample data shipped with CDS. Note this is process will take a few moments to execute.  
+        /// Request CDS to remove sample data shipped with CDS. Note this is process will take a few moments to execute.
         /// This method will return once the request has been submitted.
         /// </para>
         /// </summary>
@@ -3417,7 +3417,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Determines if the CDS sample data has been installed 
+        /// Determines if the CDS sample data has been installed
         /// </summary>
         /// <returns>True if the sample data is installed, False if not. </returns>
         public ImportStatus IsSampleDataInstalled()
@@ -3491,7 +3491,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         #endregion
 
         /// <summary>
-        /// Associates one Entity to another where an M2M Relationship Exists. 
+        /// Associates one Entity to another where an M2M Relationship Exists.
         /// </summary>
         /// <param name="entityName1">Entity on one side of the relationship</param>
         /// <param name="entity1Id">The Id of the record on the first side of the relationship</param>
@@ -3534,7 +3534,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Associates multiple entities of the same time to a single entity 
+        /// Associates multiple entities of the same time to a single entity
         /// </summary>
         /// <param name="targetEntity">Entity that things will be related too.</param>
         /// <param name="targetEntity1Id">ID of entity that things will be related too</param>
@@ -3583,7 +3583,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Removes the Association between 2 entity items where an M2M Relationship Exists. 
+        /// Removes the Association between 2 entity items where an M2M Relationship Exists.
         /// </summary>
         /// <param name="entityName1">Entity on one side of the relationship</param>
         /// <param name="entity1Id">The Id of the record on the first side of the relationship</param>
@@ -3657,7 +3657,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// This will route a Entity to a public queue, 
+        /// This will route a Entity to a public queue,
         /// </summary>
         /// <param name="entityId">ID of the Entity to route</param>
         /// <param name="entityName">Name of the Entity that the Id describes</param>
@@ -3722,7 +3722,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// this will send an Email to the 
+        /// this will send an Email to the
         /// </summary>
         /// <param name="emailid">ID of the Email activity</param>
         /// <param name="token">Tracking Token or Null</param>
@@ -3758,7 +3758,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Returns the user ID of the currently logged in user. 
+        /// Returns the user ID of the currently logged in user.
         /// </summary>
         /// <returns></returns>
         public Guid GetMyCdsUserId()
@@ -3816,7 +3816,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Gets a global option set from CDS. 
+        /// Gets a global option set from CDS.
         /// </summary>
         /// <param name="globalOptionSetName">Name of the Option Set To get</param>
         /// <returns>OptionSetMetadata or null</returns>
@@ -3870,7 +3870,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Returns the Metadata for an entity from CDS, defaults to basic data only. 
+        /// Returns the Metadata for an entity from CDS, defaults to basic data only.
         /// </summary>
         /// <param name="entityLogicalname">Logical name of the entity</param>
         /// <param name="queryFilter">filter to apply to the query, defaults to default entity data.</param>
@@ -3898,7 +3898,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Returns the Form Entity References for a given form type. 
+        /// Returns the Form Entity References for a given form type.
         /// </summary>
         /// <param name="entityLogicalname">logical name of the entity you are querying for form data.</param>
         /// <param name="formTypeId">Form Type you want</param>
@@ -4003,7 +4003,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Gets an Entity Name by Logical name or Type code. 
+        /// Gets an Entity Name by Logical name or Type code.
         /// </summary>
         /// <param name="entityName">logical name of the entity </param>
         /// <param name="entityTypeCode">Type code for the entity </param>
@@ -4014,7 +4014,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Gets an Entity Name by Logical name or Type code. 
+        /// Gets an Entity Name by Logical name or Type code.
         /// </summary>
         /// <param name="entityName">logical name of the entity </param>
         /// <param name="entityTypeCode">Type code for the entity </param>
@@ -4025,7 +4025,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// This will clear the Metadata cache for either all entities or the specified entity 
+        /// This will clear the Metadata cache for either all entities or the specified entity
         /// </summary>
         /// <param name="entityName">Optional: name of the entity to clear cached info for</param>
         public void ResetLocalMetadataCache(string entityName = "")
@@ -4035,7 +4035,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Gets the Entity Display Name. 
+        /// Gets the Entity Display Name.
         /// </summary>
         /// <param name="entityName"></param>
         /// <param name="entityTypeCode"></param>
@@ -4103,7 +4103,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Gets the typecode of an entity by name. 
+        /// Gets the typecode of an entity by name.
         /// </summary>
         /// <param name="entityName">name of the entity to get the type code on</param>
         /// <returns></returns>
@@ -4159,7 +4159,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 
         /// <summary>
-        /// Adds an option to a pick list on an entity. 
+        /// Adds an option to a pick list on an entity.
         /// </summary>
         /// <param name="targetEntity">Entity Name to Target</param>
         /// <param name="attribName">Attribute Name on the Entity</param>
@@ -4333,7 +4333,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Publishes an entity to the production system, 
+        /// Publishes an entity to the production system,
         /// used in conjunction with the Metadata services.
         /// </summary>
         /// <param name="entityName">Name of the entity to publish</param>
@@ -4404,7 +4404,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             //    _CdsServiceClientTokenCache = new CdsServiceClientTokenCache(tokenCachePath);
             //return _CdsServiceClientTokenCache.Clear(tokenCachePath);
             //TODO: Update for new Token cache providers. 
-            return false; 
+            return false;
         }
 
         #endregion
@@ -4446,7 +4446,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        ///  Makes a secure string 
+        ///  Makes a secure string
         /// </summary>
         /// <param name="pass"></param>
         /// <returns></returns>
@@ -4466,7 +4466,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Builds the Query expression to use with a Search. 
+        /// Builds the Query expression to use with a Search.
         /// </summary>
         /// <param name="entityName"></param>
         /// <param name="searchParams"></param>
@@ -4510,7 +4510,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Creates a SearchFilterList from a Search string Dictionary 
+        /// Creates a SearchFilterList from a Search string Dictionary
         /// </summary>
         /// <param name="inSearchParams">Inbound Search Strings</param>
         /// <param name="outSearchList">List that will be populated</param>
@@ -4565,7 +4565,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Get the localize label from a CDS Label. 
+        /// Get the localize label from a CDS Label.
         /// </summary>
         /// <param name="cdsLabel"></param>
         /// <returns></returns>
@@ -4668,7 +4668,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Lookup a entity ID by a single search element. 
+        /// Lookup a entity ID by a single search element.
         /// Used for Lookup Lists.
         /// </summary>
         /// <param name="SearchValue">Text to search for</param>
@@ -4812,7 +4812,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
         /// <summary>
         /// Adds a request to a batch with display and handling logic
-        /// will fail out if batching is not enabled. 
+        /// will fail out if batching is not enabled.
         /// </summary>
         /// <param name="batchId">ID of the batch to add too</param>
         /// <param name="req">Organization request to Add</param>
@@ -4852,18 +4852,18 @@ namespace Microsoft.PowerPlatform.Cds.Client
         #region Public Access to direct commands.
 
         /// <summary>
-        /// Executes a web request against Xrm WebAPI. 
+        /// Executes a web request against Xrm WebAPI.
         /// </summary>
-        /// <param name="queryString">Here you would pass the path and query parameters that you wish to pass onto the WebAPI.  
+        /// <param name="queryString">Here you would pass the path and query parameters that you wish to pass onto the WebAPI.
         /// The format used here is as follows:
-        ///   {APIURI}/api/data/v{instance version}/querystring.  
-        /// For example, 
-        ///     if you wanted to get data back from an account,  you would pass the following: 
+        ///   {APIURI}/api/data/v{instance version}/querystring.
+        /// For example,
+        ///     if you wanted to get data back from an account,  you would pass the following:
         ///         accounts(id)
         ///         which creates:  get - https://myinstance.crm.dynamics.com/api/data/v9.0/accounts(id)
         ///     if you were creating an account, you would pass the following:
-        ///         accounts 
-        ///         which creates:  post - https://myinstance.crm.dynamics.com/api/data/v9.0/accounts - body contains the data. 
+        ///         accounts
+        ///         which creates:  post - https://myinstance.crm.dynamics.com/api/data/v9.0/accounts - body contains the data.
         ///         </param>
         /// <param name="method">Method to use for the request</param>
         /// <param name="body">Content your passing to the request</param>
@@ -4945,11 +4945,11 @@ namespace Microsoft.PowerPlatform.Cds.Client
                 Entity cReq = null;
                 if (req.Parameters.ContainsKey("Target") && req.Parameters["Target"] is Entity ent) // this should cover things that have targets. 
                 {
-                    cReq = ent; 
+                    cReq = ent;
                 }
                 else if (req.Parameters.ContainsKey("Target") && req.Parameters["Target"] is EntityReference entRef) // this should cover things that have targets. 
                 {
-                    cReq = new Entity(entRef.LogicalName, entRef.Id); 
+                    cReq = new Entity(entRef.LogicalName, entRef.Id);
                 }
 
                 if (cReq != null)
@@ -5035,7 +5035,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                         if (req.Parameters[Utilities.CDSRequestHeaders.SUPPRESSDUPLICATEDETECTION].GetType() == typeof(bool) &&
                             (bool)req.Parameters[Utilities.CDSRequestHeaders.SUPPRESSDUPLICATEDETECTION])
                         {
-                            suppressDuplicateDetection = true; 
+                            suppressDuplicateDetection = true;
                         }
                     }
 
@@ -5051,7 +5051,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
                     string rowVersion = string.Empty;
                     string IfMatchHeaderTag = string.Empty;
-                    if ( req.Parameters.ContainsKey(Utilities.CDSRequestHeaders.CONCURRENCYBEHAVIOR) && 
+                    if ( req.Parameters.ContainsKey(Utilities.CDSRequestHeaders.CONCURRENCYBEHAVIOR) &&
                         (ConcurrencyBehavior)req.Parameters[Utilities.CDSRequestHeaders.CONCURRENCYBEHAVIOR] != ConcurrencyBehavior.Default)
                     {
                         // Found concurrency flag. 
@@ -5110,7 +5110,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                         headers.Add($"{Utilities.CDSRequestHeaders.CDSHEADERPROPERTYPREFIX}{Utilities.CDSRequestHeaders.SUPPRESSDUPLICATEDETECTION}", new List<string>() { "true" });
                     }
 
-                    string addedQueryParams = ""; 
+                    string addedQueryParams = "";
                     // modify post URI
                     if (!string.IsNullOrEmpty(tagValue))
                     {
@@ -5123,7 +5123,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     // add queryParms to the PostUri. 
                     if (!string.IsNullOrEmpty(addedQueryParams))
                     {
-                        postUri = $"{postUri}?{addedQueryParams}"; 
+                        postUri = $"{postUri}?{addedQueryParams}";
                     }
 
                     // Execute request 
@@ -5150,12 +5150,12 @@ namespace Microsoft.PowerPlatform.Cds.Client
                         }
                         else if (req is DeleteRequest)
                         {
-                            return new DeleteResponse(); 
+                            return new DeleteResponse();
                         }
                         else if (req is UpsertRequest)
                         {
                             //var upsertReturn = new UpsertResponse();
-                            return null; 
+                            return null;
                         }
                         else
                             return null;
@@ -5164,7 +5164,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                         return null;
                 }
                 else
-                    return null; 
+                    return null;
             }
             else
             {
@@ -5269,7 +5269,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     }
                     else
                     {
-                        if ((CdsConnectionSvc.OrganizationVersion == null) || 
+                        if ((CdsConnectionSvc.OrganizationVersion == null) ||
                         (CdsConnectionSvc.OrganizationVersion != null && CdsConnectionSvc.OrganizationVersion < Utilities.CDSFeatureVersionMinimums.AllowAsyncRibbonProcessing))
                         {
                             // Not supported on this version of CDS 
@@ -5435,7 +5435,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Executes a CDS Create Request and returns the organization response object. 
+        /// Executes a CDS Create Request and returns the organization response object.
         /// </summary>
         /// <param name="req">Request to run</param>
         /// <param name="errorStringCheck">Formatted Error string</param>
@@ -5633,15 +5633,15 @@ namespace Microsoft.PowerPlatform.Cds.Client
                 var errorMessage = CdsTraceLogger.GetFirstLineFromString(contentBody["error"]["message"].ToString()).Trim();
 
                 logEntry.Log(string.Format(CultureInfo.InvariantCulture, "{6}Failed to Execute Command - {0}{1} : {5}RequestID={2} {3}: {8} duration={4} ExceptionMessage = {7}",
-                    webUriMessageReq, 
-                    _disableConnectionLocking ? " : DisableCrossThreadSafeties=true :" : string.Empty, 
-                    requestTrackingId.ToString(), 
-                    string.Empty, 
+                    webUriMessageReq,
+                    _disableConnectionLocking ? " : DisableCrossThreadSafeties=true :" : string.Empty,
+                    requestTrackingId.ToString(),
+                    string.Empty,
                     logDt.Elapsed.ToString(),
-                    SessionTrackingId.HasValue && SessionTrackingId.Value != Guid.Empty ? $"SessionID={SessionTrackingId.Value.ToString()} : " : "", 
-                    isTerminalFailure ? "[TerminalFailure] " : "", 
-                    errorMessage, 
-                    errorStringCheck), 
+                    SessionTrackingId.HasValue && SessionTrackingId.Value != Guid.Empty ? $"SessionID={SessionTrackingId.Value.ToString()} : " : "",
+                    isTerminalFailure ? "[TerminalFailure] " : "",
+                    errorMessage,
+                    errorStringCheck),
                     TraceEventType.Error, ex);
             }
         }
@@ -5703,16 +5703,16 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// <summary>
         /// Makes a web request to the connected XRM instance.
         /// </summary>
-        /// <param name="queryString">Here you would pass the path and query parameters that you wish to pass onto the WebAPI.  
+        /// <param name="queryString">Here you would pass the path and query parameters that you wish to pass onto the WebAPI.
         /// The format used here is as follows:
-        ///   {APIURI}/api/data/v{instance version}/querystring.  
-        /// For example, 
-        ///     if you wanted to get data back from an account,  you would pass the following: 
+        ///   {APIURI}/api/data/v{instance version}/querystring.
+        /// For example,
+        ///     if you wanted to get data back from an account,  you would pass the following:
         ///         accounts(id)
         ///         which creates:  get - https://myinstance.crm.dynamics.com/api/data/v9.0/accounts(id)
         ///     if you were creating an account, you would pass the following:
-        ///         accounts 
-        ///         which creates:  post - https://myinstance.crm.dynamics.com/api/data/v9.0/accounts - body contains the data. 
+        ///         accounts
+        ///         which creates:  post - https://myinstance.crm.dynamics.com/api/data/v9.0/accounts - body contains the data.
         ///         </param>
         /// <param name="method">Http Method you want to pass.</param>
         /// <param name="body">Content your passing to the request</param>
@@ -5865,15 +5865,15 @@ namespace Microsoft.PowerPlatform.Cds.Client
                 try
                 {
                     resp = await CdsConnectionService.ExecuteHttpRequestAsync(
-                            TargetUri.ToString(), 
-                            method, 
-                            body: body, 
-                            customHeaders: customHeaders, 
-                            logSink: logEntry, 
-                            contentType: contentType, 
-                            requestTrackingId: requestTrackingId, 
-                            sessionTrackingId: SessionTrackingId.HasValue ? SessionTrackingId.Value : Guid.Empty, 
-                            suppressDebugMessage:true , 
+                            TargetUri.ToString(),
+                            method,
+                            body: body,
+                            customHeaders: customHeaders,
+                            logSink: logEntry,
+                            contentType: contentType,
+                            requestTrackingId: requestTrackingId,
+                            sessionTrackingId: SessionTrackingId.HasValue ? SessionTrackingId.Value : Guid.Empty,
+                            suppressDebugMessage:true ,
                             providedHttpClient: CdsConnectionSvc.WebApiHttpClient == null ? ClientServiceProviders.Instance.GetService<IHttpClientFactory>().CreateClient("CdsHttpClientFactory") : CdsConnectionSvc.WebApiHttpClient
                             ).ConfigureAwait(false);
 
@@ -5906,7 +5906,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     }
                     else
                     {
-                        retry = false; 
+                        retry = false;
                         logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Failed to Execute Command - {3} {0} : {2}RequestID={1}", queryString, requestTrackingId.ToString(), SessionTrackingId.HasValue && SessionTrackingId.Value != Guid.Empty ? $"SessionID={SessionTrackingId.Value.ToString()} : " : "", method), TraceEventType.Verbose);
                         logEntry.Log(string.Format(CultureInfo.InvariantCulture, "************ Exception - {2} : {0} |=> {1}", errorStringCheck, ex.Message, queryString), TraceEventType.Error, ex);
                         return null;
@@ -5982,7 +5982,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             else
                 return false;
 
-            return false; 
+            return false;
         }
 
 
@@ -6023,7 +6023,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             }
 
             /// <summary>
-            /// Constructs a PickList item with data. 
+            /// Constructs a PickList item with data.
             /// </summary>
             /// <param name="actualValue"></param>
             /// <param name="displayValue"></param>
@@ -6059,7 +6059,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             }
 
             /// <summary>
-            /// Constructor with data. 
+            /// Constructor with data.
             /// </summary>
             /// <param name="label"></param>
             /// <param name="id"></param>
@@ -6085,7 +6085,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             public LogicalOperator FilterOperator { get; set; }
 
             /// <summary>
-            /// Creates an empty CDS Search Filter. 
+            /// Creates an empty CDS Search Filter.
             /// </summary>
             public CdsSearchFilter()
             {
@@ -6094,7 +6094,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// CDS Filter item. 
+        /// CDS Filter item.
         /// </summary>
         public sealed class CdsFilterConditionItem
         {
@@ -6141,12 +6141,12 @@ namespace Microsoft.PowerPlatform.Cds.Client
             public string DataMapFileName { get; set; }
 
             /// <summary>
-            /// if True, infers the map from the type of entity requested.. 
+            /// if True, infers the map from the type of entity requested..
             /// </summary>
             public bool UseSystemMap { get; set; }
 
             /// <summary>
-            /// List of files to import in this job,  there must be at least one. 
+            /// List of files to import in this job,  there must be at least one.
             /// </summary>
             public List<ImportFileItem> Files { get; set; }
 
@@ -6179,7 +6179,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Describes an Individual Import Item. 
+        /// Describes an Individual Import Item.
         /// </summary>
         public class ImportFileItem
         {
@@ -6200,11 +6200,11 @@ namespace Microsoft.PowerPlatform.Cds.Client
             /// </summary>
             public bool EnableDuplicateDetection { get; set; }
             /// <summary>
-            /// Name of the entity that Originated the data. 
+            /// Name of the entity that Originated the data.
             /// </summary>
             public string SourceEntityName { get; set; }
             /// <summary>
-            /// Name of the entity that Target Entity the data. 
+            /// Name of the entity that Target Entity the data.
             /// </summary>
             public string TargetEntityName { get; set; }
             /// <summary>
@@ -6220,7 +6220,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             /// </summary>
             public bool IsFirstRowHeader { get; set; }
             /// <summary>
-            /// UserID or Team ID of the Record Owner ( from systemuser ) 
+            /// UserID or Team ID of the Record Owner ( from systemuser )
             /// </summary>
             public Guid RecordOwner { get; set; }
             /// <summary>
@@ -6261,7 +6261,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                 /// </summary>
                 Comma = 2,
                 /// <summary>
-                /// Specifies ' 
+                /// Specifies '
                 /// </summary>
                 SingleQuote = 3
             }
@@ -6284,7 +6284,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Logical Search Pram to apply to over all search. 
+        /// Logical Search Pram to apply to over all search.
         /// </summary>
         public enum LogicalSearchOperator
         {
@@ -6303,7 +6303,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Logical Search Pram to apply to over all search. 
+        /// Logical Search Pram to apply to over all search.
         /// </summary>
         public enum LogicalSortOrder
         {
@@ -6327,7 +6327,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             /// </summary>
             Dashboard = 0,
             /// <summary>
-            /// Appointment book, for service requests. 
+            /// Appointment book, for service requests.
             /// </summary>
             AppointmentBook = 1,
             /// <summary>
@@ -6377,11 +6377,11 @@ namespace Microsoft.PowerPlatform.Cds.Client
         {
             // Relay to Update request. 
             CreateResponse resp = (CreateResponse)ExecuteCdsOrganizationRequestImpl(
-                new CreateRequest() 
-                { 
-                    Target = entity 
+                new CreateRequest()
+                {
+                    Target = entity
                 }
-                , "Create To CDS via IOrganizationService" 
+                , "Create To CDS via IOrganizationService"
                 , useWebAPI:true);
             if (resp == null)
                 throw LastCdsException;
@@ -6390,7 +6390,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Issues a Delete request to CDS 
+        /// Issues a Delete request to CDS
         /// </summary>
         /// <param name="entityName">Entity name to delete</param>
         /// <param name="id">ID if entity to delete</param>
@@ -6440,7 +6440,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Issues a Retrieve Request to CDS 
+        /// Issues a Retrieve Request to CDS
         /// </summary>
         /// <param name="entityName">Entity name to request</param>
         /// <param name="id">ID of the entity to request</param>
@@ -6476,16 +6476,16 @@ namespace Microsoft.PowerPlatform.Cds.Client
         }
 
         /// <summary>
-        /// Issues an update to CDS. 
+        /// Issues an update to CDS.
         /// </summary>
         /// <param name="entity">Entity to update into CDS</param>
         public void Update(Entity entity)
         {
             // Relay to Update request. 
             UpdateResponse resp = (UpdateResponse)ExecuteCdsOrganizationRequestImpl(
-                new UpdateRequest() 
-                { 
-                    Target = entity 
+                new UpdateRequest()
+                {
+                    Target = entity
                 }
                 , "UpdateRequest To CDS via IOrganizationService"
                 , useWebAPI:true);
@@ -6532,7 +6532,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 
         /// <summary>
-        /// Disposed the resources used by the CdsServiceClient. 
+        /// Disposed the resources used by the CdsServiceClient.
         /// </summary>
         public void Dispose()
         {

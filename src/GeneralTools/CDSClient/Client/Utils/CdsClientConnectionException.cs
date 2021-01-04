@@ -17,7 +17,7 @@ namespace Microsoft.PowerPlatform.Cds.Client.Utils
         /// Creates a CdsService Client Exception
         /// </summary>
         /// <param name="message">Error Message</param>
-        public CdsClientConnectionException(string message) 
+        public CdsClientConnectionException(string message)
             : base(message)
         {
         }
@@ -27,7 +27,7 @@ namespace Microsoft.PowerPlatform.Cds.Client.Utils
         /// </summary>
         /// <param name="message">Error Message</param>
         /// <param name="innerException">Supporting Exception</param>
-        public CdsClientConnectionException(string message, Exception innerException) 
+        public CdsClientConnectionException(string message, Exception innerException)
             : base(message, innerException)
         {
         }

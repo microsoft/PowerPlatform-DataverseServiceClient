@@ -8,20 +8,20 @@ using System.Threading.Tasks;
 namespace Microsoft.PowerPlatform.Cds.Client.Utils
 {
     /// <summary>
-    /// This class will be used to support hooking into ADAL 3.x+ Call back logic. 
+    /// This class will be used to support hooking into ADAL 3.x+ Call back logic.
     /// </summary>
-    internal static class ADALLoggerCallBack 
+    internal static class ADALLoggerCallBack
     {
         private static CdsTraceLogger _logEntry;
 
         /// <summary>
         /// Enabled PII logging for this connection.
-        /// if this flag is set, it will override the value from app config. 
+        /// if this flag is set, it will override the value from app config.
         /// </summary>
         public static bool? EnabledPIILogging { get; set; }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="level"></param>
         /// <param name="message"></param>
@@ -44,7 +44,7 @@ namespace Microsoft.PowerPlatform.Cds.Client.Utils
             }
 
             // Add (PII) prefix to messages that have PII in them per AAD Message alert. 
-            message = containsPii ? $"(PII){message}" : message; 
+            message = containsPii ? $"(PII){message}" : message;
 
             switch (level)
             {

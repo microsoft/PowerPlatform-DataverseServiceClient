@@ -22,7 +22,7 @@
 		private Boolean isUnsupported;
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		public Object ActualValue
 		{
@@ -31,7 +31,7 @@
 		}
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		public String AttributeLabel
 		{
@@ -40,7 +40,7 @@
 		}
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		public AttributeTypeCode AttributeType
 		{
@@ -49,7 +49,7 @@
 		}
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		public String DisplayValue
 		{
@@ -57,7 +57,7 @@
 			set { displayValue = value; }
 		}
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		public Boolean IsUnsupported
 		{
@@ -66,7 +66,7 @@
 		}
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		public String SchemaName
 		{
@@ -76,23 +76,23 @@
 	}
 
 	/// <summary>
-	/// 
+	///
 	/// </summary>
 	public sealed class BooleanAttributeData : AttributeData
 	{
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		public OptionMetadata[] BooleanOptions { get; set; }
 	}
 	/// <summary>
-	/// 
+	///
 	/// </summary>
 	public sealed class StringAttributeData : AttributeData
 	{
 		private int maxLength;
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		public int MaxLength
 		{
@@ -101,14 +101,14 @@
 		}
 	}
 	/// <summary>
-	/// 
+	///
 	/// </summary>
 	[SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Picklist")]
 	public sealed class PicklistAttributeData : AttributeData
 	{
 		private OptionMetadata[] picklistOptions;
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		[SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Picklist")]
 		public OptionMetadata[] PicklistOptions

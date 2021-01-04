@@ -27,10 +27,10 @@ namespace CdsClient_Core_UnitTests
                 outWriter.WriteLine(message);
             }
             catch (System.InvalidOperationException)
-            {  
+            {
                 // Do nothing here.. this can happen if the test does not reset the appdomain and is restarted. 
             }
-            
+
         }
     }
 }

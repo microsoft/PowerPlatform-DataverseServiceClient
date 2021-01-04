@@ -13,8 +13,8 @@ namespace Microsoft.PowerPlatform.Cds.Client.Dynamics
     public static class CdsServiceClientExtensions
     {
 		/// <summary>
-		/// Closes a quote as won or lost, 
-		/// Revise is not supported via this method 
+		/// Closes a quote as won or lost,
+		/// Revise is not supported via this method
 		/// </summary>
 		/// <param name="quoteId">ID of the quote to close</param>
 		/// <param name="fieldList">List of fields that need to be updated</param>
@@ -184,7 +184,7 @@ namespace Microsoft.PowerPlatform.Cds.Client.Dynamics
 		}
 
 		/// <summary>
-		/// Closes an Incident request in CRM, 
+		/// Closes an Incident request in CRM,
 		/// this special handling is necessary to support CRM Built In Object.
 		/// </summary>
 		/// <param name="incidentId">ID of the CRM Incident to close</param>
@@ -251,7 +251,7 @@ namespace Microsoft.PowerPlatform.Cds.Client.Dynamics
 		}
 
 		/// <summary>
-		/// Cancel Sales order 
+		/// Cancel Sales order
 		/// </summary>
 		/// <param name="salesOrderId">Sales order id to close</param>
 		/// <param name="fieldList">List of fields to add</param>

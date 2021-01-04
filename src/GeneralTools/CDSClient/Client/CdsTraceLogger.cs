@@ -21,7 +21,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 	internal sealed class CdsTraceLogger : TraceLoggerBase
 	{
 		// Internal connection of exceptions since last clear. 
-		private List<Exception> _ActiveExceptionsList; 
+		private List<Exception> _ActiveExceptionsList;
 
 		#region Properties
 		/// <summary>
@@ -33,7 +33,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Default TraceSource Name 
+		/// Default TraceSource Name
 		/// </summary>
 		public string DefaultTraceSourceName
 		{
@@ -41,7 +41,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Collection of logs captured to date. 
+		/// Collection of logs captured to date.
 		/// </summary>
 		public ConcurrentQueue<Tuple<DateTime, string>> Logs { get; private set; } = new ConcurrentQueue<Tuple<DateTime, string>>();
 
@@ -51,8 +51,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		public TimeSpan LogRetentionDuration { get; set; } = TimeSpan.FromMinutes(5);
 
 		/// <summary>
-		/// Enables or disabled in-memory log capture. 
-		/// Default is false. 
+		/// Enables or disabled in-memory log capture.
+		/// Default is false.
 		/// </summary>
 		public bool EnabledInMemoryLogCapture { get; set; } = false;
 
@@ -61,7 +61,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		#region Public Methods
 
 		/// <summary>
-		/// Constructs the CdsTraceLogger class. 
+		/// Constructs the CdsTraceLogger class.
 		/// </summary>
 		/// <param name="traceSourceName"></param>
 		public CdsTraceLogger(string traceSourceName = "")
@@ -76,7 +76,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				TraceSourceName = traceSourceName;
 			}
 
-			_ActiveExceptionsList = new List<Exception>(); 
+			_ActiveExceptionsList = new List<Exception>();
 
 			base.Initialize();
 		}
@@ -85,7 +85,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		{
 			base.LastError.Remove(0, LastError.Length);
 			LastException = null;
-			_ActiveExceptionsList.Clear(); 
+			_ActiveExceptionsList.Clear();
 		}
 
 		/// <summary>
@@ -100,7 +100,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Log a Message 
+		/// Log a Message
 		/// </summary>
 		/// <param name="message"></param>
 		public override void Log(string message)
@@ -109,7 +109,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Log a Trace event 
+		/// Log a Trace event
 		/// </summary>
 		/// <param name="message"></param>
 		/// <param name="eventType"></param>
@@ -123,7 +123,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Log a Trace event 
+		/// Log a Trace event
 		/// </summary>
 		/// <param name="message"></param>
 		/// <param name="eventType"></param>
@@ -134,7 +134,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			{
 				exception = new Exception(message);
 			}
-			
+
 			StringBuilder detailedDump = new StringBuilder();
 			StringBuilder lastMessage = new StringBuilder();
 
@@ -161,7 +161,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 						LastException = exception;
 				}
 			}
-			_ActiveExceptionsList.Add(exception); 
+			_ActiveExceptionsList.Add(exception);
 
 			detailedDump.Clear();
 			lastMessage.Clear();
@@ -191,7 +191,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Logs data to memory. 
+		/// Logs data to memory.
 		/// </summary>
 		/// <param name="eventType"></param>
 		/// <param name="id"></param>
@@ -322,7 +322,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 					if (objException is HttpOperationException httpOperationException)
 					{
 						JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
-						
+
 						FormatExceptionMessage(
 						httpOperationException.Source != null ? httpOperationException.Source.ToString().Trim() : "Not Provided",
 						httpOperationException.TargetSite != null ? httpOperationException.TargetSite.Name?.ToString() : "Not Provided",
@@ -372,7 +372,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// returns the first line from the text block. 
+		/// returns the first line from the text block.
 		/// </summary>
 		/// <param name="textBlock"></param>
 		/// <returns></returns>
@@ -381,13 +381,13 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			if (!string.IsNullOrEmpty(textBlock))
 			{
 				if (textBlock.Contains(Environment.NewLine))
-					return textBlock.Substring(0, textBlock.IndexOf(Environment.NewLine)); 
+					return textBlock.Substring(0, textBlock.IndexOf(Environment.NewLine));
 			}
 			return textBlock;
         }
 
 		/// <summary>
-		/// Formats the detail collection from a service exception. 
+		/// Formats the detail collection from a service exception.
 		/// </summary>
 		/// <param name="errorDetails"></param>
 		/// <returns></returns>
@@ -408,7 +408,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Creates the exception message. 
+		/// Creates the exception message.
 		/// </summary>
 		/// <param name="source">Source of Exception</param>
 		/// <param name="targetSite">Target of Exception</param>
@@ -453,15 +453,15 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 	}
 
-	/// <summary> 
-	/// This class provides an override for the default trace settings.  
-	/// These settings must be set before the components in the control are used for them to be effective.  
-	/// </summary> 
+	/// <summary>
+	/// This class provides an override for the default trace settings.
+	/// These settings must be set before the components in the control are used for them to be effective.
+	/// </summary>
 	public class TraceControlSettings
 	{
 		private static string _traceSourceName = "Microsoft.PowerPlatform.Cds.Client.CdsServiceClient";
 
-		/// <summary> 
+		/// <summary>
 		/// Returns the Registered Trace Listeners in the override object.
 		/// </summary>
 		internal static Dictionary<string, TraceListener> RegisterdTraceListeners
@@ -472,22 +472,22 @@ namespace Microsoft.PowerPlatform.Cds.Client
 					TraceSourceSettingStore.GetTraceSourceSettings(_traceSourceName).TraceListeners : null;
 			}
 		}
-		/// <summary> 
+		/// <summary>
 		/// Override Trace Level setting.
-		/// </summary> 
+		/// </summary>
 		public static SourceLevels TraceLevel { get; set; }
-		/// <summary> 
-		/// Builds the base trace settings 
-		/// </summary> 
+		/// <summary>
+		/// Builds the base trace settings
+		/// </summary>
 
 		static TraceControlSettings()
 		{
 			TraceLevel = SourceLevels.Off;
 		}
 
-		/// <summary> 
-		/// Closes any trace listeners that were configured  
-		/// </summary> 
+		/// <summary>
+		/// Closes any trace listeners that were configured
+		/// </summary>
 		public static void CloseListeners()
 		{
 			if (RegisterdTraceListeners != null && RegisterdTraceListeners.Count > 0)
@@ -496,8 +496,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
 					itm.Close();
 				}
 		}
-		/// <summary> 
-		/// Adds a listener to the trace listen array  
+		/// <summary>
+		/// Adds a listener to the trace listen array
 		/// </summary>
 		/// <param name="listenerToAdd">Trace Listener you wish to add</param>
 		/// <returns>true on success, false on fail.</returns>

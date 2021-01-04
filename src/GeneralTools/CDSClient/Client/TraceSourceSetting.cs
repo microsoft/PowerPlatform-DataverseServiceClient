@@ -14,7 +14,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		public string SourceName { get; set; }
 
 		/// <summary>
-		/// Override Trace Level setting 
+		/// Override Trace Level setting
 		/// </summary>
 		public SourceLevels TraceLevel { get; set; }
 

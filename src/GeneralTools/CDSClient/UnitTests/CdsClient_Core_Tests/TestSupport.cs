@@ -36,7 +36,7 @@ namespace CdsClient_Core_UnitTests
 
             moqOrgSvc = orgSvc;
             moqHttpHandler = fakHttpMethodHander;
-            cdsServiceClient = cli; 
+            cdsServiceClient = cli;
         }
         #endregion
 
@@ -113,7 +113,7 @@ namespace CdsClient_Core_UnitTests
                 ReferencingAttribute = "field07",
                 ReferencedEntity = "account",
                 ReferencingEntityNavigationPropertyName = "field07account"
-            }           
+            }
             };
 
             System.Reflection.PropertyInfo proInfo = entityMetadata.GetType().GetProperty("ManyToOneRelationships");

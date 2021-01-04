@@ -9,7 +9,7 @@ using System.Globalization;
 namespace Microsoft.PowerPlatform.Cds.Client
 {
 	/// <summary>
-	/// TraceLoggerBase Class. 
+	/// TraceLoggerBase Class.
 	/// </summary>
 	[LocalizableAttribute(false)]
 #pragma warning disable CA1063 // Implement IDisposable Correctly
@@ -35,7 +35,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		private Exception _lastException = null;
 
 		private TraceSource _source;
-		
+
 		#endregion
 
 		#region Protected fields
@@ -62,7 +62,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 						System.Diagnostics.EventLog.WriteEntry("application", errMsg, System.Diagnostics.EventLogEntryType.Error);
 #endif
 					}
-					catch 
+					catch
 					{
 						//error in writing to event log
 						string log = string.Format("UNABLE TO WRITE TO EVENT LOG FOR: {0}", errMsg);
@@ -108,7 +108,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			get { return _lastError; }
 		}
 		/// <summary>
-		/// Last Exception from CRM 
+		/// Last Exception from CRM
 		/// </summary>
 		public Exception LastException
 		{
@@ -117,7 +117,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Current Trace level 
+		/// Current Trace level
 		/// </summary>
 		public SourceLevels CurrentTraceLevel
 		{
@@ -136,7 +136,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		}
 
 		/// <summary>
-		/// Initialize Trace Source 
+		/// Initialize Trace Source
 		/// </summary>
 		protected void Initialize()
 		{
@@ -147,20 +147,20 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				RefreshListeners(TraceSourceSettingStore.TraceSourceSettingsCollection);
 			}
 		}
-		
+
 		/// <summary>
 		/// Reset the last Stored Error
 		/// </summary>
 		public abstract void ResetLastError();
 
 		/// <summary>
-		/// Log a Message as an Information event. 
+		/// Log a Message as an Information event.
 		/// </summary>
 		/// <param name="message"></param>
 		public abstract void Log(string message);
 
 		/// <summary>
-		/// Log a Trace event 
+		/// Log a Trace event
 		/// </summary>
 		/// <param name="message"></param>
 		/// <param name="eventType"></param>
@@ -202,7 +202,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		#region IDisposable Support
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 #pragma warning disable CA1063 // Implement IDisposable Correctly
 		public void Dispose()

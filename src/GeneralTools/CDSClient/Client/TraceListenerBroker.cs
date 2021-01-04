@@ -12,7 +12,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 	/// </summary>
 	/// <param name="listenerCollection"></param>
 	public delegate void RefreshListenerDelegate(List<TraceSourceSetting> listenerCollection);
-	
+
 	/// <summary>
 	/// Trace listener broker class
 	/// </summary>
@@ -55,6 +55,6 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			{
 				refreshListenerObject(TraceSourceSettingStore.TraceSourceSettingsCollection);
 			}
-		}		
+		}
 	}
 }

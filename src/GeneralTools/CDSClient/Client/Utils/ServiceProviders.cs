@@ -12,10 +12,10 @@ namespace Microsoft.PowerPlatform.Cds.Client.Utils
         /// <summary>
         /// Private property accessor for service provider
         /// </summary>
-        private static IServiceProvider _instance = null; 
+        private static IServiceProvider _instance = null;
 
         /// <summary>
-        /// Instance of Service providers. 
+        /// Instance of Service providers.
         /// </summary>
         internal static IServiceProvider Instance
         {

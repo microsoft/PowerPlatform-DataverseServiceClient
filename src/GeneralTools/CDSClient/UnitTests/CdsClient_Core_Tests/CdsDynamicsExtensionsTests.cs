@@ -23,9 +23,9 @@ namespace CdsClient_Core_UnitTests
         {
             Mock<IOrganizationService> orgSvc = null;
             Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
-            CdsServiceClient cli = null; 
-            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli); 
-            
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
             orgSvc.Setup(f => f.Execute(It.Is<CloseQuoteRequest>(p => p.QuoteClose is Entity && ((Entity)p.QuoteClose).GetAttributeValue<string>("name").Equals("MyName", StringComparison.OrdinalIgnoreCase)))).Returns(new CloseQuoteResponse());
             orgSvc.Setup(f => f.Execute(It.Is<WinQuoteRequest>(p => p.QuoteClose is Entity && ((Entity)p.QuoteClose).GetAttributeValue<string>("name").Equals("MyName", StringComparison.OrdinalIgnoreCase)))).Returns(new WinQuoteResponse());
 

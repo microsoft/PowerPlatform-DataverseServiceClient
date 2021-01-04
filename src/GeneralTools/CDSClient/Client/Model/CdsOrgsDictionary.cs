@@ -41,7 +41,7 @@ namespace Microsoft.PowerPlatform.Cds.Client.Model
 		public OrganizationDetail OrgDetail { get { return _OrgDetail; } set { if (value != _OrgDetail) _OrgDetail = value; NotifyPropertyChanged("OrdDetail"); } }
 
 		/// <summary>
-		/// This is the name assigned to the Discovery Server, this is used to visual separate organizations returned by Discovery server used, or Premise solutions. 
+		/// This is the name assigned to the Discovery Server, this is used to visual separate organizations returned by Discovery server used, or Premise solutions.
 		/// </summary>
 		public string DiscoveryServerName { get { return _DiscoveryServerName; } set { if (value != _DiscoveryServerName) _DiscoveryServerName = value; NotifyPropertyChanged("DiscoveryServerName"); } }
 
@@ -90,7 +90,7 @@ namespace Microsoft.PowerPlatform.Cds.Client.Model
 		public ObservableCollection<CdsOrgByServer> OrgsList { get { return _orgsList; } internal set { if (value != _orgsList) _orgsList = value; NotifyPropertyChanged("OrgsList"); } }
 
 		/// <summary>
-		/// Container for CRM Orgs List. 
+		/// Container for CRM Orgs List.
 		/// </summary>
 		public CdsOrgList()
 		{ }

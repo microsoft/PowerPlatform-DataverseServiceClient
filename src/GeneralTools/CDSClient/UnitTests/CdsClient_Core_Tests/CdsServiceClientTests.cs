@@ -1,5 +1,5 @@
 using System;
-using System.Linq; 
+using System.Linq;
 using Xunit;
 using Microsoft.Xrm.Sdk;
 using Moq;
@@ -36,7 +36,7 @@ namespace CdsClient_Core_Tests
 
             TraceControlSettings.TraceLevel = System.Diagnostics.SourceLevels.Verbose;
             TraceConsoleSupport traceConsoleSupport = new TraceConsoleSupport(outputListner);
-            TraceControlSettings.CloseListeners(); 
+            TraceControlSettings.CloseListeners();
             TraceControlSettings.AddTraceListener(traceConsoleSupport);
         }
 
@@ -81,7 +81,7 @@ namespace CdsClient_Core_Tests
             // Setup handlers to deal with both orgRequest and WebAPI request.             
             fakHttpMethodHander.Setup(s => s.Send(It.Is<HttpRequestMessage>(f => f.Method.ToString().Equals("delete", StringComparison.OrdinalIgnoreCase)))).Returns(new HttpResponseMessage(System.Net.HttpStatusCode.OK));
             orgSvc.Setup(f => f.Execute(It.Is<DeleteRequest>(p => p.Target.LogicalName.Equals("account") && p.Target.Id.Equals(testSupport._DefaultId)))).Returns(new DeleteResponse());
-            
+
             bool rslt = cli.ExecuteCdsEntityDeleteRequest("account", testSupport._DefaultId);
             Assert.True(rslt);
 
@@ -128,7 +128,7 @@ namespace CdsClient_Core_Tests
             var response = cli.ExecuteCdsOrganizationRequest(new CreateRequest() { Target = acctEntity }, useWebAPI: false);
             Assert.NotNull(response);
             respId = ((CreateResponse)response).id;
-            Assert.Equal(testSupport._DefaultId, respId); 
+            Assert.Equal(testSupport._DefaultId, respId);
 
             // Test low level create
             respId = cli.Create(acctEntity);
@@ -342,7 +342,7 @@ namespace CdsClient_Core_Tests
             testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
 
 
-            AssignResponse assignResponse = new AssignResponse(); 
+            AssignResponse assignResponse = new AssignResponse();
             orgSvc.Setup(f => f.Execute(It.IsAny<AssignRequest>())).Returns(assignResponse);
 
             bool result = cli.AssignEntityToUser(testSupport._DefaultId, "account", testSupport._DefaultId);
@@ -407,14 +407,14 @@ namespace CdsClient_Core_Tests
 
             ImportSolutionResponse importResponse = new ImportSolutionResponse();
             orgSvc.Setup(f => f.Execute(It.Is<ImportSolutionRequest>(
-                (p) => 
-                    p.CustomizationFile != null && 
+                (p) =>
+                    p.CustomizationFile != null &&
                     p.AsyncRibbonProcessing.Equals(true) &&
                     p.ComponentParameters != null))).Returns(importResponse);
 
             string SampleSolutionPath = Path.Combine("TestMaterial", "EnvVarsSample_1_0_0_2.zip");
 
-            EntityCollection entCollection = new EntityCollection(); 
+            EntityCollection entCollection = new EntityCollection();
 
             Dictionary<string, object> importParams = new Dictionary<string, object>();
             importParams.Add(ImportSolutionProperties.ASYNCRIBBONPROCESSING, true);
@@ -422,7 +422,7 @@ namespace CdsClient_Core_Tests
             Guid importId = Guid.Empty;
             var result = cli.ImportSolutionToCds(SampleSolutionPath, out importId, activatePlugIns: true, extraParameters: importParams);
 
-            Assert.NotEqual(result, Guid.Empty); 
+            Assert.NotEqual(result, Guid.Empty);
         }
 
 
@@ -519,7 +519,7 @@ namespace CdsClient_Core_Tests
             string connStr = $"AuthType=ClientSecret;AppId={Conn_AppID};ClientSecret={Conn_Secret};Url={Conn_Url}";
             CdsServiceClient client = new CdsServiceClient(connStr);
             Assert.True(client.IsReady, "Failed to Create Connection via Connection string");
-            
+
             // Validate connection
             ValidateConnection(client);
         }
@@ -544,7 +544,7 @@ namespace CdsClient_Core_Tests
             string connStr = $"AuthType=OAuth;Username={Conn_UserName};Password={Conn_PW};Url={Conn_Url};AppId={testSupport._SampleAppID.ToString()};RedirectUri={testSupport._SampleAppRedirect.ToString()};TokenCacheStorePath=c:\\MyTokenCache;LoginPrompt=Never";
             CdsServiceClient client = new CdsServiceClient(connStr);
             Assert.True(client.IsReady, "Failed to Create Connection via Connection string");
-            
+
             // Validate connection
             ValidateConnection(client);
         }
@@ -570,10 +570,10 @@ namespace CdsClient_Core_Tests
 
             Assert.NotNull(onlineRegion);
             Assert.NotNull(orgName);
-            Assert.False(isOnPrem); 
+            Assert.False(isOnPrem);
 
             Uri orgUri = new Uri(Conn_Url);
-            string hostName = orgUri.Host.Split('.')[0]; 
+            string hostName = orgUri.Host.Split('.')[0];
 
             CdsServiceClient client = new CdsServiceClient(Conn_UserName, CdsServiceClient.MakeSecureString(Conn_PW), onlineRegion, hostName, true,null, CdsConnectionStringProcessor.sampleClientId, new Uri(CdsConnectionStringProcessor.sampleRedirectUrl), PromptBehavior.Never);
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor - Discovery");
