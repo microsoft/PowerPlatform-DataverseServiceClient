@@ -118,9 +118,15 @@ namespace CdsClient_Core_Tests
             // use create operation to setup request 
             Dictionary<string, CdsDataTypeWrapper> newFields = new Dictionary<string, CdsDataTypeWrapper>();
             newFields.Add("name", new CdsDataTypeWrapper("CrudTestAccount", CdsFieldType.String));
+            newFields.Add("dateonlyfield", new CdsDataTypeWrapper(new DateTime(2000, 01, 01) , CdsFieldType.DateTime));
+            newFields.Add("datetimeNormal", new CdsDataTypeWrapper(new DateTime(2000, 01, 01, 12, 01, 00, DateTimeKind.Local), CdsFieldType.DateTime));
+            newFields.Add("datetimeTZindependant", new CdsDataTypeWrapper(new DateTime(2000, 01, 01, 13, 01, 00, DateTimeKind.Local), CdsFieldType.DateTime));
 
             Entity acctEntity = new Entity("account");
             acctEntity.Attributes.Add("name", "CrudTestAccount");
+            acctEntity.Attributes.Add("dateonlyfield", new DateTime(2000, 01, 01));
+            acctEntity.Attributes.Add("datetimeNormal", new DateTime(2000, 01, 01 , 12,01,00, DateTimeKind.Local));
+            acctEntity.Attributes.Add("datetimeTZindependant", new DateTime(2000, 01, 01, 13, 01, 00, DateTimeKind.Local));
 
             Guid respId = Guid.Empty;
 

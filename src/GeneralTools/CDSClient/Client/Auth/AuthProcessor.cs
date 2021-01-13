@@ -269,7 +269,6 @@ namespace Microsoft.PowerPlatform.Cds.Client.Auth
 			{
 				if (clientCredentialsCheck && !useDefaultCreds && !(promptBehavior == PromptBehavior.Always || promptBehavior == PromptBehavior.SelectAccount))
 				{
-					logSink.Log("ObtainAccessToken - CRED", TraceEventType.Verbose);
 					_authenticationResult = publicAppClient.AcquireTokenByUsernamePassword(scopes, clientCredentials.UserName.UserName, CdsServiceClient.MakeSecureString(clientCredentials.UserName.Password)).ExecuteAsync().Result;
 				}
 				else
@@ -278,12 +277,10 @@ namespace Microsoft.PowerPlatform.Cds.Client.Auth
 					{
 						if (!string.IsNullOrEmpty(loginUserHint))
 						{
-							logSink.Log("ObtainAccessToken - DEFAULT CREDS - Passed UPN", TraceEventType.Verbose);
 							_authenticationResult = await publicAppClient.AcquireTokenByIntegratedWindowsAuth(scopes).WithUsername(loginUserHint).ExecuteAsync();
 						}
 						else
 						{
-							logSink.Log("ObtainAccessToken - DEFAULT CREDS", TraceEventType.Verbose);
 							_authenticationResult = await publicAppClient.AcquireTokenByIntegratedWindowsAuth(scopes).ExecuteAsync();
 						}
 					}
@@ -351,7 +348,6 @@ namespace Microsoft.PowerPlatform.Cds.Client.Auth
 			AuthenticationResult _authenticationResult = null;
 			if (confidentialAppClient != null)
 			{
-				logSink.Log("ObtainAccessToken - Confidential Client", TraceEventType.Verbose);
 				_authenticationResult = await confidentialAppClient.AcquireTokenForClient(scopes).ExecuteAsync();
 			}
 			else
