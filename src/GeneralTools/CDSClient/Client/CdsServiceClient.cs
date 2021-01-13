@@ -911,11 +911,12 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// <param name="externalOrgWebProxyClient">User Provided Organization Web Proxy Client</param>
         /// <param name="isCloned">when true, skips init</param>
         /// <param name="orginalAuthType">Auth type of source connection</param>
-        internal CdsServiceClient(OrganizationWebProxyClient externalOrgWebProxyClient, bool isCloned = true , AuthenticationType orginalAuthType = AuthenticationType.OAuth)
+        /// <param name="sourceOrgVersion">source organization version</param>
+        internal CdsServiceClient(OrganizationWebProxyClient externalOrgWebProxyClient, bool isCloned = true , AuthenticationType orginalAuthType = AuthenticationType.OAuth , Version sourceOrgVersion = null)
         {
             CreateCdsServiceConnection(null, orginalAuthType, string.Empty, string.Empty, string.Empty, null, string.Empty,
                 MakeSecureString(string.Empty), string.Empty, string.Empty, string.Empty, false, false, null, string.Empty, null,
-                PromptBehavior.Auto,  externalOrgWebProxyClient, isCloned: isCloned);
+                PromptBehavior.Auto,  externalOrgWebProxyClient, isCloned: isCloned , incomingOrgVersion: sourceOrgVersion);
         }
 
 
@@ -945,8 +946,9 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// <param name="certificateStoreName">StoreName to look in for certificate identified by certificateThumbPrint</param>
         /// <param name="certificateThumbPrint">ThumbPrint of the Certificate to load</param>
         /// <param name="instanceUrl">Actual URI of the Organization Instance</param>
-        /// <param name="isCloned">When True, Indicates that the contruction request is coming from a clone operation. </param>
+        /// <param name="isCloned">When True, Indicates that the construction request is coming from a clone operation. </param>
         /// <param name="useDefaultCreds">(optional) If true attempts login using current user ( Online ) </param>
+        /// <param name="incomingOrgVersion">Incoming Org Version, used as part of clone.</param>
         internal void CreateCdsServiceConnection(
             object externalOrgServiceProxy,
             AuthenticationType requestedAuthType,
@@ -971,7 +973,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
             X509Certificate2 certificate = null,
             Uri instanceUrl = null,
             bool isCloned = false,
-            bool useDefaultCreds = false
+            bool useDefaultCreds = false,
+            Version incomingOrgVersion = null
             )
         {
 
@@ -1037,6 +1040,10 @@ namespace Microsoft.PowerPlatform.Cds.Client
             {
                 CdsConnectionSvc = new CdsConnectionService(externalOrgWebProxyClient, logEntry);
                 CdsConnectionSvc.IsAClone = isCloned;
+                if ( isCloned && incomingOrgVersion != null)
+                {
+                    CdsConnectionSvc.OrganizationVersion = incomingOrgVersion; 
+                }
             }
             else
             {
@@ -1196,9 +1203,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
             if (proxy != null)
             {
                 proxy.HeaderToken = CdsConnectionSvc.CdsWebClient.HeaderToken;
-                var SvcClient = new CdsServiceClient(proxy, true , CdsConnectionSvc.AuthenticationTypeInUse);
+                var SvcClient = new CdsServiceClient(proxy, true , CdsConnectionSvc.AuthenticationTypeInUse ,CdsConnectionSvc.OrganizationVersion);
                 SvcClient.CdsConnectionSvc.SetClonedProperties(this);
-                SvcClient._BatchManager = _BatchManager;
                 SvcClient.CallerAADObjectId = CallerAADObjectId;
                 SvcClient.CallerId = CallerId;
                 SvcClient.MaxRetryCount = _maxRetryCount;
@@ -4826,7 +4832,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             {
                 // if request should bypass plugin exec.
                 if (bypassPluginExecution && ConnectedOrgVersion >= Utilities.CDSFeatureVersionMinimums.AllowBypassCustomPlugin)
-                    req.Parameters.Add(Utilities.CDSRequestHeaders.BYPASSCUSTOMPLUGINEXECUTION, "true");
+                    req.Parameters.Add(Utilities.CDSRequestHeaders.BYPASSCUSTOMPLUGINEXECUTION, true);
 
                 if (IsBatchOperationsAvailable)
                 {
@@ -5478,7 +5484,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
                     // if request should bypass plugin exec.
                     if (bypassPluginExecution && ConnectedOrgVersion >= Utilities.CDSFeatureVersionMinimums.AllowBypassCustomPlugin)
-                        req.Parameters.Add(Utilities.CDSRequestHeaders.BYPASSCUSTOMPLUGINEXECUTION, "true");
+                        req.Parameters.Add(Utilities.CDSRequestHeaders.BYPASSCUSTOMPLUGINEXECUTION, true);
 
                     logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Execute Command - {0}{1}: RequestID={2} {3}",
                         req.RequestName,
@@ -5691,8 +5697,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
             else if (ex is HttpOperationException httpOperationException)
             {
                 JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
-                var errorMessage = CdsTraceLogger.GetFirstLineFromString(contentBody["error"]["message"].ToString()).Trim();
-                logEntry.Log(string.Format(CultureInfo.InvariantCulture, "************ {3} - {2} : {0} |=> {1}", errorStringCheck, errorMessage, webUriMessageReq, ex.GetType().Name), TraceEventType.Error, ex);
+                CdsClientOperationException ex01 = CdsClientOperationException.GenerateCdsClientOperationException(httpOperationException);
+                logEntry.Log(string.Format(CultureInfo.InvariantCulture, "************ {3} - {2} : {0} |=> {1}", errorStringCheck, CdsTraceLogger.GetFirstLineFromString(contentBody["error"]["message"].ToString()).Trim(), webUriMessageReq, ex.GetType().Name), TraceEventType.Error, ex01);
             }
             else
             {

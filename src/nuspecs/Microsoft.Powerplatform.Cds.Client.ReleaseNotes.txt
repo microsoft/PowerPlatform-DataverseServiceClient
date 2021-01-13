@@ -9,6 +9,11 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time. 
 
 ++CURRENTRELEASEID++
+Fixed an issue where Activity Party types were not being properly processed
+Fixed an issue where the incorrect format was used for Data only types. 
+Fixed an issue where BypassPluginExecution property on request was not being understood properly by the server. 
+
+0.3.1-Alpha
 ***** Breaking Changes *****
 
 MSAL Port completed.

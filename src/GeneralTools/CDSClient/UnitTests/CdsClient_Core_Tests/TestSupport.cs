@@ -94,6 +94,16 @@ namespace CdsClient_Core_UnitTests
             entityMetadata.DisplayCollectionName = new Label("Accounts", 1033);
             entityMetadata.DisplayCollectionName.UserLocalizedLabel = new LocalizedLabel("Accounts", 1033);
 
+            var attribmetadata = new List<AttributeMetadata>()
+            {
+                new DateTimeAttributeMetadata(DateTimeFormat.DateOnly , "dateonlyfield" ),
+                new DateTimeAttributeMetadata(DateTimeFormat.DateAndTime , "datetimeNormal"),
+                new DateTimeAttributeMetadata(DateTimeFormat.DateAndTime , "datetimeTZindependant")
+                {
+                    DateTimeBehavior = new DateTimeBehavior(){ Value = "TimeZoneIndependent" }
+                }
+            };
+
             //entityMetadata.ManyToOneRelationships
             var ManyToOneRels = new List<OneToManyRelationshipMetadata>() {
             new OneToManyRelationshipMetadata()
@@ -126,6 +136,12 @@ namespace CdsClient_Core_UnitTests
             if (proInfo1 != null)
             {
                 proInfo1.SetValue(entityMetadata, 1, null);
+            }
+            
+            System.Reflection.PropertyInfo proInfo3 = entityMetadata.GetType().GetProperty("Attributes");
+            if (proInfo3 != null)
+            {
+                proInfo3.SetValue(entityMetadata, attribmetadata.ToArray(), null);
             }
 
             RetrieveEntityResponse retrieveEntityResponse = new RetrieveEntityResponse();

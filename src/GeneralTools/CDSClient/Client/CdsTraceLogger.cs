@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using Microsoft.Rest;
 using Newtonsoft.Json.Linq;
+using Microsoft.PowerPlatform.Cds.Client.Utils;
 
 namespace Microsoft.PowerPlatform.Cds.Client
 {
@@ -246,27 +247,6 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			if (objException == null)
 				return;
 
-			//if (objException is SoapException)
-			//{
-			//	SoapException soapEx = (SoapException)objException;
-			//	FormatExceptionMessage(
-			//	soapEx.Source != null ? soapEx.Source.ToString().Trim() : "Not Provided",
-			//	soapEx.TargetSite != null ? soapEx.TargetSite.Name.ToString() : "Not Provided",
-			//	string.IsNullOrEmpty(soapEx.Message) ? "Not Provided" : soapEx.Message.ToString().Trim(),
-			//	string.IsNullOrEmpty(soapEx.StackTrace) ? "Not Provided" : soapEx.StackTrace.ToString().Trim()
-			//	, sw, level);
-
-			//	lastErrorMsg.Append(string.IsNullOrEmpty(soapEx.Message) ? "Not Provided" : soapEx.Message.ToString().Trim());
-
-			//	if (lastErrorMsg.Length > 0 && soapEx.InnerException != null)
-			//		lastErrorMsg.Append(" => ");
-
-			//	level++;
-			//	if (soapEx.InnerException != null)
-			//		GetExceptionDetail(soapEx.InnerException, sw, level, lastErrorMsg);
-
-			//}
-			//else
 			if (objException is FaultException<OrganizationServiceFault>)
 			{
 				FaultException<OrganizationServiceFault> OrgFault = (FaultException<OrganizationServiceFault>)objException;
@@ -276,6 +256,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 				OrgFault.TargetSite != null ? OrgFault.TargetSite.Name.ToString() : "Not Provided",
 				OrgFault.Detail != null ? string.Format(CultureInfo.InvariantCulture, "Message: {0}\nErrorCode: {1}\nTrace: {2}{3}", OrgFault.Detail.Message, OrgFault.Detail.ErrorCode, OrgFault.Detail.TraceText, string.IsNullOrEmpty(ErrorDetail) ? "" : $"\n{ErrorDetail}") :
 				string.IsNullOrEmpty(OrgFault.Message) ? "Not Provided" : OrgFault.Message.ToString().Trim(),
+				string.IsNullOrEmpty(OrgFault.HelpLink) ? "Not Provided" : OrgFault.HelpLink.ToString().Trim(),
 				string.IsNullOrEmpty(OrgFault.StackTrace) ? "Not Provided" : OrgFault.StackTrace.ToString().Trim()
 				, sw, level);
 
@@ -303,6 +284,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 							string.Format(CultureInfo.InvariantCulture, "Message: {0}\nErrorCode: {1}\nTrace: {2}{3}", oFault.Message, oFault.ErrorCode, oFault.TraceText, string.IsNullOrEmpty(ErrorDetail) ? "" : $"\n{ErrorDetail}"),
 							oFault.Timestamp.ToString(),
 							oFault.ErrorCode.ToString(),
+							string.IsNullOrEmpty(oFault.HelpLink) ? "Not Provided" : oFault.HelpLink.ToString().Trim(),
 							string.IsNullOrEmpty(oFault.TraceText) ? "Not Provided" : oFault.TraceText.ToString().Trim(), sw, level);
 
 					level++;
@@ -322,12 +304,14 @@ namespace Microsoft.PowerPlatform.Cds.Client
 					if (objException is HttpOperationException httpOperationException)
 					{
 						JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
-						
+
+						var ErrorBlock = contentBody["error"]; 
 						FormatExceptionMessage(
 						httpOperationException.Source != null ? httpOperationException.Source.ToString().Trim() : "Not Provided",
 						httpOperationException.TargetSite != null ? httpOperationException.TargetSite.Name?.ToString() : "Not Provided",
-						string.IsNullOrEmpty(contentBody["error"]["message"]?.ToString()) ? "Not Provided" : GetFirstLineFromString(contentBody["error"]["message"]?.ToString()).Trim(),
-						string.IsNullOrEmpty(contentBody["error"]["stacktrace"]?.ToString()) ? "Not Provided" : contentBody["error"]["stacktrace"]?.ToString().Trim()
+						string.IsNullOrEmpty(ErrorBlock["message"]?.ToString()) ? "Not Provided" : GetFirstLineFromString(ErrorBlock["message"]?.ToString()).Trim(),
+						string.IsNullOrEmpty(httpOperationException.HelpLink) ? "Not Provided" : httpOperationException.HelpLink.ToString().Trim(),
+						string.IsNullOrEmpty(ErrorBlock["stacktrace"]?.ToString()) ? "Not Provided" : ErrorBlock["stacktrace"]?.ToString().Trim()
 						, sw, level);
 
 						lastErrorMsg.Append(string.IsNullOrEmpty(httpOperationException.Message) ? "Not Provided" : httpOperationException.Message.ToString().Trim());
@@ -342,29 +326,57 @@ namespace Microsoft.PowerPlatform.Cds.Client
 								httpOperationException.Source != null ? httpOperationException.Source.ToString().Trim() : "Not Provided",
 								httpOperationException.TargetSite != null ? httpOperationException.TargetSite.Name?.ToString() : "Not Provided",
 								string.IsNullOrEmpty(InnerError["message"]?.ToString()) ? "Not Provided" : GetFirstLineFromString(InnerError["message"]?.ToString()).Trim(),
+								string.IsNullOrEmpty(InnerError["@Microsoft.PowerApps.CDS.HelpLink"]?.ToString()) ? "Not Provided" : GetFirstLineFromString(InnerError["@Microsoft.PowerApps.CDS.HelpLink"]?.ToString()).Trim(),
 								string.IsNullOrEmpty(InnerError["stacktrace"]?.ToString()) ? "Not Provided" : InnerError["stacktrace"]?.ToString().Trim()
 								, sw, level);
 						}
 					}
 					else
-					if (objException is Exception)
 					{
-						Exception generalEx = (Exception)objException;
-						FormatExceptionMessage(
-						generalEx.Source != null ? generalEx.Source.ToString().Trim() : "Not Provided",
-						generalEx.TargetSite != null ? generalEx.TargetSite.Name.ToString() : "Not Provided",
-						string.IsNullOrEmpty(generalEx.Message) ? "Not Provided" : generalEx.Message.ToString().Trim(),
-						string.IsNullOrEmpty(generalEx.StackTrace) ? "Not Provided" : generalEx.StackTrace.ToString().Trim()
-						, sw, level);
+						if (objException is CdsClientOperationException cdsOpExecp)
+						{
+							FormatCdsSvcFaultMessage(
+								string.IsNullOrEmpty(cdsOpExecp.Message) ? "Not Provided" : cdsOpExecp.Message.ToString().Trim(),
+								string.IsNullOrEmpty(cdsOpExecp.Source) ? "Not Provided" : cdsOpExecp.Source.ToString().Trim(),
+								cdsOpExecp.HResult == -1 ? "Not Provided" : cdsOpExecp.HResult.ToString().Trim(),
+								cdsOpExecp.Data,
+								string.IsNullOrEmpty(cdsOpExecp.HelpLink) ? "Not Provided" : cdsOpExecp.HelpLink.ToString().Trim(),
+								sw, 
+								level);
 
-						lastErrorMsg.Append(string.IsNullOrEmpty(generalEx.Message) ? "Not Provided" : generalEx.Message.ToString().Trim());
+							lastErrorMsg.Append(string.IsNullOrEmpty(cdsOpExecp.Message) ? "Not Provided" : cdsOpExecp.Message.ToString().Trim());
 
-						if (lastErrorMsg.Length > 0 && generalEx.InnerException != null)
-							lastErrorMsg.Append(" => ");
+							if (lastErrorMsg.Length > 0 && cdsOpExecp.InnerException != null)
+								lastErrorMsg.Append(" => ");
 
-						level++;
-						if (generalEx.InnerException != null)
-							GetExceptionDetail(generalEx.InnerException, sw, level, lastErrorMsg);
+							level++;
+							if (cdsOpExecp.InnerException != null)
+								GetExceptionDetail(cdsOpExecp.InnerException, sw, level, lastErrorMsg);
+
+						}
+						else
+						{
+							if (objException is Exception)
+							{
+								Exception generalEx = (Exception)objException;
+								FormatExceptionMessage(
+								generalEx.Source != null ? generalEx.Source.ToString().Trim() : "Not Provided",
+								generalEx.TargetSite != null ? generalEx.TargetSite.Name.ToString() : "Not Provided",
+								string.IsNullOrEmpty(generalEx.Message) ? "Not Provided" : generalEx.Message.ToString().Trim(),
+								string.IsNullOrEmpty(generalEx.HelpLink) ? "Not Provided" : generalEx.HelpLink.ToString().Trim(),
+								string.IsNullOrEmpty(generalEx.StackTrace) ? "Not Provided" : generalEx.StackTrace.ToString().Trim()
+								, sw, level);
+
+								lastErrorMsg.Append(string.IsNullOrEmpty(generalEx.Message) ? "Not Provided" : generalEx.Message.ToString().Trim());
+
+								if (lastErrorMsg.Length > 0 && generalEx.InnerException != null)
+									lastErrorMsg.Append(" => ");
+
+								level++;
+								if (generalEx.InnerException != null)
+									GetExceptionDetail(generalEx.InnerException, sw, level, lastErrorMsg);
+							}
+						}
 					}
 				}
 			}
@@ -414,18 +426,20 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <param name="targetSite">Target of Exception</param>
 		/// <param name="message">Exception Message</param>
 		/// <param name="stackTrace">StackTrace</param>
+		/// <param name="helpLink">Url for help. </param>
 		/// <param name="sw">Writer to write too</param>
 		/// <param name="level">Depth of Exception</param>
-		private static void FormatExceptionMessage(string source, string targetSite, string message, string stackTrace, StringBuilder sw, int level)
+		private static void FormatExceptionMessage(string source, string targetSite, string message, string helpLink, string stackTrace, StringBuilder sw, int level)
 		{
 			if (level != 0)
-				sw.AppendLine(string.Format(CultureInfo.InvariantCulture, "Inner Exception Level {0}\t: ", level));
-			sw.AppendLine("Source\t: " + source);
-			sw.AppendLine("Method\t: " + targetSite);
-			sw.AppendLine("Date\t: " + DateTime.Now.ToShortDateString());
-			sw.AppendLine("Time\t: " + DateTime.Now.ToLongTimeString());
-			sw.AppendLine("Error\t: " + message);
-			sw.AppendLine("Stack Trace\t: " + stackTrace);
+				sw.AppendLine($"Inner Exception Level {level}\t: ");
+			sw.AppendLine("Source: " + source);
+			sw.AppendLine("Method: " + targetSite);
+			sw.AppendLine("DateUTC: " + DateTime.UtcNow.ToShortDateString());
+			sw.AppendLine("TimeUTC: " + DateTime.UtcNow.ToLongTimeString());
+			sw.AppendLine("Error: " + message);
+			sw.AppendLine($"HelpLink Url: {helpLink}");
+			sw.AppendLine("Stack Trace: " + stackTrace);
 			sw.AppendLine("======================================================================================================================");
 		}
 
@@ -436,19 +450,53 @@ namespace Microsoft.PowerPlatform.Cds.Client
 		/// <param name="timeOfEvent">Time occurred</param>
 		/// <param name="errorCode">Error code of message</param>
 		/// <param name="traceText">Message Text</param>
+		/// <param name="helpLink">Help Link URL</param>
 		/// <param name="sw">Writer to write too</param>
 		/// <param name="level">Depth</param>
-		private static void FormatOrgFaultMessage(string message, string timeOfEvent, string errorCode, string traceText, StringBuilder sw, int level)
+		private static void FormatOrgFaultMessage(string message, string timeOfEvent, string errorCode, string traceText, string helpLink, StringBuilder sw, int level)
 		{
 			if (level != 0)
-				sw.AppendLine(string.Format(CultureInfo.InvariantCulture, "Inner Exception Level {0}\t: ", level));
+				sw.AppendLine($"Inner Exception Level {level}\t: ");
 			sw.AppendLine("==OrganizationServiceFault Info=======================================================================================");
-			sw.AppendLine("Error\t: " + message);
-			sw.AppendLine("Time\t: " + timeOfEvent);
-			sw.AppendLine("ErrorCode\t: " + errorCode);
-			sw.AppendLine("Date\t: " + DateTime.Now.ToShortDateString());
-			sw.AppendLine("Time\t: " + DateTime.Now.ToLongTimeString());
-			sw.AppendLine("Trace\t: " + traceText);
+			sw.AppendLine("Error: " + message);
+			sw.AppendLine("Time: " + timeOfEvent);
+			sw.AppendLine("ErrorCode: " + errorCode);
+			sw.AppendLine("DateUTC: " + DateTime.UtcNow.ToShortDateString());
+			sw.AppendLine("TimeUTC: " + DateTime.UtcNow.ToLongTimeString());
+			sw.AppendLine($"HelpLink Url: {helpLink}");
+			sw.AppendLine("Trace: " + traceText);
+			sw.AppendLine("======================================================================================================================");
+		}
+
+		/// <summary>
+		/// Formats an Exception specific to an organization fault.
+		/// </summary>
+		/// <param name="message">Exception Message</param>
+		/// <param name="source">Source of error.</param>
+		/// <param name="errorCode">Error code of message</param>
+		/// <param name="dataItems">Data Items</param>
+		/// <param name="helpLink">Help Link</param>
+		/// <param name="sw">Writer to write too</param>
+		/// <param name="level">Depth</param>
+		private static void FormatCdsSvcFaultMessage(string message, string source, string errorCode, System.Collections.IDictionary dataItems , string helpLink, StringBuilder sw, int level)
+		{
+			if (level != 0)
+				sw.AppendLine($"Inner Exception Level {level}\t: ");
+			sw.AppendLine("==CdsClientOperationException Info=======================================================================================");
+			sw.AppendLine($"Source: {source}");
+			sw.AppendLine("Error: " + message);
+			sw.AppendLine("ErrorCode: " + errorCode);
+			sw.AppendLine("DateUTC: " + DateTime.UtcNow.ToShortDateString());
+			sw.AppendLine("TimeUTC: " + DateTime.UtcNow.ToLongTimeString());
+			sw.AppendLine($"HelpLink Url: {helpLink}");
+			if (dataItems != null && dataItems.Count > 0)
+			{
+				sw.AppendLine("CdsErrorDetail:");
+				foreach (System.Collections.DictionaryEntry itm in dataItems)
+				{
+					sw.AppendLine($"\t{itm.Key}: {itm.Value}");
+				}
+			}
 			sw.AppendLine("======================================================================================================================");
 		}
 	}

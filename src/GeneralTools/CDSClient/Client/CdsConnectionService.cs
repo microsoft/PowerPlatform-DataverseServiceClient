@@ -1371,9 +1371,6 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			TenantId = sourceClient.TenantId;
 			EnvironmentId = sourceClient.EnvironmentId;
 			GetAccessTokenAsync = sourceClient.GetAccessToken;
-			//_authority = sourceClient.CdsConnectionSvc.AuthContext == null
-			//				? string.Empty
-			//				: sourceClient.CdsConnectionSvc.AuthContext.Authority;
 		}
 
 		#region WebAPI Interface Utilities
