@@ -266,7 +266,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
 			}
 			else
 			{
-				logEntry.Log($"Authentication Type \"{authType}\" is not a valid Authentication Type.");
+				logEntry.Log($"Authentication Type \"{authType}\" is not a valid Authentication Type.", System.Diagnostics.TraceEventType.Error);
 				AuthenticationType = AuthenticationType.InvalidConnection;
 			}
 
