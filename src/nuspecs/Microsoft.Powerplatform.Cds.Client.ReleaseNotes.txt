@@ -9,6 +9,13 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time. 
 
 ++CURRENTRELEASEID++
+Initial async implementation of SDK Client. - note this is a WORK IN PROGRESS and may not work as expected under all circumstances.
+    Please report bugs or behaviors issues in the normal way
+Fixes and issue with exceptions being thrown by code that is supposed to log exceptions. 
+Corrected issue with DateOnly data types when using CUD events. 
+Included additions to logging when failures occur during connection string based login. - credit to GIT:@nicknow for the suggestion of fix. 
+
+0.3.6-Alpha:
 Fixed an issue where Activity Party types were not being properly processed
 Fixed an issue where the incorrect format was used for Data only types. 
 Fixed an issue where BypassPluginExecution property on request was not being understood properly by the server. 

@@ -421,11 +421,11 @@ namespace Microsoft.PowerPlatform.Cds.Client
                             {
                                 if (attribDateTimeData.Format == Xrm.Sdk.Metadata.DateTimeFormat.DateOnly)
                                 {
-                                    value = dateTimeValue.ToUniversalTime().ToString("yyyy'-'MM'-'dd'");
+                                    value = dateTimeValue.ToUniversalTime().ToString("yyyy-MM-dd");
                                 }
                                 else
                                 {
-                                    value = dateTimeValue.ToUniversalTime().ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'");
+                                    value = dateTimeValue.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
                                 }
                             }
                         }
@@ -609,6 +609,20 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// </summary>
         internal static class CDSFeatureVersionMinimums
         {
+            /// <summary>
+            /// returns true of the feature version is valid for this environment. 
+            /// </summary>
+            /// <param name="instanceVersion">Instance version of the Cds Instance</param>
+            /// <param name="featureVersion">MinFeatureVersion</param>
+            /// <returns></returns>
+            internal static bool IsFeatureValidForEnviroment ( Version instanceVersion , Version featureVersion)
+            {
+                if (instanceVersion != null && (instanceVersion >= featureVersion))
+                    return true;
+                else
+                    return false; 
+            }
+
             /// <summary>
             /// Lowest server version that can be connected too. 
             /// </summary>

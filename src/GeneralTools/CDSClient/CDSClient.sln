@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.PowerPlatform.Cds
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Dynamics.Sdk.Messages.Shell", "Extensions\Microsoft.Dynamics.Sdk.Messages\Microsoft.Dynamics.Sdk.Messages.Shell.csproj", "{503645DD-7711-40ED-8811-F06391F294AB}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiveTestsConsole", "UnitTests\LiveTestsConsole\LiveTestsConsole.csproj", "{5A1A4FFF-78F5-48A2-9AB0-3E507E938465}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,12 +37,17 @@ Global
 		{503645DD-7711-40ED-8811-F06391F294AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{503645DD-7711-40ED-8811-F06391F294AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{503645DD-7711-40ED-8811-F06391F294AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A1A4FFF-78F5-48A2-9AB0-3E507E938465}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A1A4FFF-78F5-48A2-9AB0-3E507E938465}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A1A4FFF-78F5-48A2-9AB0-3E507E938465}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A1A4FFF-78F5-48A2-9AB0-3E507E938465}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F85F6B93-D17D-4CAE-9B2F-D293BE73C700} = {CD32538C-E929-42F9-A936-5550427E2CD5}
+		{5A1A4FFF-78F5-48A2-9AB0-3E507E938465} = {CD32538C-E929-42F9-A936-5550427E2CD5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EA6D26FC-C065-4849-959E-1EF7FC013AF2}

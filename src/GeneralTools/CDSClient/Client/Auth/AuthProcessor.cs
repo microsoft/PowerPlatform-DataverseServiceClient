@@ -269,7 +269,14 @@ namespace Microsoft.PowerPlatform.Cds.Client.Auth
 			{
 				if (clientCredentialsCheck && !useDefaultCreds && !(promptBehavior == PromptBehavior.Always || promptBehavior == PromptBehavior.SelectAccount))
 				{
-					_authenticationResult = publicAppClient.AcquireTokenByUsernamePassword(scopes, clientCredentials.UserName.UserName, CdsServiceClient.MakeSecureString(clientCredentials.UserName.Password)).ExecuteAsync().Result;
+					if (account != null)
+					{
+						_authenticationResult = await publicAppClient.AcquireTokenSilent(scopes, account).ExecuteAsync().ConfigureAwait(false);
+					}
+					else
+                    {
+						_authenticationResult = await publicAppClient.AcquireTokenByUsernamePassword(scopes, clientCredentials.UserName.UserName, CdsServiceClient.MakeSecureString(clientCredentials.UserName.Password)).ExecuteAsync().ConfigureAwait(false);
+                    }
 				}
 				else
 				{
