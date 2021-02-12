@@ -26,13 +26,15 @@ using Microsoft.PowerPlatform.Cds.Client.Utils;
 using Newtonsoft.Json.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.PowerPlatform.Cds.Client.Auth;
+using Microsoft.PowerPlatform.Cds.Client;
+using System.Threading;
 
 namespace Microsoft.PowerPlatform.Cds.Client
 {
     /// <summary>
     /// Primary implementation of the API interface for CDS. 
     /// </summary>
-    public sealed class CdsServiceClient : IOrganizationService, IDisposable
+    public sealed class CdsServiceClient : IOrganizationService, IOrganizationServiceAsync, IDisposable
     {
         #region Vars
 
@@ -382,7 +384,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
         /// Returns the Version Number of the connected CDS organization. 
         /// If access before the Organization is connected, value returned will be null or 0.0 
         /// </summary>
-        public Version ConnectedOrgVersion { get { if (CdsConnectionSvc != null) return CdsConnectionSvc.OrganizationVersion; else return new Version(0, 0); } }
+        public Version ConnectedOrgVersion { get { if (CdsConnectionSvc != null) return CdsConnectionSvc?.OrganizationVersion; else return new Version(0, 0); } }
 
         /// <summary>
         /// ID of the connected organization. 
@@ -434,14 +436,14 @@ namespace Microsoft.PowerPlatform.Cds.Client
             }
             set
             {
-                if (CdsConnectionSvc != null && CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion >= Utilities.CDSFeatureVersionMinimums.AADCallerIDSupported))
+                if (Utilities.CDSFeatureVersionMinimums.IsFeatureValidForEnviroment(CdsConnectionSvc?.OrganizationVersion , Utilities.CDSFeatureVersionMinimums.AADCallerIDSupported))
                     CdsConnectionSvc.CallerAADObjectId = value;
                 else
                 {
-                    if (CdsConnectionSvc.OrganizationVersion != null)
+                    if (CdsConnectionSvc?.OrganizationVersion != null)
                     {
                         CdsConnectionSvc.CallerAADObjectId = null; // Null value as this is not supported for this version. 
-                        logEntry.Log($"Setting CallerAADObject ID not supported in version {CdsConnectionSvc.OrganizationVersion}");
+                        logEntry.Log($"Setting CallerAADObject ID not supported in version {CdsConnectionSvc?.OrganizationVersion}");
                     }
                 }
             }
@@ -466,14 +468,14 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
             set
             {
-                if (CdsConnectionSvc != null && CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion >= Utilities.CDSFeatureVersionMinimums.SessionTrackingSupported))
+                if (CdsConnectionSvc != null && Utilities.CDSFeatureVersionMinimums.IsFeatureValidForEnviroment(ConnectedOrgVersion, Utilities.CDSFeatureVersionMinimums.SessionTrackingSupported))
                     CdsConnectionSvc.SessionTrackingId = value;
                 else
                 {
-                    if (CdsConnectionSvc.OrganizationVersion != null)
+                    if (CdsConnectionSvc?.OrganizationVersion != null)
                     {
                         CdsConnectionSvc.SessionTrackingId = null; // Null value as this is not supported for this version. 
-                        logEntry.Log($"Setting SessionTrackingId ID not supported in version {CdsConnectionSvc.OrganizationVersion}");
+                        logEntry.Log($"Setting SessionTrackingId ID not supported in version {CdsConnectionSvc?.OrganizationVersion}");
                     }
                 }
             }
@@ -498,14 +500,14 @@ namespace Microsoft.PowerPlatform.Cds.Client
             }
             set
             {
-                if (CdsConnectionSvc != null && CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion >= Utilities.CDSFeatureVersionMinimums.ForceConsistencySupported))
+                if (CdsConnectionSvc != null && Utilities.CDSFeatureVersionMinimums.IsFeatureValidForEnviroment(CdsConnectionSvc?.OrganizationVersion , Utilities.CDSFeatureVersionMinimums.ForceConsistencySupported))
                     CdsConnectionSvc.ForceServerCacheConsistency = value;
                 else
                 {
-                    if (CdsConnectionSvc.OrganizationVersion != null)
+                    if (CdsConnectionSvc?.OrganizationVersion != null)
                     {
                         CdsConnectionSvc.ForceServerCacheConsistency = false; // Null value as this is not supported for this version. 
-                        logEntry.Log($"Setting ForceServerMetadataCacheConsistency not supported in version {CdsConnectionSvc.OrganizationVersion}");
+                        logEntry.Log($"Setting ForceServerMetadataCacheConsistency not supported in version {CdsConnectionSvc?.OrganizationVersion}");
                     }
                 }
             }
@@ -819,6 +821,10 @@ namespace Microsoft.PowerPlatform.Cds.Client
         {
             var parsedCdsCon = CdsConnectionStringProcessor.Parse(cdsConnectionString);
 
+            if ( parsedCdsCon.AuthenticationType == AuthenticationType.InvalidConnection )
+                throw new ArgumentException("AuthType is invalid.  Please see Microsoft.PowerPlatform.Cds.Client.AuthenticationType for supported authentication types." , "AuthType")
+                {  HelpLink = "https://docs.microsoft.com/powerapps/developer/data-platform/xrm-tooling/use-connection-strings-xrm-tooling-connect" };
+
             var serviceUri = parsedCdsCon.ServiceUri;
 
             var networkCredentials = parsedCdsCon.ClientCredentials != null && parsedCdsCon.ClientCredentials.Windows != null ?
@@ -1019,7 +1025,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     if (fv != null)
                     {
                         Version fileVersion = new Version(fv.ProductVersion);
-                        if (!(fileVersion >= Utilities.CDSFeatureVersionMinimums.CDSVersionForThisAPI))
+                        if (!(Utilities.CDSFeatureVersionMinimums.IsFeatureValidForEnviroment(fileVersion, Utilities.CDSFeatureVersionMinimums.CDSVersionForThisAPI)))
                         {
                             logEntry.Log("!!WARNING!!! The version of the CDS product assemblies is less than the recommend version for this API; you must use version 5.0.9688.1533 or newer (Newer then the Oct-2011 service release)", TraceEventType.Warning);
                             logEntry.Log(string.Format(CultureInfo.InvariantCulture, "CDS Version found is {0}", fv.ProductVersion), TraceEventType.Warning);
@@ -1112,7 +1118,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
                         CACHOBJECNAME = CdsConnectionSvc.ServiceCACHEName + ".LookupCache";
 
                         // Min supported version for batch operations. 
-                        if (CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion >= Utilities.CDSFeatureVersionMinimums.BatchOperations))
+                        if (CdsConnectionSvc?.OrganizationVersion != null &&
+                            Utilities.CDSFeatureVersionMinimums.IsFeatureValidForEnviroment(CdsConnectionSvc?.OrganizationVersion, Utilities.CDSFeatureVersionMinimums.BatchOperations))
                             _BatchManager = new BatchManager(logEntry);
                         else
                             logEntry.Log("Batch System disabled, CDS Server does not support this message call", TraceEventType.Information);
@@ -1203,7 +1210,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             if (proxy != null)
             {
                 proxy.HeaderToken = CdsConnectionSvc.CdsWebClient.HeaderToken;
-                var SvcClient = new CdsServiceClient(proxy, true , CdsConnectionSvc.AuthenticationTypeInUse ,CdsConnectionSvc.OrganizationVersion);
+                var SvcClient = new CdsServiceClient(proxy, true , CdsConnectionSvc.AuthenticationTypeInUse ,CdsConnectionSvc?.OrganizationVersion);
                 SvcClient.CdsConnectionSvc.SetClonedProperties(this);
                 SvcClient.CallerAADObjectId = CallerAADObjectId;
                 SvcClient.CallerId = CallerId;
@@ -4831,7 +4838,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
             if (batchId != Guid.Empty)
             {
                 // if request should bypass plugin exec.
-                if (bypassPluginExecution && ConnectedOrgVersion >= Utilities.CDSFeatureVersionMinimums.AllowBypassCustomPlugin)
+                if (bypassPluginExecution &&
+                    Utilities.CDSFeatureVersionMinimums.IsFeatureValidForEnviroment(ConnectedOrgVersion, Utilities.CDSFeatureVersionMinimums.AllowBypassCustomPlugin))
                     req.Parameters.Add(Utilities.CDSRequestHeaders.BYPASSCUSTOMPLUGINEXECUTION, true);
 
                 if (IsBatchOperationsAvailable)
@@ -4932,7 +4940,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                 else
                 {
                     // use Web API. 
-                    return CdsCommand_WebAPIProcess_Execute(req, logMessageTag, bypassPluginExecution);
+                    return CdsCommand_WebAPIProcess_ExecuteAsync(req, logMessageTag, bypassPluginExecution, new CancellationToken()).Result;
                 }
             }
             else
@@ -4942,8 +4950,29 @@ namespace Microsoft.PowerPlatform.Cds.Client
             }
         }
 
+        private async Task<OrganizationResponse> ExecuteCdsOrganizationRequestAsyncImpl(OrganizationRequest req, CancellationToken cancellationToken, string logMessageTag = "User Defined", bool useWebAPI = false, bool bypassPluginExecution = false)
+        {
+            if (req != null)
+            {
+                useWebAPI = Utilities.IsRequestValidForTranslationToWebAPI(req) ? useWebAPI : false;
+                if (!useWebAPI)
+                {
+                    return await CdsCommand_ExecuteAsync(req, logMessageTag, cancellationToken, bypassPluginExecution);
+                }
+                else
+                {
+                    // use Web API. 
+                    return await CdsCommand_WebAPIProcess_ExecuteAsync(req, logMessageTag, bypassPluginExecution , cancellationToken);
+                }
+            }
+            else
+            {
+                logEntry.Log("Execute Organization Request failed, Organization Request cannot be null", TraceEventType.Error);
+                return null;
+            }
+        }
 
-        private OrganizationResponse CdsCommand_WebAPIProcess_Execute(OrganizationRequest req, string logMessageTag , bool bypassPluginExecution)
+        private async Task<OrganizationResponse> CdsCommand_WebAPIProcess_ExecuteAsync(OrganizationRequest req, string logMessageTag , bool bypassPluginExecution , CancellationToken cancellationToken)
         {
             if (Utilities.IsRequestValidForTranslationToWebAPI(req)) // THIS WILL GET REMOVED AT SOME POINT, TEMP FOR TRANSTION  //TODO:REMOVE ON COMPELTE
             {
@@ -5101,7 +5130,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                         }
                     }
 
-                    if (bypassPluginExecution && ConnectedOrgVersion >= Utilities.CDSFeatureVersionMinimums.AllowBypassCustomPlugin)
+                    if (bypassPluginExecution && Utilities.CDSFeatureVersionMinimums.IsFeatureValidForEnviroment(ConnectedOrgVersion, Utilities.CDSFeatureVersionMinimums.AllowBypassCustomPlugin))
                     {
                         headers.Add($"{Utilities.CDSRequestHeaders.CDSHEADERPROPERTYPREFIX}{Utilities.CDSRequestHeaders.BYPASSCUSTOMPLUGINEXECUTION}", new List<string>() { "true" });
                     }
@@ -5133,7 +5162,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     }
 
                     // Execute request 
-                    var sResp = CdsCommand_WebExecuteAsync(postUri, bodyOfRequest, methodToExecute, headers, "application/json", logMessageTag).Result;
+                    var sResp = await CdsCommand_WebExecuteAsync(postUri, bodyOfRequest, methodToExecute, headers, "application/json", logMessageTag);
                     if (sResp != null && sResp.IsSuccessStatusCode)
                     {
                         if (req is CreateRequest)
@@ -5275,11 +5304,10 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     }
                     else
                     {
-                        if ((CdsConnectionSvc.OrganizationVersion == null) || 
-                        (CdsConnectionSvc.OrganizationVersion != null && CdsConnectionSvc.OrganizationVersion < Utilities.CDSFeatureVersionMinimums.AllowAsyncRibbonProcessing))
+                        if (!Utilities.CDSFeatureVersionMinimums.IsFeatureValidForEnviroment(CdsConnectionSvc?.OrganizationVersion, Utilities.CDSFeatureVersionMinimums.AllowAsyncRibbonProcessing))
                         {
                             // Not supported on this version of CDS 
-                            this.logEntry.Log($"ImportSolution request contains {ImportSolutionProperties.ASYNCRIBBONPROCESSING} property.  This request CDS version {Utilities.CDSFeatureVersionMinimums.AllowAsyncRibbonProcessing.ToString()} or above. This property will be removed", TraceEventType.Warning);
+                            this.logEntry.Log($"ImportSolution request contains {ImportSolutionProperties.ASYNCRIBBONPROCESSING} property.  This request CDS version {Utilities.CDSFeatureVersionMinimums.AllowAsyncRibbonProcessing.ToString()} or above. Current CDS version is {CdsConnectionSvc?.OrganizationVersion}. This property will be removed", TraceEventType.Warning);
                             asyncRibbonProcessing = null;
                         }
                     }
@@ -5294,10 +5322,10 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     }
                     else
                     {
-                        if (CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion <= Utilities.CDSFeatureVersionMinimums.AllowComponetInfoProcessing))
+                        if (!Utilities.CDSFeatureVersionMinimums.IsFeatureValidForEnviroment(CdsConnectionSvc?.OrganizationVersion, Utilities.CDSFeatureVersionMinimums.AllowComponetInfoProcessing))
                         {
                             // Not supported on this version of CDS 
-                            this.logEntry.Log($"ImportSolution request contains {ImportSolutionProperties.COMPONENTPARAMETERSPARAM} property.  This request CDS version {Utilities.CDSFeatureVersionMinimums.AllowComponetInfoProcessing.ToString()} or above. This property will be removed", TraceEventType.Warning);
+                            this.logEntry.Log($"ImportSolution request contains {ImportSolutionProperties.COMPONENTPARAMETERSPARAM} property. This request CDS version {Utilities.CDSFeatureVersionMinimums.AllowComponetInfoProcessing.ToString()} or above. Current CDS version is {CdsConnectionSvc?.OrganizationVersion}. This property will be removed", TraceEventType.Warning);
                             componetsToProcess = null;
                         }
                     }
@@ -5355,7 +5383,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     if (importAsHoldingSolution)  // If Import as Holding is set.. 
                     {
                         // Check for Min version of CDS for support of Import as Holding solution. 
-                        if (CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion >= Utilities.CDSFeatureVersionMinimums.ImportHoldingSolution))
+                        if (Utilities.CDSFeatureVersionMinimums.IsFeatureValidForEnviroment(CdsConnectionSvc?.OrganizationVersion, Utilities.CDSFeatureVersionMinimums.ImportHoldingSolution))
                         {
                             // Use Parameters to add the property here to support the underlying Xrm API on the incorrect version. 
                             SolutionImportRequest.Parameters.Add("HoldingSolution", importAsHoldingSolution);
@@ -5365,7 +5393,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     // Set IsInternalUpgrade flag on request only for upgrade scenario for V9 only.
                     if (isInternalUpgrade)
                     {
-                        if (CdsConnectionSvc.OrganizationVersion != null && (CdsConnectionSvc.OrganizationVersion >= Utilities.CDSFeatureVersionMinimums.InternalUpgradeSolution))
+                        if (Utilities.CDSFeatureVersionMinimums.IsFeatureValidForEnviroment(CdsConnectionSvc?.OrganizationVersion, Utilities.CDSFeatureVersionMinimums.InternalUpgradeSolution))
                         {
                             SolutionImportRequest.Parameters["IsInternalUpgrade"] = true;
                         }
@@ -5442,12 +5470,27 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
         /// <summary>
         /// Executes a CDS Create Request and returns the organization response object. 
+        /// Uses an Async pattern to allow for the thread to be backgroudned. 
+        /// </summary>
+        /// <param name="req">Request to run</param>
+        /// <param name="errorStringCheck">Formatted Error string</param>
+        /// <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
+        /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
+        /// <returns>Result of create request or null.</returns>
+        internal async Task<OrganizationResponse> CdsCommand_ExecuteAsync(OrganizationRequest req, string errorStringCheck, System.Threading.CancellationToken cancellationToken, bool bypassPluginExecution = false)
+        {
+            return await Task.Run(() => CdsCommand_Execute(req, errorStringCheck, bypassPluginExecution), cancellationToken);
+        }
+
+
+        /// <summary>
+        /// Executes a CDS Create Request and returns the organization response object. 
         /// </summary>
         /// <param name="req">Request to run</param>
         /// <param name="errorStringCheck">Formatted Error string</param>
         /// <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
         /// <returns>Result of create request or null.</returns>
-        internal OrganizationResponse CdsCommand_Execute(OrganizationRequest req, string errorStringCheck , bool bypassPluginExecution = false)
+        internal OrganizationResponse CdsCommand_Execute(OrganizationRequest req, string errorStringCheck, bool bypassPluginExecution = false)
         {
             Guid requestTrackingId = Guid.NewGuid();
             OrganizationResponse resp = null;
@@ -5483,7 +5526,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
                     }
 
                     // if request should bypass plugin exec.
-                    if (bypassPluginExecution && ConnectedOrgVersion >= Utilities.CDSFeatureVersionMinimums.AllowBypassCustomPlugin)
+                    if (bypassPluginExecution && Utilities.CDSFeatureVersionMinimums.IsFeatureValidForEnviroment(CdsConnectionSvc?.OrganizationVersion, Utilities.CDSFeatureVersionMinimums.AllowBypassCustomPlugin))
                         req.Parameters.Add(Utilities.CDSRequestHeaders.BYPASSCUSTOMPLUGINEXECUTION, true);
 
                     logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Execute Command - {0}{1}: RequestID={2} {3}",
@@ -5745,7 +5788,7 @@ namespace Microsoft.PowerPlatform.Cds.Client
             //defaultODataHeaders.Add("If-None-Match", "");
 
             // Supported Version Check. 
-            if (!(ConnectedOrgVersion > Utilities.CDSFeatureVersionMinimums.WebAPISupported))
+            if (!(Utilities.CDSFeatureVersionMinimums.IsFeatureValidForEnviroment(ConnectedOrgVersion , Utilities.CDSFeatureVersionMinimums.WebAPISupported)))
             {
                 logEntry.Log(string.Format("Web API Service is not supported by the CdsServiceClient in {0} version of XRM", ConnectedOrgVersion), TraceEventType.Error, new InvalidOperationException(string.Format("Web API Service is not supported by the CdsServiceClient in {0} version of XRM", ConnectedOrgVersion)));
                 return null;
@@ -6500,6 +6543,189 @@ namespace Microsoft.PowerPlatform.Cds.Client
                 throw LastCdsException;
         }
 
+        #endregion
+
+        #region IOrganzationServiceAsync helper - Proxy object
+
+        /// <summary>
+        /// Associate an entity with a set of entities
+        /// </summary>
+        /// <param name="entityName"></param>
+        /// <param name="entityId"></param>
+        /// <param name="relationship"></param>
+        /// <param name="relatedEntities"></param>
+        /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
+        public async void AssociateAsync(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities, CancellationToken cancellationToken)
+        {
+            AssociateResponse resp = (AssociateResponse)await ExecuteCdsOrganizationRequestAsyncImpl(new AssociateRequest()
+            {
+                Target = new EntityReference(entityName, entityId),
+                Relationship = relationship,
+                RelatedEntities = relatedEntities
+            }
+            , cancellationToken
+            , "Associate To CDS via IOrganizationService");
+            if (resp == null)
+                throw LastCdsException;
+        }
+
+        /// <summary>
+        /// Create an entity and process any related entities
+        /// </summary>
+        /// <param name="entity">entity to create</param>
+        /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
+        /// <returns>The ID of the created record</returns>
+        public async Task<Guid> CreateAsync(Entity entity, CancellationToken cancellationToken = default)
+        {
+            // Relay to Update request. 
+            CreateResponse resp = (CreateResponse) await ExecuteCdsOrganizationRequestAsyncImpl(
+                new CreateRequest()
+                {
+                    Target = entity
+                }
+                , cancellationToken
+                , "Create To CDS via IOrganizationService"
+                , useWebAPI: true);
+            if (resp == null)
+                throw LastCdsException;
+
+            return resp.id;
+        }
+
+
+        /// <summary>
+        /// Create an entity and process any related entities
+        /// </summary>
+        /// <param name="entity">entity to create</param>
+        /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
+        /// <returns>Returns the newly created record</returns>
+        public Task<Entity> CreateAndReturnAsync(Entity entity, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Delete instance of an entity
+        /// </summary>
+        /// <param name="entityName">Logical name of entity</param>
+        /// <param name="id">Id of entity</param>
+        /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
+        public async void DeleteAsync(string entityName, Guid id, CancellationToken cancellationToken = default)
+        {
+            DeleteResponse resp = (DeleteResponse)await ExecuteCdsOrganizationRequestAsyncImpl(
+               new DeleteRequest()
+               {
+                   Target = new EntityReference(entityName, id)
+               }
+               , cancellationToken
+               , "Delete Request to CDS via IOrganizationService"
+               , useWebAPI: true);
+            if (resp == null)
+                throw LastCdsException;
+        }
+
+        /// <summary>
+        /// Disassociate an entity with a set of entities
+        /// </summary>
+        /// <param name="entityName"></param>
+        /// <param name="entityId"></param>
+        /// <param name="relationship"></param>
+        /// <param name="relatedEntities"></param>
+        /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
+        public async void DisassociateAsync(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities, CancellationToken cancellationToken = default)
+        {
+            DisassociateResponse resp = (DisassociateResponse) await ExecuteCdsOrganizationRequestAsyncImpl(new DisassociateRequest()
+            {
+                Target = new EntityReference(entityName, entityId),
+                Relationship = relationship,
+                RelatedEntities = relatedEntities
+            }
+            , cancellationToken
+            , "Disassociate To CDS via IOrganizationService");
+            if (resp == null)
+                throw LastCdsException;
+        }
+
+        /// <summary>
+        /// Perform an action in an organization specified by the request.
+        /// </summary>
+        /// <param name="request">Refer to SDK documentation for list of messages that can be used.</param>
+        /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
+        /// <returns>Results from processing the request</returns>
+        public async Task<OrganizationResponse> ExecuteAsync(OrganizationRequest request, CancellationToken cancellationToken = default)
+        {
+            OrganizationResponse resp = await ExecuteCdsOrganizationRequestAsyncImpl(request
+                , cancellationToken
+                , string.Format("Execute ({0}) request to CDS from IOrganizationService", request.RequestName)
+                , useWebAPI: true);
+            if (resp == null)
+                throw LastCdsException;
+            return resp;
+        }
+
+
+        /// <summary>
+        /// Retrieves instance of an entity
+        /// </summary>
+        /// <param name="entityName">Logical name of entity</param>
+        /// <param name="id">Id of entity</param>
+        /// <param name="columnSet">Column Set collection to return with the request</param>
+        /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
+        /// <returns>Selected Entity</returns>
+        public async Task<Entity> RetrieveAsync(string entityName, Guid id, ColumnSet columnSet, CancellationToken cancellationToken = default)
+        {
+            RetrieveResponse resp = (RetrieveResponse)await ExecuteCdsOrganizationRequestAsyncImpl(
+            new RetrieveRequest()
+            {
+                ColumnSet = columnSet,
+                Target = new EntityReference(entityName, id)
+            }
+            , cancellationToken
+            , "Retrieve Request to CDS via IOrganizationService");
+                    if (resp == null)
+                        throw LastCdsException;
+
+                    return resp.Entity;
+        }
+
+        /// <summary>
+        /// Retrieves a collection of entities
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
+        /// <returns>Returns an EntityCollection Object containing the results of the query</returns>
+        public async Task<EntityCollection> RetrieveMultipleAsync(QueryBase query, CancellationToken cancellationToken = default)
+        {
+            RetrieveMultipleResponse resp = (RetrieveMultipleResponse)await ExecuteCdsOrganizationRequestAsyncImpl(new RetrieveMultipleRequest() { Query = query }, cancellationToken, "RetrieveMultiple to CDS via IOrganizationService");
+            if (resp == null)
+                throw LastCdsException;
+
+            return resp.EntityCollection;
+        }
+
+        /// <summary>
+        /// Updates an entity and process any related entities
+        /// </summary>
+        /// <param name="entity">entity to update</param>
+        /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
+        public async Task UpdateAsync(Entity entity, CancellationToken cancellationToken = default)
+        {
+            // Relay to Update request. 
+            UpdateResponse resp = (UpdateResponse) await ExecuteCdsOrganizationRequestAsyncImpl(
+                new UpdateRequest()
+                {
+                    Target = entity
+                }
+                , cancellationToken
+                , "UpdateRequest To CDS via IOrganizationService"
+                , useWebAPI: true);
+
+            if (resp == null)
+                throw LastCdsException;
+        }
+
+        #endregion
+
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
 
@@ -6544,7 +6770,6 @@ namespace Microsoft.PowerPlatform.Cds.Client
         {
             Dispose(true);
         }
-        #endregion
         #endregion
 
     }

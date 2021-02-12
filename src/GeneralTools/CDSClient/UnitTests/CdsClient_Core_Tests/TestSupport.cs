@@ -25,14 +25,17 @@ namespace CdsClient_Core_UnitTests
         #endregion
 
         #region BoilerPlate
-        public void SetupMockAndSupport( out Mock<IOrganizationService> moqOrgSvc , out Mock<MoqHttpMessagehander> moqHttpHandler , out CdsServiceClient cdsServiceClient )
+        public void SetupMockAndSupport( out Mock<IOrganizationService> moqOrgSvc , out Mock<MoqHttpMessagehander> moqHttpHandler , out CdsServiceClient cdsServiceClient , Version requestedCdsVersion = null)
         {
+            if (requestedCdsVersion is null)
+                requestedCdsVersion = new Version("9.1.2.0"); 
+
             var orgSvc = new Mock<IOrganizationService>();
             var fakHttpMethodHander = new Mock<MoqHttpMessagehander> { CallBase = true };
             var httpClientHandeler = new HttpClient(fakHttpMethodHander.Object, false);
             SetupWhoAmIHandlers(orgSvc);
             SetupMetadataHandlersForAccount(orgSvc);
-            CdsServiceClient cli = new CdsServiceClient(orgSvc.Object, httpClientHandeler, new Version("9.1.2.0"));
+            CdsServiceClient cli = new CdsServiceClient(orgSvc.Object, httpClientHandeler, requestedCdsVersion);
 
             moqOrgSvc = orgSvc;
             moqHttpHandler = fakHttpMethodHander;

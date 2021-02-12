@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using System.Globalization;
-//using System.Web.Services.Protocols;
 using System.ComponentModel;
 using System.ServiceModel;
 using Microsoft.Xrm.Sdk;
@@ -84,7 +82,8 @@ namespace Microsoft.PowerPlatform.Cds.Client
 
 		public override void ResetLastError()
 		{
-			base.LastError.Remove(0, LastError.Length);
+			if (base.LastError.Length > 0 )
+				base.LastError.Remove(0, LastError.Length -1 );
 			LastException = null;
 			_ActiveExceptionsList.Clear(); 
 		}

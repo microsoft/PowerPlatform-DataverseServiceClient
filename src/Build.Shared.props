@@ -3,15 +3,16 @@
   <PropertyGroup>
     <PackageVersion_AppInsights>2.9.1</PackageVersion_AppInsights>
     <PackageVersion_Adal>3.19.8</PackageVersion_Adal>
-    <PackageVersion_MSAL>4.8.2</PackageVersion_MSAL>
+    <PackageVersion_MSAL>4.25.0</PackageVersion_MSAL>
     <PackageVersion_CdsSdk>4.6.875-weekly-2011.2</PackageVersion_CdsSdk>
     <PackageVersion_CDSServerNuget>4.6.875-weekly-2011.2</PackageVersion_CDSServerNuget>
     <PackageVersion_Newtonsoft>10.0.3</PackageVersion_Newtonsoft>
     <PackageVersion_RestClientRuntime>2.3.20</PackageVersion_RestClientRuntime>
     <PackageVersion_XrmSdk>9.0.2.25</PackageVersion_XrmSdk>
     <!-- Test: -->
-    <PackageVersion_Moq>4.13.1</PackageVersion_Moq>
+    <PackageVersion_Moq>4.16.0</PackageVersion_Moq>
     <PackageVersion_XUnit>2.4.1</PackageVersion_XUnit>
+    <PackageVersion_FluentAssertions>5.10.3</PackageVersion_FluentAssertions>
   </PropertyGroup>
 
   <PropertyGroup>

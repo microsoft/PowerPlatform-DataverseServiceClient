@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using Xunit.Abstractions;
 using System.IO;
 using Microsoft.PowerPlatform.Cds.Client.Auth;
+using FluentAssertions;
 
 namespace CdsClient_Core_Tests
 {
@@ -227,7 +228,6 @@ namespace CdsClient_Core_Tests
 
         }
 
-
         [Fact]
         public void GetCurrentUser()
         {
@@ -433,6 +433,34 @@ namespace CdsClient_Core_Tests
 
 
         [Fact]
+        public void ImportSolutionTest_AsyncRibbon_ComponetData()
+        {
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            CdsServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli , new Version("9.2.21013.117"));
+
+            ImportSolutionResponse importResponse = new ImportSolutionResponse();
+            orgSvc.Setup(f => f.Execute(It.Is<ImportSolutionRequest>(
+                (p) =>
+                    p.CustomizationFile != null &&
+                    p.AsyncRibbonProcessing.Equals(true) &&
+                    p.ComponentParameters != null))).Returns(importResponse);
+
+            string SampleSolutionPath = Path.Combine("TestMaterial", "EnvVarsSample_1_0_0_2.zip");
+
+            EntityCollection entCollection = new EntityCollection();
+
+            Dictionary<string, object> importParams = new Dictionary<string, object>();
+            importParams.Add(ImportSolutionProperties.ASYNCRIBBONPROCESSING, true);
+            importParams.Add(ImportSolutionProperties.COMPONENTPARAMETERSPARAM, entCollection);
+            Guid importId = Guid.Empty;
+            var result = cli.ImportSolutionToCds(SampleSolutionPath, out importId, activatePlugIns: true, extraParameters: importParams);
+
+            Assert.NotEqual(result, Guid.Empty);
+        }
+
+        [Fact]
         public void GetEntityTypeCodeTest()
         {
             Mock<IOrganizationService> orgSvc = null;
@@ -475,98 +503,115 @@ namespace CdsClient_Core_Tests
 
         #region LiveConnectedTests
 
-        [SkippableConnectionTestAttribute]
+        [SkippableConnectionTest]
         [Trait("Category", "Live Connect Required")]
         public void ConnectUsingServiceIdentity_ClientSecret_CtorV1()
         {
             System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
 
-            string Conn_AppID = System.Environment.GetEnvironmentVariable("XUNITCONNTESTAPPID");
-            string Conn_Secret = System.Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET");
-            string Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
+            var Conn_AppID = System.Environment.GetEnvironmentVariable("XUNITCONNTESTAPPID");
+            var Conn_Secret = System.Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET");
+            var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
 
             // Connection params. 
-            CdsServiceClient client = new CdsServiceClient(new Uri(Conn_Url), Conn_AppID, Conn_Secret, true);
+            var client = new CdsServiceClient(new Uri(Conn_Url), Conn_AppID, Conn_Secret, true);
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
 
             // Validate connection
             ValidateConnection(client);
         }
 
-        [SkippableConnectionTestAttribute]
+        [SkippableConnectionTest]
         [Trait("Category", "Live Connect Required")]
         public void ConnectUsingServiceIdentity_ClientSecret_CtorV2()
         {
             System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
 
-            string Conn_AppID = System.Environment.GetEnvironmentVariable("XUNITCONNTESTAPPID");
-            string Conn_Secret = System.Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET");
-            string Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
+            var Conn_AppID = System.Environment.GetEnvironmentVariable("XUNITCONNTESTAPPID");
+            var Conn_Secret = System.Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET");
+            var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
 
             // connection params + secure string. 
-            CdsServiceClient client = new CdsServiceClient(new Uri(Conn_Url), Conn_AppID, CdsServiceClient.MakeSecureString(Conn_Secret), true);
+            var client = new CdsServiceClient(new Uri(Conn_Url), Conn_AppID, CdsServiceClient.MakeSecureString(Conn_Secret), true);
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
 
             // Validate connection
             ValidateConnection(client);
         }
 
-        [SkippableConnectionTestAttribute]
+        [SkippableConnectionTest]
         [Trait("Category", "Live Connect Required")]
         public void ConnectUsingServiceIdentity_ClientSecret_ConStr()
         {
             System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
 
-            string Conn_AppID = System.Environment.GetEnvironmentVariable("XUNITCONNTESTAPPID");
-            string Conn_Secret = System.Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET");
-            string Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
+            var Conn_AppID = System.Environment.GetEnvironmentVariable("XUNITCONNTESTAPPID");
+            var Conn_Secret = System.Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET");
+            var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
 
             // Connection string; 
-            string connStr = $"AuthType=ClientSecret;AppId={Conn_AppID};ClientSecret={Conn_Secret};Url={Conn_Url}";
-            CdsServiceClient client = new CdsServiceClient(connStr);
+            var connStr = $"AuthType=ClientSecret;AppId={Conn_AppID};ClientSecret={Conn_Secret};Url={Conn_Url}";
+            var client = new CdsServiceClient(connStr);
             Assert.True(client.IsReady, "Failed to Create Connection via Connection string");
-            
+
+            // Check user before we validate connection
+            client.CdsConnectionSvc.AuthenticationTypeInUse.Should().BeEquivalentTo(Microsoft.PowerPlatform.Cds.Client.AuthenticationType.ClientSecret);
+            client.CdsConnectionSvc.AuthContext.Scopes.Should().BeEquivalentTo(new string[] { $"{Conn_Url}/.default" });
+            client.CdsConnectionSvc.AuthContext.Account.Should().BeNull();
+            client.CdsConnectionSvc.AuthContext.AccessToken.Should().NotBeNull();
+            client.CdsConnectionSvc.AuthContext.IdToken.Should().BeNull();
+
             // Validate connection
             ValidateConnection(client);
+
+            // IdToken should stay null
+            client.CdsConnectionSvc.AuthContext.IdToken.Should().BeNull();
         }
-
-
-
 
         /// <summary>
         /// This Tests connection for UID/PW via connection string - direct connect.
         /// </summary>
-        [SkippableConnectionTestAttribute]
+        [SkippableConnectionTest]
         [Trait("Category", "Live Connect Required")]
         public void ConnectUsingUserIdentity_UIDPW_ConStr()
         {
             System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
 
-            string Conn_UserName = System.Environment.GetEnvironmentVariable("XUNITCONNTESTUSERID");
-            string Conn_PW = System.Environment.GetEnvironmentVariable("XUNITCONNTESTPW");
-            string Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
+            var Conn_UserName = System.Environment.GetEnvironmentVariable("XUNITCONNTESTUSERID");
+            var Conn_PW = System.Environment.GetEnvironmentVariable("XUNITCONNTESTPW");
+            var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
 
             // Connection string - Direct connect using Sample ApplicationID's
-            string connStr = $"AuthType=OAuth;Username={Conn_UserName};Password={Conn_PW};Url={Conn_Url};AppId={testSupport._SampleAppID.ToString()};RedirectUri={testSupport._SampleAppRedirect.ToString()};TokenCacheStorePath=c:\\MyTokenCache;LoginPrompt=Never";
-            CdsServiceClient client = new CdsServiceClient(connStr);
+            var connStr = $"AuthType=OAuth;Username={Conn_UserName};Password={Conn_PW};Url={Conn_Url};AppId={testSupport._SampleAppID.ToString()};RedirectUri={testSupport._SampleAppRedirect.ToString()};TokenCacheStorePath=c:\\MyTokenCache;LoginPrompt=Never";
+            var client = new CdsServiceClient(connStr);
             Assert.True(client.IsReady, "Failed to Create Connection via Connection string");
-            
+
+            // Check user before we validate connection
+            client.CdsConnectionSvc.AuthenticationTypeInUse.Should().BeEquivalentTo(Microsoft.PowerPlatform.Cds.Client.AuthenticationType.OAuth);
+            client.CdsConnectionSvc.AuthContext.Scopes.Should().BeEquivalentTo(new string[] { $"{Conn_Url}//user_impersonation" } );
+            client.CdsConnectionSvc.AuthContext.Account.Should().NotBeNull();
+            client.CdsConnectionSvc.AuthContext.IdToken.Should().NotBeEmpty();
+            client.CdsConnectionSvc.AuthContext.Account.Username.Should().BeEquivalentTo(Conn_UserName);
+
             // Validate connection
             ValidateConnection(client);
+
+            // Check user after we validate connection again as it gets it from cached token 
+            client.CdsConnectionSvc.AuthContext.Account.Username.Should().BeEquivalentTo(Conn_UserName);
         }
 
         /// <summary>
         /// This Tests connection for UID/PW via constructor - uses discovery to locate instance.
         /// </summary>
-        [SkippableConnectionTestAttribute]
+        [SkippableConnectionTest]
         [Trait("Category", "Live Connect Required")]
         public void ConnectUsingUserIdentity_UIDPW_CtorV1_Discovery()
         {
             System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
 
-            string Conn_UserName = System.Environment.GetEnvironmentVariable("XUNITCONNTESTUSERID");
-            string Conn_PW = System.Environment.GetEnvironmentVariable("XUNITCONNTESTPW");
-            string Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
+            var Conn_UserName = System.Environment.GetEnvironmentVariable("XUNITCONNTESTUSERID");
+            var Conn_PW = System.Environment.GetEnvironmentVariable("XUNITCONNTESTPW");
+            var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
 
             //Connection params. 
             string onlineRegion = string.Empty;
@@ -576,37 +621,56 @@ namespace CdsClient_Core_Tests
 
             Assert.NotNull(onlineRegion);
             Assert.NotNull(orgName);
-            Assert.False(isOnPrem); 
+            Assert.False(isOnPrem);
 
-            Uri orgUri = new Uri(Conn_Url);
-            string hostName = orgUri.Host.Split('.')[0]; 
+            var orgUri = new Uri(Conn_Url);
+            var hostName = orgUri.Host.Split('.')[0];
 
-            CdsServiceClient client = new CdsServiceClient(Conn_UserName, CdsServiceClient.MakeSecureString(Conn_PW), onlineRegion, hostName, true,null, CdsConnectionStringProcessor.sampleClientId, new Uri(CdsConnectionStringProcessor.sampleRedirectUrl), PromptBehavior.Never);
+            var client = new CdsServiceClient(Conn_UserName, CdsServiceClient.MakeSecureString(Conn_PW), onlineRegion, hostName, true,null, CdsConnectionStringProcessor.sampleClientId, new Uri(CdsConnectionStringProcessor.sampleRedirectUrl), PromptBehavior.Never);
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor - Discovery");
+
+            // Check user before we validate connection
+            client.CdsConnectionSvc.AuthenticationTypeInUse.Should().BeEquivalentTo(Microsoft.PowerPlatform.Cds.Client.AuthenticationType.OAuth);
+            client.CdsConnectionSvc.AuthContext.Account.Should().NotBeNull();
+            client.CdsConnectionSvc.AuthContext.IdToken.Should().NotBeEmpty();
+            client.CdsConnectionSvc.AuthContext.Account.Username.Should().BeEquivalentTo(Conn_UserName);
 
             // Validate connection
             ValidateConnection(client);
+
+            // Check user after we validate connection again as it gets it from cached token 
+            client.CdsConnectionSvc.AuthContext.Account.Username.Should().BeEquivalentTo(Conn_UserName);
         }
 
         /// <summary>
         /// This Tests connection for UID/PW via constructor - uses Direct Connect.
         /// </summary>
-        [SkippableConnectionTestAttribute]
+        [SkippableConnectionTest]
         [Trait("Category", "Live Connect Required")]
         public void ConnectUsingUserIdentity_UIDPW_CtorV2()
         {
             System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
 
-            string Conn_UserName = System.Environment.GetEnvironmentVariable("XUNITCONNTESTUSERID");
-            string Conn_PW = System.Environment.GetEnvironmentVariable("XUNITCONNTESTPW");
-            string Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
+            var Conn_UserName = System.Environment.GetEnvironmentVariable("XUNITCONNTESTUSERID");
+            var Conn_PW = System.Environment.GetEnvironmentVariable("XUNITCONNTESTPW");
+            var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
 
             // Connection params. 
-            CdsServiceClient client = new CdsServiceClient(Conn_UserName, CdsServiceClient.MakeSecureString(Conn_PW),new Uri(Conn_Url), true, CdsConnectionStringProcessor.sampleClientId, new Uri(CdsConnectionStringProcessor.sampleRedirectUrl), PromptBehavior.Never);
+            var client = new CdsServiceClient(Conn_UserName, CdsServiceClient.MakeSecureString(Conn_PW),new Uri(Conn_Url), true, CdsConnectionStringProcessor.sampleClientId, new Uri(CdsConnectionStringProcessor.sampleRedirectUrl), PromptBehavior.Never);
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor - Direct Connect");
+
+            // Check user before we validate connection
+            client.CdsConnectionSvc.AuthenticationTypeInUse.Should().BeEquivalentTo(Microsoft.PowerPlatform.Cds.Client.AuthenticationType.OAuth);
+            client.CdsConnectionSvc.AuthContext.Scopes.Should().BeEquivalentTo(new string[] { $"{Conn_Url}//user_impersonation" });
+            client.CdsConnectionSvc.AuthContext.Account.Should().NotBeNull();
+            client.CdsConnectionSvc.AuthContext.IdToken.Should().NotBeEmpty();
+            client.CdsConnectionSvc.AuthContext.Account.Username.Should().BeEquivalentTo(Conn_UserName);
 
             // Validate connection
             ValidateConnection(client);
+
+            // Check user after we validate connection again as it gets it from cached token 
+            client.CdsConnectionSvc.AuthContext.Account.Username.Should().BeEquivalentTo(Conn_UserName);
         }
 
 
@@ -614,20 +678,22 @@ namespace CdsClient_Core_Tests
 
         private void ValidateConnection(CdsServiceClient client)
         {
+            client.CdsConnectionSvc.AuthContext.Should().NotBeNull();
+
             // Validate it 
             var rslt = client.Execute(new WhoAmIRequest());
             Assert.IsType<WhoAmIResponse>(rslt);
 
             // Clone it. - Validate use
-            using (CdsServiceClient client2 = client.Clone())
+            using (var client2 = client.Clone())
             {
                 rslt = client2.Execute(new WhoAmIRequest());
                 Assert.IsType<WhoAmIResponse>(rslt);
             }
 
             // Create clone chain an break linkage. 
-            CdsServiceClient client3 = client.Clone();
-            CdsServiceClient client4 = client3.Clone();
+            var client3 = client.Clone();
+            var client4 = client3.Clone();
             rslt = client3.Execute(new WhoAmIRequest());
             Assert.IsType<WhoAmIResponse>(rslt);
             // dispose client3 explicitly

@@ -54,18 +54,24 @@ namespace Microsoft.PowerPlatform.Cds.Client.Utils
 
             JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
             var ErrorBlock = contentBody["error"];
-            var errorMessage = CdsTraceLogger.GetFirstLineFromString(ErrorBlock["message"].ToString()).Trim();
-            int HResult = Convert.ToInt32(ErrorBlock["code"].ToString(), 16);
-            string HelpLink = ErrorBlock["@Microsoft.PowerApps.CDS.HelpLink"].ToString();
-
-            foreach (var node in ErrorBlock.ToArray())
+            if (ErrorBlock != null)
             {
-                if ( node.Path.Contains(errorDetailPrefixString))
+                string errorMessage = CdsTraceLogger.GetFirstLineFromString(ErrorBlock["message"]?.ToString()).Trim();
+                int HResult = ErrorBlock["code"] != null ? Convert.ToInt32(ErrorBlock["code"].ToString(), 16) : -1;
+                string HelpLink = ErrorBlock["@Microsoft.PowerApps.CDS.HelpLink"]?.ToString();
+
+                foreach (var node in ErrorBlock.ToArray())
                 {
-                    cdsErrorData.Add(node.Value<JProperty>().Name.ToString().Replace(errorDetailPrefixString, string.Empty), node.HasValues? node.Value<JProperty>().Value.ToString() : string.Empty);
+                    if (node.Path.Contains(errorDetailPrefixString))
+                    {
+                        cdsErrorData.Add(node.Value<JProperty>().Name.ToString().Replace(errorDetailPrefixString, string.Empty), node.HasValues ? node.Value<JProperty>().Value.ToString() : string.Empty);
+                    }
                 }
+                return new CdsClientOperationException(errorMessage, HResult, HelpLink, cdsErrorData);
             }
-            return new CdsClientOperationException(errorMessage, HResult, HelpLink, cdsErrorData);
+            else
+                return new CdsClientOperationException("Server Error, no error report generated from server" , -1 , string.Empty, cdsErrorData);
+
         }
 
         /// <summary>
