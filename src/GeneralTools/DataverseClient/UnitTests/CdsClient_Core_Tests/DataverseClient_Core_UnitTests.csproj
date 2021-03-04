@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ProjectSpecificFx>true</ProjectSpecificFx>
+    <!-- only test with one of the Classic and Core frameworks each -->
+    <TargetFrameworks>net462;netcoreapp3.1</TargetFrameworks>
+    <SignAssembly>true</SignAssembly>
+    <ComponentAreaName>DataverseClient-Tests</ComponentAreaName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <Import Project="..\..\..\..\Build.Common.core.props" />
+
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="5.10.3" />
+    <PackageReference Include="Microsoft.Cds.CoreAssemblies.Internal" Version="$(PackageVersion_CDSServerNuget)" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
+    <PackageReference Include="Moq" Version="$(PackageVersion_Moq)" />
+    <PackageReference Include="xunit" Version="$(PackageVersion_XUnit)" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="$(PackageVersion_XUnit)" />
+    <PackageReference Include="coverlet.collector" Version="1.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Client\Microsoft.PowerPlatform.Dataverse.Client.csproj" />
+    <ProjectReference Include="..\..\Extensions\DynamicsExtension\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="TestMaterial\EnvVarsSample_1_0_0_2.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

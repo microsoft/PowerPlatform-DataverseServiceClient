@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Microsoft.Dynamics.Sdk.Messages</RootNamespace>
+    <ComponentAreaName>DataverseClient</ComponentAreaName>
+    <SignAssembly>true</SignAssembly>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+  <Import Project="..\..\..\..\Build.Common.core.props" />
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Dynamics.Sdk.Messages.Internal" Version="$(PackageVersion_CDSServerNuget)" />
+  </ItemGroup>
+
+</Project>

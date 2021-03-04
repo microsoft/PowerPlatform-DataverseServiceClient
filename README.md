@@ -1,27 +1,29 @@
+## NOTICE **Project renamed to Microsoft.PowerPlatform.Dataverse.Client.***
+
+
 ## Current Release Notes
 Current release notes:
 
-[Microsoft.Powerplatform.Cds.Client](src/nuspecs/Microsoft.Powerplatform.Cds.Client.ReleaseNotes.txt)
+[Microsoft.PowerPlatform.Dataverse.Client](src/nuspecs/Microsoft.PowerPlatform.Dataverse.Client.ReleaseNotes.txt)
 
-[Microsoft.Powerplatform.Cds.Client.Dynamics](src/nuspecs/Microsoft.Powerplatform.Cds.Client.Dynamics.ReleaseNotes.txt)
+[Microsoft.PowerPlatform.Dataverse.Client.Dynamics](src/nuspecs/Microsoft.PowerPlatform.Dataverse.Client.Dynamics.ReleaseNotes.txt)
 
 [Microsoft.Dynamics.Sdk.Messages](src/nuspecs/Microsoft.Dynamics.Sdk.Messages.ReleaseNotes.txt)
 
 ## Overview
-This repository contains the code for the Microsoft.PowerPlatform.Cds.Client and its supporting assemblies and classes. 
+This repository contains the code for the Microsoft.PowerPlatform.Dataverse.Client and its supporting assemblies and classes. 
 
 **IMPORTANT NOTE**
 
-**The CdsServiceClient cannot be built outside of Microsoft** 
+**The Dataverse ServiceClient cannot be built outside of Microsoft** 
 This is due to a set of dependencies on nuget packages that are internally available only.  At some point in the future, we will expose the supporting nuget packages when we have updated our server infrastructure to support plugin development on .net core.
-
 
 This encompasses the contents of the following nuget packages:
 
-[Microsoft.PowerPlatform.Cds.Client](https://www.nuget.org/packages/Microsoft.PowerPlatform.Cds.Client)
--
-[Microsoft.PowerPlatform.Cds.Client.Dynamics](https://www.nuget.org/packages/Microsoft.PowerPlatform.Cds.Client.Dynamics)
--
+[Microsoft.PowerPlatform.Dataverse.Client](https://www.nuget.org/packages/Microsoft.PowerPlatform.Dataverse.Client)
+
+[Microsoft.PowerPlatform.Dataverse.Client.Dynamics](https://www.nuget.org/packages/Microsoft.PowerPlatform.Dataverse.Client.Dynamics)
+
 [Microsoft.Dynamics.Sdk.Messages](https://www.nuget.org/packages/Microsoft.Dynamics.Sdk.Messages)
 
 
@@ -35,30 +37,29 @@ We are using this effort to for a few key things we have wanted to get done for 
 
 <b>We are currently in ALPHA.</b> 
 What does this mean? 
-Alpha means that we can and will change the api surface, namepaces and behavior from time to time. this is mostly driven by feedback from users of the client (you).   During this process we are also working though ports of many internal tools and will adjust  things based on the needs of those tools were it make sense. 
+Alpha means that we can and will change the api surface, namespaces and behavior from time to time. this is mostly driven by feedback from users of the client (you).   During this process we are also working though ports of many internal tools and will adjust  things based on the needs of those tools were it make sense. 
 
 We encourage you to read the release notes we provide with each nuget packages. As with most of our Nuget packages that are intended as tools or for developer consumption, we extensively comment in release notes. 
 
-At this time: (12/05/2020)
+At this time: (01/20/2021)
 The alpha version of the SDK libs supports the following and has the following notices: 
 
 * .net full framework 4.6.2, 4.7.2, 4.8 and .net core 3.0, 3.1 
 * We now support all authentication types from CrmServiceClient, ( Client\Secret, Client\Cert, UID\PW Noninteractive, UID\PW interactive.)
 * MSAL Port has been completed,  this Lib is now using MSAL 4.3+
-* The Namespaces of areas WILL change.  We do not know what they will change too just yet but they will change before we “release” this.
-* The Assembly Names Will likely change at least once more. 
-* The Message types that are part of the client have been reduced to CDS Core server messages only.  Things like “QualifyLeadRequest” have been removed to their own Nuget package ( Microsoft.Dynamics.Sdk.Messages ) 
+* The Namespaces of areas may change.  We do not know what they will change too just yet but they will change before we “release” this.
+* The Message types that are part of the client have been reduced to Dataverse Core server messages only.  Things like “QualifyLeadRequest” have been removed to their own Nuget package ( Microsoft.Dynamics.Sdk.Messages ) 
 * We will likely ship more extension packages that will contain the “CRM” messages,  though over time, we will likely split the namespaces of those messages up based on service line,  think Field Service or Sales or Customer Service, etc..
 * Plugin Development using this Client is NOT supported at this time. 
 
-From a scenario point of view,  we are particularity interested in any issues or challenges when using these library in either Asp.net Core or Functions scenarios. 
+From a scenario point of view,  we are particularity interested in any issues or challenges when using these library in either Asp.net Core, Azure Functions, and Linux based scenarios. 
  
-We believe forthe vast majorty of applications working against the older dynamices sdk libs, you should only need Microsoft.Powerplatform.Cds.Client and Microsoft.Dynamics.Sdk.Messages.
+We believe for the vast majority of applications working against the older dynamices sdk libs, you should only need Microsoft.PowerPlatform.Dataverse.Client and Microsoft.Dynamics.Sdk.Messages.
 
-If your working against CDS Only and or custom entities and sdk messages, you should only need Microsoft.Powerplatform.Cds.Client.  If you do not experience that, or find missing messages in the CDS only scenarios, please let us know. 
+If your working against Dataverse Only and or custom entities and sdk messages, you should only need Microsoft.PowerPlatform.Dataverse.Client.  If you do not experience that, or find missing messages in the Dataverse only scenarios, please let us know in the issues area. 
 
  
-<b>Note: Please be aware that during the Alpha \ Beta phases, these nuget packages are not supported via official channels. 
+<b>Note: Please be aware that during the Alpha \ Beta phases, these nuget packages are not supported via official channels.  
 Support is aware of them, however you will likely be directed back to the community forums for support during the Alpha \ Beta phases.  A number of our dev's and PM's do monitor this channel and can respond to questions and feedback. 
 
 While we are monitoring the community forums,  you are encouraged to open issue [here](https://github.com/microsoft/PowerPlatform-CdsServiceClient/issues) 

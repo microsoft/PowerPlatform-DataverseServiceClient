@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net462;netcoreapp3.1</TargetFrameworks>
+    <SignAssembly>true</SignAssembly>
+    <ComponentAreaName>DataverseClient-Tests</ComponentAreaName>
+    <IsPackable>false</IsPackable>
+
+  </PropertyGroup>
+  <Import Project="..\..\..\..\Build.Common.core.props" />
+
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="5.10.3" />
+    <PackageReference Include="Microsoft.Cds.CoreAssemblies.Internal" Version="$(PackageVersion_CDSServerNuget)" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\Client\Microsoft.PowerPlatform.Dataverse.Client.csproj" />
+    <ProjectReference Include="..\..\Extensions\DynamicsExtension\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.csproj" />
+  </ItemGroup>
+
+</Project>

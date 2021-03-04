@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Microsoft.PowerPlatform.Dataverse.Client.Dynamics</RootNamespace>
+    <ComponentAreaName>DataverseClient</ComponentAreaName>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <Import Project="..\..\..\..\Build.Common.core.props" />
+
+  <PropertyGroup>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <DocumentationFile>$(OutDir)\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Cds.CoreAssemblies.Internal" Version="$(PackageVersion_CDSServerNuget)">
+      <IncludeAssets></IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Dynamics.Sdk.Messages.Internal" Version="$(PackageVersion_CDSServerNuget)">
+      <IncludeAssets></IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Client\Microsoft.PowerPlatform.Dataverse.Client.csproj" />
+  </ItemGroup>
+
+</Project>
