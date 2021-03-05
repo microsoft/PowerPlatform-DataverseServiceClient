@@ -1,13 +1,15 @@
 Notice: 
     This package is an ALPHA release. - Use at your own risk.
-    This package is Contains SDK messaged intended be used in conjuction with the Microsoft.Cds.Client Nuget package.
+    This package is an extension to the Microsoft.Cds.Client Nuget package.
     This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8, .net core 3.0 and 3.1 
     We have not stabilized on NameSpace or Class names with this package as of yet and things will change as we move though the preview.
 
-    Documentation for Most of these messages can be found here: 
-        https://docs.microsoft.com/en-us/dotnet/api/microsoft.crm.sdk.messages?view=dynamics-general-ce-9
-
 0.4.1:
+Supersedes Microsoft.PowerPlatform.Cds.Client.Dynamics,  Previous nuget has been retired. 
+***** MAJOR Breaking Changes *****
+Renamed namespace to Dataverse instance. 
+
+0.3.10-Alpha:
     No updates here. 
 
 0.2.31-Alpha:
@@ -17,13 +19,16 @@ Notice:
     No updates here. 
 
 0.2.17-Alpha:
-    No Updates here. 
+Added IntelliSense Doc Support
+Added support for bypassing custom Plug-in Execution during SDK Operation.  
+    This is a special use capability that requires a specialized permission in the CDS infrastructure to use. 
+    Currently this is only permitted for use by users that have the System Administrator Security Role.
 
 0.2.16-Alpha:
     No Updates here. 
 
 0.2.14-Alpha:
-    Update to internal support libraries - fixes casting issue with messages in this library
+    Update to internal support libraries.
 
 0.2.8-Alpha
     No Updates here. 
@@ -38,20 +43,20 @@ Namespace change from Microsoft.Powerplatform.xxxx to Microsoft.PowerPlatform.xx
 No other changes to this assembly
 
 0.0.1.11-Alpha:
-    Updated Dynamics messages to pick up current North America versions of application messages.
+    No Updates here. 
 
 0.0.1.9-Alpha:
     No Updates here.
 
 0.0.1.8-Alpha:
-    No updates here.
-
+    No Updates here.
+    
 0.0.1.7-Alpha
     Fixed a Nuget Package dependency issue in Microsoft.Dynamics.Sdk.Messages
 
 0.0.1.6-Alpha
-Intial Alpha release of Microsoft.Dynamics.Messages Message Package
+Intial Alpha release of Microsoft.Cds.Client.CdsServiceClient Dynamics extensions
     WARNING: This is an ALPHA release. 
-    This library contains messages supporting Sales and Service and Marketing Applications.
+    This library contains helper extensions supporting Sales and Service actions.
         
 

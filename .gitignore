@@ -40,13 +40,14 @@ src/GeneralTools/PowerShell/Microsoft.Crm.SDKBuilder/Microsoft.Crm.SDKBuilder/v9
 TestResults
 
 
-#Visual Studio Files
+#Visual Studio Files user files
 /.vs/*
 /src/**/.vs/*
 /src/**/*.suo
 /src/**/*.vssscc
 /src/**/*.user
 /src/**/*.vspscc
+**/Properties/launchSettings.json
 
 #Skip Nuget Packages
 /src/**/packages/*
