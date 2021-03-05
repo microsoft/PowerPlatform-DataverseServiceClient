@@ -1,4 +1,5 @@
 ## NOTICE **Project renamed to Microsoft.PowerPlatform.Dataverse.Client.***
+Please see [project rename](https://github.com/microsoft/PowerPlatform-DataverseServiceClient/discussions/103) for more information
 
 
 ## Current Release Notes
