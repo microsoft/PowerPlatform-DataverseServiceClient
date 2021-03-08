@@ -22,7 +22,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// <summary>
 		/// String Builder Info
 		/// </summary>
-		private StringBuilder _lastError = new StringBuilder();
+		private string _lastError = string.Empty;
 
 		/// <summary>
 		/// string _traceSourceName private field
@@ -103,9 +103,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// <summary>
 		/// Last Error from CRM
 		/// </summary>
-		public StringBuilder LastError
+		public string LastError
 		{
 			get { return _lastError; }
+			set { _lastError = value; }
 		}
 		/// <summary>
 		/// Last Exception from CRM 

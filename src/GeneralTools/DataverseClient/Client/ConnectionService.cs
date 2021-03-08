@@ -93,13 +93,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		private string _ServiceCACHEName = "Microsoft.PowerPlatform.Dataverse.Client.Service"; // this is the base cache key name that will be used to cache the service. 
 
 		//OAuth Params
-		private string _clientId;                           // client id to register your application for OAuth
-		private Uri _redirectUri;                           // uri specifying the redirection uri post OAuth auth
 		private PromptBehavior _promptBehavior;             // prompt behavior
 		private string _tokenCachePath;                     // user specified token cache file path  
-		private string _resource;                           // Resource to connect to
 		private bool _isOnPremOAuth = false;                // Identifies whether the connection is for OnPrem or Online Deployment for OAuth
-		private static string _authority;                   //cached authority reading from credential manager
 		private static string _userId = null;               //cached userid reading from config file
 		private bool _isCalledbyExecuteRequest = false;     //Flag indicating that the an request called by Execute_Command
 		private bool _isDefaultCredsLoginForOAuth = false;  //Flag indicating that the user is trying to login with the current user id. 
@@ -119,6 +115,27 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// if Set to true then the connection is for one use and should be cleand out of cache when completed. 
 		/// </summary>
 		private bool unqueInstance = false;
+
+		/// <summary>
+        /// Client or App Id to use. 
+        /// </summary>
+		private string _clientId;
+
+		/// <summary>
+		/// uri specifying the redirection uri post OAuth auth
+		/// </summary>
+		private Uri _redirectUri;
+
+		/// <summary>
+		/// Resource to connect to
+		/// </summary>
+		private string _resource;
+
+		/// <summary>
+		/// cached authority reading from credential manager
+		/// </summary>
+		internal static string _authority;
+
 		/// <summary>
 		/// when certificate Auth is used,  this is the certificate that is used to execute the connection. 
 		/// </summary>
@@ -1370,6 +1387,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			TenantId = sourceClient.TenantId;
 			EnvironmentId = sourceClient.EnvironmentId;
 			GetAccessTokenAsync = sourceClient.GetAccessToken;
+			_clientId = sourceClient._connectionSvc._clientId;
+			_certificateStoreLocation = sourceClient._connectionSvc._certificateStoreLocation;
+			_certificateThumbprint = sourceClient._connectionSvc._certificateThumbprint;
+			_certificateOfConnection = sourceClient._connectionSvc._certificateOfConnection;
+			_redirectUri = sourceClient._connectionSvc._redirectUri;
+			_resource = sourceClient._connectionSvc._resource; 
 		}
 
 		#region WebAPI Interface Utilities

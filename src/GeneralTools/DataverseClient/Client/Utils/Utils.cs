@@ -316,13 +316,23 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <summary>
         /// Parses an attribute array into a object that can be used to create a JSON request. 
         /// </summary>
-        /// <param name="entityAttributes"></param>
+        /// <param name="sourceEntity">Entity to process</param>
         /// <param name="mUtil"></param>
-        /// <param name="entityName"></param>
         /// <returns></returns>
-        internal static ExpandoObject ToExpandoObject(string entityName, AttributeCollection entityAttributes, MetadataUtility mUtil)
+        internal static ExpandoObject ToExpandoObject(Entity sourceEntity , MetadataUtility mUtil)
         {
             dynamic expando = new ExpandoObject();
+
+            // Check for primary Id info: 
+            if (sourceEntity.Id != Guid.Empty)
+                sourceEntity = UpdateEntityAttributesForPrimaryId(sourceEntity, mUtil); 
+
+            AttributeCollection entityAttributes = sourceEntity.Attributes; 
+            if (!(entityAttributes != null) && (entityAttributes.Count > 0 ))
+            {
+                return expando; 
+            }
+
             var expandoObject = (IDictionary<string, object>)expando;
             var attributes = entityAttributes.ToArray();
 
@@ -337,11 +347,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 if (value is EntityReference entityReference)
                 {
                     // Get Lookup attribute meta data for the ER to check for polymorphic relationship. 
-                    var attributeInfo = mUtil.GetAttributeMetadata(entityName, key.ToLower());
+                    var attributeInfo = mUtil.GetAttributeMetadata(sourceEntity.LogicalName, key.ToLower());
                     if (attributeInfo is Xrm.Sdk.Metadata.LookupAttributeMetadata attribData)
                     {
                         // Now get relationship to make sure we use the correct name. 
-                        var eData = mUtil.GetEntityMetadata(Xrm.Sdk.Metadata.EntityFilters.Relationships, entityName);
+                        var eData = mUtil.GetEntityMetadata(Xrm.Sdk.Metadata.EntityFilters.Relationships, sourceEntity.LogicalName);
                         var ERNavName = eData.ManyToOneRelationships.FirstOrDefault(w => w.ReferencingAttribute.Equals(attribData.LogicalName) &&
                                                                                 w.ReferencedEntity.Equals(entityReference.LogicalName))
                                                                                 ?.ReferencingEntityNavigationPropertyName;
@@ -354,7 +364,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     else if (attributeInfo == null)
                     {
                         // Fault here. 
-                        throw new DataverseOperationException($"Entity Reference {key.ToLower()} was not found for entity {entityName}.", null);
+                        throw new DataverseOperationException($"Entity Reference {key.ToLower()} was not found for entity {sourceEntity.LogicalName}.", null);
                     }
 
                     string entityReferanceValue = string.Empty;
@@ -385,7 +395,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         // build linked collection here. 
                         foreach (var ent in (value as EntityCollection).Entities)
                         {
-                            ExpandoObject rslt = ToExpandoObject(ent.LogicalName, ent.Attributes, mUtil);
+                            ExpandoObject rslt = ToExpandoObject(ent, mUtil);
                             if (isActivityParty)
                             {
                                 var tempDict = ((IDictionary<string, object>)rslt);
@@ -416,7 +426,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         }
                         else if (value is DateTime dateTimeValue)
                         {
-                            var attributeInfo = mUtil.GetAttributeMetadata(entityName, key.ToLower());
+                            var attributeInfo = mUtil.GetAttributeMetadata(sourceEntity.LogicalName, key.ToLower());
                             if (attributeInfo is Xrm.Sdk.Metadata.DateTimeAttributeMetadata attribDateTimeData)
                             {
                                 if (attribDateTimeData.Format == Xrm.Sdk.Metadata.DateTimeFormat.DateOnly)
@@ -453,11 +463,121 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             // Check to see if this contained an activity party 
             if (partiesCollection?.Count > 0)
             {
-                expandoObject.Add($"{entityName}_activity_parties", partiesCollection);
+                expandoObject.Add($"{sourceEntity.LogicalName}_activity_parties", partiesCollection);
             }
 
 
             return (ExpandoObject)expandoObject;
+        }
+
+        /// <summary>
+        /// checks to see if an attribute has been added to the collection containing the ID of the entity . 
+        /// this is required for the WebAPI to properly function. 
+        /// </summary>
+        /// <param name="sourceEntity"></param>
+        /// <param name="mUtil"></param>
+        /// <returns></returns>
+        private static Entity UpdateEntityAttributesForPrimaryId(Entity sourceEntity, MetadataUtility mUtil)
+        {
+            if ( sourceEntity.Id != Guid.Empty )
+            {
+                var entMeta = mUtil.GetEntityMetadata(sourceEntity.LogicalName);
+                sourceEntity.Attributes[entMeta.PrimaryIdAttribute] = sourceEntity.Id; 
+            }
+            return sourceEntity; 
+        }
+
+        /// <summary>
+        /// Handle general related entity collection construction
+        /// </summary>
+        /// <param name="rootExpando">Object being added too</param>
+        /// <param name="entityName">parent entity</param>
+        /// <param name="entityCollection">collection of relationships</param>
+        /// <param name="mUtil">meta-data utility</param>
+        /// <returns></returns>
+        internal static ExpandoObject ReleatedEntitiesToExpandoObject(ExpandoObject rootExpando, string entityName, RelatedEntityCollection entityCollection, MetadataUtility mUtil)
+        {
+            if (rootExpando == null)
+                return rootExpando; 
+
+            if ( entityCollection != null && entityCollection.Count == 0 )
+            {
+                // nothing to do, just return. 
+                return rootExpando; 
+            }
+
+            foreach (var entItem in entityCollection)
+            {
+                string key = "";
+                bool isArrayRequired = false;
+                dynamic expando = new ExpandoObject();
+                var expandoObject = (IDictionary<string, object>)expando;
+                ExpandoObject childEntities = new ExpandoObject();
+
+                List<ExpandoObject> childCollection = new List<ExpandoObject>();
+
+                // Get the Entity relationship key and entity and reverse it back to the entity key name
+                var eData = mUtil.GetEntityMetadata(Xrm.Sdk.Metadata.EntityFilters.Relationships, entItem.Value.Entities[0].LogicalName);
+
+                // Find the relationship that is referenced. 
+                var ERM21 = eData.ManyToOneRelationships.FirstOrDefault(w1 => w1.SchemaName.ToLower().Equals(entItem.Key.SchemaName.ToLower()));
+                var ERM2M = eData.ManyToManyRelationships.FirstOrDefault(w2 => w2.SchemaName.ToLower().Equals(entItem.Key.SchemaName.ToLower()));
+                var ER12M = eData.OneToManyRelationships.FirstOrDefault(w3 => w3.SchemaName.ToLower().Equals(entItem.Key.SchemaName.ToLower()));
+
+                // Determine which one hit
+                if (ERM21 != null)
+                {
+                    isArrayRequired = true; 
+                    key = ERM21.ReferencedEntityNavigationPropertyName;
+                }
+                else if (ERM2M != null)
+                {
+                    isArrayRequired = true;
+                    if (ERM2M.Entity1LogicalName.ToLower().Equals(entityName))
+                    {
+                        key = ERM2M.Entity1NavigationPropertyName;
+                    }
+                    else
+                    {
+                        key = ERM2M.Entity2NavigationPropertyName;
+                    }
+                }
+                else if (ER12M != null)
+                {
+                    key = ER12M.ReferencingAttribute;
+                }
+
+                if ( string.IsNullOrEmpty(key) ) // Failed to find key 
+                {
+                    throw new DataverseOperationException($"Relationship key {entItem.Key.SchemaName} cannot be found for related entities of {entityName}.");
+                }
+
+                foreach (var ent in entItem.Value.Entities)
+                {
+                    // Check to see if the entity itself has related entities 
+                    if (ent.RelatedEntities != null && ent.RelatedEntities.Count > 0)
+                    {
+                        childEntities = ReleatedEntitiesToExpandoObject(childEntities, entityName, ent.RelatedEntities, mUtil);
+                    }
+
+                    // generate object. 
+                    ExpandoObject ent1 = ToExpandoObject(ent, mUtil);
+
+                    if (((IDictionary<string, object>)childEntities).Count() > 0)
+                    {
+                        foreach (var item in (IDictionary<string, object>)childEntities)
+                        {
+                            ((IDictionary<string, object>)ent1).Add(item.Key, item.Value);
+                        }
+                    }
+                    childCollection?.Add((ExpandoObject)ent1);
+                }
+                if ( childCollection.Count == 1 && isArrayRequired == false)
+                    ((IDictionary<string, object>)rootExpando).Add(key, childCollection[0]);
+                else
+                    ((IDictionary<string, object>)rootExpando).Add(key, childCollection);
+            }
+            return rootExpando; 
         }
 
         /// <summary>

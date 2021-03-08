@@ -6,7 +6,8 @@
     <authors>Microsoft</authors>
     <owners>crmsdk,Microsoft</owners>
     <licenseUrl>https://go.microsoft.com/fwlink/?linkid=2108407</licenseUrl>
-    <projectUrl>https://github.com/microsoft/PowerPlatform-CdsServiceClient</projectUrl>
+    <projectUrl>https://github.com/microsoft/PowerPlatform-DataverseServiceClient</projectUrl>
+    <icon>images\Dataverse.128x128.png</icon>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>This package contains the preview of the .net core Dataverse ServiceClient. Used to connect to Microsoft Dataverse. This Package has been authored by the Microsoft Dataverse SDK team.</description>
     <summary>CdsServiceClient and supporting libraries for use in building client applications to interact with the Dataverse</summary>
@@ -130,5 +131,6 @@
     <file src="{signedBinDir}\{configuration}\DataverseClient\net462\Microsoft.Cds.Sdk.Proxy.dll" target="lib\net462\Microsoft.Cds.Sdk.Proxy.dll" />
     <file src="{licenseDir}\Other Redistributable.txt" target="lib\net462\Other Redistributable.txt" />
     <file src="{licenseDir}\Third Party Notices for Dynamics 365 SDK.docx" target="lib\net462\Third Party Notices for Dynamics 365 SDK.docx" />
+    <file src="{sharedImagesDir}\Desktop\Dataverse.128x128.png" target="images\Dataverse.128x128.png" />
   </files>
 </package>

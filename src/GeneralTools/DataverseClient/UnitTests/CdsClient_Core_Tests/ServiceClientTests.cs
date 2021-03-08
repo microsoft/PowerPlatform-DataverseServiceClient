@@ -20,6 +20,7 @@ using Xunit.Abstractions;
 using System.IO;
 using Microsoft.PowerPlatform.Dataverse.Client.Auth;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 
 namespace Client_Core_Tests
 {
@@ -37,7 +38,7 @@ namespace Client_Core_Tests
 
             TraceControlSettings.TraceLevel = System.Diagnostics.SourceLevels.Verbose;
             TraceConsoleSupport traceConsoleSupport = new TraceConsoleSupport(outputListner);
-            TraceControlSettings.CloseListeners(); 
+            TraceControlSettings.CloseListeners();
             TraceControlSettings.AddTraceListener(traceConsoleSupport);
         }
 
@@ -69,6 +70,38 @@ namespace Client_Core_Tests
             Assert.NotNull(orgData);
         }
 
+        [Fact]
+        public void LogWriteTest()
+        {
+            ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+                    builder.AddConsole(options =>
+                    {
+                        options.IncludeScopes = true;
+                        options.TimestampFormat = "hh:mm:ss ";
+                    }));
+            ILogger<ClientTests> Ilogger = loggerFactory.CreateLogger<ClientTests>();
+
+            DataverseTraceLogger logger = new DataverseTraceLogger(Ilogger);
+            logger.EnabledInMemoryLogCapture = true; 
+
+            logger.Log("TEST INFO MESSAGE");
+            logger.Log("TEST WARNING MESSAGE", TraceEventType.Warning);
+            logger.Log("TEST VERBOSE MESSAGE", TraceEventType.Verbose);
+            logger.Log("TEST ERROR MESSAGE", TraceEventType.Error);
+            logger.Log("TEST CRITICAL MESSAGE", TraceEventType.Critical);
+
+
+            // error throw. 
+            Microsoft.Rest.HttpOperationException operationException = new Microsoft.Rest.HttpOperationException("HTTPOPEXC");
+            HttpResponseMessage Resp500 = new HttpResponseMessage(System.Net.HttpStatusCode.ServiceUnavailable);
+            Resp500.Headers.Add("REQ_ID", "39393F77-8F8B-4416-846E-28B4D2AA5667");
+            operationException.Response = new Microsoft.Rest.HttpResponseMessageWrapper(Resp500, "{\"error\":{\"code\":\"0x80040203\",\"message\":\"Communication activity cannot have more than one Sender party\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiExceptionSourceKey\":\"Plugin/Microsoft.Crm.Common.ObjectModel.PhoneCallService\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiStepKey\":\"3ccabb1b-ea3e-db11-86a7-000a3a5473e8\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiDepthKey\":\"1\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiActivityIdKey\":\"1736f387-e025-4828-a2bb-74ea8ac768a2\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiPluginSolutionNameKey\":\"System\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiStepSolutionNameKey\":\"System\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiExceptionCategory\":\"ClientError\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiExceptionMesageName\":\"InvalidArgument\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiExceptionHttpStatusCode\":\"400\",\"@Microsoft.PowerApps.CDS.HelpLink\":\"http://go.microsoft.com/fwlink/?LinkID=398563&error=Microsoft.Crm.CrmException%3a80040203&client=platform\",\"@Microsoft.PowerApps.CDS.InnerError.Message\":\"Communication activity cannot have more than one Sender party\"}}");
+            logger.Log(operationException);
+
+            Assert.NotNull(logger.LastError);
+            Exception exOut = logger.LastException;
+
+        }
 
         [Fact]
         public void DeleteRequestTests()
@@ -82,7 +115,7 @@ namespace Client_Core_Tests
             // Setup handlers to deal with both orgRequest and WebAPI request.             
             fakHttpMethodHander.Setup(s => s.Send(It.Is<HttpRequestMessage>(f => f.Method.ToString().Equals("delete", StringComparison.OrdinalIgnoreCase)))).Returns(new HttpResponseMessage(System.Net.HttpStatusCode.OK));
             orgSvc.Setup(f => f.Execute(It.Is<DeleteRequest>(p => p.Target.LogicalName.Equals("account") && p.Target.Id.Equals(testSupport._DefaultId)))).Returns(new DeleteResponse());
-            
+
             bool rslt = cli.ExecuteEntityDeleteRequest("account", testSupport._DefaultId);
             Assert.True(rslt);
 
@@ -119,14 +152,14 @@ namespace Client_Core_Tests
             // use create operation to setup request 
             Dictionary<string, DataverseDataTypeWrapper> newFields = new Dictionary<string, DataverseDataTypeWrapper>();
             newFields.Add("name", new DataverseDataTypeWrapper("CrudTestAccount", DataverseFieldType.String));
-            newFields.Add("dateonlyfield", new DataverseDataTypeWrapper(new DateTime(2000, 01, 01) , DataverseFieldType.DateTime));
+            newFields.Add("dateonlyfield", new DataverseDataTypeWrapper(new DateTime(2000, 01, 01), DataverseFieldType.DateTime));
             newFields.Add("datetimeNormal", new DataverseDataTypeWrapper(new DateTime(2000, 01, 01, 12, 01, 00, DateTimeKind.Local), DataverseFieldType.DateTime));
             newFields.Add("datetimeTZindependant", new DataverseDataTypeWrapper(new DateTime(2000, 01, 01, 13, 01, 00, DateTimeKind.Local), DataverseFieldType.DateTime));
 
             Entity acctEntity = new Entity("account");
             acctEntity.Attributes.Add("name", "CrudTestAccount");
             acctEntity.Attributes.Add("dateonlyfield", new DateTime(2000, 01, 01));
-            acctEntity.Attributes.Add("datetimeNormal", new DateTime(2000, 01, 01 , 12,01,00, DateTimeKind.Local));
+            acctEntity.Attributes.Add("datetimeNormal", new DateTime(2000, 01, 01, 12, 01, 00, DateTimeKind.Local));
             acctEntity.Attributes.Add("datetimeTZindependant", new DateTime(2000, 01, 01, 13, 01, 00, DateTimeKind.Local));
 
             Guid respId = Guid.Empty;
@@ -135,7 +168,7 @@ namespace Client_Core_Tests
             var response = cli.ExecuteOrganizationRequest(new CreateRequest() { Target = acctEntity }, useWebAPI: false);
             Assert.NotNull(response);
             respId = ((CreateResponse)response).id;
-            Assert.Equal(testSupport._DefaultId, respId); 
+            Assert.Equal(testSupport._DefaultId, respId);
 
             // Test low level create
             respId = cli.Create(acctEntity);
@@ -188,7 +221,7 @@ namespace Client_Core_Tests
             Dictionary<string, DataverseDataTypeWrapper> newFields = new Dictionary<string, DataverseDataTypeWrapper>();
             newFields.Add("name", new DataverseDataTypeWrapper("CrudTestAccount", DataverseFieldType.String));
             newFields.Add("Field01", new DataverseDataTypeWrapper(false, DataverseFieldType.Boolean));
-            newFields.Add("Field02", new DataverseDataTypeWrapper(testSupport._DefaultId, DataverseFieldType.Customer , "account"));
+            newFields.Add("Field02", new DataverseDataTypeWrapper(testSupport._DefaultId, DataverseFieldType.Customer, "account"));
             newFields.Add("Field03", new DataverseDataTypeWrapper(DateTime.UtcNow, DataverseFieldType.DateTime));
             newFields.Add("Field04", new DataverseDataTypeWrapper(64, DataverseFieldType.Decimal));
             newFields.Add("Field05", new DataverseDataTypeWrapper(1.001, DataverseFieldType.Float));
@@ -202,13 +235,13 @@ namespace Client_Core_Tests
 
             Entity acctEntity = new Entity("account");
             acctEntity.Attributes.Add("name", "CrudTestAccount");
-            acctEntity.Attributes.Add("Field01",  false);
-            acctEntity.Attributes.Add("Field02",  new EntityReference("parentaccount" , testSupport._DefaultId));
-            acctEntity.Attributes.Add("Field03",  DateTime.UtcNow);
-            acctEntity.Attributes.Add("Field04",  64);
-            acctEntity.Attributes.Add("Field05",  1.001);
-            acctEntity.Attributes.Add("Field08",  50);
-            acctEntity.Attributes.Add("Field09",  100);
+            acctEntity.Attributes.Add("Field01", false);
+            acctEntity.Attributes.Add("Field02", new EntityReference("parentaccount", testSupport._DefaultId));
+            acctEntity.Attributes.Add("Field03", DateTime.UtcNow);
+            acctEntity.Attributes.Add("Field04", 64);
+            acctEntity.Attributes.Add("Field05", 1.001);
+            acctEntity.Attributes.Add("Field08", 50);
+            acctEntity.Attributes.Add("Field09", 100);
             acctEntity.Attributes.Add("Field010", new OptionSetValue(20));
 
             // Test Helper create
@@ -348,7 +381,7 @@ namespace Client_Core_Tests
             testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
 
 
-            AssignResponse assignResponse = new AssignResponse(); 
+            AssignResponse assignResponse = new AssignResponse();
             orgSvc.Setup(f => f.Execute(It.IsAny<AssignRequest>())).Returns(assignResponse);
 
             bool result = cli.AssignEntityToUser(testSupport._DefaultId, "account", testSupport._DefaultId);
@@ -385,7 +418,7 @@ namespace Client_Core_Tests
             Assert.Equal("Accounts", response);
 
             // Test for plural name ETC
-            response = cli.GetEntityDisplayNamePlural("account" , 1);
+            response = cli.GetEntityDisplayNamePlural("account", 1);
             Assert.Equal("Accounts", response);
 
             // Test for non plural name 
@@ -393,7 +426,7 @@ namespace Client_Core_Tests
             Assert.Equal("Account", response);
 
             // Test for non plural name ETC 
-            response = cli.GetEntityDisplayName("account" , 1);
+            response = cli.GetEntityDisplayName("account", 1);
             Assert.Equal("Account", response);
 
             // Test base function
@@ -413,14 +446,14 @@ namespace Client_Core_Tests
 
             ImportSolutionResponse importResponse = new ImportSolutionResponse();
             orgSvc.Setup(f => f.Execute(It.Is<ImportSolutionRequest>(
-                (p) => 
-                    p.CustomizationFile != null && 
+                (p) =>
+                    p.CustomizationFile != null &&
                     p.AsyncRibbonProcessing.Equals(true) &&
                     p.ComponentParameters != null))).Returns(importResponse);
 
             string SampleSolutionPath = Path.Combine("TestMaterial", "EnvVarsSample_1_0_0_2.zip");
 
-            EntityCollection entCollection = new EntityCollection(); 
+            EntityCollection entCollection = new EntityCollection();
 
             Dictionary<string, object> importParams = new Dictionary<string, object>();
             importParams.Add(ImportSolutionProperties.ASYNCRIBBONPROCESSING, true);
@@ -428,7 +461,7 @@ namespace Client_Core_Tests
             Guid importId = Guid.Empty;
             var result = cli.ImportSolution(SampleSolutionPath, out importId, activatePlugIns: true, extraParameters: importParams);
 
-            Assert.NotEqual(result, Guid.Empty); 
+            Assert.NotEqual(result, Guid.Empty);
         }
 
 
@@ -438,7 +471,7 @@ namespace Client_Core_Tests
             Mock<IOrganizationService> orgSvc = null;
             Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
             ServiceClient cli = null;
-            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli , new Version("9.2.21013.117"));
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli, new Version("9.2.21013.117"));
 
             ImportSolutionResponse importResponse = new ImportSolutionResponse();
             orgSvc.Setup(f => f.Execute(It.Is<ImportSolutionRequest>(
@@ -588,7 +621,7 @@ namespace Client_Core_Tests
 
             // Check user before we validate connection
             client._connectionSvc.AuthenticationTypeInUse.Should().BeEquivalentTo(Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.OAuth);
-            client._connectionSvc.AuthContext.Scopes.Should().BeEquivalentTo(new string[] { $"{Conn_Url}//user_impersonation" } );
+            client._connectionSvc.AuthContext.Scopes.Should().BeEquivalentTo(new string[] { $"{Conn_Url}//user_impersonation" });
             client._connectionSvc.AuthContext.Account.Should().NotBeNull();
             client._connectionSvc.AuthContext.IdToken.Should().NotBeEmpty();
             client._connectionSvc.AuthContext.Account.Username.Should().BeEquivalentTo(Conn_UserName);
@@ -626,7 +659,7 @@ namespace Client_Core_Tests
             var orgUri = new Uri(Conn_Url);
             var hostName = orgUri.Host.Split('.')[0];
 
-            var client = new ServiceClient(Conn_UserName, ServiceClient.MakeSecureString(Conn_PW), onlineRegion, hostName, true,null, DataverseConnectionStringProcessor.sampleClientId, new Uri(DataverseConnectionStringProcessor.sampleRedirectUrl), PromptBehavior.Never);
+            var client = new ServiceClient(Conn_UserName, ServiceClient.MakeSecureString(Conn_PW), onlineRegion, hostName, true, null, DataverseConnectionStringProcessor.sampleClientId, new Uri(DataverseConnectionStringProcessor.sampleRedirectUrl), PromptBehavior.Never);
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor - Discovery");
 
             // Check user before we validate connection
@@ -656,7 +689,7 @@ namespace Client_Core_Tests
             var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
 
             // Connection params. 
-            var client = new ServiceClient(Conn_UserName, ServiceClient.MakeSecureString(Conn_PW),new Uri(Conn_Url), true, DataverseConnectionStringProcessor.sampleClientId, new Uri(DataverseConnectionStringProcessor.sampleRedirectUrl), PromptBehavior.Never);
+            var client = new ServiceClient(Conn_UserName, ServiceClient.MakeSecureString(Conn_PW), new Uri(Conn_Url), true, DataverseConnectionStringProcessor.sampleClientId, new Uri(DataverseConnectionStringProcessor.sampleRedirectUrl), PromptBehavior.Never);
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor - Direct Connect");
 
             // Check user before we validate connection
@@ -672,8 +705,6 @@ namespace Client_Core_Tests
             // Check user after we validate connection again as it gets it from cached token 
             client._connectionSvc.AuthContext.Account.Username.Should().BeEquivalentTo(Conn_UserName);
         }
-
-
         #region connectionValidationHelper
 
         private void ValidateConnection(ServiceClient client)
@@ -704,6 +735,73 @@ namespace Client_Core_Tests
         }
 
         #endregion
+
+
+        [SkippableConnectionTest]
+        [Trait("Category", "Live Connect Required")]
+        public void RelatedEntityLiveTest()
+        {
+            // Live test is required due to support on server side being required to parse various configurations. 
+            // use ClientSecretConnection
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
+            var Conn_AppID = System.Environment.GetEnvironmentVariable("XUNITCONNTESTAPPID");
+            var Conn_Secret = System.Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET");
+            var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
+
+            // connection params + secure string. 
+            var client = new ServiceClient(new Uri(Conn_Url), Conn_AppID, ServiceClient.MakeSecureString(Conn_Secret), true);
+            Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
+
+
+            // Use Entity class with entity logical name
+            var account = new Entity("account");
+
+            // Set attribute values
+            // string primary name
+            account["name"] = "Sample Account";
+
+            // Create Primary contact
+            var primaryContact = new Entity("contact");
+            primaryContact["firstname"] = "James";
+            primaryContact["lastname"] = "Kirk";
+
+            EntityCollection contactCollection = new EntityCollection();
+            var contact01 = new Entity("contact");
+            contact01["lastname"] = "Spock";
+            contactCollection.Entities.Add(contact01);
+
+            var contact05 = new Entity("contact");
+            contact05["firstname"] = "Lennard";
+            contact05["lastname"] = "McCoy";
+            contactCollection.Entities.Add(contact05);
+
+            EntityCollection ec = new EntityCollection();
+            var task1 = new Entity("task");
+            task1["subject"] = "task1";
+            task1["description"] = "task1-description";
+            ec.Entities.Add(task1);
+            primaryContact.RelatedEntities.Add(new Relationship("contact_tasks"), ec);
+
+            // Add the contact to an EntityCollection
+            EntityCollection primaryContactCollection = new EntityCollection();
+            primaryContactCollection.Entities.Add(primaryContact);
+
+            // Set the value to the relationship
+            account.RelatedEntities[new Relationship("account_primary_contact")] = primaryContactCollection;
+            account.RelatedEntities[new Relationship("contact_customer_accounts")] = contactCollection;
+
+            // Create the account
+            Guid accountid = client.Create(account);
+            Assert.True(accountid != Guid.Empty);
+
+            // Now delete
+            client.Delete("account", accountid); 
+
+
+
+
+        }
 
         #endregion
 

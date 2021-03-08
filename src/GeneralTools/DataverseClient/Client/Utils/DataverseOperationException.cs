@@ -31,12 +31,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Utils
         /// <param name="errorCode">Error code</param>
         /// <param name="data">Data Properties</param>
         /// <param name="helpLink">Help Link</param>
-        public DataverseOperationException(string message, int errorCode , string helpLink , IDictionary<string,string> data)
-            : base(message)
+        /// <param name="httpOperationException"></param>
+        public DataverseOperationException(string message, int errorCode , string helpLink , IDictionary<string,string> data , HttpOperationException httpOperationException = null)
+            : base(message, httpOperationException)
         {
             HResult = errorCode;
             HelpLink = helpLink;
-            Source = "Cds Server API";
+            Source = "Dataverse Server API";
             foreach (var itm in data)
             {
                 this.Data.Add(itm.Key, itm.Value);
@@ -67,11 +68,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Utils
                         cdsErrorData.Add(node.Value<JProperty>().Name.ToString().Replace(errorDetailPrefixString, string.Empty), node.HasValues ? node.Value<JProperty>().Value.ToString() : string.Empty);
                     }
                 }
-                return new DataverseOperationException(errorMessage, HResult, HelpLink, cdsErrorData);
+                return new DataverseOperationException(errorMessage, HResult, HelpLink, cdsErrorData, httpOperationException);
             }
             else
-                return new DataverseOperationException("Server Error, no error report generated from server" , -1 , string.Empty, cdsErrorData);
-
+                return new DataverseOperationException("Server Error, no error report generated from server" , -1 , string.Empty, cdsErrorData, httpOperationException);
         }
 
         /// <summary>

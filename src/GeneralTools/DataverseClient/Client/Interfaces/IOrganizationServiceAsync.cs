@@ -51,7 +51,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// <param name="entityName">Logical name of entity</param>
 		/// <param name="id">Id of entity</param>
 		/// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
-		void DeleteAsync(string entityName, Guid id, CancellationToken cancellationToken);
+		Task DeleteAsync(string entityName, Guid id, CancellationToken cancellationToken);
 
 		/// <summary>
 		/// Perform an action in an organization specified by the request.
@@ -69,7 +69,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// <param name="relationship"></param>
 		/// <param name="relatedEntities"></param>
 		/// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
-		void AssociateAsync(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities, CancellationToken cancellationToken);
+		Task AssociateAsync(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities, CancellationToken cancellationToken);
 
 		/// <summary>
 		/// Disassociate an entity with a set of entities
@@ -79,7 +79,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// <param name="relationship"></param>
 		/// <param name="relatedEntities"></param>
 		/// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
-		void DisassociateAsync(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities, CancellationToken cancellationToken);
+		Task DisassociateAsync(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities, CancellationToken cancellationToken);
 
 		/// <summary>
 		/// Retrieves a collection of entities
