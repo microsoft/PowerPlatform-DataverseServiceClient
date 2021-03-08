@@ -147,6 +147,12 @@ namespace Client_Core_UnitTests
                 proInfo3.SetValue(entityMetadata, attribmetadata.ToArray(), null);
             }
 
+            System.Reflection.PropertyInfo proInfo4 = entityMetadata.GetType().GetProperty("PrimaryIdAttribute");
+            if (proInfo4 != null)
+            {
+                proInfo4.SetValue(entityMetadata, "accountid", null);
+            }
+
             RetrieveEntityResponse retrieveEntityResponse = new RetrieveEntityResponse();
             retrieveEntityResponse.Results.Add("EntityMetadata", entityMetadata);
 

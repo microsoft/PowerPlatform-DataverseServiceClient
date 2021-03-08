@@ -6,8 +6,9 @@
     <authors>Microsoft</authors>
     <owners>crmsdk,Microsoft</owners>
     <licenseUrl>https://go.microsoft.com/fwlink/?linkid=2108407</licenseUrl>
-    <projectUrl>https://github.com/microsoft/PowerPlatform-CdsServiceClient</projectUrl>
+    <projectUrl>https://github.com/microsoft/PowerPlatform-DataverseServiceClient</projectUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <icon>images\Dataverse.128x128.png</icon>
     <description>This package contains the preview of the .net core Dynamics Messages Assembly. Used to issue commands to Dynamics Applications Installed on Microsoft Dataverse. This Package has been authored by the Microsoft Dataverse SDK team.</description>
     <summary>This package contains messages used to interact with the Dynamics CE applications via the Dataverse ServiceClient.</summary>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
@@ -49,5 +50,6 @@
     <file src="{signedBinDir}\{configuration}\DataverseClient\net472\Microsoft.Dynamics.Sdk.Messages.dll" target="lib\net472\Microsoft.Dynamics.Sdk.Messages.dll" />
     <file src="{signedBinDir}\{configuration}\DataverseClient\net462\Microsoft.Dynamics.Sdk.Messages.dll" target="lib\net462\Microsoft.Dynamics.Sdk.Messages.dll" />
     <file src="{signedBinDir}\{configuration}\DataverseClient\net48\Microsoft.Dynamics.Sdk.Messages.dll" target="lib\net48\Microsoft.Dynamics.Sdk.Messages.dll" />
+    <file src="{sharedImagesDir}\Desktop\Dataverse.128x128.png" target="images\Dataverse.128x128.png" />
   </files>
 </package>

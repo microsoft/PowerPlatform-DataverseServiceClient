@@ -6,7 +6,8 @@
     <authors>Microsoft</authors>
     <owners>crmsdk,Microsoft</owners>
     <licenseUrl>https://go.microsoft.com/fwlink/?linkid=2108407</licenseUrl>
-    <projectUrl>https://github.com/microsoft/PowerPlatform-CdsServiceClient</projectUrl>
+    <projectUrl>https://github.com/microsoft/PowerPlatform-DataverseServiceClient</projectUrl>
+    <icon>images\Dataverse.128x128.png</icon>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>This package contains the preview of the .net core ServiceClient Dynamics Extensions. Used to connect to Microsoft Dataverse. This Package has been authored by the Microsoft Dataverse SDK team.</description>
     <summary>ServiceClient and supporting libraries for use in building client applications to interact with the Dataverse</summary>
@@ -54,5 +55,6 @@
     <file src="{signedBinDir}\{configuration}\DataverseClient\net462\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.xml" target="lib\net462\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.xml" />
     <file src="{signedBinDir}\{configuration}\DataverseClient\net48\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.dll" target="lib\net48\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.dll" />
     <file src="{signedBinDir}\{configuration}\DataverseClient\net48\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.xml" target="lib\net48\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.xml" />
+    <file src="{sharedImagesDir}\Desktop\Dataverse.128x128.png" target="images\Dataverse.128x128.png" />
   </files>
 </package>

@@ -7,9 +7,11 @@ using System.ServiceModel;
 using Microsoft.Xrm.Sdk;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Linq; 
 using Microsoft.Rest;
 using Newtonsoft.Json.Linq;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.PowerPlatform.Dataverse.Client
 {
@@ -20,7 +22,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 	internal sealed class DataverseTraceLogger : TraceLoggerBase
 	{
 		// Internal connection of exceptions since last clear. 
-		private List<Exception> _ActiveExceptionsList; 
+		private List<Exception> _ActiveExceptionsList;
+
+		private ILogger _logger; 
 
 		#region Properties
 		/// <summary>
@@ -28,7 +32,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// </summary>
 		public new string LastError
 		{
-			get { return base.LastError.ToString(); }
+			get { return base.LastError; }
 		}
 
 		/// <summary>
@@ -80,6 +84,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			base.Initialize();
 		}
 
+        public DataverseTraceLogger(ILogger logger)
+        {
+			_logger = logger;
+			TraceSourceName = DefaultTraceSourceName;
+			_ActiveExceptionsList = new List<Exception>();
+			base.Initialize();
+		}
+
+
 		public override void ResetLastError()
 		{
 			if (base.LastError.Length > 0 )
@@ -105,7 +118,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// <param name="message"></param>
 		public override void Log(string message)
 		{
-			Source.TraceEvent(TraceEventType.Information, (int)TraceEventType.Information, message);
+			TraceEvent(TraceEventType.Information, (int)TraceEventType.Information, message, null);
 		}
 
 		/// <summary>
@@ -115,10 +128,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// <param name="eventType"></param>
 		public override void Log(string message, TraceEventType eventType)
 		{
-			TraceEvent(eventType, (int)eventType, message);
 			if (eventType == TraceEventType.Error)
 			{
 				Log(message, eventType, new Exception(message));
+			}
+			else
+            {
+				TraceEvent(eventType, (int)eventType, message, null);
 			}
 		}
 
@@ -144,10 +160,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			if (!(exception != null && _ActiveExceptionsList.Contains(exception))) // Skip this line if its already been done. 
 				GetExceptionDetail(exception, detailedDump, 0, lastMessage);
 
-			TraceEvent(eventType, (int)eventType, detailedDump.ToString());
+			TraceEvent(eventType, (int)eventType, detailedDump.ToString(), exception);
 			if (eventType == TraceEventType.Error)
 			{
-				base.LastError.Append(lastMessage.ToString());
+				base.LastError += lastMessage.ToString();
 				if (!(exception != null && _ActiveExceptionsList.Contains(exception))) // Skip this line if its already been done. 
 				{
 					// check and or alter the exception is its and HTTPOperationExecption. 
@@ -175,13 +191,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		public override void Log(Exception exception)
 		{
 			if (exception != null && _ActiveExceptionsList.Contains(exception))
-				return;  // allready logged this one .
+				return;  // already logged this one .
 
 			StringBuilder detailedDump = new StringBuilder();
 			StringBuilder lastMessage = new StringBuilder();
 			GetExceptionDetail(exception, detailedDump, 0, lastMessage);
-			TraceEvent(TraceEventType.Error, (int)TraceEventType.Error, detailedDump.ToString());
-			base.LastError.Append(lastMessage.ToString());
+			TraceEvent(TraceEventType.Error, (int)TraceEventType.Error, detailedDump.ToString(), exception);
+			base.LastError += lastMessage.ToString();
 			LastException = exception;
 
 			_ActiveExceptionsList.Add(exception);
@@ -196,9 +212,16 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// <param name="eventType"></param>
 		/// <param name="id"></param>
 		/// <param name="message"></param>
-		private void TraceEvent(TraceEventType eventType, int id, string message)
+		/// <param name="ex"></param>
+		private void TraceEvent(TraceEventType eventType, int id, string message , Exception ex)
 		{
 			Source.TraceEvent(eventType, id, message);
+
+			LogLevel logLevel = TranslateTraceEventType(eventType);
+			if (_logger != null && _logger.IsEnabled(logLevel))
+            {
+				_logger.Log(logLevel, id, ex, message);
+            }
 
 			if (EnabledInMemoryLogCapture)
 			{
@@ -253,7 +276,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 				FormatExceptionMessage(
 				OrgFault.Source != null ? OrgFault.Source.ToString().Trim() : "Not Provided",
 				OrgFault.TargetSite != null ? OrgFault.TargetSite.Name.ToString() : "Not Provided",
-				OrgFault.Detail != null ? string.Format(CultureInfo.InvariantCulture, "Message: {0}\nErrorCode: {1}\nTrace: {2}{3}", OrgFault.Detail.Message, OrgFault.Detail.ErrorCode, OrgFault.Detail.TraceText, string.IsNullOrEmpty(ErrorDetail) ? "" : $"\n{ErrorDetail}") :
+				OrgFault.Detail != null ? string.Format(CultureInfo.InvariantCulture, "Message: {0}\nErrorCode: {1}{4}\nTrace: {2}{3}", OrgFault.Detail.Message, OrgFault.Detail.ErrorCode, OrgFault.Detail.TraceText, string.IsNullOrEmpty(ErrorDetail) ? "" : $"\n{ErrorDetail}" , OrgFault.Detail.ActivityId == null ? "" : $"\nActivityId: {OrgFault.Detail.ActivityId}") :
 				string.IsNullOrEmpty(OrgFault.Message) ? "Not Provided" : OrgFault.Message.ToString().Trim(),
 				string.IsNullOrEmpty(OrgFault.HelpLink) ? "Not Provided" : OrgFault.HelpLink.ToString().Trim(),
 				string.IsNullOrEmpty(OrgFault.StackTrace) ? "Not Provided" : OrgFault.StackTrace.ToString().Trim()
@@ -280,7 +303,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 					OrganizationServiceFault oFault = (OrganizationServiceFault)objException;
 					string ErrorDetail = GenerateOrgErrorDetailsInfo(oFault.ErrorDetails);
 					FormatOrgFaultMessage(
-							string.Format(CultureInfo.InvariantCulture, "Message: {0}\nErrorCode: {1}\nTrace: {2}{3}", oFault.Message, oFault.ErrorCode, oFault.TraceText, string.IsNullOrEmpty(ErrorDetail) ? "" : $"\n{ErrorDetail}"),
+							string.Format(CultureInfo.InvariantCulture, "Message: {0}\nErrorCode: {1}{4}\nTrace: {2}{3}", oFault.Message, oFault.ErrorCode, oFault.TraceText, string.IsNullOrEmpty(ErrorDetail) ? "" : $"\n{ErrorDetail}", oFault.ActivityId == null ? "" : $"\nActivityId: {oFault.ActivityId}"),
 							oFault.Timestamp.ToString(),
 							oFault.ErrorCode.ToString(),
 							string.IsNullOrEmpty(oFault.HelpLink) ? "Not Provided" : oFault.HelpLink.ToString().Trim(),
@@ -302,21 +325,23 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 				{
 					if (objException is HttpOperationException httpOperationException)
 					{
-						JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
+						JObject contentBody = null; 
+						if (!string.IsNullOrEmpty(httpOperationException.Response.Content))
+							contentBody = JObject.Parse(httpOperationException.Response.Content);
 
-						var ErrorBlock = contentBody["error"]; 
+						var ErrorBlock = contentBody?["error"];
 						FormatExceptionMessage(
 						httpOperationException.Source != null ? httpOperationException.Source.ToString().Trim() : "Not Provided",
 						httpOperationException.TargetSite != null ? httpOperationException.TargetSite.Name?.ToString() : "Not Provided",
-						string.IsNullOrEmpty(ErrorBlock["message"]?.ToString()) ? "Not Provided" : GetFirstLineFromString(ErrorBlock["message"]?.ToString()).Trim(),
+						string.IsNullOrEmpty(ErrorBlock?["message"]?.ToString()) ? "Not Provided" : string.Format("Message: {0}{1}\n", GetFirstLineFromString(ErrorBlock?["message"]?.ToString()).Trim(), httpOperationException.Response != null && httpOperationException.Response.Headers.ContainsKey("REQ_ID") ? $"\nActivityId: {ExtractString(httpOperationException.Response.Headers["REQ_ID"])}" : "") ,
 						string.IsNullOrEmpty(httpOperationException.HelpLink) ? "Not Provided" : httpOperationException.HelpLink.ToString().Trim(),
-						string.IsNullOrEmpty(ErrorBlock["stacktrace"]?.ToString()) ? "Not Provided" : ErrorBlock["stacktrace"]?.ToString().Trim()
+						string.IsNullOrEmpty(ErrorBlock?["stacktrace"]?.ToString()) ? "Not Provided" : ErrorBlock["stacktrace"]?.ToString().Trim()
 						, sw, level);
 
 						lastErrorMsg.Append(string.IsNullOrEmpty(httpOperationException.Message) ? "Not Provided" : httpOperationException.Message.ToString().Trim());
 
-						// WebEx currently only returns 1 leve of error. 
-						var InnerError = contentBody["error"]["innererror"];
+						// WebEx currently only returns 1 level of error. 
+						var InnerError = contentBody?["error"]["innererror"];
 						if (lastErrorMsg.Length > 0 && InnerError != null)
 						{
 							level++;
@@ -324,9 +349,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 							FormatExceptionMessage(
 								httpOperationException.Source != null ? httpOperationException.Source.ToString().Trim() : "Not Provided",
 								httpOperationException.TargetSite != null ? httpOperationException.TargetSite.Name?.ToString() : "Not Provided",
-								string.IsNullOrEmpty(InnerError["message"]?.ToString()) ? "Not Provided" : GetFirstLineFromString(InnerError["message"]?.ToString()).Trim(),
-								string.IsNullOrEmpty(InnerError["@Microsoft.PowerApps.CDS.HelpLink"]?.ToString()) ? "Not Provided" : GetFirstLineFromString(InnerError["@Microsoft.PowerApps.CDS.HelpLink"]?.ToString()).Trim(),
-								string.IsNullOrEmpty(InnerError["stacktrace"]?.ToString()) ? "Not Provided" : InnerError["stacktrace"]?.ToString().Trim()
+								string.IsNullOrEmpty(InnerError?["message"]?.ToString()) ? "Not Provided" : GetFirstLineFromString(InnerError?["message"]?.ToString()).Trim(),
+								string.IsNullOrEmpty(InnerError?["@Microsoft.PowerApps.CDS.HelpLink"]?.ToString()) ? "Not Provided" : GetFirstLineFromString(InnerError?["@Microsoft.PowerApps.CDS.HelpLink"]?.ToString()).Trim(),
+								string.IsNullOrEmpty(InnerError?["stacktrace"]?.ToString()) ? "Not Provided" : InnerError?["stacktrace"]?.ToString().Trim()
 								, sw, level);
 						}
 					}
@@ -334,7 +359,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 					{
 						if (objException is DataverseOperationException cdsOpExecp)
 						{
-							FormatCdsSvcFaultMessage(
+							FormatSvcFaultMessage(
 								string.IsNullOrEmpty(cdsOpExecp.Message) ? "Not Provided" : cdsOpExecp.Message.ToString().Trim(),
 								string.IsNullOrEmpty(cdsOpExecp.Source) ? "Not Provided" : cdsOpExecp.Source.ToString().Trim(),
 								cdsOpExecp.HResult == -1 ? "Not Provided" : cdsOpExecp.HResult.ToString().Trim(),
@@ -382,12 +407,30 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			return;
 		}
 
-		/// <summary>
-		/// returns the first line from the text block. 
-		/// </summary>
-		/// <param name="textBlock"></param>
-		/// <returns></returns>
-		internal static string GetFirstLineFromString(string textBlock)
+        private static string ExtractString(IEnumerable<string> enumerable)
+        {
+			string sOut = string.Empty;
+			if (enumerable != null)
+            {
+				List<string> lst = new List<string>(enumerable);
+				
+                foreach (var itm in lst.Distinct())
+                {
+					if (string.IsNullOrEmpty(sOut))
+						sOut += $"{itm}";
+					else
+						sOut += $"|{itm}";
+				}
+            }
+			return sOut; 
+        }
+
+        /// <summary>
+        /// returns the first line from the text block. 
+        /// </summary>
+        /// <param name="textBlock"></param>
+        /// <returns></returns>
+        internal static string GetFirstLineFromString(string textBlock)
         {
 			if (!string.IsNullOrEmpty(textBlock))
 			{
@@ -477,11 +520,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// <param name="helpLink">Help Link</param>
 		/// <param name="sw">Writer to write too</param>
 		/// <param name="level">Depth</param>
-		private static void FormatCdsSvcFaultMessage(string message, string source, string errorCode, System.Collections.IDictionary dataItems , string helpLink, StringBuilder sw, int level)
+		private static void FormatSvcFaultMessage(string message, string source, string errorCode, System.Collections.IDictionary dataItems , string helpLink, StringBuilder sw, int level)
 		{
 			if (level != 0)
 				sw.AppendLine($"Inner Exception Level {level}\t: ");
-			sw.AppendLine("==CdsClientOperationException Info=======================================================================================");
+			sw.AppendLine("==DataverseOperationException Info=======================================================================================");
 			sw.AppendLine($"Source: {source}");
 			sw.AppendLine("Error: " + message);
 			sw.AppendLine("ErrorCode: " + errorCode);
@@ -490,7 +533,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			sw.AppendLine($"HelpLink Url: {helpLink}");
 			if (dataItems != null && dataItems.Count > 0)
 			{
-				sw.AppendLine("CdsErrorDetail:");
+				sw.AppendLine("DataverseErrorDetail:");
 				foreach (System.Collections.DictionaryEntry itm in dataItems)
 				{
 					sw.AppendLine($"\t{itm.Key}: {itm.Value}");
@@ -498,6 +541,26 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			}
 			sw.AppendLine("======================================================================================================================");
 		}
+
+		private static LogLevel TranslateTraceEventType(TraceEventType traceLevel)
+        {
+            switch (traceLevel)
+            {
+                case TraceEventType.Critical:
+					return LogLevel.Critical;
+                case TraceEventType.Error:
+					return LogLevel.Error;
+                case TraceEventType.Warning:
+					return LogLevel.Warning;
+                case TraceEventType.Information:
+					return LogLevel.Information;
+                case TraceEventType.Verbose:
+					return LogLevel.Trace;
+                default:
+					return LogLevel.None;
+            }
+        }
+
 	}
 
 	/// <summary> 

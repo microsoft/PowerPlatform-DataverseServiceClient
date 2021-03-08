@@ -8,6 +8,15 @@ Notice:
         https://docs.microsoft.com/en-us/powerapps/developer/common-data-service/xrm-tooling/use-connection-strings-xrm-tooling-connect
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time. 
 
+++CURRENTRELEASEID++
+Added support for related entity create as part of general "create" operation. 
+Updated Async Operations to return task's for async methods that were returning void's
+Updated DataverseOperationException to include HttpOperationResponse, where it exists.
+Fixed issue with Cloned Connections not refreshing their tokens on token expiration 
+Updated Logger to remove string builder property
+Added Initial code for ILogger implementation. (Not exposed as of yet but coming soon) 
+Corrected an issue when using the Entity myEnt = new Entity(string, guid) not properly setting the primary id. 
+
 0.4.1:
 Supersedes Microsoft.PowerPlatform.Cds.Client,  Previous nuget has been retired. 
 ***** MAJOR Breaking Changes *****

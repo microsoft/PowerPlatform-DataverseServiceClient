@@ -28,6 +28,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.PowerPlatform.Dataverse.Client.Auth;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using System.Threading;
+using System.Dynamic;
 
 namespace Microsoft.PowerPlatform.Dataverse.Client
 {
@@ -5033,11 +5034,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     }
 
                     string bodyOfRequest = string.Empty;
-                    if (cReq.Attributes != null && cReq.Attributes.Count > 0)
-                    {
-                        var requestBodyObject = Utilities.ToExpandoObject(cReq.LogicalName, cReq.Attributes, _metadataUtlity);
+
+                    ExpandoObject requestBodyObject = Utilities.ToExpandoObject(cReq, _metadataUtlity);
+                    if (cReq.RelatedEntities != null && cReq.RelatedEntities.Count > 0)
+                        requestBodyObject = Utilities.ReleatedEntitiesToExpandoObject(requestBodyObject, cReq.LogicalName, cReq.RelatedEntities, _metadataUtlity);
+
+                    if (requestBodyObject != null)
                         bodyOfRequest = Newtonsoft.Json.JsonConvert.SerializeObject(requestBodyObject);
-                    }
 
                     // Process request params. 
                     if (req.Parameters.ContainsKey(Utilities.RequestHeaders.BYPASSCUSTOMPLUGINEXECUTION))
@@ -6561,7 +6564,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="relationship"></param>
         /// <param name="relatedEntities"></param>
         /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
-        public async void AssociateAsync(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities, CancellationToken cancellationToken)
+        public async Task AssociateAsync(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities, CancellationToken cancellationToken)
         {
             AssociateResponse resp = (AssociateResponse)await ExecuteOrganizationRequestAsyncImpl(new AssociateRequest()
             {
@@ -6616,7 +6619,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="entityName">Logical name of entity</param>
         /// <param name="id">Id of entity</param>
         /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
-        public async void DeleteAsync(string entityName, Guid id, CancellationToken cancellationToken = default)
+        public async Task DeleteAsync(string entityName, Guid id, CancellationToken cancellationToken = default)
         {
             DeleteResponse resp = (DeleteResponse)await ExecuteOrganizationRequestAsyncImpl(
                new DeleteRequest()
@@ -6638,7 +6641,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="relationship"></param>
         /// <param name="relatedEntities"></param>
         /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
-        public async void DisassociateAsync(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities, CancellationToken cancellationToken = default)
+        public async Task DisassociateAsync(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities, CancellationToken cancellationToken = default)
         {
             DisassociateResponse resp = (DisassociateResponse) await ExecuteOrganizationRequestAsyncImpl(new DisassociateRequest()
             {
