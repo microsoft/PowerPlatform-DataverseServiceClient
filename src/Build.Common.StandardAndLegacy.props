@@ -1,4 +1,8 @@
 <Project>
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+  
   <PropertyGroup Condition="'$(TargetFrameworks)' == ''">
     <TargetFrameworks Condition="'$(OutputType)' == 'Exe'">netcoreapp3.1;net462</TargetFrameworks>
     <TargetFrameworks Condition="'$(OutputType)' != 'Exe'">netstandard2.0;net462</TargetFrameworks>
