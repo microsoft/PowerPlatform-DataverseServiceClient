@@ -1,5 +1,5 @@
 using System;
-using System.Linq; 
+using System.Linq;
 using Xunit;
 using Microsoft.Xrm.Sdk;
 using Moq;
@@ -30,6 +30,7 @@ namespace Client_Core_Tests
 
         TestSupport testSupport = new TestSupport();
         ITestOutputHelper outputListner;
+        ILogger<ClientTests> Ilogger = null;
         #endregion
 
         public ClientTests(ITestOutputHelper output)
@@ -40,6 +41,14 @@ namespace Client_Core_Tests
             TraceConsoleSupport traceConsoleSupport = new TraceConsoleSupport(outputListner);
             TraceControlSettings.CloseListeners();
             TraceControlSettings.AddTraceListener(traceConsoleSupport);
+
+            ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+                    builder.AddConsole(options =>
+                    {
+                    options.IncludeScopes = true;
+                    options.TimestampFormat = "hh:mm:ss ";
+                    }));
+            Ilogger = loggerFactory.CreateLogger<ClientTests>();
         }
 
         [Fact]
@@ -52,7 +61,7 @@ namespace Client_Core_Tests
 
             var rsp = (WhoAmIResponse)cli.ExecuteOrganizationRequest(new WhoAmIRequest());
 
-            // Validate that the user ID sent in is the UserID that comes out. 
+            // Validate that the user ID sent in is the UserID that comes out.
             Assert.Equal(rsp.UserId, testSupport._UserId);
         }
 
@@ -82,7 +91,7 @@ namespace Client_Core_Tests
             ILogger<ClientTests> Ilogger = loggerFactory.CreateLogger<ClientTests>();
 
             DataverseTraceLogger logger = new DataverseTraceLogger(Ilogger);
-            logger.EnabledInMemoryLogCapture = true; 
+            logger.EnabledInMemoryLogCapture = true;
 
             logger.Log("TEST INFO MESSAGE");
             logger.Log("TEST WARNING MESSAGE", TraceEventType.Warning);
@@ -91,7 +100,7 @@ namespace Client_Core_Tests
             logger.Log("TEST CRITICAL MESSAGE", TraceEventType.Critical);
 
 
-            // error throw. 
+            // error throw.
             Microsoft.Rest.HttpOperationException operationException = new Microsoft.Rest.HttpOperationException("HTTPOPEXC");
             HttpResponseMessage Resp500 = new HttpResponseMessage(System.Net.HttpStatusCode.ServiceUnavailable);
             Resp500.Headers.Add("REQ_ID", "39393F77-8F8B-4416-846E-28B4D2AA5667");
@@ -112,7 +121,7 @@ namespace Client_Core_Tests
             testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
 
 
-            // Setup handlers to deal with both orgRequest and WebAPI request.             
+            // Setup handlers to deal with both orgRequest and WebAPI request.
             fakHttpMethodHander.Setup(s => s.Send(It.Is<HttpRequestMessage>(f => f.Method.ToString().Equals("delete", StringComparison.OrdinalIgnoreCase)))).Returns(new HttpResponseMessage(System.Net.HttpStatusCode.OK));
             orgSvc.Setup(f => f.Execute(It.Is<DeleteRequest>(p => p.Target.LogicalName.Equals("account") && p.Target.Id.Equals(testSupport._DefaultId)))).Returns(new DeleteResponse());
 
@@ -133,7 +142,7 @@ namespace Client_Core_Tests
             testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
 
 
-            // Set up Responses 
+            // Set up Responses
             CreateResponse testCreate = new CreateResponse();
             testCreate.Results.AddOrUpdateIfNotNull("accountid", testSupport._DefaultId);
             testCreate.Results.AddOrUpdateIfNotNull("id", testSupport._DefaultId);
@@ -143,13 +152,13 @@ namespace Client_Core_Tests
             createRespMsg.Headers.Add("Location", $"https://deploymenttarget02.crm.dynamics.com/api/data/v9.1/accounts({testSupport._DefaultId})");
             createRespMsg.Headers.Add("OData-EntityId", $"https://deploymenttarget02.crm.dynamics.com/api/data/v9.1/accounts({testSupport._DefaultId})");
 
-            // Setup handlers to deal with both orgRequest and WebAPI request.             
+            // Setup handlers to deal with both orgRequest and WebAPI request.
             fakHttpMethodHander.Setup(s => s.Send(It.Is<HttpRequestMessage>(f => f.Method.ToString().Equals("post", StringComparison.OrdinalIgnoreCase)))).Returns(createRespMsg);
             orgSvc.Setup(f => f.Execute(It.Is<CreateRequest>(p => p.Target.LogicalName.Equals("account")))).Returns(testCreate);
 
 
-            // Setup request 
-            // use create operation to setup request 
+            // Setup request
+            // use create operation to setup request
             Dictionary<string, DataverseDataTypeWrapper> newFields = new Dictionary<string, DataverseDataTypeWrapper>();
             newFields.Add("name", new DataverseDataTypeWrapper("CrudTestAccount", DataverseFieldType.String));
             newFields.Add("dateonlyfield", new DataverseDataTypeWrapper(new DateTime(2000, 01, 01), DataverseFieldType.DateTime));
@@ -188,7 +197,7 @@ namespace Client_Core_Tests
             testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
 
 
-            // Set up Responses 
+            // Set up Responses
             CreateResponse testCreate = new CreateResponse();
             testCreate.Results.AddOrUpdateIfNotNull("accountid", testSupport._DefaultId);
             testCreate.Results.AddOrUpdateIfNotNull("id", testSupport._DefaultId);
@@ -210,14 +219,14 @@ namespace Client_Core_Tests
             createRespMsg.Headers.Add("Location", $"https://deploymenttarget02.crm.dynamics.com/api/data/v9.1/accounts({testSupport._DefaultId})");
             createRespMsg.Headers.Add("OData-EntityId", $"https://deploymenttarget02.crm.dynamics.com/api/data/v9.1/accounts({testSupport._DefaultId})");
 
-            // Setup handlers to deal with both orgRequest and WebAPI request.             
+            // Setup handlers to deal with both orgRequest and WebAPI request.
             fakHttpMethodHander.Setup(s => s.Send(It.Is<HttpRequestMessage>(f => f.Method.ToString().Equals("post", StringComparison.OrdinalIgnoreCase)))).Returns(createRespMsg);
             orgSvc.Setup(f => f.Execute(It.Is<CreateRequest>(p => p.Target.LogicalName.Equals("account")))).Returns(testCreate);
             orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field02", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribfield02Resp);
             orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field07", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribfield07Resp);
 
             // Setup request for all datatypes
-            // use create operation to setup request 
+            // use create operation to setup request
             Dictionary<string, DataverseDataTypeWrapper> newFields = new Dictionary<string, DataverseDataTypeWrapper>();
             newFields.Add("name", new DataverseDataTypeWrapper("CrudTestAccount", DataverseFieldType.String));
             newFields.Add("Field01", new DataverseDataTypeWrapper(false, DataverseFieldType.Boolean));
@@ -272,7 +281,7 @@ namespace Client_Core_Tests
 
             var rsp01 = cli.GetMyUserId();
 
-            // Validate that the user ID sent in is the UserID that comes out. 
+            // Validate that the user ID sent in is the UserID that comes out.
             Assert.Equal(rsp01, testSupport._UserId);
         }
 
@@ -307,26 +316,26 @@ namespace Client_Core_Tests
             string BatchRequestName = "TestBatch";
             Guid batchid = cli.CreateBatchOperationRequest(BatchRequestName);
 
-            // use create operation to setup request 
+            // use create operation to setup request
             Dictionary<string, DataverseDataTypeWrapper> newFields = new Dictionary<string, DataverseDataTypeWrapper>();
             newFields.Add("name", new DataverseDataTypeWrapper("CrudTestAccount", DataverseFieldType.String));
             newFields.Add("accountnumber", new DataverseDataTypeWrapper("12345", DataverseFieldType.String));
             newFields.Add("telephone1", new DataverseDataTypeWrapper("555-555-5555", DataverseFieldType.String));
             newFields.Add("donotpostalmail", new DataverseDataTypeWrapper(true, DataverseFieldType.Boolean));
 
-            // issue request as a batch: 
+            // issue request as a batch:
             Guid result = cli.CreateAnnotation("account", testSupport._DefaultId, newFields, batchid);
             Assert.Equal<Guid>(Guid.Empty, result);
 
             OrganizationRequest req = cli.GetBatchRequestAtPosition(batchid, 0);
 
-            // Executes the batch request. 
+            // Executes the batch request.
             cli.ExecuteBatch(batchid);
 
-            // Request Batch by name 
+            // Request Batch by name
             Guid OperationId = cli.GetBatchOperationIdRequestByName(BatchRequestName);
 
-            // Request batch back 
+            // Request batch back
             RequestBatch reqBatch = cli.GetBatchById(batchid);
             Assert.NotNull(reqBatch);
             Assert.Equal(BatchRequestName, reqBatch.BatchName);
@@ -413,7 +422,7 @@ namespace Client_Core_Tests
             testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
 
 
-            // Test for plural name 
+            // Test for plural name
             string response = cli.GetEntityDisplayNamePlural("account");
             Assert.Equal("Accounts", response);
 
@@ -421,11 +430,11 @@ namespace Client_Core_Tests
             response = cli.GetEntityDisplayNamePlural("account", 1);
             Assert.Equal("Accounts", response);
 
-            // Test for non plural name 
+            // Test for non plural name
             response = cli.GetEntityDisplayName("account");
             Assert.Equal("Account", response);
 
-            // Test for non plural name ETC 
+            // Test for non plural name ETC
             response = cli.GetEntityDisplayName("account", 1);
             Assert.Equal("Account", response);
 
@@ -546,8 +555,8 @@ namespace Client_Core_Tests
             var Conn_Secret = System.Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET");
             var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
 
-            // Connection params. 
-            var client = new ServiceClient(new Uri(Conn_Url), Conn_AppID, Conn_Secret, true);
+            // Connection params.
+            var client = new ServiceClient(new Uri(Conn_Url), Conn_AppID, Conn_Secret, true , Ilogger);
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
 
             // Validate connection
@@ -564,8 +573,8 @@ namespace Client_Core_Tests
             var Conn_Secret = System.Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET");
             var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
 
-            // connection params + secure string. 
-            var client = new ServiceClient(new Uri(Conn_Url), Conn_AppID, ServiceClient.MakeSecureString(Conn_Secret), true);
+            // connection params + secure string.
+            var client = new ServiceClient(new Uri(Conn_Url), Conn_AppID, ServiceClient.MakeSecureString(Conn_Secret), true , logger: Ilogger);
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
 
             // Validate connection
@@ -582,9 +591,9 @@ namespace Client_Core_Tests
             var Conn_Secret = System.Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET");
             var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
 
-            // Connection string; 
+            // Connection string;
             var connStr = $"AuthType=ClientSecret;AppId={Conn_AppID};ClientSecret={Conn_Secret};Url={Conn_Url}";
-            var client = new ServiceClient(connStr);
+            var client = new ServiceClient(connStr, Ilogger);
             Assert.True(client.IsReady, "Failed to Create Connection via Connection string");
 
             // Check user before we validate connection
@@ -616,7 +625,7 @@ namespace Client_Core_Tests
 
             // Connection string - Direct connect using Sample ApplicationID's
             var connStr = $"AuthType=OAuth;Username={Conn_UserName};Password={Conn_PW};Url={Conn_Url};AppId={testSupport._SampleAppID.ToString()};RedirectUri={testSupport._SampleAppRedirect.ToString()};TokenCacheStorePath=c:\\MyTokenCache;LoginPrompt=Never";
-            var client = new ServiceClient(connStr);
+            var client = new ServiceClient(connStr, Ilogger);
             Assert.True(client.IsReady, "Failed to Create Connection via Connection string");
 
             // Check user before we validate connection
@@ -629,7 +638,7 @@ namespace Client_Core_Tests
             // Validate connection
             ValidateConnection(client);
 
-            // Check user after we validate connection again as it gets it from cached token 
+            // Check user after we validate connection again as it gets it from cached token
             client._connectionSvc.AuthContext.Account.Username.Should().BeEquivalentTo(Conn_UserName);
         }
 
@@ -646,7 +655,7 @@ namespace Client_Core_Tests
             var Conn_PW = System.Environment.GetEnvironmentVariable("XUNITCONNTESTPW");
             var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
 
-            //Connection params. 
+            //Connection params.
             string onlineRegion = string.Empty;
             string orgName = string.Empty;
             bool isOnPrem = false;
@@ -671,7 +680,7 @@ namespace Client_Core_Tests
             // Validate connection
             ValidateConnection(client);
 
-            // Check user after we validate connection again as it gets it from cached token 
+            // Check user after we validate connection again as it gets it from cached token
             client._connectionSvc.AuthContext.Account.Username.Should().BeEquivalentTo(Conn_UserName);
         }
 
@@ -688,7 +697,7 @@ namespace Client_Core_Tests
             var Conn_PW = System.Environment.GetEnvironmentVariable("XUNITCONNTESTPW");
             var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
 
-            // Connection params. 
+            // Connection params.
             var client = new ServiceClient(Conn_UserName, ServiceClient.MakeSecureString(Conn_PW), new Uri(Conn_Url), true, DataverseConnectionStringProcessor.sampleClientId, new Uri(DataverseConnectionStringProcessor.sampleRedirectUrl), PromptBehavior.Never);
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor - Direct Connect");
 
@@ -702,7 +711,7 @@ namespace Client_Core_Tests
             // Validate connection
             ValidateConnection(client);
 
-            // Check user after we validate connection again as it gets it from cached token 
+            // Check user after we validate connection again as it gets it from cached token
             client._connectionSvc.AuthContext.Account.Username.Should().BeEquivalentTo(Conn_UserName);
         }
         #region connectionValidationHelper
@@ -711,18 +720,27 @@ namespace Client_Core_Tests
         {
             client._connectionSvc.AuthContext.Should().NotBeNull();
 
-            // Validate it 
+            // Validate it
             var rslt = client.Execute(new WhoAmIRequest());
             Assert.IsType<WhoAmIResponse>(rslt);
 
+            ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+            builder.AddConsole(options =>
+            {
+                options.IncludeScopes = true;
+                options.TimestampFormat = "hh:mm:ss ";
+            }));
+
+            ILogger<ClientTests> locallogger = loggerFactory.CreateLogger<ClientTests>();
+            locallogger.BeginScope("Beginning CloneLogger");
             // Clone it. - Validate use
-            using (var client2 = client.Clone())
+            using (var client2 = client.Clone(locallogger))
             {
                 rslt = client2.Execute(new WhoAmIRequest());
                 Assert.IsType<WhoAmIResponse>(rslt);
             }
 
-            // Create clone chain an break linkage. 
+            // Create clone chain an break linkage.
             var client3 = client.Clone();
             var client4 = client3.Clone();
             rslt = client3.Execute(new WhoAmIRequest());
@@ -741,7 +759,7 @@ namespace Client_Core_Tests
         [Trait("Category", "Live Connect Required")]
         public void RelatedEntityLiveTest()
         {
-            // Live test is required due to support on server side being required to parse various configurations. 
+            // Live test is required due to support on server side being required to parse various configurations.
             // use ClientSecretConnection
             System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
 
@@ -749,8 +767,8 @@ namespace Client_Core_Tests
             var Conn_Secret = System.Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET");
             var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
 
-            // connection params + secure string. 
-            var client = new ServiceClient(new Uri(Conn_Url), Conn_AppID, ServiceClient.MakeSecureString(Conn_Secret), true);
+            // connection params + secure string.
+            var client = new ServiceClient(new Uri(Conn_Url), Conn_AppID, ServiceClient.MakeSecureString(Conn_Secret), true , logger: Ilogger);
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
 
 
@@ -796,7 +814,7 @@ namespace Client_Core_Tests
             Assert.True(accountid != Guid.Empty);
 
             // Now delete
-            client.Delete("account", accountid); 
+            client.Delete("account", accountid);
 
 
 

@@ -9,12 +9,13 @@ using System.Reflection;
 using System.ServiceModel.Description;
 using Microsoft.PowerPlatform.Dataverse.Client.Model;
 using Microsoft.PowerPlatform.Dataverse.Client.Auth;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.PowerPlatform.Dataverse.Client
 {
 	/// <summary>
-	/// Stores Parsed connection info from the use of a CDS connection string. 
-	/// This is only populated when the CDS Connection string object is used, this is read only. 
+	/// Stores Parsed connection info from the use of a CDS connection string.
+	/// This is only populated when the CDS Connection string object is used, this is read only.
 	/// </summary>
 	internal class DataverseConnectionStringProcessor
 	{
@@ -120,7 +121,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		internal string CertThumbprint { get; set; }
 
 		/// <summary>
-		/// if set to true, then the org URI should be used directly. 
+		/// if set to true, then the org URI should be used directly.
 		/// </summary>
 		internal bool SkipDiscovery { get; set; }
 
@@ -188,12 +189,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		}
 
 		/// <summary>
-		/// When true, specifies a unique instance of the connection should be created. 
+		/// When true, specifies a unique instance of the connection should be created.
 		/// </summary>
 		public bool UseUniqueConnectionInstance { get; internal set; }
 
 		/// <summary>
-		/// When set to true and oAuth Mode ( not Cert ) attempts to run the login using the current user identity. 
+		/// When set to true and oAuth Mode ( not Cert ) attempts to run the login using the current user identity.
 		/// </summary>
 		public bool UseCurrentUser { get; set; }
 
@@ -201,7 +202,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		{
 		}
 
-		private DataverseConnectionStringProcessor(IDictionary<string, string> connection)
+		private DataverseConnectionStringProcessor(IDictionary<string, string> connection , ILogger logger)
 			: this(
 					connection.FirstNotNullOrEmpty(ConnectionStringConstants.ServiceUri),
 					connection.FirstNotNullOrEmpty(ConnectionStringConstants.UserName),
@@ -218,12 +219,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 					connection.FirstNotNullOrEmpty(ConnectionStringConstants.CertThumbprint),
 					connection.FirstNotNullOrEmpty(ConnectionStringConstants.SkipDiscovery),
 					connection.FirstNotNullOrEmpty(ConnectionStringConstants.IntegratedSecurity),
-					connection.FirstNotNullOrEmpty(ConnectionStringConstants.ClientSecret)
+					connection.FirstNotNullOrEmpty(ConnectionStringConstants.ClientSecret),
+					logger
 				  )
 		{
 		}
 		private DataverseConnectionStringProcessor(string serviceUri, string userName, string password, string domain, string homeRealmUri, string authType, string requireNewInstance, string clientId, string redirectUri,
-			string tokenCacheStorePath, string loginPrompt, string certStoreName, string certThumbprint, string skipDiscovery, string IntegratedSecurity , string clientSecret)
+			string tokenCacheStorePath, string loginPrompt, string certStoreName, string certThumbprint, string skipDiscovery, string IntegratedSecurity , string clientSecret , ILogger logger)
 		{
 			DataverseTraceLogger logEntry = new DataverseTraceLogger();
 			Uri _serviceuriName, _realmUri;
@@ -232,7 +234,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			if (bool.TryParse(skipDiscovery, out tempbool))
 				SkipDiscovery = tempbool;
 			else
-				SkipDiscovery = true;  // changed to change defaulting behavior of skip discovery. 
+				SkipDiscovery = true;  // changed to change defaulting behavior of skip discovery.
 
 
 			ServiceUri = GetValidUri(serviceUri, out _serviceuriName) ? _serviceuriName : null;
@@ -247,16 +249,16 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			CertStoreName = certStoreName;
 			CertThumbprint = certThumbprint;
 
-			// Check to see if use current user is configured. 
+			// Check to see if use current user is configured.
 			bool _IntegratedSecurity = false;
 			if (!string.IsNullOrEmpty(IntegratedSecurity))
 				bool.TryParse(IntegratedSecurity, out _IntegratedSecurity);
 
-			bool useUniqueConnection = true;  // Set default to true to follow the old behavior. 
+			bool useUniqueConnection = true;  // Set default to true to follow the old behavior.
 			if (!string.IsNullOrEmpty(requireNewInstance))
 				bool.TryParse(requireNewInstance, out useUniqueConnection);
 			UseUniqueConnectionInstance = useUniqueConnection;
-			
+
 			//UserIdentifier = !string.IsNullOrWhiteSpace(UserId) ? new UserIdentifier(UserId, UserIdentifierType.OptionalDisplayableId) : null;
 
 			AuthenticationType authenticationType;
@@ -322,7 +324,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// <param name="serviceUri"></param>
 		private void SetOrgnameAndOnlineRegion(Uri serviceUri)
 		{
-			// uses publicaly exposed connection parser to parse 
+			// uses publicaly exposed connection parser to parse
 			string orgRegion = string.Empty;
 			string orgName = string.Empty;
 			bool isOnPrem = false;
@@ -334,13 +336,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
 
 		/// <summary>
-		/// Parse the connection sting 
+		/// Parse the connection sting
 		/// </summary>
 		/// <param name="connectionString"></param>
+		/// <param name="logger">Logging provider <see cref="ILogger"/></param>
 		/// <returns></returns>
-		public static DataverseConnectionStringProcessor Parse(string connectionString )
+		public static DataverseConnectionStringProcessor Parse(string connectionString , ILogger logger = null)
 		{
-			return new DataverseConnectionStringProcessor(connectionString.ToDictionary());
+			return new DataverseConnectionStringProcessor(connectionString.ToDictionary(), logger);
 		}
 
 	}

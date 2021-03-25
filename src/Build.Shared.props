@@ -1,6 +1,7 @@
 <Project>
   <!-- msbuild properties shared for dotnetCore and .NET classic projects: -->
   <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
     <PackageVersion_AppInsights>2.9.1</PackageVersion_AppInsights>
     <PackageVersion_Adal>3.19.8</PackageVersion_Adal>
     <PackageVersion_MSAL>4.25.0</PackageVersion_MSAL>
@@ -17,7 +18,7 @@
 
   <PropertyGroup>
     <!-- this property must be re-defined in individual .csprojs or a .props file per component area -->
-    <ComponentAreaName Condition="'$(ComponentAreaName)' == ''">FORGOT-To-Set-ComponentAreaName</ComponentAreaName>    
+    <ComponentAreaName Condition="'$(ComponentAreaName)' == ''">FORGOT-To-Set-ComponentAreaName</ComponentAreaName>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -44,7 +45,6 @@
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>

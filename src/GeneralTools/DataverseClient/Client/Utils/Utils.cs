@@ -101,15 +101,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     // Determine deployment region from Uri
                     List<string> elements = new List<string>(serviceUri.Host.Split(new string[] { "." }, StringSplitOptions.RemoveEmptyEntries));
                     organizationName = elements[0];
-                    elements.RemoveAt(0); // remove the first ( org name ) from the Uri. 
+                    elements.RemoveAt(0); // remove the first ( org name ) from the Uri.
 
 
-                    // construct Prospective CRM Online path. 
+                    // construct Prospective CRM Online path.
                     System.Text.StringBuilder buildPath = new System.Text.StringBuilder();
                     foreach (var item in elements)
                     {
                         if (item.Equals("api"))
-                            continue; // Skip the .api. when running via this path. 
+                            continue; // Skip the .api. when running via this path.
                         buildPath.AppendFormat("{0}.", item);
                     }
                     string crmKey = buildPath.ToString().TrimEnd('.').TrimEnd('/');
@@ -118,7 +118,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     {
                         using (DiscoveryServers discoSvcs = new DiscoveryServers())
                         {
-                            // drop in the discovery region if it can be determined.  if not, default to scanning. 
+                            // drop in the discovery region if it can be determined.  if not, default to scanning.
                             var locatedDiscoServer = discoSvcs.OSDPServers.Where(w => w.DiscoveryServerUri != null && w.DiscoveryServerUri.Host.Contains(crmKey)).FirstOrDefault();
                             if (locatedDiscoServer != null && !string.IsNullOrEmpty(locatedDiscoServer.ShortName))
                                 onlineRegion = locatedDiscoServer.ShortName;
@@ -142,7 +142,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         }
 
         /// <summary>
-        /// returns ( if possible ) the org detail for a given organization name from the list of orgs in discovery 
+        /// returns ( if possible ) the org detail for a given organization name from the list of orgs in discovery
         /// </summary>
         /// <param name="orgList">OrgList to Parse though</param>
         /// <param name="organizationName">Name to find</param>
@@ -153,7 +153,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             if (orgDetail == null)
                 orgDetail = orgList.OrgsList.Where(o => o.OrgDetail.FriendlyName.Equals(organizationName, StringComparison.CurrentCultureIgnoreCase)).FirstOrDefault();
 
-            // still not found... try by URI name. 
+            // still not found... try by URI name.
             if (orgDetail == null)
             {
                 string formatedOrgName = string.Format("://{0}.", organizationName).ToLowerInvariant();
@@ -163,7 +163,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         }
 
         /// <summary>
-        /// returns ( if possible ) the org detail for a given organization name from the list of orgs in discovery 
+        /// returns ( if possible ) the org detail for a given organization name from the list of orgs in discovery
         /// </summary>
         /// <param name="orgList">OrgList to Parse though</param>
         /// <param name="organizationName">Name to find</param>
@@ -174,7 +174,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             if (orgDetail == null)
                 orgDetail = orgList.Where(o => o.FriendlyName.Equals(organizationName, StringComparison.CurrentCultureIgnoreCase)).FirstOrDefault();
 
-            // still not found... try by URI name. 
+            // still not found... try by URI name.
             if (orgDetail == null)
             {
                 string formatedOrgName = string.Format("://{0}.", organizationName).ToLowerInvariant();
@@ -184,7 +184,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         }
 
         /// <summary>
-        /// Parses an OrgURI to determine what the supporting discovery server is. 
+        /// Parses an OrgURI to determine what the supporting discovery server is.
         /// </summary>
         /// <param name="serviceUri">Service Uri to parse</param>
         /// <param name="Geo">Geo Code for region (Optional)</param>
@@ -195,7 +195,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             //support for detecting a Live/Online URI in the path and rerouting to use that..
             if (IsValidOnlineHost(serviceUri))
             {
-                // Check for Geo code and to make sure that the region is not on our internal list. 
+                // Check for Geo code and to make sure that the region is not on our internal list.
                 if (!string.IsNullOrEmpty(Geo)
                     && !(serviceUri.Host.ToUpperInvariant().Contains("CRMLIVETIE.COM")
                     || serviceUri.Host.ToUpperInvariant().Contains("CRMLIVETODAY.COM"))
@@ -203,7 +203,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 {
                     using (DiscoveryServers discoSvcs = new DiscoveryServers())
                     {
-                        // Find by Geo, if null fall though to next check 
+                        // Find by Geo, if null fall though to next check
                         var locatedDiscoServer = discoSvcs.OSDPServers.Where(w => !string.IsNullOrEmpty(w.GeoCode) && w.GeoCode == Geo).FirstOrDefault();
                         if (locatedDiscoServer != null && !string.IsNullOrEmpty(locatedDiscoServer.ShortName))
                             return locatedDiscoServer;
@@ -216,15 +216,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
                     // Determine deployment region from Uri
                     List<string> elements = new List<string>(serviceUri.Host.Split(new string[] { "." }, StringSplitOptions.RemoveEmptyEntries));
-                    elements.RemoveAt(0); // remove the first ( org name ) from the Uri. 
+                    elements.RemoveAt(0); // remove the first ( org name ) from the Uri.
 
 
-                    // construct Prospective Dataverse Online path. 
+                    // construct Prospective Dataverse Online path.
                     System.Text.StringBuilder buildPath = new System.Text.StringBuilder();
                     foreach (var item in elements)
                     {
                         if (item.Equals("api"))
-                            continue; // Skip the .api. when running via this path. 
+                            continue; // Skip the .api. when running via this path.
                         buildPath.AppendFormat("{0}.", item);
                     }
                     string crmKey = buildPath.ToString().TrimEnd('.').TrimEnd('/');
@@ -233,7 +233,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     {
                         using (DiscoveryServers discoSvcs = new DiscoveryServers())
                         {
-                            // drop in the discovery region if it can be determined.  if not, default to scanning. 
+                            // drop in the discovery region if it can be determined.  if not, default to scanning.
                             var locatedDiscoServer = discoSvcs.OSDPServers.Where(w => w.DiscoveryServerUri != null && w.DiscoveryServerUri.Host.Contains(crmKey)).FirstOrDefault();
                             if (locatedDiscoServer != null && !string.IsNullOrEmpty(locatedDiscoServer.ShortName))
                                 return locatedDiscoServer;
@@ -269,7 +269,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 || hostUri.DnsSafeHost.ToUpperInvariant().Contains("CRMLIVETIE.COM")
                 || hostUri.DnsSafeHost.ToUpperInvariant().Contains("CRMLIVETODAY.COM"))
 #else
-			if (hostUri.DnsSafeHost.ToUpperInvariant().Contains("DYNAMICS.COM") 
+			if (hostUri.DnsSafeHost.ToUpperInvariant().Contains("DYNAMICS.COM")
 				|| hostUri.DnsSafeHost.ToUpperInvariant().Contains("MICROSOFTDYNAMICS.DE")
 				|| hostUri.DnsSafeHost.ToUpperInvariant().Contains("MICROSOFTDYNAMICS.US")
 				|| hostUri.DnsSafeHost.ToUpperInvariant().Contains("APPSPLATFORM.US")
@@ -287,7 +287,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
         /// <summary>
         /// Determines if the request type can be translated to WebAPI
-        /// This is a temp method to support the staged transition to the webAPI and will be removed or reintegrated with the overall pipeline at some point in the future. 
+        /// This is a temp method to support the staged transition to the webAPI and will be removed or reintegrated with the overall pipeline at some point in the future.
         /// </summary>
         /// <param name="req"></param>
         /// <returns></returns>
@@ -301,20 +301,20 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 case "delete":
                     return true;
                 case "upsert":
-                // Disabling WebAPI support for upsert right now due to issues with generating the response. 
+                // Disabling WebAPI support for upsert right now due to issues with generating the response.
 
                 // avoid bug in WebAPI around Support for key's as EntityRefeances //TODO: TEMP
                 //Xrm.Sdk.Messages.UpsertRequest upsert = (Xrm.Sdk.Messages.UpsertRequest)req;
                 //if (upsert.Target.KeyAttributes?.Any(a => a.Value is string) != true)
                 //	return false;
                 //else
-                //return true; 
+                //return true;
                 default:
                     return false;
             }
         }
         /// <summary>
-        /// Parses an attribute array into a object that can be used to create a JSON request. 
+        /// Parses an attribute array into a object that can be used to create a JSON request.
         /// </summary>
         /// <param name="sourceEntity">Entity to process</param>
         /// <param name="mUtil"></param>
@@ -323,14 +323,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         {
             dynamic expando = new ExpandoObject();
 
-            // Check for primary Id info: 
+            // Check for primary Id info:
             if (sourceEntity.Id != Guid.Empty)
-                sourceEntity = UpdateEntityAttributesForPrimaryId(sourceEntity, mUtil); 
+                sourceEntity = UpdateEntityAttributesForPrimaryId(sourceEntity, mUtil);
 
-            AttributeCollection entityAttributes = sourceEntity.Attributes; 
+            AttributeCollection entityAttributes = sourceEntity.Attributes;
             if (!(entityAttributes != null) && (entityAttributes.Count > 0 ))
             {
-                return expando; 
+                return expando;
             }
 
             var expandoObject = (IDictionary<string, object>)expando;
@@ -346,11 +346,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 var key = keyValuePair.Key;
                 if (value is EntityReference entityReference)
                 {
-                    // Get Lookup attribute meta data for the ER to check for polymorphic relationship. 
+                    // Get Lookup attribute meta data for the ER to check for polymorphic relationship.
                     var attributeInfo = mUtil.GetAttributeMetadata(sourceEntity.LogicalName, key.ToLower());
                     if (attributeInfo is Xrm.Sdk.Metadata.LookupAttributeMetadata attribData)
                     {
-                        // Now get relationship to make sure we use the correct name. 
+                        // Now get relationship to make sure we use the correct name.
                         var eData = mUtil.GetEntityMetadata(Xrm.Sdk.Metadata.EntityFilters.Relationships, sourceEntity.LogicalName);
                         var ERNavName = eData.ManyToOneRelationships.FirstOrDefault(w => w.ReferencingAttribute.Equals(attribData.LogicalName) &&
                                                                                 w.ReferencedEntity.Equals(entityReference.LogicalName))
@@ -363,7 +363,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     }
                     else if (attributeInfo == null)
                     {
-                        // Fault here. 
+                        // Fault here.
                         throw new DataverseOperationException($"Entity Reference {key.ToLower()} was not found for entity {sourceEntity.LogicalName}.", null);
                     }
 
@@ -385,14 +385,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 {
                     if (value is EntityCollection)
                     {
-                        // try to get the participation type id from the key. 
+                        // try to get the participation type id from the key.
                         int PartyTypeId = PartyListHelper.GetParticipationtypeMasks(key);
-                        bool isActivityParty = PartyTypeId != -1;  // if the partytypeID is -1 this is not a activity party collection. 
+                        bool isActivityParty = PartyTypeId != -1;  // if the partytypeID is -1 this is not a activity party collection.
 
                         if (isActivityParty && partiesCollection == null)
-                            partiesCollection = new List<ExpandoObject>(); // Only build it when needed. 
+                            partiesCollection = new List<ExpandoObject>(); // Only build it when needed.
 
-                        // build linked collection here. 
+                        // build linked collection here.
                         foreach (var ent in (value as EntityCollection).Entities)
                         {
                             ExpandoObject rslt = ToExpandoObject(ent, mUtil);
@@ -406,7 +406,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         if (isActivityParty)
                             continue;
 
-                        // Note.. if this is not an activity party but instead an embedded entity.. this will fall though and fail with trying to embed an entity.  
+                        // Note.. if this is not an activity party but instead an embedded entity.. this will fall though and fail with trying to embed an entity.
                     }
                     else
                     {
@@ -460,7 +460,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 expandoObject.Add(key, value);
             }
 
-            // Check to see if this contained an activity party 
+            // Check to see if this contained an activity party
             if (partiesCollection?.Count > 0)
             {
                 expandoObject.Add($"{sourceEntity.LogicalName}_activity_parties", partiesCollection);
@@ -471,8 +471,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         }
 
         /// <summary>
-        /// checks to see if an attribute has been added to the collection containing the ID of the entity . 
-        /// this is required for the WebAPI to properly function. 
+        /// checks to see if an attribute has been added to the collection containing the ID of the entity .
+        /// this is required for the WebAPI to properly function.
         /// </summary>
         /// <param name="sourceEntity"></param>
         /// <param name="mUtil"></param>
@@ -482,9 +482,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             if ( sourceEntity.Id != Guid.Empty )
             {
                 var entMeta = mUtil.GetEntityMetadata(sourceEntity.LogicalName);
-                sourceEntity.Attributes[entMeta.PrimaryIdAttribute] = sourceEntity.Id; 
+                sourceEntity.Attributes[entMeta.PrimaryIdAttribute] = sourceEntity.Id;
             }
-            return sourceEntity; 
+            return sourceEntity;
         }
 
         /// <summary>
@@ -498,12 +498,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         internal static ExpandoObject ReleatedEntitiesToExpandoObject(ExpandoObject rootExpando, string entityName, RelatedEntityCollection entityCollection, MetadataUtility mUtil)
         {
             if (rootExpando == null)
-                return rootExpando; 
+                return rootExpando;
 
             if ( entityCollection != null && entityCollection.Count == 0 )
             {
-                // nothing to do, just return. 
-                return rootExpando; 
+                // nothing to do, just return.
+                return rootExpando;
             }
 
             foreach (var entItem in entityCollection)
@@ -519,7 +519,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 // Get the Entity relationship key and entity and reverse it back to the entity key name
                 var eData = mUtil.GetEntityMetadata(Xrm.Sdk.Metadata.EntityFilters.Relationships, entItem.Value.Entities[0].LogicalName);
 
-                // Find the relationship that is referenced. 
+                // Find the relationship that is referenced.
                 var ERM21 = eData.ManyToOneRelationships.FirstOrDefault(w1 => w1.SchemaName.ToLower().Equals(entItem.Key.SchemaName.ToLower()));
                 var ERM2M = eData.ManyToManyRelationships.FirstOrDefault(w2 => w2.SchemaName.ToLower().Equals(entItem.Key.SchemaName.ToLower()));
                 var ER12M = eData.OneToManyRelationships.FirstOrDefault(w3 => w3.SchemaName.ToLower().Equals(entItem.Key.SchemaName.ToLower()));
@@ -527,7 +527,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 // Determine which one hit
                 if (ERM21 != null)
                 {
-                    isArrayRequired = true; 
+                    isArrayRequired = true;
                     key = ERM21.ReferencedEntityNavigationPropertyName;
                 }
                 else if (ERM2M != null)
@@ -547,20 +547,20 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     key = ER12M.ReferencingAttribute;
                 }
 
-                if ( string.IsNullOrEmpty(key) ) // Failed to find key 
+                if ( string.IsNullOrEmpty(key) ) // Failed to find key
                 {
                     throw new DataverseOperationException($"Relationship key {entItem.Key.SchemaName} cannot be found for related entities of {entityName}.");
                 }
 
                 foreach (var ent in entItem.Value.Entities)
                 {
-                    // Check to see if the entity itself has related entities 
+                    // Check to see if the entity itself has related entities
                     if (ent.RelatedEntities != null && ent.RelatedEntities.Count > 0)
                     {
                         childEntities = ReleatedEntitiesToExpandoObject(childEntities, entityName, ent.RelatedEntities, mUtil);
                     }
 
-                    // generate object. 
+                    // generate object.
                     ExpandoObject ent1 = ToExpandoObject(ent, mUtil);
 
                     if (((IDictionary<string, object>)childEntities).Count() > 0)
@@ -577,11 +577,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 else
                     ((IDictionary<string, object>)rootExpando).Add(key, childCollection);
             }
-            return rootExpando; 
+            return rootExpando;
         }
 
         /// <summary>
-        /// Parses Key attribute collection for alt key support. 
+        /// Parses Key attribute collection for alt key support.
         /// </summary>
         /// <param name="keyValues">alt key's for object</param>
         /// <returns>webAPI compliant key string</returns>
@@ -599,15 +599,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     keycollection += $"{itm.Key}='{itm.Value}',";
                 }
             }
-            return keycollection.Remove(keycollection.Length - 1); // remove trailing , 
+            return keycollection.Remove(keycollection.Length - 1); // remove trailing ,
         }
         /// <summary>
-        /// List of entities to retry retrieves on. 
+        /// List of entities to retry retrieves on.
         /// </summary>
         private static List<string> _autoRetryRetrieveEntityList = null;
 
         /// <summary>
-        /// if the Incoming query has an entity on the retry list, returns true.  else returns false. 
+        /// if the Incoming query has an entity on the retry list, returns true.  else returns false.
         /// </summary>
         /// <param name="queryStringToParse">string containing entity name to check against</param>
         /// <returns>true if found, false if not</returns>
@@ -628,7 +628,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         }
 
         /// <summary>
-        /// Creates or Adds scopes and returns the current scope 
+        /// Creates or Adds scopes and returns the current scope
         /// </summary>
         /// <param name="scopeToAdd"></param>
         /// <param name="currentScopes"></param>
@@ -657,19 +657,19 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             /// </summary>
             public static readonly string USER_AGENT_HTTP_HEADER = "User-Agent";
             /// <summary>
-            /// Session ID used to track all operations associated with a given group of calls. 
+            /// Session ID used to track all operations associated with a given group of calls.
             /// </summary>
             public static readonly string X_MS_CLIENT_SESSION_ID = "x-ms-client-session-id";
             /// <summary>
-            /// PerRequest ID used to track a specific request. 
+            /// PerRequest ID used to track a specific request.
             /// </summary>
             public static readonly string X_MS_CLIENT_REQUEST_ID = "x-ms-client-request-id";
             /// <summary>
-            /// Content type of WebAPI request. 
+            /// Content type of WebAPI request.
             /// </summary>
             public static readonly string CONTENT_TYPE = "Content-Type";
             /// <summary>
-            /// Header loaded with the AADObjectID of the user to impersonate 
+            /// Header loaded with the AADObjectID of the user to impersonate
             /// </summary>
             public static readonly string AAD_CALLER_OBJECT_ID_HTTP_HEADER = "CallerObjectId";
             /// <summary>
@@ -681,11 +681,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             /// </summary>
             public static readonly string AUTHORIZATION_HEADER = "Authorization";
             /// <summary>
-            /// Header requesting the connection be kept alive. 
+            /// Header requesting the connection be kept alive.
             /// </summary>
             public static readonly string CONNECTION_KEEP_ALIVE = "Keep-Alive";
             /// <summary>
-            /// Header requiring Cache Consistency Server side. 
+            /// Header requiring Cache Consistency Server side.
             /// </summary>
             public static readonly string FORCE_CONSISTENCY = "Consistency";
 
@@ -695,25 +695,25 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             public const string BYPASSCUSTOMPLUGINEXECUTION = "BypassCustomPluginExecution";
 
             /// <summary>
-            /// key used to apply the operation to a given solution. 
+            /// key used to apply the operation to a given solution.
             /// See: https://docs.microsoft.com/powerapps/developer/common-data-service/org-service/use-messages#passing-optional-parameters-with-a-request
             /// </summary>
             public const string SOLUTIONUNIQUENAME = "SolutionUniqueName";
 
             /// <summary>
-            /// used to apply duplicate detection behavior to a given request. 
+            /// used to apply duplicate detection behavior to a given request.
             /// See: https://docs.microsoft.com/powerapps/developer/common-data-service/org-service/use-messages#passing-optional-parameters-with-a-request
             /// </summary>
             public const string SUPPRESSDUPLICATEDETECTION = "SuppressDuplicateDetection";
 
             /// <summary>
-            /// used to pass data though Dataverse to a plugin or downstream system on a request. 
+            /// used to pass data though Dataverse to a plugin or downstream system on a request.
             /// See: https://docs.microsoft.com/en-us/powerapps/developer/common-data-service/org-service/use-messages#add-a-shared-variable-from-the-organization-service
             /// </summary>
             public const string TAG = "tag";
 
             /// <summary>
-            /// used to identify concurrencybehavior property in an organization request. 
+            /// used to identify concurrencybehavior property in an organization request.
             /// </summary>
             public const string CONCURRENCYBEHAVIOR = "ConcurrencyBehavior";
 
@@ -725,12 +725,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         }
 
         /// <summary>
-        /// Minim Version numbers for various features of Dataverse API's. 
+        /// Minim Version numbers for various features of Dataverse API's.
         /// </summary>
         internal static class FeatureVersionMinimums
         {
             /// <summary>
-            /// returns true of the feature version is valid for this environment. 
+            /// returns true of the feature version is valid for this environment.
             /// </summary>
             /// <param name="instanceVersion">Instance version of the Dataverse Instance</param>
             /// <param name="featureVersion">MinFeatureVersion</param>
@@ -740,21 +740,21 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 if (instanceVersion != null && (instanceVersion >= featureVersion))
                     return true;
                 else
-                    return false; 
+                    return false;
             }
 
             /// <summary>
-            /// Lowest server version that can be connected too. 
+            /// Lowest server version that can be connected too.
             /// </summary>
             internal static Version DataverseVersionForThisAPI = new Version("5.0.9688.1533");
 
             /// <summary>
-            /// Minimum version that supports batch Operations. 
+            /// Minimum version that supports batch Operations.
             /// </summary>
             internal static Version BatchOperations = new Version("5.0.9690.3000");
 
             /// <summary>
-            /// Minimum version that supports holding solutions. 
+            /// Minimum version that supports holding solutions.
             /// </summary>
             internal static Version ImportHoldingSolution = new Version("7.2.0.9");
 
@@ -764,37 +764,37 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             internal static Version InternalUpgradeSolution = new Version("9.0.0.0");
 
             /// <summary>
-            /// MinVersion that supports AAD Caller ID. 
+            /// MinVersion that supports AAD Caller ID.
             /// </summary>
             internal static Version AADCallerIDSupported = new Version("8.1.0.0");
 
             /// <summary>
-            /// MinVersion that supports Session ID Telemetry Tracking. 
+            /// MinVersion that supports Session ID Telemetry Tracking.
             /// </summary>
             internal static Version SessionTrackingSupported = new Version("9.0.2.0");
 
             /// <summary>
-            /// MinVersion that supports Forcing Cache Sync. 
+            /// MinVersion that supports Forcing Cache Sync.
             /// </summary>
             internal static Version ForceConsistencySupported = new Version("9.1.0.0");
 
             /// <summary>
-            /// Minimum version to allow plug in bypass param. 
+            /// Minimum version to allow plug in bypass param.
             /// </summary>
             internal static Version AllowBypassCustomPlugin = new Version("9.1.0.20918");
 
             /// <summary>
-            /// Minimum version supported by the Web API 
+            /// Minimum version supported by the Web API
             /// </summary>
             internal static Version WebAPISupported = new Version("8.0.0.0");
 
             /// <summary>
-            /// Minimum version supported for AsyncRibbonProcessing. 
+            /// Minimum version supported for AsyncRibbonProcessing.
             /// </summary>
             internal static Version AllowAsyncRibbonProcessing = new Version("9.1.0.15400");
 
             /// <summary>
-            /// Minimum version supported for Passing Component data to Dataverse as part of solution deployment.. 
+            /// Minimum version supported for Passing Component data to Dataverse as part of solution deployment..
             /// </summary>
             internal static Version AllowComponetInfoProcessing = new Version("9.1.0.16547");
         }

@@ -28,7 +28,7 @@ namespace Client_Core_UnitTests
         public void SetupMockAndSupport( out Mock<IOrganizationService> moqOrgSvc , out Mock<MoqHttpMessagehander> moqHttpHandler , out ServiceClient cdsServiceClient , Version requestedCdsVersion = null)
         {
             if (requestedCdsVersion is null)
-                requestedCdsVersion = new Version("9.1.2.0"); 
+                requestedCdsVersion = new Version("9.1.2.0");
 
             var orgSvc = new Mock<IOrganizationService>();
             var fakHttpMethodHander = new Mock<MoqHttpMessagehander> { CallBase = true };
@@ -39,14 +39,14 @@ namespace Client_Core_UnitTests
 
             moqOrgSvc = orgSvc;
             moqHttpHandler = fakHttpMethodHander;
-            cdsServiceClient = cli; 
+            cdsServiceClient = cli;
         }
         #endregion
 
         #region PreSetupResponses
         private void SetupWhoAmIHandlers(Mock<IOrganizationService> orgSvc)
         {
-            // Who Am I Response 
+            // Who Am I Response
             var whoAmIResponse = new WhoAmIResponse();
             whoAmIResponse.Results = new ParameterCollection();
             whoAmIResponse.Results.Add("UserId", _UserId);
@@ -126,7 +126,7 @@ namespace Client_Core_UnitTests
                 ReferencingAttribute = "field07",
                 ReferencedEntity = "account",
                 ReferencingEntityNavigationPropertyName = "field07account"
-            }           
+            }
             };
 
             System.Reflection.PropertyInfo proInfo = entityMetadata.GetType().GetProperty("ManyToOneRelationships");
@@ -140,7 +140,7 @@ namespace Client_Core_UnitTests
             {
                 proInfo1.SetValue(entityMetadata, 1, null);
             }
-            
+
             System.Reflection.PropertyInfo proInfo3 = entityMetadata.GetType().GetProperty("Attributes");
             if (proInfo3 != null)
             {
