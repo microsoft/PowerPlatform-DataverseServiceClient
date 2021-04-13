@@ -4,6 +4,7 @@ using System.Globalization;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Messages;
 using System.Collections.Concurrent;
+using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 
 namespace Microsoft.PowerPlatform.Dataverse.Client
 {
@@ -22,7 +23,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// </summary>
 		private ConcurrentDictionary<String, AttributeMetadata> _attributeMetadataCache = new ConcurrentDictionary<String, AttributeMetadata>();
 		/// <summary>
-		/// Global option metadata cache object. 
+		/// Global option metadata cache object.
 		/// </summary>
 		private ConcurrentDictionary<String, OptionSetMetadata> _globalOptionMetadataCache = new ConcurrentDictionary<String, OptionSetMetadata>();
 		/// <summary>
@@ -34,7 +35,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// </summary>
 		private static Object _lockObject = new Object();
 		/// <summary>
-		/// Last time Entity data was validated. 
+		/// Last time Entity data was validated.
 		/// </summary>
 		private DateTime _metadataLastValidatedAt;
 
@@ -54,7 +55,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		public void ClearCachedEntityMetadata(string entityName)
 		{
 			TouchMetadataDate();
-			// Not clearing the ETC ID's as they do not change... 
+			// Not clearing the ETC ID's as they do not change...
 			if (_entityMetadataCache.ContainsKey(entityName))
 			{
 				EntityMetadata removedEntData;
@@ -88,12 +89,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 				foreach (var entity in response.EntityMetadata)
 				{
 					if (_entityMetadataCache.ContainsKey(entity.LogicalName))
-						_entityMetadataCache[entity.LogicalName] = entity;  // Update local copy of the entity... 
+						_entityMetadataCache[entity.LogicalName] = entity;  // Update local copy of the entity...
 					else
 						_entityMetadataCache.TryAdd(entity.LogicalName, entity);
 
 					results.Add(entity);
-					// Preload the entity data catch as this has been called already 
+					// Preload the entity data catch as this has been called already
 					if (_entityNameCache.ContainsKey(entity.ObjectTypeCode.Value))
 						continue;
 					else
@@ -101,19 +102,26 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 				}
 				TouchMetadataDate();
 			}
+			else
+			{
+				if (svcAct.LastException != null)
+					throw new DataverseOperationException($"Failed to get metadata from Dataverse.", svcAct.LastException);
+				else
+					throw new DataverseOperationException($"Failed to get metadata from Dataverse", null);
+			}
 
 			return results;
 		}
 
 		/// <summary>
-		/// Returns Entity Metadata for requested entity. 
+		/// Returns Entity Metadata for requested entity.
 		/// Applies returns all data available based on CRM version type
 		/// </summary>
 		/// <param name="entityName">Name of the Entity, data is being requested on</param>
 		/// <returns>Entity data</returns>
 		public EntityMetadata GetEntityMetadata(string entityName)
 		{
-			// Filter the EntityFitlers based on the version of CRM being connected too. 
+			// Filter the EntityFitlers based on the version of CRM being connected too.
 			if (svcAct.ConnectedOrgVersion < Version.Parse("7.1.0.0"))
 				return GetEntityMetadata(EntityFilters.Attributes | EntityFilters.Entity | EntityFilters.Privileges | EntityFilters.Relationships , entityName);
 			else
@@ -180,6 +188,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 					if (!bSelectiveUpdate)
 						TouchMetadataDate();
 				}
+				else
+				{
+					if (svcAct.LastException != null)
+						throw new DataverseOperationException($"Failed to resolve entity metadata for {entityName}.", svcAct.LastException);
+					else
+						throw new DataverseOperationException($"Failed to resolve entity metadata for {entityName}.", null);
+				}
 			}
 			return entityMetadata;
 		}
@@ -208,13 +223,20 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 						{
 							_entityNameCache.TryAdd(metadata.ObjectTypeCode.Value, metadata.LogicalName);
 
-							// reload metadata cache. 
+							// reload metadata cache.
 							if (_entityMetadataCache.ContainsKey(metadata.LogicalName))
 								continue;
 							else
 								_entityMetadataCache.TryAdd(metadata.LogicalName, metadata);
 						}
 						TouchMetadataDate();
+					}
+					else
+					{
+						if (svcAct.LastException != null)
+							throw new DataverseOperationException($"Failed to resolve entity name from typecode {entityTypeCode}.", svcAct.LastException);
+						else
+							throw new DataverseOperationException($"Failed to resolve entity name from typecode {entityTypeCode}.", null);
 					}
 				}
 			}
@@ -223,7 +245,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		}
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		/// <param name="entityName"></param>
 		/// <param name="attributeName"></param>
@@ -249,13 +271,20 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 						_attributeMetadataCache.TryAdd(String.Format(CultureInfo.InvariantCulture, "{0}.{1}", entityName, attributeName), attributeMetadata);
 						_metadataLastValidatedAt = DateTime.UtcNow;
 					}
+					else
+					{
+						if (svcAct.LastException != null)
+							throw new DataverseOperationException($"Failed to resolve attribute metadata for {attributeName} in entity {entityName}.", svcAct.LastException);
+						else
+							throw new DataverseOperationException($"Failed to resolve attribute metadata for {attributeName} in entity {entityName}.", null);
+					}
 				}
 			}
 			return attributeMetadata;
 		}
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		/// <param name="entityName"></param>
 		/// <returns></returns>
@@ -264,7 +293,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			EntityMetadata entityMetadata = GetEntityMetadata(entityName);
 			if (entityMetadata != null)
 			{
-				// Added to deal with failed call to CRM. 
+				// Added to deal with failed call to CRM.
 				if (entityMetadata.Attributes != null)
 				{
 					List<AttributeMetadata> results = new List<AttributeMetadata>();
@@ -281,7 +310,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		}
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		/// <param name="entityName"></param>
 		/// <returns></returns>
@@ -304,7 +333,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		}
 
 		/// <summary>
-		/// Retrieve Global OptionSet Information. 
+		/// Retrieve Global OptionSet Information.
 		/// </summary>
 		/// <param name="optionSetName"></param>
 		/// <returns></returns>
@@ -313,7 +342,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			if (string.IsNullOrEmpty(optionSetName))
 				return null;
 
-			ValidateMetadata(); // Check to see if Metadata has expired. 
+			ValidateMetadata(); // Check to see if Metadata has expired.
 
 			if (_globalOptionMetadataCache.ContainsKey(optionSetName))
 				return _globalOptionMetadataCache[optionSetName];
@@ -332,11 +361,18 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 					return _globalOptionMetadataCache[optionSetName];
 				}
 			}
+			else
+            {
+				if (svcAct.LastException != null)
+					throw new DataverseOperationException($"Failed to resolve global optionset metadata for {optionSetName}.", svcAct.LastException);
+				else
+					throw new DataverseOperationException($"Failed to resolve global optionset metadata for {optionSetName}.", null);
+			}
 			return null;
 		}
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		private void ValidateMetadata()
 		{

@@ -27,5 +27,18 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// Parameter used to pass a collection of component parameters to the import job.
         /// </summary>
         public static string COMPONENTPARAMETERSPARAM = "ComponentParameters";
+        /// <summary>
+        /// Direct the system to convert any matching unmanaged customizations into your managed solution
+        /// </summary>
+        public static string CONVERTTOMANAGED = "ConvertToManaged";
+        /// <summary>
+        /// Internal use only
+        /// </summary>
+        public static string TEMPLATESUFFIX = "TemplateSuffix";
+        /// <summary>
+        /// Internal use only
+        /// </summary>
+        public static string ISTEMPLATEMODE = "IsTemplateMode";
+
     }
 }

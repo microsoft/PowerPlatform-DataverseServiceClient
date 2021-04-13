@@ -298,6 +298,29 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         }
 
         /// <summary>
+        /// Defaults to True.
+        /// <para>When true, this setting applies the default connection routing strategy to connections to Dataverse.</para>
+        /// <para>This will 'prefer' a given node when interacting with Dataverse which improves overall connection performance.</para>
+        /// <para>When set to false, each call to Dataverse will be routed to any given node supporting your organization. </para>
+        /// <para>See https://docs.microsoft.com/en-us/powerapps/developer/data-platform/api-limits#remove-the-affinity-cookie for proper use.</para>
+        /// </summary>
+        public bool EnableAffinityCookie
+        {
+            get
+            {
+                if (_connectionSvc != null)
+                    return _connectionSvc.EnableCookieRelay;
+                else
+                    return true;
+            }
+            set
+            {
+                if (_connectionSvc != null)
+                    _connectionSvc.EnableCookieRelay = value;
+            }
+        }
+
+        /// <summary>
         /// Pointer to Dataverse Service.
         /// </summary>
         internal IOrganizationService DataverseService
@@ -5303,12 +5326,18 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             LayerDesiredOrder desiredLayerOrder = null;
             bool? asyncRibbonProcessing = null;
             EntityCollection componetsToProcess = null;
+            bool? convertToManaged = null;
+            bool? isTemplateModeImport = null;
+            string templateSuffix = null;
 
             if (extraParameters != null)
             {
                 solutionName = extraParameters.ContainsKey(ImportSolutionProperties.SOLUTIONNAMEPARAM) ? extraParameters[ImportSolutionProperties.SOLUTIONNAMEPARAM].ToString() : string.Empty;
                 desiredLayerOrder = extraParameters.ContainsKey(ImportSolutionProperties.DESIREDLAYERORDERPARAM) ? extraParameters[ImportSolutionProperties.DESIREDLAYERORDERPARAM] as LayerDesiredOrder : null;
                 componetsToProcess = extraParameters.ContainsKey(ImportSolutionProperties.COMPONENTPARAMETERSPARAM) ? extraParameters[ImportSolutionProperties.COMPONENTPARAMETERSPARAM] as EntityCollection : null;
+                convertToManaged = extraParameters.ContainsKey(ImportSolutionProperties.CONVERTTOMANAGED) ? extraParameters[ImportSolutionProperties.CONVERTTOMANAGED] as bool? : null;
+                isTemplateModeImport = extraParameters.ContainsKey(ImportSolutionProperties.ISTEMPLATEMODE) ? extraParameters[ImportSolutionProperties.ISTEMPLATEMODE] as bool? : null;
+                templateSuffix = extraParameters.ContainsKey(ImportSolutionProperties.TEMPLATESUFFIX) ? extraParameters[ImportSolutionProperties.TEMPLATESUFFIX].ToString() : string.Empty;
 
                 // Pick up the data from the request,  if the request has the AsyncRibbonProcessing flag, pick up the value of it.
                 asyncRibbonProcessing = extraParameters.ContainsKey(ImportSolutionProperties.ASYNCRIBBONPROCESSING) ? extraParameters[ImportSolutionProperties.ASYNCRIBBONPROCESSING] as bool? : null;
@@ -5347,6 +5376,24 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             // Not supported on this version of Dataverse
                             this._logEntry.Log($"ImportSolution request contains {ImportSolutionProperties.COMPONENTPARAMETERSPARAM} property. This request Dataverse version {Utilities.FeatureVersionMinimums.AllowComponetInfoProcessing.ToString()} or above. Current Dataverse version is {_connectionSvc?.OrganizationVersion}. This property will be removed", TraceEventType.Warning);
                             componetsToProcess = null;
+                        }
+                    }
+                }
+
+                if (isTemplateModeImport != null)
+                {
+                    if (isConnectedToOnPrem)
+                    {
+                        this._logEntry.Log($"ImportSolution request contains {ImportSolutionProperties.ISTEMPLATEMODE} property.  This is not valid for OnPremise deployments and will be removed", TraceEventType.Warning);
+                        isTemplateModeImport = null;
+                    }
+                    else
+                    {
+                        if (!Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(_connectionSvc?.OrganizationVersion, Utilities.FeatureVersionMinimums.AllowTemplateSolutionImport))
+                        {
+                            // Not supported on this version of Dataverse
+                            this._logEntry.Log($"ImportSolution request contains {ImportSolutionProperties.ISTEMPLATEMODE} property. This request Dataverse version {Utilities.FeatureVersionMinimums.AllowTemplateSolutionImport.ToString()} or above. Current Dataverse version is {_connectionSvc?.OrganizationVersion}. This property will be removed", TraceEventType.Warning);
+                            isTemplateModeImport = null;
                         }
                     }
                 }
@@ -5392,6 +5439,17 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     if (componetsToProcess != null)
                     {
                         SolutionImportRequest.ComponentParameters = componetsToProcess;
+                    }
+
+                    if (convertToManaged != null)
+                    {
+                        SolutionImportRequest.ConvertToManaged = convertToManaged.Value;
+                    }
+
+                    if (isTemplateModeImport != null && isTemplateModeImport.Value)
+                    {
+                        SolutionImportRequest.Parameters[ImportSolutionProperties.ISTEMPLATEMODE] = isTemplateModeImport.Value;
+                        SolutionImportRequest.Parameters[ImportSolutionProperties.TEMPLATESUFFIX] = templateSuffix;
                     }
 
                     if (IsBatchOperationsAvailable)
@@ -5891,10 +5949,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 }
             }
 
-            // Add authorization header.
-            if (!customHeaders.ContainsKey(Utilities.RequestHeaders.AUTHORIZATION_HEADER))
-                customHeaders.Add(Utilities.RequestHeaders.AUTHORIZATION_HEADER, new List<string>() { string.Format("Bearer {0}", await _connectionSvc.RefreshWebProxyClientTokenAsync()) });
-
             // Add tracking headers
             // Request id
             if (!customHeaders.ContainsKey(Utilities.RequestHeaders.X_MS_CLIENT_REQUEST_ID))
@@ -5929,6 +5983,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             HttpResponseMessage resp = null;
             do
             {
+                // Add authorization header. - Here to catch the situation where a token expires during retry.
+                if (!customHeaders.ContainsKey(Utilities.RequestHeaders.AUTHORIZATION_HEADER))
+                    customHeaders.Add(Utilities.RequestHeaders.AUTHORIZATION_HEADER, new List<string>() { string.Format("Bearer {0}", await _connectionSvc.RefreshWebProxyClientTokenAsync()) });
+
                 logDt.Restart(); // start clock.
 
                 _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Execute Command - {0}{1}: RequestID={2} {3}",

@@ -147,6 +147,23 @@ namespace Client_Core_Tests
             testCreate.Results.AddOrUpdateIfNotNull("accountid", testSupport._DefaultId);
             testCreate.Results.AddOrUpdateIfNotNull("id", testSupport._DefaultId);
 
+            DateTimeAttributeMetadata dateTimeAttributeMetadata = new DateTimeAttributeMetadata();
+            dateTimeAttributeMetadata.LogicalName = "dateonlyfield";
+            dateTimeAttributeMetadata.Format = DateTimeFormat.DateOnly;
+            RetrieveAttributeResponse attribdateonlyfieldResp = new RetrieveAttributeResponse();
+            attribdateonlyfieldResp.Results.AddOrUpdateIfNotNull("AttributeMetadata", dateTimeAttributeMetadata);
+
+            DateTimeAttributeMetadata dateTimeAttributeMetadata1 = new DateTimeAttributeMetadata();
+            dateTimeAttributeMetadata1.LogicalName = "datetimeNormal";
+            dateTimeAttributeMetadata1.Format = DateTimeFormat.DateAndTime;
+            RetrieveAttributeResponse attribdatetimeNormalfieldResp = new RetrieveAttributeResponse();
+            attribdatetimeNormalfieldResp.Results.AddOrUpdateIfNotNull("AttributeMetadata", dateTimeAttributeMetadata1);
+
+            DateTimeAttributeMetadata dateTimeAttributeMetadata2 = new DateTimeAttributeMetadata();
+            dateTimeAttributeMetadata2.LogicalName = "datetimeTZindependant";
+            dateTimeAttributeMetadata2.Format = DateTimeFormat.DateAndTime;
+            RetrieveAttributeResponse attribdatetimeTZindependantfieldResp = new RetrieveAttributeResponse();
+            attribdatetimeTZindependantfieldResp.Results.AddOrUpdateIfNotNull("AttributeMetadata", dateTimeAttributeMetadata2);
 
             HttpResponseMessage createRespMsg = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
             createRespMsg.Headers.Add("Location", $"https://deploymenttarget02.crm.dynamics.com/api/data/v9.1/accounts({testSupport._DefaultId})");
@@ -155,6 +172,9 @@ namespace Client_Core_Tests
             // Setup handlers to deal with both orgRequest and WebAPI request.
             fakHttpMethodHander.Setup(s => s.Send(It.Is<HttpRequestMessage>(f => f.Method.ToString().Equals("post", StringComparison.OrdinalIgnoreCase)))).Returns(createRespMsg);
             orgSvc.Setup(f => f.Execute(It.Is<CreateRequest>(p => p.Target.LogicalName.Equals("account")))).Returns(testCreate);
+            orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("dateonlyfield", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribdateonlyfieldResp);
+            orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("datetimeNormal", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribdatetimeNormalfieldResp);
+            orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("datetimeTZindependant", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribdatetimeTZindependantfieldResp);
 
 
             // Setup request
@@ -214,6 +234,13 @@ namespace Client_Core_Tests
             RetrieveAttributeResponse attribfield07Resp = new RetrieveAttributeResponse();
             attribfield07Resp.Results.AddOrUpdateIfNotNull("AttributeMetadata", lookupAttributeMeta2);
 
+            DateTimeAttributeMetadata dateTimeAttributeMetadata = new DateTimeAttributeMetadata();
+            dateTimeAttributeMetadata.LogicalName = "field03";
+            dateTimeAttributeMetadata.Format = DateTimeFormat.DateAndTime;
+            RetrieveAttributeResponse attribfield03Resp = new RetrieveAttributeResponse();
+            attribfield03Resp.Results.AddOrUpdateIfNotNull("AttributeMetadata", dateTimeAttributeMetadata);
+
+
 
             HttpResponseMessage createRespMsg = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
             createRespMsg.Headers.Add("Location", $"https://deploymenttarget02.crm.dynamics.com/api/data/v9.1/accounts({testSupport._DefaultId})");
@@ -224,6 +251,7 @@ namespace Client_Core_Tests
             orgSvc.Setup(f => f.Execute(It.Is<CreateRequest>(p => p.Target.LogicalName.Equals("account")))).Returns(testCreate);
             orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field02", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribfield02Resp);
             orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field07", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribfield07Resp);
+            orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field03", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribfield03Resp);
 
             // Setup request for all datatypes
             // use create operation to setup request

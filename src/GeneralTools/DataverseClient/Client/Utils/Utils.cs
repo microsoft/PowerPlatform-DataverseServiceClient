@@ -797,6 +797,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             /// Minimum version supported for Passing Component data to Dataverse as part of solution deployment..
             /// </summary>
             internal static Version AllowComponetInfoProcessing = new Version("9.1.0.16547");
+
+            /// <summary>
+            /// Minimum version support for Solution tagging.
+            /// </summary>
+            internal static Version AllowTemplateSolutionImport = new Version("9.2.21013.00131");
+
         }
 
 
