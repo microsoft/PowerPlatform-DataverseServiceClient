@@ -9,6 +9,14 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Update for Current Dataverse System Messages.
+Fixed an issue where authentication could fail during throttling due to token not being refreshed on retry.
+Adding Exception behaviors for all Metadata Operations.
+Adding EnableAffinityCookie to allow for override of Affinity behavior when interacting with Dataverse. 
+    In general, users should not manipulate this property. more details can be found here: https://docs.microsoft.com/en-us/powerapps/developer/data-platform/api-limits#remove-the-affinity-cookie
+Adding support for enhanced features for solution import. 
+
+0.4.6:
 Exposing ILogger support on all constructors and Static API commands.
 
 0.4.4:

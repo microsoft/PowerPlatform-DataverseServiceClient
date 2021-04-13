@@ -4,6 +4,9 @@ Notice:
     This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8, .net core 3.0 and 3.1 
     We have not stabilized on NameSpace or Class names with this package as of yet and things will change as we move though the preview.
 
+++CURRENTRELEASEID++
+    Updated Dataverse Messages
+
 0.4.1:
 Supersedes Microsoft.PowerPlatform.Cds.Client.Dynamics,  Previous nuget has been retired. 
 ***** MAJOR Breaking Changes *****

@@ -7,6 +7,9 @@ Notice:
     Documentation for Most of these messages can be found here: 
         https://docs.microsoft.com/en-us/dotnet/api/microsoft.crm.sdk.messages?view=dynamics-general-ce-9
 
+++CURRENTRELEASEID++
+    Updated Dataverse Messages
+
 0.4.1:
     No updates here. 
 
