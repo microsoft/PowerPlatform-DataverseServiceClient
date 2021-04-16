@@ -367,19 +367,26 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         throw new DataverseOperationException($"Entity Reference {key.ToLower()} was not found for entity {sourceEntity.LogicalName}.", null);
                     }
 
-                    string entityReferanceValue = string.Empty;
-                    // process ER Value
-                    if (entityReference.KeyAttributes?.Any() == true)
+                    if (entityReference.Id == Guid.Empty)
                     {
-                        entityReferanceValue = ParseAltKeyCollection(entityReference.KeyAttributes);
+                        value = null;
                     }
                     else
                     {
-                        entityReferanceValue = entityReference.Id.ToString();
+                        string entityReferanceValue = string.Empty;
+                        // process ER Value
+                        if (entityReference.KeyAttributes?.Any() == true)
+                        {
+                            entityReferanceValue = ParseAltKeyCollection(entityReference.KeyAttributes);
+                        }
+                        else
+                        {
+                            entityReferanceValue = entityReference.Id.ToString();
+                        }
+
+
+                        value = $"/{mUtil.GetEntityMetadata(Xrm.Sdk.Metadata.EntityFilters.Entity, entityReference.LogicalName).EntitySetName}({entityReferanceValue})";
                     }
-
-
-                    value = $"/{mUtil.GetEntityMetadata(Xrm.Sdk.Metadata.EntityFilters.Entity, entityReference.LogicalName).EntitySetName}({entityReferanceValue})";
                 }
                 else
                 {
