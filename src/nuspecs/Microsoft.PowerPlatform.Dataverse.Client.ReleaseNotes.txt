@@ -1,7 +1,6 @@
 Notice:
-    This package is in a public ALPHA release.
+    This package is in a public preview release.
     This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8, .net core 3.0, 3.1 and 5.0
-    We have not stabilized on NameSpace or Class names with this package as of yet and things will change as we move though the preview.
     General Documentation is the same as CrmServiceClient and can be found here:
         https://docs.microsoft.com/en-us/dotnet/api/microsoft.xrm.tooling.connector.crmserviceclient?view=dynamics-xrmtooling-ce-9
     Connection String Docs can be found here:
@@ -9,6 +8,11 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Fixed an issue raised when updating some entities\attributes values to null.
+Fixed and issue with DataTime formatting for Timezone independent, Timezone specific, and 'normal' DateTime types. 
+Update for Current Dataverse System Messages.
+
+0.4.11:
 Update for Current Dataverse System Messages.
 Fixed an issue where authentication could fail during throttling due to token not being refreshed on retry.
 Adding Exception behaviors for all Metadata Operations.

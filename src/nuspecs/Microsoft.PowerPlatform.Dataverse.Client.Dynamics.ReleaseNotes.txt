@@ -1,10 +1,11 @@
 Notice: 
-    This package is an ALPHA release. - Use at your own risk.
-    This package is an extension to the Microsoft.Cds.Client Nuget package.
+    This package is an extension to the Microsoft.PowerPlatform.Dataverse.Client Nuget package.
     This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8, .net core 3.0 and 3.1 
-    We have not stabilized on NameSpace or Class names with this package as of yet and things will change as we move though the preview.
 
 ++CURRENTRELEASEID++
+    Updated Dataverse Messages
+
+0.4.11:
     Updated Dataverse Messages
 
 0.4.1:

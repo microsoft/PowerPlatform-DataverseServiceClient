@@ -45,8 +45,8 @@ namespace Client_Core_Tests
             ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
                     builder.AddConsole(options =>
                     {
-                    options.IncludeScopes = true;
-                    options.TimestampFormat = "hh:mm:ss ";
+                        options.IncludeScopes = true;
+                        options.TimestampFormat = "hh:mm:ss ";
                     }));
             Ilogger = loggerFactory.CreateLogger<ClientTests>();
         }
@@ -147,21 +147,26 @@ namespace Client_Core_Tests
             testCreate.Results.AddOrUpdateIfNotNull("accountid", testSupport._DefaultId);
             testCreate.Results.AddOrUpdateIfNotNull("id", testSupport._DefaultId);
 
+            StringAttributeMetadata stringAttributeData = new StringAttributeMetadata();
+            stringAttributeData.LogicalName = "name";
+            RetrieveAttributeResponse stringAttributeDataResp = new RetrieveAttributeResponse();
+            stringAttributeDataResp.Results.AddOrUpdateIfNotNull("AttributeMetadata", stringAttributeData);
+
             DateTimeAttributeMetadata dateTimeAttributeMetadata = new DateTimeAttributeMetadata();
             dateTimeAttributeMetadata.LogicalName = "dateonlyfield";
-            dateTimeAttributeMetadata.Format = DateTimeFormat.DateOnly;
+            dateTimeAttributeMetadata.DateTimeBehavior = DateTimeBehavior.DateOnly;
             RetrieveAttributeResponse attribdateonlyfieldResp = new RetrieveAttributeResponse();
             attribdateonlyfieldResp.Results.AddOrUpdateIfNotNull("AttributeMetadata", dateTimeAttributeMetadata);
 
             DateTimeAttributeMetadata dateTimeAttributeMetadata1 = new DateTimeAttributeMetadata();
             dateTimeAttributeMetadata1.LogicalName = "datetimeNormal";
-            dateTimeAttributeMetadata1.Format = DateTimeFormat.DateAndTime;
+            dateTimeAttributeMetadata1.DateTimeBehavior = DateTimeBehavior.UserLocal;
             RetrieveAttributeResponse attribdatetimeNormalfieldResp = new RetrieveAttributeResponse();
             attribdatetimeNormalfieldResp.Results.AddOrUpdateIfNotNull("AttributeMetadata", dateTimeAttributeMetadata1);
 
             DateTimeAttributeMetadata dateTimeAttributeMetadata2 = new DateTimeAttributeMetadata();
             dateTimeAttributeMetadata2.LogicalName = "datetimeTZindependant";
-            dateTimeAttributeMetadata2.Format = DateTimeFormat.DateAndTime;
+            dateTimeAttributeMetadata2.DateTimeBehavior = DateTimeBehavior.TimeZoneIndependent;
             RetrieveAttributeResponse attribdatetimeTZindependantfieldResp = new RetrieveAttributeResponse();
             attribdatetimeTZindependantfieldResp.Results.AddOrUpdateIfNotNull("AttributeMetadata", dateTimeAttributeMetadata2);
 
@@ -175,7 +180,7 @@ namespace Client_Core_Tests
             orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("dateonlyfield", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribdateonlyfieldResp);
             orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("datetimeNormal", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribdatetimeNormalfieldResp);
             orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("datetimeTZindependant", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribdatetimeTZindependantfieldResp);
-
+            orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("name", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(stringAttributeDataResp);
 
             // Setup request
             // use create operation to setup request
@@ -222,11 +227,26 @@ namespace Client_Core_Tests
             testCreate.Results.AddOrUpdateIfNotNull("accountid", testSupport._DefaultId);
             testCreate.Results.AddOrUpdateIfNotNull("id", testSupport._DefaultId);
 
+            StringAttributeMetadata stringAttributeData = new StringAttributeMetadata();
+            stringAttributeData.LogicalName = "name";
+            RetrieveAttributeResponse stringAttributeDataResp = new RetrieveAttributeResponse();
+            stringAttributeDataResp.Results.AddOrUpdateIfNotNull("AttributeMetadata", stringAttributeData);
+
+            BooleanAttributeMetadata field01booleanAttribute = new BooleanAttributeMetadata();
+            field01booleanAttribute.LogicalName = "field01";
+            RetrieveAttributeResponse booleanAttributefield01Resp = new RetrieveAttributeResponse();
+            booleanAttributefield01Resp.Results.AddOrUpdateIfNotNull("AttributeMetadata", field01booleanAttribute);
+
             LookupAttributeMetadata lookupAttributeMeta1 = new LookupAttributeMetadata();
             lookupAttributeMeta1.LogicalName = "field02";
             lookupAttributeMeta1.Targets = new List<string>() { "account", "contact" }.ToArray();
             RetrieveAttributeResponse attribfield02Resp = new RetrieveAttributeResponse();
             attribfield02Resp.Results.AddOrUpdateIfNotNull("AttributeMetadata", lookupAttributeMeta1);
+
+            DecimalAttributeMetadata field04decimalAttribute = new DecimalAttributeMetadata();
+            field04decimalAttribute.LogicalName = "field04";
+            RetrieveAttributeResponse decimalAttributefield04Resp = new RetrieveAttributeResponse();
+            decimalAttributefield04Resp.Results.AddOrUpdateIfNotNull("AttributeMetadata", field04decimalAttribute);
 
             LookupAttributeMetadata lookupAttributeMeta2 = new LookupAttributeMetadata();
             lookupAttributeMeta2.LogicalName = "field07";
@@ -240,7 +260,43 @@ namespace Client_Core_Tests
             RetrieveAttributeResponse attribfield03Resp = new RetrieveAttributeResponse();
             attribfield03Resp.Results.AddOrUpdateIfNotNull("AttributeMetadata", dateTimeAttributeMetadata);
 
+            DecimalAttributeMetadata field05AttributeMetadata = new DecimalAttributeMetadata();
+            field05AttributeMetadata.LogicalName = "field05";
+            field05AttributeMetadata.Precision = 3;
+            RetrieveAttributeResponse attribfield05Resp = new RetrieveAttributeResponse();
+            attribfield05Resp.Results.AddOrUpdateIfNotNull("AttributeMetadata", field05AttributeMetadata);
 
+            EntityKeyMetadata field06Metadata = new EntityKeyMetadata();
+            field06Metadata.LogicalName = "field06";
+            RetrieveAttributeResponse attribfield06Resp = new RetrieveAttributeResponse();
+            attribfield06Resp.Results.AddOrUpdateIfNotNull("AttributeMetadata", field06Metadata);
+
+            MoneyAttributeMetadata field08AttributeMetadata = new MoneyAttributeMetadata();
+            field08AttributeMetadata.LogicalName = "field08";
+            field08AttributeMetadata.Precision = 2;
+            RetrieveAttributeResponse attribfield08Resp = new RetrieveAttributeResponse();
+            attribfield08Resp.Results.AddOrUpdateIfNotNull("AttributeMetadata", field08AttributeMetadata);
+
+            DecimalAttributeMetadata field09AttributeMetadata = new DecimalAttributeMetadata();
+            field09AttributeMetadata.LogicalName = "field09";
+            field09AttributeMetadata.Precision = 0;
+            RetrieveAttributeResponse attribfield09Resp = new RetrieveAttributeResponse();
+            attribfield06Resp.Results.AddOrUpdateIfNotNull("AttributeMetadata", field09AttributeMetadata);
+
+            PicklistAttributeMetadata field10AttributeMetadata = new PicklistAttributeMetadata();
+            field10AttributeMetadata.LogicalName = "field010";
+            RetrieveAttributeResponse attribfield10Resp = new RetrieveAttributeResponse();
+            attribfield10Resp.Results.AddOrUpdateIfNotNull("AttributeMetadata", field10AttributeMetadata);
+
+            StringAttributeMetadata field011AttributeData = new StringAttributeMetadata();
+            stringAttributeData.LogicalName = "field011";
+            RetrieveAttributeResponse attribfield011Resp = new RetrieveAttributeResponse();
+            attribfield011Resp.Results.AddOrUpdateIfNotNull("AttributeMetadata", stringAttributeData);
+
+            EntityKeyMetadata field012Metadata = new EntityKeyMetadata();
+            field06Metadata.LogicalName = "field012";
+            RetrieveAttributeResponse attribfield012Resp = new RetrieveAttributeResponse();
+            attribfield012Resp.Results.AddOrUpdateIfNotNull("AttributeMetadata", field012Metadata);
 
             HttpResponseMessage createRespMsg = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
             createRespMsg.Headers.Add("Location", $"https://deploymenttarget02.crm.dynamics.com/api/data/v9.1/accounts({testSupport._DefaultId})");
@@ -249,9 +305,19 @@ namespace Client_Core_Tests
             // Setup handlers to deal with both orgRequest and WebAPI request.
             fakHttpMethodHander.Setup(s => s.Send(It.Is<HttpRequestMessage>(f => f.Method.ToString().Equals("post", StringComparison.OrdinalIgnoreCase)))).Returns(createRespMsg);
             orgSvc.Setup(f => f.Execute(It.Is<CreateRequest>(p => p.Target.LogicalName.Equals("account")))).Returns(testCreate);
+            orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("name", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(stringAttributeDataResp);
+            orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field01", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(booleanAttributefield01Resp);
             orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field02", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribfield02Resp);
-            orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field07", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribfield07Resp);
             orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field03", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribfield03Resp);
+            orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field04", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(decimalAttributefield04Resp);
+            orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field05", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribfield05Resp);
+            orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field06", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribfield06Resp);
+            orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field07", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribfield07Resp);
+            orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field08", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribfield08Resp);
+            orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field09", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribfield06Resp);
+            orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field010", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribfield10Resp);
+            orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field011", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribfield011Resp);
+            orgSvc.Setup(f => f.Execute(It.Is<RetrieveAttributeRequest>(p => p.LogicalName.Equals("field012", StringComparison.OrdinalIgnoreCase) && p.EntityLogicalName.Equals("account", StringComparison.OrdinalIgnoreCase)))).Returns(attribfield012Resp);
 
             // Setup request for all datatypes
             // use create operation to setup request
@@ -584,7 +650,7 @@ namespace Client_Core_Tests
             var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
 
             // Connection params.
-            var client = new ServiceClient(new Uri(Conn_Url), Conn_AppID, Conn_Secret, true , Ilogger);
+            var client = new ServiceClient(new Uri(Conn_Url), Conn_AppID, Conn_Secret, true, Ilogger);
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
 
             // Validate connection
@@ -602,7 +668,7 @@ namespace Client_Core_Tests
             var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
 
             // connection params + secure string.
-            var client = new ServiceClient(new Uri(Conn_Url), Conn_AppID, ServiceClient.MakeSecureString(Conn_Secret), true , logger: Ilogger);
+            var client = new ServiceClient(new Uri(Conn_Url), Conn_AppID, ServiceClient.MakeSecureString(Conn_Secret), true, logger: Ilogger);
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
 
             // Validate connection
@@ -796,7 +862,7 @@ namespace Client_Core_Tests
             var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
 
             // connection params + secure string.
-            var client = new ServiceClient(new Uri(Conn_Url), Conn_AppID, ServiceClient.MakeSecureString(Conn_Secret), true , logger: Ilogger);
+            var client = new ServiceClient(new Uri(Conn_Url), Conn_AppID, ServiceClient.MakeSecureString(Conn_Secret), true, logger: Ilogger);
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
 
 
