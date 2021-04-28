@@ -319,7 +319,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="sourceEntity">Entity to process</param>
         /// <param name="mUtil"></param>
         /// <returns></returns>
-        internal static ExpandoObject ToExpandoObject(Entity sourceEntity , MetadataUtility mUtil)
+        internal static ExpandoObject ToExpandoObject(Entity sourceEntity, MetadataUtility mUtil)
         {
             dynamic expando = new ExpandoObject();
 
@@ -328,7 +328,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 sourceEntity = UpdateEntityAttributesForPrimaryId(sourceEntity, mUtil);
 
             AttributeCollection entityAttributes = sourceEntity.Attributes;
-            if (!(entityAttributes != null) && (entityAttributes.Count > 0 ))
+            if (!(entityAttributes != null) && (entityAttributes.Count > 0))
             {
                 return expando;
             }
@@ -346,8 +346,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 var key = keyValuePair.Key;
                 if (value is EntityReference entityReference)
                 {
-                    // Get Lookup attribute meta data for the ER to check for polymorphic relationship.
                     var attributeInfo = mUtil.GetAttributeMetadata(sourceEntity.LogicalName, key.ToLower());
+                    // Get Lookup attribute meta data for the ER to check for polymorphic relationship.
                     if (attributeInfo is Xrm.Sdk.Metadata.LookupAttributeMetadata attribData)
                     {
                         // Now get relationship to make sure we use the correct name.
@@ -429,13 +429,23 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             var attributeInfo = mUtil.GetAttributeMetadata(sourceEntity.LogicalName, key.ToLower());
                             if (attributeInfo is Xrm.Sdk.Metadata.DateTimeAttributeMetadata attribDateTimeData)
                             {
-                                if (attribDateTimeData.Format == Xrm.Sdk.Metadata.DateTimeFormat.DateOnly)
+                                if (attribDateTimeData.DateTimeBehavior == Xrm.Sdk.Metadata.DateTimeBehavior.DateOnly)
                                 {
                                     value = dateTimeValue.ToUniversalTime().ToString("yyyy-MM-dd");
                                 }
                                 else
                                 {
-                                    value = dateTimeValue.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+                                    if (attribDateTimeData.DateTimeBehavior == Xrm.Sdk.Metadata.DateTimeBehavior.TimeZoneIndependent)
+                                    {
+                                        value = dateTimeValue.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fff");
+                                    }
+                                    else
+                                    {
+                                        if (attribDateTimeData.DateTimeBehavior == Xrm.Sdk.Metadata.DateTimeBehavior.UserLocal)
+                                        {
+                                            value = dateTimeValue.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -453,6 +463,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         }
                         else if (value is null)
                         {
+                            var attributeInfo = mUtil.GetAttributeMetadata(sourceEntity.LogicalName, key.ToLower());
+                            if (attributeInfo is Xrm.Sdk.Metadata.LookupAttributeMetadata attribData)
+                            {
+                                // Populate Key property
+                                key = $"{key}@odata.bind";
+                            }
                             value = null;
                         }
                     }
@@ -479,7 +495,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <returns></returns>
         private static Entity UpdateEntityAttributesForPrimaryId(Entity sourceEntity, MetadataUtility mUtil)
         {
-            if ( sourceEntity.Id != Guid.Empty )
+            if (sourceEntity.Id != Guid.Empty)
             {
                 var entMeta = mUtil.GetEntityMetadata(sourceEntity.LogicalName);
                 sourceEntity.Attributes[entMeta.PrimaryIdAttribute] = sourceEntity.Id;
@@ -500,7 +516,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             if (rootExpando == null)
                 return rootExpando;
 
-            if ( entityCollection != null && entityCollection.Count == 0 )
+            if (entityCollection != null && entityCollection.Count == 0)
             {
                 // nothing to do, just return.
                 return rootExpando;
@@ -547,7 +563,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     key = ER12M.ReferencingAttribute;
                 }
 
-                if ( string.IsNullOrEmpty(key) ) // Failed to find key
+                if (string.IsNullOrEmpty(key)) // Failed to find key
                 {
                     throw new DataverseOperationException($"Relationship key {entItem.Key.SchemaName} cannot be found for related entities of {entityName}.");
                 }
@@ -572,7 +588,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     }
                     childCollection?.Add((ExpandoObject)ent1);
                 }
-                if ( childCollection.Count == 1 && isArrayRequired == false)
+                if (childCollection.Count == 1 && isArrayRequired == false)
                     ((IDictionary<string, object>)rootExpando).Add(key, childCollection[0]);
                 else
                     ((IDictionary<string, object>)rootExpando).Add(key, childCollection);
@@ -735,7 +751,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             /// <param name="instanceVersion">Instance version of the Dataverse Instance</param>
             /// <param name="featureVersion">MinFeatureVersion</param>
             /// <returns></returns>
-            internal static bool IsFeatureValidForEnviroment ( Version instanceVersion , Version featureVersion)
+            internal static bool IsFeatureValidForEnviroment(Version instanceVersion, Version featureVersion)
             {
                 if (instanceVersion != null && (instanceVersion >= featureVersion))
                     return true;

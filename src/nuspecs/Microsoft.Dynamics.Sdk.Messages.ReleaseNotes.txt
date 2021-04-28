@@ -1,13 +1,14 @@
 Notice: 
-    This package is an ALPHA release. - Use at your own risk.
-    This package is Contains SDK messaged intended be used in conjuction with the Microsoft.Cds.Client Nuget package.
+    This package is Contains SDK messaged intended be used in conjunction with the Microsoft.PowerPlatform.Dataverse.Client Nuget package.
     This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8, .net core 3.0 and 3.1 
-    We have not stabilized on NameSpace or Class names with this package as of yet and things will change as we move though the preview.
 
     Documentation for Most of these messages can be found here: 
         https://docs.microsoft.com/en-us/dotnet/api/microsoft.crm.sdk.messages?view=dynamics-general-ce-9
 
 ++CURRENTRELEASEID++
+    Updated Dataverse Messages
+
+0.4.11:
     Updated Dataverse Messages
 
 0.4.1:
