@@ -29,6 +29,7 @@ using Microsoft.PowerPlatform.Dataverse.Client.Auth;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using System.Threading;
 using System.Dynamic;
+using System.Reflection;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.PowerPlatform.Dataverse.Client
@@ -549,7 +550,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             {
                 if (string.IsNullOrEmpty(_sdkVersionProperty))
                 {
-                    _sdkVersionProperty = FileVersionInfo.GetVersionInfo(typeof(OrganizationWebProxyClient).Assembly.Location).FileVersion;
+                    var assembly = typeof(OrganizationWebProxyClient).Assembly;
+                    _sdkVersionProperty = assembly.GetCustomAttribute<AssemblyFileVersion>()?.Value ?? FileVersionInfo.GetVersionInfo(assembly.Location).FileVersion;
                 }
                 return _sdkVersionProperty;
             }
