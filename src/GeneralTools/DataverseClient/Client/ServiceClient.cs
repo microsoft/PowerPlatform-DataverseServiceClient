@@ -5482,15 +5482,49 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         // Assign Tracking ID
                         Guid requestTrackingId = Guid.NewGuid();
                         SolutionImportRequest.RequestId = requestTrackingId;
-                        // Creating Async Solution Import request.
-                        ExecuteAsyncRequest req = new ExecuteAsyncRequest() { Request = SolutionImportRequest };
-                        _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "{1}Created Async ImportSolutionRequest : RequestID={0} ",
-                            requestTrackingId.ToString(), solutionNameForLogging), TraceEventType.Verbose);
-                        ExecuteAsyncResponse asyncResp = (ExecuteAsyncResponse)Command_Execute(req, solutionNameForLogging + "Executing Request for ImportSolutionToAsync : ");
-                        if (asyncResp == null)
-                            return Guid.Empty;
+
+                        if (!isConnectedToOnPrem && Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(ConnectedOrgVersion, Utilities.FeatureVersionMinimums.AllowImportSolutionAsyncV2))
+                        {
+                            // map import request to Async Model
+                            ImportSolutionAsyncRequest asynImportRequest = new ImportSolutionAsyncRequest()
+                            {
+                                AsyncRibbonProcessing = SolutionImportRequest.AsyncRibbonProcessing,
+                                ComponentParameters = SolutionImportRequest.ComponentParameters,
+                                ConvertToManaged = SolutionImportRequest.ConvertToManaged,
+                                CustomizationFile = SolutionImportRequest.CustomizationFile,
+                                HoldingSolution = SolutionImportRequest.HoldingSolution,
+                                LayerDesiredOrder = SolutionImportRequest.LayerDesiredOrder,
+                                OverwriteUnmanagedCustomizations = SolutionImportRequest.OverwriteUnmanagedCustomizations,
+                                Parameters = SolutionImportRequest.Parameters,
+                                PublishWorkflows = SolutionImportRequest.PublishWorkflows,
+                                RequestId = SolutionImportRequest.RequestId,
+                                SkipProductUpdateDependencies = SolutionImportRequest.SkipProductUpdateDependencies,
+                                SkipQueueRibbonJob = SolutionImportRequest.SkipQueueRibbonJob
+                            };
+
+                            // remove unsupported parameter from importsolutionasync request.
+                            if (asynImportRequest.Parameters.ContainsKey("ImportJobId"))
+                                asynImportRequest.Parameters.Remove("ImportJobId");
+
+                            _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "{1}Created Async ImportSolutionAsyncRequest : RequestID={0} ", requestTrackingId.ToString(), solutionNameForLogging), TraceEventType.Verbose);
+                            ImportSolutionAsyncResponse asyncResp = (ImportSolutionAsyncResponse)Command_Execute(asynImportRequest, solutionNameForLogging + "Executing Request for ImportSolutionAsyncRequest : ");
+                            if (asyncResp == null)
+                                return Guid.Empty;
+                            else
+                                return asyncResp.AsyncOperationId;
+                        }
                         else
-                            return asyncResp.AsyncJobId;
+                        {
+                            // Creating Async Solution Import request.
+                            ExecuteAsyncRequest req = new ExecuteAsyncRequest() { Request = SolutionImportRequest };
+                            _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "{1}Created Async ImportSolutionRequest : RequestID={0} ",
+                                requestTrackingId.ToString(), solutionNameForLogging), TraceEventType.Verbose);
+                            ExecuteAsyncResponse asyncResp = (ExecuteAsyncResponse)Command_Execute(req, solutionNameForLogging + "Executing Request for ImportSolutionToAsync : ");
+                            if (asyncResp == null)
+                                return Guid.Empty;
+                            else
+                                return asyncResp.AsyncJobId;
+                        }
                     }
                     else
                     {

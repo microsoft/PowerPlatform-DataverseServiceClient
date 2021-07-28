@@ -6,6 +6,9 @@ Notice:
         https://docs.microsoft.com/en-us/dotnet/api/microsoft.crm.sdk.messages?view=dynamics-general-ce-9
 
 ++CURRENTRELEASEID++
+    Updated Newtonsoft.Json to v11.0.2 to match server.
+
+0.4.12:
     Updated Dataverse Messages
 
 0.4.11:

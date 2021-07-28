@@ -7,10 +7,10 @@
     <PackageVersion_MSAL>4.25.0</PackageVersion_MSAL>
     <PackageVersion_CdsSdk>4.6.3291-weekly-2104.2</PackageVersion_CdsSdk>
     <PackageVersion_CDSServerNuget>4.6.3291-weekly-2104.2</PackageVersion_CDSServerNuget>
-    <PackageVersion_Newtonsoft>10.0.3</PackageVersion_Newtonsoft>
+    <PackageVersion_Newtonsoft>11.0.2</PackageVersion_Newtonsoft>
     <PackageVersion_RestClientRuntime>2.3.20</PackageVersion_RestClientRuntime>
     <PackageVersion_XrmSdk>9.0.2.25</PackageVersion_XrmSdk>
-    <PackageVersion_BatchedTelemetry>2.0.5</PackageVersion_BatchedTelemetry>
+    <PackageVersion_BatchedTelemetry>2.0.11</PackageVersion_BatchedTelemetry>
     <!-- Test: -->
     <PackageVersion_Moq>4.16.0</PackageVersion_Moq>
     <PackageVersion_XUnit>2.4.1</PackageVersion_XUnit>
