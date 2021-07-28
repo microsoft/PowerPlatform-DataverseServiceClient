@@ -383,8 +383,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 }
                 else
                 {
-                    if (value is EntityCollection)
+                    if (value is EntityCollection || value is Entity[])
                     {
+                        if ( value is Entity[] v1s)
+                        {
+                            EntityCollection ec = new EntityCollection(((Entity[])value).ToList<Entity>());
+                            value = ec;
+                        }
+
                         // try to get the participation type id from the key.
                         int PartyTypeId = PartyListHelper.GetParticipationtypeMasks(key);
                         bool isActivityParty = PartyTypeId != -1;  // if the partytypeID is -1 this is not a activity party collection.
@@ -399,7 +405,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             if (isActivityParty)
                             {
                                 var tempDict = ((IDictionary<string, object>)rslt);
-                                tempDict.Add("participationtypemask", PartyTypeId);
+                                if (!tempDict.ContainsKey("participationtypemask"))
+                                    tempDict.Add("participationtypemask", PartyTypeId);
                                 partiesCollection.Add((ExpandoObject)tempDict);
                             }
                         }
@@ -818,6 +825,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             /// Minimum version support for Solution tagging.
             /// </summary>
             internal static Version AllowTemplateSolutionImport = new Version("9.2.21013.00131");
+
+            /// <summary>
+            /// Minimum version support for ImportSolutionAsync API.
+            /// </summary>
+            internal static Version AllowImportSolutionAsyncV2 = new Version("9.2.21013.00131");
+
 
         }
 

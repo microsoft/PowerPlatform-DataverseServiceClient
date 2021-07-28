@@ -8,6 +8,12 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Updated behavior of ImportSolutionAsync to leverage updated Dataverse behavior post 9.2 release.
+Updated Display name for Northamerica 2 Region to reflect that it is more commonly know as GCC. 
+Updated Newtonsoft.Json to v11.0.2 to match server.
+Fixed an issue with ActivityParty when using an Entity Array vs an EntityCollection for ActivityParties 
+
+0.4.12:
 Fixed an issue raised when updating some entities\attributes values to null.
 Fixed and issue with DataTime formatting for Timezone independent, Timezone specific, and 'normal' DateTime types. 
 Update for Current Dataverse System Messages.
