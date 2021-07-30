@@ -11,7 +11,7 @@ using System.Xml;
 namespace Microsoft.PowerPlatform.Dataverse.Client
 {
     /// <summary>
-    /// Adding support to Send the User Agent Header. 
+    /// Adding support to Send the User Agent Header.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses")]
     internal class DataverseTelemetryBehaviors : IEndpointBehavior, IClientMessageInspector
@@ -29,14 +29,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         #endregion
 
         /// <summary>
-        /// Constructor for building the hook to call into the platform. 
+        /// Constructor for building the hook to call into the platform.
         /// </summary>
         public DataverseTelemetryBehaviors(ConnectionService cli)
         {
             _callerCdsConnectionServiceHandler = cli;
 
             // reading overrides from app config if present..
-            // these values override the values that are set on the client from the server. 
+            // these values override the values that are set on the client from the server.
             DataverseTraceLogger logg = new DataverseTraceLogger();
             try
             {
@@ -47,7 +47,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     _userAgent = AppDomain.CurrentDomain.FriendlyName;
                 }
 
-                _userAgent = $"{_userAgent} (CdsSvcClient:{Environs.FileVersion})";
+                _userAgent = $"{_userAgent} (DataverseSvcClient:{Environs.FileVersion})";
 
                 if (_maxFaultSize == -1 && ConfigurationManager.AppSettings.AllKeys.Contains("MaxFaultSizeOverride"))
                 {
@@ -110,7 +110,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             clientRuntime.ClientMessageInspectors.Add(this);
 #endif
 
-            // when Set, this will ask WCF to transit cookies. 
+            // when Set, this will ask WCF to transit cookies.
             if (_callerCdsConnectionServiceHandler.EnableCookieRelay)
             {
                 if (endpoint.Binding is BasicHttpBinding)
@@ -118,7 +118,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     ((BasicHttpBinding)endpoint.Binding).AllowCookies = true;
                 }
             }
-            // Override the Max Fault size if required. 
+            // Override the Max Fault size if required.
             if (_maxFaultSize != -1)
             {
                 clientRuntime.MaxFaultSize = _maxFaultSize;
@@ -130,7 +130,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 clientRuntime.MaxFaultSize = 4 * 1024 * 1024;
             }
 
-            // Override the max received size if required. 
+            // Override the max received size if required.
             if (_maxReceivedMessageSize != -1)
             {
                 if (endpoint.Binding is BasicHttpBinding)
@@ -158,14 +158,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         public object BeforeSendRequest(ref Message request, IClientChannel channel)
         {
-            // Try to get Request ID from inbound request. 
+            // Try to get Request ID from inbound request.
             Guid OrganizationRequestId = Guid.Empty;
             try
             {
-                // Get a copy to work with. 
+                // Get a copy to work with.
                 using (MessageBuffer mbuff = request.CreateBufferedCopy(Int32.MaxValue))
                 {
-                    request = mbuff.CreateMessage();  // Copy it back to the request buffer. 
+                    request = mbuff.CreateMessage();  // Copy it back to the request buffer.
                     using (XmlDictionaryReader msgReader = mbuff.CreateMessage().GetReaderAtBodyContents())
                     {
                         msgReader.MoveToContent();
@@ -175,7 +175,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             {
                                 string readValue = msgReader.ReadElementContentAsString();
                                 if (!string.IsNullOrEmpty(readValue))
-                                    Guid.TryParse(readValue, out OrganizationRequestId); // Find the request ID from the message and assign it to the new tracking id. 
+                                    Guid.TryParse(readValue, out OrganizationRequestId); // Find the request ID from the message and assign it to the new tracking id.
                                 break;
                             }
                         }
@@ -243,12 +243,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     callerId = _callerCdsConnectionServiceHandler.WebClient.CallerId;
             }
 
-            if (callerId == Guid.Empty) // Prefer the CRM Caller ID over hte AADObjectID. 
+            if (callerId == Guid.Empty) // Prefer the CRM Caller ID over hte AADObjectID.
             {
                 if (_callerCdsConnectionServiceHandler != null && (_callerCdsConnectionServiceHandler.CallerAADObjectId.HasValue && _callerCdsConnectionServiceHandler.CallerAADObjectId.Value != Guid.Empty))
                 {
-                    // Add Caller ID to the SOAP Envolope. 
-                    // Set a header request with the AAD Caller Object ID. 
+                    // Add Caller ID to the SOAP Envolope.
+                    // Set a header request with the AAD Caller Object ID.
                     using (OperationContextScope scope = new OperationContextScope((IContextChannel)channel))
                     {
                         var AADCallerIdHeader = new MessageHeader<Guid>(_callerCdsConnectionServiceHandler.CallerAADObjectId.Value).GetUntypedHeader(Utilities.RequestHeaders.AAD_CALLER_OBJECT_ID_HTTP_HEADER, "http://schemas.microsoft.com/xrm/2011/Contracts");

@@ -195,8 +195,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
 		/// <summary>
 		/// Max connection timeout property
+		/// https://docs.microsoft.com/en-us/azure/app-service/faq-availability-performance-application-issues#why-does-my-request-time-out-after-230-seconds
+		/// Azure Load Balancer has a default idle timeout setting of four minutes. This is generally a reasonable response time limit for a web request.
 		/// </summary>
-		private static TimeSpan _MaxConnectionTimeout = Utils.AppSettingsHelper.GetAppSettingTimeSpan("MaxDataverseConnectionTimeOutMinutes", Utils.AppSettingsHelper.TimeSpanFromKey.Minutes, new TimeSpan(0, 0, 2, 0));
+		private static TimeSpan _MaxConnectionTimeout = Utils.AppSettingsHelper.GetAppSettingTimeSpan("MaxDataverseConnectionTimeOutMinutes", Utils.AppSettingsHelper.TimeSpanFromKey.Minutes, new TimeSpan(0, 0, 4, 0));
 
 		/// <summary>
 		/// Tenant ID
@@ -952,13 +954,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
 								if (_eAuthType == AuthenticationType.OAuth)
 								{
-									orgs = await DiscoverOrganizationsAsync(uCrmUrl, _UserClientCred, _clientId, _redirectUri, _promptBehavior, true, _authority, logEntry);
+									orgs = await DiscoverOrganizationsAsync(uCrmUrl, _UserClientCred, _clientId, _redirectUri, _promptBehavior, true, _authority, logEntry).ConfigureAwait(false);
 								}
 								else
 								{
 									if (_eAuthType == AuthenticationType.Certificate)
 									{
-										orgs = await DiscoverOrganizationsAsync(uCrmUrl, _certificateOfConnection, _clientId, true, _authority, logEntry);
+										orgs = await DiscoverOrganizationsAsync(uCrmUrl, _certificateOfConnection, _clientId, true, _authority, logEntry).ConfigureAwait(false);
 									}
 								}
 
@@ -988,7 +990,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 								orgDetail = _OrgDetail; // Assign to passed in value.
 
 							// Try to connect to CRM here.
-							dvService = await ConnectAndInitServiceAsync(orgDetail, true, uUserHomeRealm);
+							dvService = await ConnectAndInitServiceAsync(orgDetail, true, uUserHomeRealm).ConfigureAwait(false);
 
 							if (dvService == null)
 							{
@@ -1040,7 +1042,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 							// Given Direct Url.. connect to the Direct URL
 							if (_targetInstanceUriToConnectTo != null)
 							{
-								dvService = await DoDirectLoginAsync();
+								dvService = await DoDirectLoginAsync().ConfigureAwait(false);
 							}
 						}
 						#endregion
@@ -1063,7 +1065,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 							if (_OrgDetail == null && _targetInstanceUriToConnectTo != null)
 							{
 								// User provided a direct link to login
-								dvService = await DoDirectLoginAsync();
+								dvService = await DoDirectLoginAsync().ConfigureAwait(false);
 							}
 							else
 							{
@@ -1071,14 +1073,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 								try
 								{
 
-									OrgList orgList = await FindDiscoveryServerAsync(onlineServerList);
+									OrgList orgList = await FindDiscoveryServerAsync(onlineServerList).ConfigureAwait(false);
 
 									if (orgList.OrgsList != null && orgList.OrgsList.Count > 0)
 									{
 										logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Found {0} Org(s)", orgList.OrgsList.Count), TraceEventType.Information);
 										if (orgList.OrgsList.Count == 1)
 										{
-											dvService = await ConnectAndInitServiceAsync(orgList.OrgsList.First().OrgDetail, false, null);
+											dvService = await ConnectAndInitServiceAsync(orgList.OrgsList.First().OrgDetail, false, null).ConfigureAwait(false);
 											if (dvService != null)
 											{
 												dvService = (OrganizationWebProxyClient)dvService;
@@ -1101,7 +1103,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 												{
 													// Found it ..
 													logEntry.Log(string.Format(CultureInfo.InvariantCulture, "found User Org = {0} in results", _organization), TraceEventType.Information);
-													dvService = await ConnectAndInitServiceAsync(orgDetail.OrgDetail, false, null);
+													dvService = await ConnectAndInitServiceAsync(orgDetail.OrgDetail, false, null).ConfigureAwait(false);
 													if (dvService != null)
 													{
 														dvService = (OrganizationWebProxyClient)dvService;
@@ -1231,7 +1233,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			orgDetail.OrgDetail = new OrganizationDetail();
 			orgDetail.OrgDetail.Endpoints[EndpointType.OrganizationService] = _targetInstanceUriToConnectTo.ToString();
 
-			dvService = await ConnectAndInitServiceAsync(orgDetail.OrgDetail, false, null);
+			dvService = await ConnectAndInitServiceAsync(orgDetail.OrgDetail, false, null).ConfigureAwait(false);
 			if (dvService != null)
 			{
 				RefreshInstanceDetails(dvService, _targetInstanceUriToConnectTo);
@@ -1253,7 +1255,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 				}
 			}
 			sw.Stop();
-			logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Direct Login Process {0} - duration {1}", dvService != null ? "Succeeded" : "Failed", sw.Elapsed.Duration().ToString()), TraceEventType.Verbose);
+			logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Direct Login Process {0} - duration {1}", dvService != null ? "Succeeded" : "Failed", sw.Elapsed.Duration().ToString()));
 			return dvService;
 		}
 
@@ -1783,10 +1785,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			{
 				logSink.Log("DiscoverOrganizations - Called using user of MFA Auth for : " + discoveryServiceUri.ToString());
 				if (!useGlobalDisco)
-					return await DiscoverOrganizations_InternalAsync(discoveryServiceUri, clientCredentials, null, clientId, redirectUri, promptBehavior, isOnPrem, authority, useDefaultCreds, logSink);
+					return await DiscoverOrganizations_InternalAsync(discoveryServiceUri, clientCredentials, null, clientId, redirectUri, promptBehavior, isOnPrem, authority, useDefaultCreds, logSink).ConfigureAwait(false);
 				else
 				{
-					return await DiscoverGlobalOrganizationsAsync(discoveryServiceUri, clientCredentials, null, clientId, redirectUri, promptBehavior, isOnPrem, authority, logSink, useDefaultCreds: useDefaultCreds);
+					return await DiscoverGlobalOrganizationsAsync(discoveryServiceUri, clientCredentials, null, clientId, redirectUri, promptBehavior, isOnPrem, authority, logSink, useDefaultCreds: useDefaultCreds).ConfigureAwait(false);
 				}
 
 			}
@@ -1819,7 +1821,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			try
 			{
 				logSink.Log("DiscoverOrganizations - Called using Certificate Auth for : " + discoveryServiceUri.ToString());
-				return await DiscoverOrganizations_InternalAsync(discoveryServiceUri, null, loginCertificate, clientId, null, PromptBehavior.Never, isOnPrem, authority, useDefaultCreds, logSink);
+				return await DiscoverOrganizations_InternalAsync(discoveryServiceUri, null, loginCertificate, clientId, null, PromptBehavior.Never, isOnPrem, authority, useDefaultCreds, logSink).ConfigureAwait(false);
 			}
 			finally
 			{
@@ -1857,8 +1859,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			try
 			{
 				logSink.Log("DiscoverOrganizations - : " + discoveryServiceUri.ToString());
-				string AuthToken = await tokenProviderFunction(discoveryServiceUri.ToString());
-				return await QueryGlobalDiscoveryAsync(AuthToken, discoveryServiceUri, logSink);
+				string AuthToken = await tokenProviderFunction(discoveryServiceUri.ToString()).ConfigureAwait(false);
+				return await QueryGlobalDiscoveryAsync(AuthToken, discoveryServiceUri, logSink).ConfigureAwait(false);
 			}
 			finally
 			{
@@ -1906,7 +1908,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 				// Execute Authentication Request and return token And ServiceURI
 				IAccount user = null;
 				object msalAuthClientOut = null;
-				ExecuteAuthenticationResults authRequestResult = await AuthProcessor.ExecuteAuthenticateServiceProcessAsync(discoveryServiceUri, clientCredentials, loginCertificate, clientId, redirectUri, promptBehavior, isOnPrem, authority, null, logSink: logSink, useDefaultCreds: useDefaultCreds, addVersionInfoToUri: false);
+				ExecuteAuthenticationResults authRequestResult = await AuthProcessor.ExecuteAuthenticateServiceProcessAsync(discoveryServiceUri, clientCredentials, loginCertificate, clientId, redirectUri, promptBehavior, isOnPrem, authority, null, logSink: logSink, useDefaultCreds: useDefaultCreds, addVersionInfoToUri: false).ConfigureAwait(false);
 				AuthenticationResult authenticationResult = null;
 				authToken = authRequestResult.GetAuthTokenAndProperties(out authenticationResult, out targetServiceUrl, out msalAuthClientOut, out authority, out resource, out user);
 
@@ -2010,12 +2012,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 				IAccount user = null;
 				object msalAuthClientOut = null;
 				AuthenticationResult authenticationResult = null;
-				ExecuteAuthenticationResults authRequestResult = await AuthProcessor.ExecuteAuthenticateServiceProcessAsync(authChallengeUri, clientCredentials, loginCertificate, clientId, redirectUri, promptBehavior, isOnPrem, authority, null, logSink:logSink, useDefaultCreds: useDefaultCreds, addVersionInfoToUri:false);
+				ExecuteAuthenticationResults authRequestResult = await AuthProcessor.ExecuteAuthenticateServiceProcessAsync(authChallengeUri, clientCredentials, loginCertificate, clientId, redirectUri, promptBehavior, isOnPrem, authority, null, logSink:logSink, useDefaultCreds: useDefaultCreds, addVersionInfoToUri:false).ConfigureAwait(false);
 				authToken = authRequestResult.GetAuthTokenAndProperties(out authenticationResult, out targetServiceUrl, out msalAuthClientOut, out authority, out resource, out user);
 
 
 				// Get the GD Info and return.
-				return await QueryGlobalDiscoveryAsync(authToken, discoveryServiceUri, logSink);
+				return await QueryGlobalDiscoveryAsync(authToken, discoveryServiceUri, logSink).ConfigureAwait(false);
 
 			}
 			finally
@@ -2062,7 +2064,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 				headers["Authorization"].Add(string.Format("Bearer {0}", authToken));
 
 				var a = await ExecuteHttpRequestAsync(discoveryServiceUri.ToString(), HttpMethod.Get, customHeaders: headers, logSink: logSink).ConfigureAwait(false);
-				string body = await a.Content.ReadAsStringAsync();
+				string body = await a.Content.ReadAsStringAsync().ConfigureAwait(false);
 				// Parse the out put into a discovery request.
 				var b = JsonConvert.DeserializeObject<GlobalDiscoveryModel>(body);
 
@@ -2258,7 +2260,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 					{
 						targetServiceUrl = targetServiceUrl = AuthProcessor.GetUriBuilderWithVersion(_ActualDataverseOrgUri).Uri;
 						if (GetAccessTokenAsync != null)
-							authToken = await GetAccessTokenAsync(targetServiceUrl.ToString());
+							authToken = await GetAccessTokenAsync(targetServiceUrl.ToString()).ConfigureAwait(false);
 
 						if (string.IsNullOrEmpty(authToken))
 						{
@@ -2275,7 +2277,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 				else
 				{
 					// Execute Authentication Request and return token And ServiceURI
-					ExecuteAuthenticationResults authRequestResult = await AuthProcessor.ExecuteAuthenticateServiceProcessAsync(_ActualDataverseOrgUri, _UserClientCred, _certificateOfConnection,_clientId, _redirectUri, _promptBehavior, IsOnPrem, _authority, _MsalAuthClient, logEntry, useDefaultCreds: _isDefaultCredsLoginForOAuth, clientSecret: _eAuthType == AuthenticationType.ClientSecret ? _LivePass : null);
+					ExecuteAuthenticationResults authRequestResult = await AuthProcessor.ExecuteAuthenticateServiceProcessAsync(_ActualDataverseOrgUri, _UserClientCred, _certificateOfConnection,_clientId, _redirectUri, _promptBehavior, IsOnPrem, _authority, _MsalAuthClient, logEntry, useDefaultCreds: _isDefaultCredsLoginForOAuth, clientSecret: _eAuthType == AuthenticationType.ClientSecret ? _LivePass : null).ConfigureAwait(false);
 					authToken = authRequestResult.GetAuthTokenAndProperties(out _authenticationResultContainer, out targetServiceUrl, out _MsalAuthClient, out _authority, out _resource, out _userAccount);
 				}
 				_ActualDataverseOrgUri = targetServiceUrl;
@@ -2442,12 +2444,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 							if (svr.RegionalGlobalDiscoveryServer == null)
 							{
 								logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Trying Discovery Server, ({1}) URI is = {0}", svr.DiscoveryServerUri.ToString(), svr.DisplayName), TraceEventType.Information);
-								col = await QueryLiveDiscoveryServerAsync(svr.DiscoveryServerUri); // Defaults to not using GD.
+								col = await QueryLiveDiscoveryServerAsync(svr.DiscoveryServerUri).ConfigureAwait(false); // Defaults to not using GD.
 							}
 							else
 							{
 								logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Trying Regional Global Discovery Server, ({1}) URI is = {0}", svr.RegionalGlobalDiscoveryServer.ToString(), svr.DisplayName), TraceEventType.Information);
-								await QueryOnlineServersListAsync(onlineServerList.OSDPServers, col, orgsList, svr.DiscoveryServerUri, svr.RegionalGlobalDiscoveryServer);
+								await QueryOnlineServersListAsync(onlineServerList.OSDPServers, col, orgsList, svr.DiscoveryServerUri, svr.RegionalGlobalDiscoveryServer).ConfigureAwait(false);
 								//col = QueryLiveDiscoveryServer(svr.DiscoveryServer); // Defaults to not using GD.
 								return orgsList;
 							}
@@ -2458,12 +2460,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 							{
 								// OAuth, and GD is allowed.
 								logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Trying Global Discovery Server ({0}) and filtering to region {1}", GlobalDiscoveryAllInstancesUri, _DataverseOnlineRegion), TraceEventType.Information);
-								await QueryOnlineServersListAsync(onlineServerList.OSDPServers, col, orgsList, svr.DiscoveryServerUri);
+								await QueryOnlineServersListAsync(onlineServerList.OSDPServers, col, orgsList, svr.DiscoveryServerUri).ConfigureAwait(false);
 								return orgsList;
 							}
 							else
 							{
-								col = await QueryLiveDiscoveryServerAsync(svr.DiscoveryServerUri);
+								col = await QueryLiveDiscoveryServerAsync(svr.DiscoveryServerUri).ConfigureAwait(false);
 								if (col != null)
 									AddOrgToOrgList(col, svr.DisplayName, svr.DiscoveryServerUri, ref orgsList);
 							}
@@ -2478,7 +2480,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 				if (_eAuthType == AuthenticationType.OAuth)
 				{
 					// use GD.
-					col = await QueryLiveDiscoveryServerAsync(new Uri(GlobalDiscoveryAllInstancesUri), true);
+					col = await QueryLiveDiscoveryServerAsync(new Uri(GlobalDiscoveryAllInstancesUri), true).ConfigureAwait(false);
 					if (col != null)
 					{
 						bool isOnPrem = false;
@@ -2491,7 +2493,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 					return orgsList;
 				}
 				else
-					await QueryOnlineServersListAsync(onlineServerList.OSDPServers, col, orgsList);
+					await QueryOnlineServersListAsync(onlineServerList.OSDPServers, col, orgsList).ConfigureAwait(false);
 			}
 			else
 			{
@@ -2523,7 +2525,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 				logEntry.Log(string.Format("Trying Global Discovery Server, ({1}) URI is = {0}", gdUriToUse.ToString(), "Global Discovery"), TraceEventType.Information);
 				try
 				{
-					col = await QueryLiveDiscoveryServerAsync(gdUriToUse, true);
+					col = await QueryLiveDiscoveryServerAsync(gdUriToUse, true).ConfigureAwait(false);
 				}
 				catch (MessageSecurityException)
 				{
@@ -2564,7 +2566,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
 						logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Trying Live Discovery Server, ({1}) URI is = {0}", svr.DiscoveryServerUri.ToString(), svr.DisplayName), TraceEventType.Information);
 
-						col = await QueryLiveDiscoveryServerAsync(svr.DiscoveryServerUri);
+						col = await QueryLiveDiscoveryServerAsync(svr.DiscoveryServerUri).ConfigureAwait(false);
 						if (col != null)
 							AddOrgToOrgList(col, svr.DisplayName, svr.DiscoveryServerUri, ref orgsList);
 					}
@@ -2599,13 +2601,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			{
 				if (_eAuthType == AuthenticationType.OAuth || _eAuthType == AuthenticationType.ClientSecret)
 				{
-					return await DiscoverOrganizationsAsync(discoServer, _UserClientCred, _clientId, _redirectUri, _promptBehavior, false, _authority, logEntry, useGlobalDisco: useGlobal);
+					return await DiscoverOrganizationsAsync(discoServer, _UserClientCred, _clientId, _redirectUri, _promptBehavior, false, _authority, logEntry, useGlobalDisco: useGlobal).ConfigureAwait(false);
 				}
 				else
 				{
 					if (_eAuthType == AuthenticationType.Certificate)
 					{
-						return await DiscoverOrganizationsAsync(discoServer, _certificateOfConnection, _clientId, false, _authority, logEntry);
+						return await DiscoverOrganizationsAsync(discoServer, _certificateOfConnection, _clientId, false, _authority, logEntry).ConfigureAwait(false);
 					}
 
 					return null;
@@ -2666,18 +2668,18 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 					if (_isCalledbyExecuteRequest && _promptBehavior != PromptBehavior.Never)
                     {
 						_isCalledbyExecuteRequest = false;
-						_authenticationResultContainer = await AuthProcessor.ObtainAccessTokenAsync(pClient, _authenticationResultContainer.Scopes.ToList(), _authenticationResultContainer.Account, _promptBehavior, _UserClientCred, _isDefaultCredsLoginForOAuth , logEntry);
+						_authenticationResultContainer = await AuthProcessor.ObtainAccessTokenAsync(pClient, _authenticationResultContainer.Scopes.ToList(), _authenticationResultContainer.Account, _promptBehavior, _UserClientCred, _isDefaultCredsLoginForOAuth , logEntry).ConfigureAwait(false);
 					}
 					else
                     {
-						_authenticationResultContainer = await AuthProcessor.ObtainAccessTokenAsync(pClient, _authenticationResultContainer.Scopes.ToList(), _authenticationResultContainer.Account, _promptBehavior, _UserClientCred, _isDefaultCredsLoginForOAuth, logEntry);
+						_authenticationResultContainer = await AuthProcessor.ObtainAccessTokenAsync(pClient, _authenticationResultContainer.Scopes.ToList(), _authenticationResultContainer.Account, _promptBehavior, _UserClientCred, _isDefaultCredsLoginForOAuth, logEntry).ConfigureAwait(false);
 					}
 				}
 				else
                 {
 					if (_MsalAuthClient is IConfidentialClientApplication cClient)
 					{
-						_authenticationResultContainer = await AuthProcessor.ObtainAccessTokenAsync(cClient, _authenticationResultContainer.Scopes.ToList(), logEntry);
+						_authenticationResultContainer = await AuthProcessor.ObtainAccessTokenAsync(cClient, _authenticationResultContainer.Scopes.ToList(), logEntry).ConfigureAwait(false);
 					}
                 }
 				_svcWebClientProxy.HeaderToken = _authenticationResultContainer.AccessToken;
@@ -2689,7 +2691,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 				try
 				{
 					if (GetAccessTokenAsync != null)
-						_svcWebClientProxy.HeaderToken = await GetAccessTokenAsync(_ActualDataverseOrgUri.ToString());
+						_svcWebClientProxy.HeaderToken = await GetAccessTokenAsync(_ActualDataverseOrgUri.ToString()).ConfigureAwait(false);
 					else
 						throw new Exception("External Authentication Requested but not configured correctly. Faulted In Request Access Token 004");
 
