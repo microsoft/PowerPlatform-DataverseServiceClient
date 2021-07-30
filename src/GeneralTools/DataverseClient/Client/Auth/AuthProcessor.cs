@@ -17,7 +17,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
     internal class AuthProcessor
     {
 		/// <summary>
-		/// Executes Authentication against a service 
+		/// Executes Authentication against a service
 		/// </summary>
 		/// <param name="serviceUrl"></param>
 		/// <param name="clientCredentials"></param>
@@ -35,38 +35,38 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 		/// <param name="addVersionInfoToUri">indicates if the serviceURI should be updated to include the /web?sdk version</param>
 		/// <returns>AuthenticationResult containing a JWT Token for the requested Resource and user/app</returns>
 		internal async static Task<ExecuteAuthenticationResults> ExecuteAuthenticateServiceProcessAsync(
-			Uri serviceUrl, 
-			ClientCredentials clientCredentials, 
-			X509Certificate2 userCert, 
-			string clientId, 
-			Uri redirectUri, 
-			PromptBehavior promptBehavior, 
-			bool isOnPrem, 
-			string authority, 
-			object msalAuthClient , 
-			DataverseTraceLogger logSink = null, 
-			bool useDefaultCreds = false, 
-			SecureString clientSecret = null, 
+			Uri serviceUrl,
+			ClientCredentials clientCredentials,
+			X509Certificate2 userCert,
+			string clientId,
+			Uri redirectUri,
+			PromptBehavior promptBehavior,
+			bool isOnPrem,
+			string authority,
+			object msalAuthClient ,
+			DataverseTraceLogger logSink = null,
+			bool useDefaultCreds = false,
+			SecureString clientSecret = null,
 			bool addVersionInfoToUri = true,
 			IAccount user = null
 			)
 		{
 			ExecuteAuthenticationResults processResult = new ExecuteAuthenticationResults();
 			bool createdLogSource = false;
-			
+
 			AuthenticationResult authenticationResult = null;
 
 			try
 			{
 				if (logSink == null)
 				{
-					// when set, the log source is locally created. 
+					// when set, the log source is locally created.
 					createdLogSource = true;
 					logSink = new DataverseTraceLogger();
 				}
 
 				string Authority = string.Empty;
-				string Resource = string.Empty; 
+				string Resource = string.Empty;
 
 				bool clientCredentialsCheck = clientCredentials != null && clientCredentials.UserName != null && !string.IsNullOrEmpty(clientCredentials.UserName.UserName) && !string.IsNullOrEmpty(clientCredentials.UserName.Password);
 				Resource = serviceUrl.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped);
@@ -96,21 +96,21 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 				}
 				//	clientCredentialsCheck = false;  // Forcing system to provide a UX popup vs UID/PW
 
-				// Assign outbound properties. 
+				// Assign outbound properties.
 				processResult.Resource = Resource;
-				processResult.Authority = Authority; 
+				processResult.Authority = Authority;
 
 				logSink.Log("AuthenticateService - found authority with name " + (string.IsNullOrEmpty(Authority) ? "<Not Provided>" : Authority));
 				logSink.Log("AuthenticateService - found resource with name " + (string.IsNullOrEmpty(Resource) ? "<Not Provided>" : Resource));
 
 				Uri ResourceUri = new Uri(Resource);
-                // Add Scope, 
+                // Add Scope,
                 List<string> Scopes = Utilities.AddScope($"{Resource}/user_impersonation");
 
 				AuthenticationResult _authenticationResult = null;
 				if (userCert != null || clientSecret != null)
 				{
-					// Add Scope, 
+					// Add Scope,
 					Scopes.Clear();
 					Scopes = Utilities.AddScope($"{Resource}.default" , Scopes);
 
@@ -138,7 +138,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 					{
 						logSink.Log("Initial ObtainAccessToken - CERT", TraceEventType.Verbose);
 						cApp = cAppBuilder.WithCertificate(userCert).Build();
-						_authenticationResult = await ObtainAccessTokenAsync(cApp, Scopes, logSink);
+						_authenticationResult = await ObtainAccessTokenAsync(cApp, Scopes, logSink).ConfigureAwait(false);
 					}
 					else
 					{
@@ -146,19 +146,19 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 						{
 							logSink.Log("Initial ObtainAccessToken - Client Secret", TraceEventType.Verbose);
 							cApp = cAppBuilder.WithClientSecret(clientSecret.ToUnsecureString()).Build();
-							_authenticationResult = await ObtainAccessTokenAsync(cApp, Scopes, logSink);
+							_authenticationResult = await ObtainAccessTokenAsync(cApp, Scopes, logSink).ConfigureAwait(false);
 						}
 						else
 							throw new Exception("Invalid Cert or Client Secret Auth flow");
 					}
 
 					// Update the MSAL Client handed back.
-					processResult.MsalAuthClient = cApp; 
+					processResult.MsalAuthClient = cApp;
 				}
 				else
 				{
 					PublicClientApplicationBuilder cApp = null;
-					IPublicClientApplication pApp = null; 
+					IPublicClientApplication pApp = null;
 					if (msalAuthClient is IPublicClientApplication)
 					{
 						pApp = (IPublicClientApplication)msalAuthClient;
@@ -179,8 +179,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 						pApp = cApp.Build();
 					}
 
-					//Run user Auth flow. 
-					_authenticationResult = await ObtainAccessTokenAsync(pApp, Scopes, user, promptBehavior, clientCredentials, useDefaultCreds, logSink);
+					//Run user Auth flow.
+					_authenticationResult = await ObtainAccessTokenAsync(pApp, Scopes, user, promptBehavior, clientCredentials, useDefaultCreds, logSink).ConfigureAwait(false);
 
 					// Assign the application back out
 					processResult.MsalAuthClient = pApp;
@@ -195,7 +195,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 					//_userId = _authenticationResult.Account;
 					processResult.UserIdent = _authenticationResult.Account;
 				}
-		
+
 				if (null == _authenticationResult)
 				{
 					throw new ArgumentNullException("AuthenticationResult");
@@ -207,7 +207,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 			{
 				if (ex.InnerException is Microsoft.Identity.Client.MsalException)
 				{
-					var errorHandledResult = await ProcessAdalExecptionAsync(serviceUrl, clientCredentials, userCert, clientId, redirectUri, promptBehavior, isOnPrem, authority , msalAuthClient, logSink, useDefaultCreds , (Microsoft.Identity.Client.MsalException)ex.InnerException);
+					var errorHandledResult = await ProcessAdalExecptionAsync(serviceUrl, clientCredentials, userCert, clientId, redirectUri, promptBehavior, isOnPrem, authority , msalAuthClient, logSink, useDefaultCreds , (Microsoft.Identity.Client.MsalException)ex.InnerException).ConfigureAwait(false);
 					if (errorHandledResult != null)
 						processResult = errorHandledResult;
 				}
@@ -232,7 +232,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 			}
 			finally
 			{
-				if (createdLogSource) // Only dispose it if it was created locally. 
+				if (createdLogSource) // Only dispose it if it was created locally.
 					logSink.Dispose();
 			}
 			return processResult;
@@ -241,7 +241,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 
 
 		/// <summary>
-		///  Token refresh flow for MSAL User Flows. 
+		///  Token refresh flow for MSAL User Flows.
 		/// </summary>
 		/// <param name="publicAppClient">MSAL Client to use.</param>
 		/// <param name="scopes">Scopes to send in.</param>
@@ -260,10 +260,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 			bool useDefaultCreds = false,
 			DataverseTraceLogger logSink = null)
 		{
-			// This works for user Auth flows. 
+			// This works for user Auth flows.
 			AuthenticationResult _authenticationResult = null;
 			bool clientCredentialsCheck = clientCredentials != null && clientCredentials.UserName != null && !string.IsNullOrEmpty(clientCredentials.UserName.UserName) && !string.IsNullOrEmpty(clientCredentials.UserName.Password);
-			// Login user hint 
+			// Login user hint
 			string loginUserHint = (clientCredentials != null && clientCredentials.UserName != null) ? clientCredentials.UserName.UserName : string.Empty;
 			if (publicAppClient != null)
 			{
@@ -284,11 +284,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 					{
 						if (!string.IsNullOrEmpty(loginUserHint))
 						{
-							_authenticationResult = await publicAppClient.AcquireTokenByIntegratedWindowsAuth(scopes).WithUsername(loginUserHint).ExecuteAsync();
+							_authenticationResult = await publicAppClient.AcquireTokenByIntegratedWindowsAuth(scopes).WithUsername(loginUserHint).ExecuteAsync().ConfigureAwait(false);
 						}
 						else
 						{
-							_authenticationResult = await publicAppClient.AcquireTokenByIntegratedWindowsAuth(scopes).ExecuteAsync();
+							_authenticationResult = await publicAppClient.AcquireTokenByIntegratedWindowsAuth(scopes).ExecuteAsync().ConfigureAwait(false);
 						}
 					}
 					else
@@ -315,17 +315,17 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 
 						if (userPrompt != null)
 						{
-							_authenticationResult = await publicAppClient.AcquireTokenInteractive(scopes).WithLoginHint(loginUserHint).WithPrompt(userPrompt.Value).ExecuteAsync();
+							_authenticationResult = await publicAppClient.AcquireTokenInteractive(scopes).WithLoginHint(loginUserHint).WithPrompt(userPrompt.Value).ExecuteAsync().ConfigureAwait(false);
 						}
 						else
 						{
 							if (account != null)
 							{
-								_authenticationResult = await publicAppClient.AcquireTokenSilent(scopes, account).ExecuteAsync();
+								_authenticationResult = await publicAppClient.AcquireTokenSilent(scopes, account).ExecuteAsync().ConfigureAwait(false);
 							}
 							else
 							{
-								_authenticationResult = await publicAppClient.AcquireTokenInteractive(scopes).WithLoginHint(loginUserHint).ExecuteAsync();
+								_authenticationResult = await publicAppClient.AcquireTokenInteractive(scopes).WithLoginHint(loginUserHint).ExecuteAsync().ConfigureAwait(false);
 							}
 						}
 					}
@@ -333,14 +333,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 			}
 			else
 			{
-				// throw here. 
+				// throw here.
 			}
 			return _authenticationResult;
 		}
 
 
 		/// <summary>
-		/// Acquires Confidential client token. 
+		/// Acquires Confidential client token.
 		/// </summary>
 		/// <param name="confidentialAppClient">Confidential client application</param>
 		/// <param name="scopes">Scope List</param>
@@ -351,15 +351,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 			List<string> scopes,
 			DataverseTraceLogger logSink = null)
 		{
-			// This works for user Auth flows. 
+			// This works for user Auth flows.
 			AuthenticationResult _authenticationResult = null;
 			if (confidentialAppClient != null)
 			{
-				_authenticationResult = await confidentialAppClient.AcquireTokenForClient(scopes).ExecuteAsync();
+				_authenticationResult = await confidentialAppClient.AcquireTokenForClient(scopes).ExecuteAsync().ConfigureAwait(false);
 			}
 			else
 			{
-				// throw here. 
+				// throw here.
 			}
 			return _authenticationResult;
 		}
@@ -412,7 +412,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
         }
 
 		/// <summary>
-		/// Get authority and resource for this instance. 
+		/// Get authority and resource for this instance.
 		/// </summary>
 		/// <param name="targetServiceUrl">URI to query</param>
 		/// <param name="logger">Logger to write info too</param>
@@ -423,12 +423,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 			AuthRoutingProperties authRoutingProperties = new AuthRoutingProperties();
 			var client = clientFactory.CreateClient("DataverseHttpClientFactory");
 			var rslt = await client.GetAsync(targetServiceUrl).ConfigureAwait(false);
-			
+
 			if ( rslt.StatusCode == System.Net.HttpStatusCode.NotFound || rslt.StatusCode == System.Net.HttpStatusCode.BadRequest )
 			{
-				// didnt find endpoint. 
+				// didnt find endpoint.
 				logger.Log($"Failed to get Authority and Resource error. Attempt to Access Endpoint {targetServiceUrl.ToString()} resulted in {rslt.StatusCode}.", TraceEventType.Error);
-				return authRoutingProperties; 
+				return authRoutingProperties;
 			}
 
 			if (rslt.Headers.Contains("WWW-Authenticate"))
@@ -469,19 +469,19 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 				{
 					string param;
 					authenticateHeaderItems.TryGetValue(AuthorityKey, out param);
-					authRoutingProperties.Authority = 
+					authRoutingProperties.Authority =
 						param.Replace("oauth2/authorize", "") // swap out the old oAuth pattern.
-						.Replace("common" , "organizations"); // swap common for organizations because MSAL reasons. 
+						.Replace("common" , "organizations"); // swap common for organizations because MSAL reasons.
 					authenticateHeaderItems.TryGetValue(ResourceKey, out param);
 					authRoutingProperties.Resource = param;
 				}
 			}
 
-			return authRoutingProperties; 
+			return authRoutingProperties;
 		}
 
 		/// <summary>
-		/// Process ADAL exception and provide common handlers. 
+		/// Process ADAL exception and provide common handlers.
 		/// </summary>
 		/// <param name="serviceUrl"></param>
 		/// <param name="clientCredentials"></param>
@@ -499,7 +499,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 		{
 			if (adalEx.ErrorCode.Equals("interaction_required", StringComparison.OrdinalIgnoreCase) ||
 				adalEx.ErrorCode.Equals("user_password_expired", StringComparison.OrdinalIgnoreCase) ||
-				adalEx.ErrorCode.Equals("password_required_for_managed_user", StringComparison.OrdinalIgnoreCase) || 
+				adalEx.ErrorCode.Equals("password_required_for_managed_user", StringComparison.OrdinalIgnoreCase) ||
 				adalEx is Microsoft.Identity.Client.MsalUiRequiredException)
 			{
 				logSink.Log("ERROR REQUESTING TOKEN FROM THE AUTHENTICATION CONTEXT - USER intervention required", TraceEventType.Warning);
@@ -507,10 +507,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 				if (promptBehavior == PromptBehavior.Always || promptBehavior == PromptBehavior.Auto)
 				{
 					// Switch to MFA user mode..
-					Microsoft.Identity.Client.IAccount user = null;  //TODO:UPDATE THIS OR REMOVE AS WE DETERMIN HOW TO SOLVE THIS ISSUE IN MSAL //  new Microsoft.Identity.Client.AccountId(); 
+					Microsoft.Identity.Client.IAccount user = null;  //TODO:UPDATE THIS OR REMOVE AS WE DETERMIN HOW TO SOLVE THIS ISSUE IN MSAL //  new Microsoft.Identity.Client.AccountId();
 					user = null;
 					//user = new UserIdentifier(clientCredentials.UserName.UserName, UserIdentifierType.OptionalDisplayableId);
-					return await ExecuteAuthenticateServiceProcessAsync(serviceUrl, null, userCert, clientId, redirectUri, promptBehavior, isOnPrem, authority, msalAuthClient, logSink, useDefaultCreds: useDefaultCreds, user: user);
+					return await ExecuteAuthenticateServiceProcessAsync(serviceUrl, null, userCert, clientId, redirectUri, promptBehavior, isOnPrem, authority, msalAuthClient, logSink, useDefaultCreds: useDefaultCreds, user: user).ConfigureAwait(false);
 				}
 				else
 				{

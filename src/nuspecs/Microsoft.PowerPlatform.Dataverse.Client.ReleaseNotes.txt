@@ -8,6 +8,13 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Fixed Connection Creation "Hang" behavior that could occur when trying to create a Dataverse Service Client inside a thread.
+Fixed an issue with ILogger not propagating correctly when used with connection string flows.
+Fixed an issue when attempting to Null a lookup that would cause a Microsoft.OData.ODataException: Does not support untyped value in non-open type error 
+Changed the behavior of Update message to be consistent with Organization Service Update behavior instead of an Upsert behavior.
+Added compensating code to deal with a null ref issue when logging which could cause a client crash.
+
+0.4.19:
 Updated behavior of ImportSolutionAsync to leverage updated Dataverse behavior post 9.2 release.
 Updated Display name for Northamerica 2 Region to reflect that it is more commonly know as GCC. 
 Updated Newtonsoft.Json to v11.0.2 to match server.

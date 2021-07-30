@@ -473,6 +473,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             var attributeInfo = mUtil.GetAttributeMetadata(sourceEntity.LogicalName, key.ToLower());
                             if (attributeInfo is Xrm.Sdk.Metadata.LookupAttributeMetadata attribData)
                             {
+                                // This will not work for Polymorphic currently.
+                                var eData = mUtil.GetEntityMetadata(Xrm.Sdk.Metadata.EntityFilters.Relationships, sourceEntity.LogicalName);
+                                var ERNavName = eData.ManyToOneRelationships.FirstOrDefault(w => w.ReferencingAttribute.Equals(attribData.LogicalName) &&
+                                                                               w.ReferencedEntity.Equals(attribData.Targets.FirstOrDefault()))
+                                                                               ?.ReferencingEntityNavigationPropertyName;
+                                if (!string.IsNullOrEmpty(ERNavName))
+                                    key = ERNavName;
+
                                 // Populate Key property
                                 key = $"{key}@odata.bind";
                             }
