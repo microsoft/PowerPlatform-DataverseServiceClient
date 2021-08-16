@@ -41,7 +41,7 @@ We encourage you to read the release notes we provide with each nuget packages. 
 At this time: (08/16/2021)
 The Client SDK libs supports the following and has the following notices: 
 
-* .net full framework 4.6.2, 4.7.2, 4.8 and .net core 3.0, 3.1 
+* .net full framework 4.6.2, 4.7.2, 4.8 and .net core 3.0, 3.1, 5.0
 * We now support all authentication types from CrmServiceClient, ( Client\Secret, Client\Cert, UID\PW Noninteractive, UID\PW interactive.)
 * MSAL Port has been completed,  this Lib is now using MSAL 4.35+
 * The Message types that are part of the client have been reduced to Dataverse Core server messages only.  Things like “QualifyLeadRequest” have been removed to their own Nuget package ( Microsoft.Dynamics.Sdk.Messages ) 
