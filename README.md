@@ -31,6 +31,7 @@ This encompasses the contents of the following nuget packages:
 This library is and its supporting assemblies are a revision and update of the Microsoft.Xrm.Tooling.Connector.CrmServiceClient and the underlying Microsoft.Xrm.Sdk.Client libraries. 
 
 We are using this effort to for a few key things we have wanted to get done for a number of years, 
+
 1. Refactor and update our client libraries to allow us to spit up Powerplatform Common Data Service SDK support from Microsoft Dynamics 365.
 2. Provide multi targeted library build that targets our supported .net client platforms.
 3. Update connection patterns and behaviors to be consistent with many of the broadly accepted patterns.
