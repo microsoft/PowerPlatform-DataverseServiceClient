@@ -1,25 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Diagnostics;
+﻿#region using
 using Microsoft.PowerPlatform.Dataverse.Client.Model;
-using Microsoft.Xrm.Sdk.Discovery;
-using Microsoft.Xrm.Sdk;
-using System.Dynamic;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
+using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Discovery;
+using Microsoft.Xrm.Sdk.Metadata;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Dynamic;
+using System.Linq;
+using System.Net.Http;
+using System.Reflection;
+using System.Text;
+#endregion
 
 namespace Microsoft.PowerPlatform.Dataverse.Client
 {
     /// <summary>
     /// Utility functions the ServiceClient assembly.
     /// </summary>
-    public class Utilities
+    internal class Utilities
     {
-        private Utilities() { }
-
         /// <summary>
         /// Returns the file version of passed "executing Assembly"
         /// </summary>
@@ -290,16 +291,24 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// This is a temp method to support the staged transition to the webAPI and will be removed or reintegrated with the overall pipeline at some point in the future.
         /// </summary>
         /// <param name="req"></param>
+        /// <param name="useWebApi">useWebApi</param>
         /// <returns></returns>
-        internal static bool IsRequestValidForTranslationToWebAPI(OrganizationRequest req)
+        internal static bool IsRequestValidForTranslationToWebAPI(OrganizationRequest req, bool useWebApi)
         {
-            string RequestName = req.RequestName.ToLower();
-            switch (RequestName)
+            switch (req.RequestName.ToLowerInvariant())
             {
                 case "create":
                 case "update":
                 case "delete":
                     return true;
+                case "retrievecurrentorganization":
+                case "retrieveorganizationinfo":
+                case "retrieveversion":
+                case "whoami":
+                case "importsolution":
+                case "exportsolution":
+                case "stagesolution":
+                    return useWebApi; // Only supported with useWebApi flag
                 case "upsert":
                 // Disabling WebAPI support for upsert right now due to issues with generating the response.
 
@@ -313,6 +322,137 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     return false;
             }
         }
+
+        /// <summary>
+        /// Returns Http request method based on request message name
+        /// </summary>
+        /// <param name="requestName">request name</param>
+        /// <returns>Http method</returns>
+        internal static HttpMethod RequestNameToHttpVerb(string requestName)
+        {
+            if (string.IsNullOrWhiteSpace(requestName))
+                throw new ArgumentNullException(nameof(requestName));
+
+            switch (requestName.ToLowerInvariant())
+            {
+                case "retrievecurrentorganization":
+                case "retrieveorganizationinfo":
+                case "retrieveversion":
+                case "retrieveuserlicenseinfo":
+                case "whoami":
+                    return HttpMethod.Get;
+                case "create":
+                case "importsolution":
+                case "exportsolution":
+                case "stagesolution":
+                    return HttpMethod.Post;
+                case "update":
+                case "upsert":
+                    return new HttpMethod("Patch");
+                case "delete":
+                    return HttpMethod.Delete;
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Constructs Web API request url and adds public request properties to the url as key/value pairs 
+        /// </summary>
+        internal static string ConstructWebApiRequestUrl(OrganizationRequest request, HttpMethod httpMethod, Entity entity, EntityMetadata entityMetadata)
+        {
+            var result = new StringBuilder();
+            if (httpMethod != HttpMethod.Post)
+            {
+                if (entity != null)
+                {
+                    if (entity.KeyAttributes?.Any() == true)
+                    {
+                        result.Append($"{entityMetadata.EntitySetName}({Utilities.ParseAltKeyCollection(entity.KeyAttributes)})");
+                    }
+                    else
+                    {
+                        result.Append($"{entityMetadata.EntitySetName}({entity.Id})");
+                    }
+                }
+                else // Add public properties to Url
+                {
+                    result.Append(request.RequestName);
+                    bool hasProperties = false;
+
+                    object propertyValue;
+                    foreach (var property in request.GetType().GetProperties())
+                    {
+                        if (property.DeclaringType == typeof(OrganizationRequest))
+                            continue;
+
+                        propertyValue = property.GetValue(request);
+                        if (propertyValue == null)
+                            continue;
+
+                        if (!hasProperties)
+                        {
+                            result.Append("(");
+                            hasProperties = true;
+                        }
+                        else
+                        {
+                            result.Append(",");
+                        }
+
+                        result.Append(property.Name);
+                        result.Append("='");
+                        result.Append(propertyValue.ToString());
+                        result.Append("'");
+                    }
+
+                    if (hasProperties)
+                    {
+                        result.Append(")");
+                    }
+                }
+            }
+            else
+            {
+                if (entityMetadata != null)
+                {
+                    result.Append(entityMetadata.EntitySetName);
+                }
+                else
+                {
+                    result.Append(request.RequestName);
+                }
+            }
+
+            return result.ToString();
+        }
+
+        /// <summary>
+        /// retry request
+        /// </summary>
+        /// <param name="req">request</param>
+        /// <param name="requestTrackingId">requestTrackingId</param>
+        /// <param name="LockWait">LockWait</param>
+        /// <param name="logDt">logDt</param>
+        /// <param name="logEntry">Dataverse TraceLogger</param>
+        /// <param name="sessionTrackingId">sessionTrackingId</param>
+        /// <param name="disableConnectionLocking">disableConnectionLocking</param>
+        /// <param name="retryPauseTimeRunning">retryPauseTimeRunning</param>
+        /// <param name="ex">ex</param>
+        /// <param name="errorStringCheck">errorStringCheck</param>
+        /// <param name="retryCount">retryCount</param>
+        /// <param name="isThrottled">when set indicated this was caused by a Throttle</param>
+        /// <param name="webUriReq"></param>
+        internal static void RetryRequest(OrganizationRequest req, Guid requestTrackingId, TimeSpan LockWait, Stopwatch logDt, 
+            DataverseTraceLogger logEntry, Guid? sessionTrackingId, bool disableConnectionLocking, TimeSpan retryPauseTimeRunning,
+            Exception ex, string errorStringCheck, ref int retryCount, bool isThrottled, string webUriReq = "")
+        {
+            retryCount++;
+            logEntry.LogFailure(req, requestTrackingId, sessionTrackingId, disableConnectionLocking, LockWait, logDt, ex, errorStringCheck, webUriMessageReq: webUriReq);
+            logEntry.LogRetry(retryCount, req, retryPauseTimeRunning, isThrottled: isThrottled);
+            System.Threading.Thread.Sleep(retryPauseTimeRunning);
+        }
+
         /// <summary>
         /// Parses an attribute array into a object that can be used to create a JSON request.
         /// </summary>
@@ -385,7 +525,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 {
                     if (value is EntityCollection || value is Entity[])
                     {
-                        if ( value is Entity[] v1s)
+                        if (value is Entity[] v1s)
                         {
                             EntityCollection ec = new EntityCollection(((Entity[])value).ToList<Entity>());
                             value = ec;

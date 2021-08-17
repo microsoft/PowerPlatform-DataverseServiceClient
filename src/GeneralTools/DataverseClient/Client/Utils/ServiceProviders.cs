@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.PowerPlatform.Dataverse.Client.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,6 +35,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Utils
             if (_instance == null)
             {
                 var services = new ServiceCollection();
+
+                services.AddOptions<AppSettingsConfiguration>();
                 services.AddHttpClient("DataverseHttpClientFactory");
 
                 _instance = services.BuildServiceProvider();

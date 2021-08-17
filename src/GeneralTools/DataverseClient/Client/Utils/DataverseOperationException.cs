@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace Microsoft.PowerPlatform.Dataverse.Client.Utils
 {
     /// <summary>
-    /// Used to encompass a ServiceClient Operation Exception 
+    /// Used to encompass a ServiceClient Operation Exception
     /// </summary>
     [Serializable]
     public class DataverseOperationException : Exception
@@ -19,7 +19,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Utils
         /// Creates a CdsService Client Exception
         /// </summary>
         /// <param name="message">Error Message</param>
-        public DataverseOperationException(string message) 
+        public DataverseOperationException(string message)
             : base(message)
         {
         }
@@ -32,7 +32,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Utils
         /// <param name="data">Data Properties</param>
         /// <param name="helpLink">Help Link</param>
         /// <param name="httpOperationException"></param>
-        public DataverseOperationException(string message, int errorCode , string helpLink , IDictionary<string,string> data , HttpOperationException httpOperationException = null)
+        public DataverseOperationException(string message, int errorCode, string helpLink, IDictionary<string, string> data, HttpOperationException httpOperationException = null)
             : base(message, httpOperationException)
         {
             HResult = errorCode;
@@ -45,20 +45,28 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Utils
         }
 
         /// <summary>
-        /// Creates a CdsService Client Exception from a httpOperationResult. 
+        /// Creates a CdsService Client Exception from a httpOperationResult.
         /// </summary>
         /// <param name="httpOperationException"></param>
-        public static DataverseOperationException GenerateClientOperationException(HttpOperationException httpOperationException )
+        public static DataverseOperationException GenerateClientOperationException(HttpOperationException httpOperationException)
         {
             string errorDetailPrefixString = "@Microsoft.PowerApps.CDS.ErrorDetails.";
             Dictionary<string, string> cdsErrorData = new Dictionary<string, string>();
 
-            JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
-            var ErrorBlock = contentBody["error"];
+            JToken ErrorBlock = null;
+            try
+            {
+                JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
+                ErrorBlock = contentBody["error"];
+            }
+            catch { }
+
             if (ErrorBlock != null)
             {
                 string errorMessage = DataverseTraceLogger.GetFirstLineFromString(ErrorBlock["message"]?.ToString()).Trim();
-                int HResult = ErrorBlock["code"] != null ? Convert.ToInt32(ErrorBlock["code"].ToString(), 16) : -1;
+                var code = ErrorBlock["code"];
+                int HResult = code != null && !string.IsNullOrWhiteSpace(code.ToString()) ? Convert.ToInt32(code.ToString(), 16) : -1;
+
                 string HelpLink = ErrorBlock["@Microsoft.PowerApps.CDS.HelpLink"]?.ToString();
 
                 foreach (var node in ErrorBlock.ToArray())
@@ -71,7 +79,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Utils
                 return new DataverseOperationException(errorMessage, HResult, HelpLink, cdsErrorData, httpOperationException);
             }
             else
-                return new DataverseOperationException("Server Error, no error report generated from server" , -1 , string.Empty, cdsErrorData, httpOperationException);
+                return new DataverseOperationException("Server Error, no error report generated from server", -1, string.Empty, cdsErrorData, httpOperationException);
         }
 
         /// <summary>
@@ -79,7 +87,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Utils
         /// </summary>
         /// <param name="message">Error Message</param>
         /// <param name="innerException">Supporting Exception</param>
-        public DataverseOperationException(string message, Exception innerException) 
+        public DataverseOperationException(string message, Exception innerException)
             : base(message, innerException)
         {
         }

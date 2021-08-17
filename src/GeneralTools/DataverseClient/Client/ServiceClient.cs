@@ -1,3 +1,4 @@
+#region using
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -30,6 +31,9 @@ using Microsoft.PowerPlatform.Dataverse.Client;
 using System.Threading;
 using System.Dynamic;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.PowerPlatform.Dataverse.Client.Model;
+#endregion
 
 namespace Microsoft.PowerPlatform.Dataverse.Client
 {
@@ -72,6 +76,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         private DynamicEntityUtility _dynamicAppUtility = null;
 
         /// <summary>
+        /// Configuration
+        /// </summary>
+        private IOptions<AppSettingsConfiguration> _configuration = ClientServiceProviders.Instance.GetService<IOptions<AppSettingsConfiguration>>();
+
+        /// <summary>
         /// Metadata Utility
         /// </summary>
         private MetadataUtility _metadataUtlity = null;
@@ -99,33 +108,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         public string _sdkVersionProperty = null;
 
         /// <summary>
-        /// Number of retries for an execute operation
-        /// </summary>
-        private int _maxRetryCount = Utils.AppSettingsHelper.GetAppSetting("ApiOperationRetryCountOverride", 10);
-
-        /// <summary>
-        /// Amount of time to wait between retries
-        /// </summary>
-        private TimeSpan _retryPauseTime = Utils.AppSettingsHelper.GetAppSetting("ApiOperationRetryDelayOverride", new TimeSpan(0, 0, 0, 5));
-
-        /// <summary>
         /// Value used by the retry system while the code is running,
         /// this value can scale up and down based on throttling limits.
         /// </summary>
         private TimeSpan _retryPauseTimeRunning;
-
-        /// <summary>
-        /// Throttling - ErrorCode for Rate Limit exceeded
-        /// </summary>
-        private const int _rateLimitExceededErrorCode = -2147015902;
-        /// <summary>
-        /// Throttling - ErrorCode for TimeLimitExceeded
-        /// </summary>
-        private const int _timeLimitExceededErrorCode = -2147015903;
-        /// <summary>
-        /// Throttling - ErrorCode for Concurrency Limit Exceeded
-        /// </summary>
-        private const int _concurrencyLimitExceededErrorCode = -2147015898;
 
         /// <summary>
         /// Internal Organization Service Interface used for Testing
@@ -181,8 +167,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// </summary>
         public int MaxRetryCount
         {
-            get { return _maxRetryCount; }
-            set { _maxRetryCount = value; }
+            get { return _configuration.Value.MaxRetryCount; }
+            set { _configuration.Value.MaxRetryCount = value; }
         }
 
         /// <summary>
@@ -190,8 +176,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// </summary>
         public TimeSpan RetryPauseTime
         {
-            get { return _retryPauseTime; }
-            set { _retryPauseTime = value; }
+            get { return _configuration.Value.RetryPauseTime; }
+            set { _configuration.Value.RetryPauseTime = value; }
         }
 
         /// <summary>
@@ -352,7 +338,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         return _connectionSvc.CurrentUser;
                     else
                     {
-                        WhoAmIResponse resp = _connectionSvc.GetWhoAmIDetails(this);
+                        WhoAmIResponse resp = _connectionSvc.GetWhoAmIDetails(this).ConfigureAwait(false).GetAwaiter().GetResult();
                         _connectionSvc.CurrentUser = resp;
                         return resp;
                     }
@@ -585,6 +571,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 else
                     return string.Empty;
             }
+        }
+
+        /// <summary>
+        /// Use Web API instead of legacy SOAP org service
+        /// </summary>
+        public bool UseWebApi
+        {
+            get => _configuration.Value.UseWebApi;
+            set => _configuration.Value.UseWebApi = value;
         }
 
         #endregion
@@ -1245,16 +1240,30 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
             if (proxy != null)
             {
-                proxy.HeaderToken = _connectionSvc.WebClient.HeaderToken;
-                var SvcClient = new ServiceClient(proxy, true, _connectionSvc.AuthenticationTypeInUse, _connectionSvc?.OrganizationVersion, logger: logger);
-                SvcClient._connectionSvc.SetClonedProperties(this);
-                SvcClient.CallerAADObjectId = CallerAADObjectId;
-                SvcClient.CallerId = CallerId;
-                SvcClient.MaxRetryCount = _maxRetryCount;
-                SvcClient.RetryPauseTime = _retryPauseTime;
-                SvcClient.GetAccessToken = GetAccessToken;
+                try
+                {
+                    // Get Current Access Token.
+                    // This will get the current access token
+                    proxy.HeaderToken = this.CurrentAccessToken;
+                    var SvcClient = new ServiceClient(proxy, true, _connectionSvc.AuthenticationTypeInUse, _connectionSvc?.OrganizationVersion, logger: logger);
+                    SvcClient._connectionSvc.SetClonedProperties(this);
+                    SvcClient.CallerAADObjectId = CallerAADObjectId;
+                    SvcClient.CallerId = CallerId;
+                    SvcClient.MaxRetryCount = _configuration.Value.MaxRetryCount;
+                    SvcClient.RetryPauseTime = _configuration.Value.RetryPauseTime;
+                    SvcClient.GetAccessToken = GetAccessToken;
 
-                return SvcClient;
+                    return SvcClient;
+                }
+                catch (DataverseConnectionException)
+                {
+                    // rethrow the Connection exception coming from the initial call.
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    throw new DataverseConnectionException("Failed to Clone Connection", ex);
+                }
             }
             else
             {
@@ -4950,7 +4959,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     queryString = baseQueryString;
             }
 
-            var result = Command_WebExecuteAsync(queryString, body, method, customHeaders, contentType, string.Empty).Result;
+            var result = _connectionSvc.Command_WebExecuteAsync(queryString, body, method, customHeaders, contentType, string.Empty, CallerId, _disableConnectionLocking, MaxRetryCount, RetryPauseTime).Result;
             if (result == null)
                 throw LastException;
             else
@@ -4973,7 +4982,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         {
             if (req != null)
             {
-                useWebAPI = Utilities.IsRequestValidForTranslationToWebAPI(req) ? useWebAPI : false;
+                useWebAPI = Utilities.IsRequestValidForTranslationToWebAPI(req, UseWebApi) ? useWebAPI : false;
                 if (!useWebAPI)
                 {
                     return Command_Execute(req, logMessageTag, bypassPluginExecution);
@@ -4981,7 +4990,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 else
                 {
                     // use Web API.
-                    return Command_WebAPIProcess_ExecuteAsync(req, logMessageTag, bypassPluginExecution, new CancellationToken()).Result;
+                    return _connectionSvc.Command_WebAPIProcess_ExecuteAsync(req, logMessageTag, bypassPluginExecution, _metadataUtlity, CallerId, _disableConnectionLocking, MaxRetryCount, RetryPauseTime, new CancellationToken()).Result;
                 }
             }
             else
@@ -4995,7 +5004,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         {
             if (req != null)
             {
-                useWebAPI = Utilities.IsRequestValidForTranslationToWebAPI(req) ? useWebAPI : false;
+                useWebAPI = Utilities.IsRequestValidForTranslationToWebAPI(req, UseWebApi) ? useWebAPI : false;
                 if (!useWebAPI)
                 {
                     return await Command_ExecuteAsync(req, logMessageTag, cancellationToken, bypassPluginExecution).ConfigureAwait(false);
@@ -5003,264 +5012,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 else
                 {
                     // use Web API.
-                    return await Command_WebAPIProcess_ExecuteAsync(req, logMessageTag, bypassPluginExecution, cancellationToken).ConfigureAwait(false);
+                    return await _connectionSvc.Command_WebAPIProcess_ExecuteAsync(req, logMessageTag, bypassPluginExecution, _metadataUtlity, CallerId, _disableConnectionLocking, MaxRetryCount, RetryPauseTime, cancellationToken).ConfigureAwait(false);
                 }
             }
             else
             {
                 _logEntry.Log("Execute Organization Request failed, Organization Request cannot be null", TraceEventType.Error);
-                return null;
-            }
-        }
-
-        private async Task<OrganizationResponse> Command_WebAPIProcess_ExecuteAsync(OrganizationRequest req, string logMessageTag, bool bypassPluginExecution, CancellationToken cancellationToken)
-        {
-            if (Utilities.IsRequestValidForTranslationToWebAPI(req)) // THIS WILL GET REMOVED AT SOME POINT, TEMP FOR TRANSTION  //TODO:REMOVE ON COMPELTE
-            {
-                HttpMethod methodToExecute = HttpMethod.Get;
-                Entity cReq = null;
-                if (req.Parameters.ContainsKey("Target") && req.Parameters["Target"] is Entity ent) // this should cover things that have targets.
-                {
-                    cReq = ent;
-                }
-                else if (req.Parameters.ContainsKey("Target") && req.Parameters["Target"] is EntityReference entRef) // this should cover things that have targets.
-                {
-                    cReq = new Entity(entRef.LogicalName, entRef.Id);
-                }
-
-                if (cReq != null)
-                {
-                    // if CRUD type. get Entity
-                    var EntityData = _metadataUtlity.GetEntityMetadata(EntityFilters.Relationships, cReq.LogicalName);
-                    if (EntityData == null)
-                    {
-                        _logEntry.Log($"Execute Organization Request failed, failed to acquire entity data for {cReq.LogicalName}", TraceEventType.Warning);
-                        return null;
-                    }
-                    // Get Entity Set name from Entity being addressed
-                    var EntSetname = EntityData.EntitySetName;
-                    // generate webAPI Create request.
-                    string postUri = string.Empty;
-                    string requestName = req.RequestName.ToLower();
-
-                    switch (requestName)
-                    {
-                        case "create":
-                            methodToExecute = HttpMethod.Post;
-                            break;
-                        case "update":
-                        case "upsert":
-                            methodToExecute = new HttpMethod("Patch");
-                            break;
-                        case "delete":
-                            methodToExecute = HttpMethod.Delete;
-                            break;
-                        default:
-                            // Abort request
-                            _logEntry.Log("Execute Organization Request failed, WebAPI is only supported for Create, Upsert, Update, and Delete message types at this time.", TraceEventType.Error);
-                            return null;
-                    }
-
-                    if (methodToExecute != HttpMethod.Post)
-                    {
-                        if (cReq.KeyAttributes?.Any() == true)
-                        {
-                            postUri = $"{EntityData.EntitySetName}({Utilities.ParseAltKeyCollection(cReq.KeyAttributes)})";
-                        }
-                        else
-                        {
-                            postUri = $"{EntityData.EntitySetName}({cReq.Id})";
-                        }
-                    }
-                    else
-                    {
-                        // its just a post.
-                        postUri = $"{EntityData.EntitySetName}";
-                    }
-
-                    string bodyOfRequest = string.Empty;
-
-                    ExpandoObject requestBodyObject = Utilities.ToExpandoObject(cReq, _metadataUtlity);
-                    if (cReq.RelatedEntities != null && cReq.RelatedEntities.Count > 0)
-                        requestBodyObject = Utilities.ReleatedEntitiesToExpandoObject(requestBodyObject, cReq.LogicalName, cReq.RelatedEntities, _metadataUtlity);
-
-                    if (requestBodyObject != null)
-                        bodyOfRequest = Newtonsoft.Json.JsonConvert.SerializeObject(requestBodyObject);
-
-                    // Process request params.
-                    if (req.Parameters.ContainsKey(Utilities.RequestHeaders.BYPASSCUSTOMPLUGINEXECUTION))
-                    {
-                        if (req.Parameters[Utilities.RequestHeaders.BYPASSCUSTOMPLUGINEXECUTION].GetType() == typeof(bool) &&
-                             (bool)req.Parameters[Utilities.RequestHeaders.BYPASSCUSTOMPLUGINEXECUTION])
-                        {
-                            bypassPluginExecution = true;
-                        }
-                    }
-
-                    string solutionUniqueNameHeaderValue = string.Empty;
-                    if (req.Parameters.ContainsKey(Utilities.RequestHeaders.SOLUTIONUNIQUENAME))
-                    {
-                        if (req.Parameters[Utilities.RequestHeaders.SOLUTIONUNIQUENAME].GetType() == typeof(string) &&
-                             !String.IsNullOrEmpty((string)req.Parameters[Utilities.RequestHeaders.SOLUTIONUNIQUENAME]))
-                        {
-                            solutionUniqueNameHeaderValue = req.Parameters[Utilities.RequestHeaders.SOLUTIONUNIQUENAME].ToString();
-                        }
-                    }
-
-                    bool? suppressDuplicateDetection = null;
-                    if (req.Parameters.ContainsKey(Utilities.RequestHeaders.SUPPRESSDUPLICATEDETECTION))
-                    {
-                        if (req.Parameters[Utilities.RequestHeaders.SUPPRESSDUPLICATEDETECTION].GetType() == typeof(bool) &&
-                            (bool)req.Parameters[Utilities.RequestHeaders.SUPPRESSDUPLICATEDETECTION])
-                        {
-                            suppressDuplicateDetection = true;
-                        }
-                    }
-
-                    string tagValue = string.Empty;
-                    if (req.Parameters.ContainsKey(Utilities.RequestHeaders.TAG))
-                    {
-                        if (req.Parameters[Utilities.RequestHeaders.TAG].GetType() == typeof(string) &&
-                             !String.IsNullOrEmpty((string)req.Parameters[Utilities.RequestHeaders.TAG]))
-                        {
-                            tagValue = req.Parameters[Utilities.RequestHeaders.TAG].ToString();
-                        }
-                    }
-
-                    string rowVersion = string.Empty;
-                    string IfMatchHeaderTag = string.Empty;
-                    if (req.Parameters.ContainsKey(Utilities.RequestHeaders.CONCURRENCYBEHAVIOR) &&
-                        (ConcurrencyBehavior)req.Parameters[Utilities.RequestHeaders.CONCURRENCYBEHAVIOR] != ConcurrencyBehavior.Default)
-                    {
-                        // Found concurrency flag.
-                        if (!string.IsNullOrEmpty(cReq.RowVersion))
-                        {
-                            rowVersion = cReq.RowVersion;
-                            // Now manage behavior.
-                            // if IfRowVersionMatches == Upsert/update/Delete should only work if record exists by rowRowVersion. == If-Match + RowVersion.
-                            // If AlwaysOverwrite == Upsert/update/Delete should only work if record exists at all == No IF-MatchTag.
-                            if ((ConcurrencyBehavior)req.Parameters[Utilities.RequestHeaders.CONCURRENCYBEHAVIOR] == ConcurrencyBehavior.AlwaysOverwrite)
-                            {
-                                IfMatchHeaderTag = "If-Match";
-                                rowVersion = "*";
-                            }
-                            if ((ConcurrencyBehavior)req.Parameters[Utilities.RequestHeaders.CONCURRENCYBEHAVIOR] == ConcurrencyBehavior.IfRowVersionMatches)
-                            {
-                                IfMatchHeaderTag = "If-Match";
-                            }
-                        }
-                        else
-                        {
-                            DataverseOperationException opEx = new DataverseOperationException("Request Failed, RowVersion is missing and is required when ConcurrencyBehavior is set to a value other then Default.");
-                            _logEntry.Log(opEx);
-                            return null;
-                        }
-                    }
-                    else
-                    {
-                        switch(requestName)
-                        {
-                            case "update":
-                            case "delete":
-                                // Set the default behavior for update/delete
-                                // this will cause update to fail ( not run upsert ) if there is no concurrency behavior.
-                                IfMatchHeaderTag = "If-Match";
-                                rowVersion = "*";
-                                break;
-                        }
-
-                    }
-
-                    // Setup headers.
-                    Dictionary<string, List<string>> headers = new Dictionary<string, List<string>>();
-                    headers.Add("Prefer", new List<string>() { "odata.include-annotations=*" });
-
-                    if (!string.IsNullOrEmpty(IfMatchHeaderTag))
-                    {
-                        if (rowVersion != "*")
-                        {
-                            headers.Add(IfMatchHeaderTag, new List<string>() { $"W/\"{rowVersion}\"" });
-                        }
-                        else
-                        {
-                            headers.Add(IfMatchHeaderTag, new List<string>() { $"*" });
-                        }
-                    }
-
-                    if (bypassPluginExecution && Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(ConnectedOrgVersion, Utilities.FeatureVersionMinimums.AllowBypassCustomPlugin))
-                    {
-                        headers.Add($"{Utilities.RequestHeaders.DATAVERSEHEADERPROPERTYPREFIX}{Utilities.RequestHeaders.BYPASSCUSTOMPLUGINEXECUTION}", new List<string>() { "true" });
-                    }
-
-                    if (!string.IsNullOrEmpty(solutionUniqueNameHeaderValue))
-                    {
-                        headers.Add($"{Utilities.RequestHeaders.DATAVERSEHEADERPROPERTYPREFIX}{Utilities.RequestHeaders.SOLUTIONUNIQUENAME}", new List<string>() { solutionUniqueNameHeaderValue });
-                    }
-
-                    if (suppressDuplicateDetection.HasValue)
-                    {
-                        headers.Add($"{Utilities.RequestHeaders.DATAVERSEHEADERPROPERTYPREFIX}{Utilities.RequestHeaders.SUPPRESSDUPLICATEDETECTION}", new List<string>() { "true" });
-                    }
-
-                    string addedQueryParams = "";
-                    // modify post URI
-                    if (!string.IsNullOrEmpty(tagValue))
-                    {
-                        //UriBuilder uriBuilder = new UriBuilder(postUri);
-                        var paramValues = System.Web.HttpUtility.ParseQueryString(addedQueryParams);
-                        paramValues.Add($"{Utilities.RequestHeaders.TAG}", tagValue);
-                        addedQueryParams = paramValues.ToString();
-                    }
-
-                    // add queryParms to the PostUri.
-                    if (!string.IsNullOrEmpty(addedQueryParams))
-                    {
-                        postUri = $"{postUri}?{addedQueryParams}";
-                    }
-
-                    // Execute request
-                    var sResp = await Command_WebExecuteAsync(postUri, bodyOfRequest, methodToExecute, headers, "application/json", logMessageTag).ConfigureAwait(false);
-                    if (sResp != null && sResp.IsSuccessStatusCode)
-                    {
-                        if (req is CreateRequest)
-                        {
-                            Guid createdRecId = Guid.Empty;
-                            // find location code.
-                            if (sResp.Headers.Location != null)
-                            {
-                                string locationReferance = sResp.Headers.Location.Segments.Last();
-                                string ident = locationReferance.Substring(locationReferance.IndexOf("(") + 1, 36);
-                                Guid.TryParse(ident, out createdRecId);
-                            }
-                            Microsoft.Xrm.Sdk.Messages.CreateResponse zResp = new CreateResponse();
-                            zResp.Results.Add("id", createdRecId);
-                            return zResp;
-                        }
-                        else if (req is UpdateRequest)
-                        {
-                            return new UpdateResponse();
-                        }
-                        else if (req is DeleteRequest)
-                        {
-                            return new DeleteResponse();
-                        }
-                        else if (req is UpsertRequest)
-                        {
-                            //var upsertReturn = new UpsertResponse();
-                            return null;
-                        }
-                        else
-                            return null;
-                    }
-                    else
-                        return null;
-                }
-                else
-                    return null;
-            }
-            else
-            {
-                _logEntry.Log("Execute Organization Request failed, WebAPI is only supported for Create, Update, Delete message types at this time.", TraceEventType.Error);
                 return null;
             }
         }
@@ -5629,7 +5386,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             {
                 try
                 {
-                    _retryPauseTimeRunning = _retryPauseTime; // Set the default time for each loop.
+                    _retryPauseTimeRunning = _configuration.Value.RetryPauseTime; // Set the default time for each loop.
                     retry = false;
                     if (!_disableConnectionLocking)
                         if (_lockObject == null)
@@ -5691,14 +5448,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     retry = ShouldRetry(req, ex, retryCount, out isThrottled);
                     if (retry)
                     {
-                        RetryRequest(req, requestTrackingId, LockWait, logDt, ex, errorStringCheck, ref retryCount, isThrottled);
+                        Utilities.RetryRequest(req, requestTrackingId, LockWait, logDt, _logEntry, SessionTrackingId, _disableConnectionLocking, _retryPauseTimeRunning, ex, errorStringCheck, ref retryCount, isThrottled);
                     }
                     else
                     {
-                        LogRetry(retryCount, req, true, isThrottled: isThrottled);
-                        LogException(req, ex, errorStringCheck);
+                        _logEntry.LogRetry(retryCount, req, _retryPauseTimeRunning, true, isThrottled: isThrottled);
+                        _logEntry.LogException(req, ex, errorStringCheck);
                         //keep it in end so that LastError could be a better message.
-                        LogFailure(req, requestTrackingId, LockWait, logDt, ex, errorStringCheck, true);
+                        _logEntry.LogFailure(req, requestTrackingId, SessionTrackingId, _disableConnectionLocking, LockWait, logDt, ex, errorStringCheck, true);
                     }
                     resp = null;
                 }
@@ -5722,7 +5479,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         private bool ShouldRetry(OrganizationRequest req, Exception ex, int retryCount, out bool isThrottlingRetry)
         {
             isThrottlingRetry = false;
-            if (retryCount >= _maxRetryCount)
+            if (retryCount >= _configuration.Value.MaxRetryCount)
                 return false;
             else if (((string.Equals(req.RequestName.ToLower(), "retrieve"))
                 && ((Utilities.ShouldAutoRetryRetrieveByEntityName(((Microsoft.Xrm.Sdk.EntityReference)req.Parameters["Target"]).LogicalName))))
@@ -5738,19 +5495,19 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 return true;
             else if (ex.Message.ToLowerInvariant().Contains("(503) service unavailable"))
             {
-                _retryPauseTimeRunning = _retryPauseTime;
+                _retryPauseTimeRunning = _configuration.Value.RetryPauseTime;
                 isThrottlingRetry = true;
                 return true;
             }
             else if (ex is FaultException<OrganizationServiceFault>)
             {
                 var OrgEx = (FaultException<OrganizationServiceFault>)ex;
-                if (OrgEx.Detail.ErrorCode == _rateLimitExceededErrorCode ||
-                    OrgEx.Detail.ErrorCode == _timeLimitExceededErrorCode ||
-                    OrgEx.Detail.ErrorCode == _concurrencyLimitExceededErrorCode)
+                if (OrgEx.Detail.ErrorCode == ErrorCodes.ThrottlingBurstRequestLimitExceededError ||
+                    OrgEx.Detail.ErrorCode == ErrorCodes.ThrottlingTimeExceededError ||
+                    OrgEx.Detail.ErrorCode == ErrorCodes.ThrottlingConcurrencyLimitExceededError)
                 {
                     // Error was raised by a instance throttle trigger.
-                    if (OrgEx.Detail.ErrorCode == _rateLimitExceededErrorCode)
+                    if (OrgEx.Detail.ErrorCode == ErrorCodes.ThrottlingBurstRequestLimitExceededError)
                     {
                         // Use Retry-After delay when specified
                         _retryPauseTimeRunning = (TimeSpan)OrgEx.Detail.ErrorDetails["Retry-After"];
@@ -5758,7 +5515,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     else
                     {
                         // else use exponential back off delay
-                        _retryPauseTimeRunning = _retryPauseTime.Add(TimeSpan.FromSeconds(Math.Pow(2, retryCount)));
+                        _retryPauseTimeRunning = _configuration.Value.RetryPauseTime.Add(TimeSpan.FromSeconds(Math.Pow(2, retryCount)));
                     }
                     isThrottlingRetry = true;
                     return true;
@@ -5769,408 +5526,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             else
                 return false;
         }
-
-        /// <summary>
-        /// retry request
-        /// </summary>
-        /// <param name="req">request</param>
-        /// <param name="requestTrackingId">requestTrackingId</param>
-        /// <param name="LockWait">LockWait</param>
-        /// <param name="logDt">logDt</param>
-        /// <param name="ex">ex</param>
-        /// <param name="errorStringCheck">errorStringCheck</param>
-        /// <param name="retryCount">retryCount</param>
-        /// <param name="isThrottled">when set indicated this was caused by a Throttle</param>
-        /// <param name="webUriReq"></param>
-        private void RetryRequest(OrganizationRequest req, Guid requestTrackingId, TimeSpan LockWait, Stopwatch logDt, Exception ex, string errorStringCheck, ref int retryCount, bool isThrottled, string webUriReq = "")
-        {
-            retryCount++;
-            LogFailure(req, requestTrackingId, LockWait, logDt, ex, errorStringCheck, webUriMessageReq: webUriReq);
-            LogRetry(retryCount, req, isThrottled: isThrottled);
-            System.Threading.Thread.Sleep(_retryPauseTimeRunning);
-        }
-
-        /// <summary>
-        /// log failure message
-        /// </summary>
-        /// <param name="req">request</param>
-        /// <param name="requestTrackingId">requestTrackingId</param>
-        /// <param name="LockWait">LockWait</param>
-        /// <param name="logDt">logDt</param>
-        /// <param name="ex">ex</param>
-        /// <param name="errorStringCheck">errorStringCheck</param>
-        /// <param name="isTerminalFailure">represents if it is final retry failure</param>
-        /// <param name="webUriMessageReq">.</param>
-        private void LogFailure(OrganizationRequest req, Guid requestTrackingId, TimeSpan LockWait, Stopwatch logDt, Exception ex, string errorStringCheck, bool isTerminalFailure = false, string webUriMessageReq = "")
-        {
-            if (req != null)
-            {
-                _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "{6}Failed to Execute Command - {0}{1} : {5}RequestID={2} {3}: {8} duration={4} ExceptionMessage = {7}", req.RequestName, _disableConnectionLocking ? " : DisableCrossThreadSafeties=true :" : string.Empty, requestTrackingId.ToString(), LockWait == TimeSpan.Zero ? string.Empty : string.Format(": LockWaitDuration={0} ", LockWait.ToString()), logDt.Elapsed.ToString(),
-                        SessionTrackingId.HasValue && SessionTrackingId.Value != Guid.Empty ? $"SessionID={SessionTrackingId.Value.ToString()} : " : "", isTerminalFailure ? "[TerminalFailure] " : "", ex.Message, errorStringCheck), TraceEventType.Error, ex);
-            }
-            else if (ex is HttpOperationException httpOperationException)
-            {
-                JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
-                var errorMessage = DataverseTraceLogger.GetFirstLineFromString(contentBody["error"]["message"].ToString()).Trim();
-
-                _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "{6}Failed to Execute Command - {0}{1} : {5}RequestID={2} {3}: {8} duration={4} ExceptionMessage = {7}",
-                    webUriMessageReq,
-                    _disableConnectionLocking ? " : DisableCrossThreadSafeties=true :" : string.Empty,
-                    requestTrackingId.ToString(),
-                    string.Empty,
-                    logDt.Elapsed.ToString(),
-                    SessionTrackingId.HasValue && SessionTrackingId.Value != Guid.Empty ? $"SessionID={SessionTrackingId.Value.ToString()} : " : "",
-                    isTerminalFailure ? "[TerminalFailure] " : "",
-                    errorMessage,
-                    errorStringCheck),
-                    TraceEventType.Error, ex);
-            }
-        }
-        /// <summary>
-        /// log retry message
-        /// </summary>
-        /// <param name="retryCount">retryCount</param>
-        /// <param name="req">request</param>
-        /// <param name="isTerminalFailure">represents if it is final retry failure</param>
-        /// <param name="isThrottled">If set, indicates that this was caused by a throttle</param>
-        /// <param name="webUriMessageReq"></param>
-        private void LogRetry(int retryCount, OrganizationRequest req, bool isTerminalFailure = false, bool isThrottled = false, string webUriMessageReq = "")
-        {
-            string ReqName = string.Empty;
-            if (req != null)
-                ReqName = req.RequestName;
-            else
-                ReqName = webUriMessageReq;
-
-            if (retryCount == 0)
-            {
-                _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "No retry attempted for Command {0}", ReqName), TraceEventType.Verbose);
-            }
-            else if (isTerminalFailure == true)
-            {
-                _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Retry Completed at {0} for Command {1}", $"Retry No={retryCount}", ReqName), TraceEventType.Verbose);
-            }
-            else
-            {
-                _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "{0} for Command {1}", $"Retry No={retryCount} Retry=Started IsThrottle={isThrottled} Delay={_retryPauseTimeRunning.ToString()}", ReqName), TraceEventType.Verbose);
-            }
-        }
-
-        /// <summary>
-        /// log exception message
-        /// </summary>
-        /// <param name="req">request</param>
-        /// <param name="ex">exception</param>
-        /// <param name="errorStringCheck">errorStringCheck</param>
-        /// <param name="webUriMessageReq"></param>
-        private void LogException(OrganizationRequest req, Exception ex, string errorStringCheck, string webUriMessageReq = "")
-        {
-            if (req != null)
-            {
-                _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "************ {3} - {2} : {0} |=> {1}", errorStringCheck, ex.Message, req.RequestName, ex.GetType().Name), TraceEventType.Error, ex);
-            }
-            else if (ex is HttpOperationException httpOperationException)
-            {
-                JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
-                DataverseOperationException ex01 = DataverseOperationException.GenerateClientOperationException(httpOperationException);
-                _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "************ {3} - {2} : {0} |=> {1}", errorStringCheck, DataverseTraceLogger.GetFirstLineFromString(contentBody["error"]["message"].ToString()).Trim(), webUriMessageReq, ex.GetType().Name), TraceEventType.Error, ex01);
-            }
-            else
-            {
-                _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "************ {3} - {2} : {0} |=> {1}", errorStringCheck, ex.Message, "UNKNOWN", ex.GetType().Name), TraceEventType.Error, ex);
-            }
-        }
-
-        /// <summary>
-        /// Makes a web request to the connected XRM instance.
-        /// </summary>
-        /// <param name="queryString">Here you would pass the path and query parameters that you wish to pass onto the WebAPI.
-        /// The format used here is as follows:
-        ///   {APIURI}/api/data/v{instance version}/querystring.
-        /// For example,
-        ///     if you wanted to get data back from an account,  you would pass the following:
-        ///         accounts(id)
-        ///         which creates:  get - https://myinstance.crm.dynamics.com/api/data/v9.0/accounts(id)
-        ///     if you were creating an account, you would pass the following:
-        ///         accounts
-        ///         which creates:  post - https://myinstance.crm.dynamics.com/api/data/v9.0/accounts - body contains the data.
-        ///         </param>
-        /// <param name="method">Http Method you want to pass.</param>
-        /// <param name="body">Content your passing to the request</param>
-        /// <param name="customHeaders">Headers in addition to the default headers added by for Executing a web request</param>
-        /// <param name="errorStringCheck"></param>
-        /// <param name="contentType">Content Type to pass in if executing a post request</param>
-        /// <param name="requestTrackingId"></param>
-        /// <returns></returns>
-        internal async Task<HttpResponseMessage> Command_WebExecuteAsync(string queryString, string body, HttpMethod method, Dictionary<string, List<string>> customHeaders, string contentType, string errorStringCheck, Guid requestTrackingId = default(Guid))
-        {
-            Stopwatch logDt = new Stopwatch();
-            int retryCount = 0;
-            bool retry = false;
-
-            if (requestTrackingId == Guid.Empty)
-                requestTrackingId = Guid.NewGuid();
-
-
-            // Default Odata 4.0 headers.
-            Dictionary<string, string> defaultODataHeaders = new Dictionary<string, string>();
-            defaultODataHeaders.Add("Accept", "application/json");
-            defaultODataHeaders.Add("OData-MaxVersion", "4.0");
-            defaultODataHeaders.Add("OData-Version", "4.0");
-            //defaultODataHeaders.Add("If-None-Match", "");
-
-            // Supported Version Check.
-            if (!(Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(ConnectedOrgVersion, Utilities.FeatureVersionMinimums.WebAPISupported)))
-            {
-                _logEntry.Log(string.Format("Web API Service is not supported by the ServiceClient in {0} version of XRM", ConnectedOrgVersion), TraceEventType.Error, new InvalidOperationException(string.Format("Web API Service is not supported by the ServiceClient in {0} version of XRM", ConnectedOrgVersion)));
-                return null;
-            }
-
-            if (_connectionSvc != null && _connectionSvc.AuthenticationTypeInUse == AuthenticationType.OAuth)
-                _connectionSvc.CalledbyExecuteRequest = true;
-
-            // Format URI for request.
-            Uri TargetUri = null;
-            string ConnectUri = this.ConnectedOrgPublishedEndpoints[EndpointType.OrganizationDataService];
-            if (!ConnectUri.Contains("/data/"))
-            {
-                Uri tempUri = new Uri(ConnectUri);
-                // Not using GD,  update for web API
-                ConnectUri = string.Format(_connectionSvc.BaseWebAPIDataFormat, $"{tempUri.Scheme}://{tempUri.DnsSafeHost}", ConnectedOrgVersion.ToString(2));
-            }
-
-            if (!Uri.TryCreate(string.Format("{0}{1}", ConnectUri, queryString), UriKind.Absolute, out TargetUri))
-            {
-                _logEntry.Log(string.Format("Invalid URI formed for request - {0}", string.Format("{2} {0}{1}", ConnectUri, queryString, method)), TraceEventType.Error);
-                return null;
-            }
-
-            // Add Headers.
-            if (customHeaders == null)
-                customHeaders = new Dictionary<string, List<string>>();
-            else
-            {
-                if (customHeaders.ContainsKey(Utilities.RequestHeaders.AAD_CALLER_OBJECT_ID_HTTP_HEADER))
-                {
-                    customHeaders.Remove(Utilities.RequestHeaders.AAD_CALLER_OBJECT_ID_HTTP_HEADER);
-                    _logEntry.Log(string.Format("Removing customer header {0} - Use CallerAADObjectId property instead", Utilities.RequestHeaders.AAD_CALLER_OBJECT_ID_HTTP_HEADER));
-                }
-
-                if (customHeaders.ContainsKey(Utilities.RequestHeaders.CALLER_OBJECT_ID_HTTP_HEADER))
-                {
-                    customHeaders.Remove(Utilities.RequestHeaders.CALLER_OBJECT_ID_HTTP_HEADER);
-                    _logEntry.Log(string.Format("Removing customer header {0} - Use CallerId property instead", Utilities.RequestHeaders.CALLER_OBJECT_ID_HTTP_HEADER));
-                }
-
-                if (customHeaders.ContainsKey(Utilities.RequestHeaders.FORCE_CONSISTENCY))
-                {
-                    customHeaders.Remove(Utilities.RequestHeaders.FORCE_CONSISTENCY);
-                    _logEntry.Log(string.Format("Removing customer header {0} - Use ForceServerMetadataCacheConsistency property instead", Utilities.RequestHeaders.FORCE_CONSISTENCY));
-                }
-            }
-
-            // Add Default headers.
-            foreach (var hdr in defaultODataHeaders)
-            {
-                if (customHeaders.ContainsKey(hdr.Key))
-                    customHeaders.Remove(hdr.Key);
-
-                customHeaders.Add(hdr.Key, new List<string>() { hdr.Value });
-            }
-
-            // Add headers.
-            if (CallerId != Guid.Empty)
-            {
-                {
-                    customHeaders.Add(Utilities.RequestHeaders.CALLER_OBJECT_ID_HTTP_HEADER, new List<string>() { CallerId.ToString() });
-                }
-            }
-            else
-            {
-                if (CallerAADObjectId.HasValue)
-                {
-                    // Value in Caller object ID.
-                    if (CallerAADObjectId.Value != null && CallerAADObjectId.Value != Guid.Empty)
-                    {
-                        customHeaders.Add(Utilities.RequestHeaders.AAD_CALLER_OBJECT_ID_HTTP_HEADER, new List<string>() { CallerAADObjectId.ToString() });
-                    }
-                }
-            }
-
-            // Add tracking headers
-            // Request id
-            if (!customHeaders.ContainsKey(Utilities.RequestHeaders.X_MS_CLIENT_REQUEST_ID))
-            {
-                customHeaders.Add(Utilities.RequestHeaders.X_MS_CLIENT_REQUEST_ID, new List<string>() { requestTrackingId.ToString() });
-            }
-            else
-            {
-                Guid guTempId = Guid.Empty;
-                List<string> keyValues = customHeaders[Utilities.RequestHeaders.X_MS_CLIENT_REQUEST_ID];
-                if (keyValues != null && keyValues.Count > 0)
-                    Guid.TryParse(keyValues.First(), out guTempId);
-
-                if (guTempId == Guid.Empty) // passed in value did not parse.
-                {
-                    // Assign Tracking Guid in
-                    customHeaders.Remove(Utilities.RequestHeaders.X_MS_CLIENT_REQUEST_ID);
-                    customHeaders.Add(Utilities.RequestHeaders.X_MS_CLIENT_REQUEST_ID, new List<string>() { requestTrackingId.ToString() });
-                }
-                else
-                    requestTrackingId = guTempId;
-
-            }
-            // Session id.
-            if (SessionTrackingId.HasValue && SessionTrackingId != Guid.Empty && !customHeaders.ContainsKey(Utilities.RequestHeaders.X_MS_CLIENT_SESSION_ID))
-                customHeaders.Add(Utilities.RequestHeaders.X_MS_CLIENT_SESSION_ID, new List<string>() { SessionTrackingId.Value.ToString() });
-
-            // Add force Consistency
-            if (ForceServerMetadataCacheConsistency && !customHeaders.ContainsKey(Utilities.RequestHeaders.FORCE_CONSISTENCY))
-                customHeaders.Add(Utilities.RequestHeaders.FORCE_CONSISTENCY, new List<string>() { "Strong" });
-
-            HttpResponseMessage resp = null;
-            do
-            {
-                // Add authorization header. - Here to catch the situation where a token expires during retry.
-                if (!customHeaders.ContainsKey(Utilities.RequestHeaders.AUTHORIZATION_HEADER))
-                    customHeaders.Add(Utilities.RequestHeaders.AUTHORIZATION_HEADER, new List<string>() { string.Format("Bearer {0}", await _connectionSvc.RefreshWebProxyClientTokenAsync().ConfigureAwait(false)) });
-
-                logDt.Restart(); // start clock.
-
-                _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Execute Command - {0}{1}: RequestID={2} {3}",
-                        $"{method} {queryString}",
-                        string.IsNullOrEmpty(errorStringCheck) ? "" : $" : {errorStringCheck} ",
-                        requestTrackingId.ToString(),
-                        SessionTrackingId.HasValue && SessionTrackingId.Value != Guid.Empty ? $"SessionID={SessionTrackingId.Value.ToString()} : " : ""
-                        ), TraceEventType.Verbose);
-                try
-                {
-                    resp = await ConnectionService.ExecuteHttpRequestAsync(
-                            TargetUri.ToString(),
-                            method,
-                            body: body,
-                            customHeaders: customHeaders,
-                            logSink: _logEntry,
-                            contentType: contentType,
-                            requestTrackingId: requestTrackingId,
-                            sessionTrackingId: SessionTrackingId.HasValue ? SessionTrackingId.Value : Guid.Empty,
-                            suppressDebugMessage: true,
-                            providedHttpClient: _connectionSvc.WebApiHttpClient == null ? ClientServiceProviders.Instance.GetService<IHttpClientFactory>().CreateClient("DataverseHttpClientFactory") : _connectionSvc.WebApiHttpClient
-                            ).ConfigureAwait(false);
-
-                    logDt.Stop();
-                    _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Executed Command - {0}{2}: {4}RequestID={3} : duration={1}",
-                        $"{method} {queryString}",
-                        logDt.Elapsed.ToString(),
-                        string.IsNullOrEmpty(errorStringCheck) ? "" : $" : {errorStringCheck} ",
-                        requestTrackingId.ToString(),
-                        SessionTrackingId.HasValue && SessionTrackingId.Value != Guid.Empty ? $"SessionID={SessionTrackingId.Value.ToString()} : " : ""
-                        ), TraceEventType.Verbose);
-                }
-                catch (System.Exception ex)
-                {
-                    if (ex is HttpOperationException httpOperationException)
-                    {
-                        bool isThrottled = false;
-                        retry = ShouldRetryWebAPI(ex, retryCount, out isThrottled);
-                        if (retry)
-                        {
-                            RetryRequest(null, requestTrackingId, TimeSpan.Zero, logDt, ex, errorStringCheck, ref retryCount, isThrottled, webUriReq: $"{method} {queryString}");
-                        }
-                        else
-                        {
-                            LogRetry(retryCount, null, true, isThrottled: isThrottled, webUriMessageReq: $"{method} {queryString}");
-                            LogException(null, ex, errorStringCheck, webUriMessageReq: $"{method} {queryString}");
-                            LogFailure(null, requestTrackingId, TimeSpan.Zero, logDt, ex, errorStringCheck, true, webUriMessageReq: $"{method} {queryString}");
-                        }
-                        resp = null;
-                    }
-                    else
-                    {
-                        retry = false;
-                        _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Failed to Execute Command - {3} {0} : {2}RequestID={1}", queryString, requestTrackingId.ToString(), SessionTrackingId.HasValue && SessionTrackingId.Value != Guid.Empty ? $"SessionID={SessionTrackingId.Value.ToString()} : " : "", method), TraceEventType.Verbose);
-                        _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "************ Exception - {2} : {0} |=> {1}", errorStringCheck, ex.Message, queryString), TraceEventType.Error, ex);
-                        return null;
-                    }
-                }
-                finally
-                {
-                    logDt.Stop();
-                }
-            } while (retry);
-            return resp;
-        }
-
-        /// <summary>
-        /// retry request or not
-        /// </summary>
-        /// <param name="ex">exception</param>
-        /// <param name="retryCount">retry count</param>
-        /// <param name="isThrottlingRetry">when true, indicates that the retry was caused by a throttle tripping.</param>
-        /// <returns></returns>
-        private bool ShouldRetryWebAPI(Exception ex, int retryCount, out bool isThrottlingRetry)
-        {
-            isThrottlingRetry = false;
-            if (retryCount >= _maxRetryCount)
-            {
-                return false;
-            }
-
-            if (ex is HttpOperationException httpOperationException)
-            {
-                JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
-                var errorCode = contentBody["error"]["code"].ToString();
-                var errorMessage = DataverseTraceLogger.GetFirstLineFromString(contentBody["error"]["message"].ToString()).Trim();
-                //if (((string.Equals(req.RequestName.ToLower(), "retrieve"))
-                //    && ((Utilities.ShouldAutoRetryRetrieveByEntityName(((Microsoft.Xrm.Sdk.EntityReference)req.Parameters["Target"]).LogicalName))))
-                //    || (string.Equals(req.RequestName.ToLower(), "retrievemultiple")
-                //    && (
-                //            ((((RetrieveMultipleRequest)req).Query is FetchExpression) && Utilities.ShouldAutoRetryRetrieveByEntityName(((FetchExpression)((RetrieveMultipleRequest)req).Query).Query))
-                //        || ((((RetrieveMultipleRequest)req).Query is QueryExpression) && Utilities.ShouldAutoRetryRetrieveByEntityName(((QueryExpression)((RetrieveMultipleRequest)req).Query).EntityName))
-                //        )))
-                //    return true;
-                //else
-                if (errorCode.Equals("-2147204784") || errorCode.Equals("-2146233087") && errorMessage.Contains("SQL"))
-                    return true;
-                else if (httpOperationException.Response.StatusCode == HttpStatusCode.BadGateway)
-                    return true;
-                else if (httpOperationException.Response.StatusCode == HttpStatusCode.ServiceUnavailable)
-                {
-                    _retryPauseTimeRunning = _retryPauseTime; // default timespan.
-                    isThrottlingRetry = true;
-                }
-                else if ((int)httpOperationException.Response.StatusCode == 429 ||
-                    httpOperationException.Response.StatusCode == HttpStatusCode.ServiceUnavailable)
-                {
-                    // Throttled. need to react according.
-                    if (errorCode == _rateLimitExceededErrorCode.ToString() ||
-                        errorCode == _timeLimitExceededErrorCode.ToString() ||
-                        errorCode == _concurrencyLimitExceededErrorCode.ToString())
-                    {
-                        if (errorCode == _rateLimitExceededErrorCode.ToString())
-                        {
-                            // Use Retry-After delay when specified
-                            if (httpOperationException.Response.Headers.ContainsKey("Retry-After"))
-                                _retryPauseTimeRunning = TimeSpan.Parse(httpOperationException.Response.Headers["Retry-After"].FirstOrDefault());
-                            else
-                                _retryPauseTimeRunning = _retryPauseTime; // default timespan.
-                        }
-                        else
-                        {
-                            // else use exponential back off delay
-                            _retryPauseTimeRunning = _retryPauseTime.Add(TimeSpan.FromSeconds(Math.Pow(2, retryCount)));
-                        }
-                        isThrottlingRetry = true;
-                        return true;
-                    }
-                }
-            }
-            else
-                return false;
-
-            return false;
-        }
-
 
         #endregion
 
@@ -6908,6 +6263,5 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             Dispose(true);
         }
         #endregion
-
     }
 }
