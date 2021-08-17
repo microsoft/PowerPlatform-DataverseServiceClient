@@ -2,7 +2,7 @@
 Please see [project rename](https://github.com/microsoft/PowerPlatform-DataverseServiceClient/discussions/103) for more information
 
 
-## Current Release Notes
+## Change Log
 Current release notes and change log:
 
 [Microsoft.PowerPlatform.Dataverse.Client](src/nuspecs/Microsoft.PowerPlatform.Dataverse.Client.ReleaseNotes.txt)
