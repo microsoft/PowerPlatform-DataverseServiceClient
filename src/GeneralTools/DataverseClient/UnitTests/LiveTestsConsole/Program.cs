@@ -8,9 +8,51 @@ namespace LiveTestsConsole
         {
             Console.WriteLine("Starting Tests");
 
-            var tokenRefresh = new TokenRefresh();
+            if (0 < args.Length)
+            {
+                if (string.Compare(args[0], "BasicFlow", StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    var tests = new BasicFlow();
+                    tests.Run();
+                }
+                else if (string.Compare(args[0], "ListSolutions", StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    var tests = new SolutionTests();
 
-            tokenRefresh.Run();
+                    tests.ListSolutions();
+                }
+                else if (string.Compare(args[0], "ExportSolution", StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    var tests = new SolutionTests();
+
+                    tests.ExportSolution();
+                }
+                else if (string.Compare(args[0], "ImportSolution", StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    var tests = new SolutionTests();
+
+                    tests.ImportSolution();
+                }
+                else if (string.Compare(args[0], "DeleteSolution", StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    var tests = new SolutionTests();
+
+                    tests.DeleteSolution();
+                }
+                else if (string.Compare(args[0], "TokenRefresh", StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    var tests = new TokenRefresh();
+
+                    tests.Run();
+                }
+            }
+            else
+            {
+                var tests = new BasicFlow();
+                tests.Run();
+            }
+
+            Console.ReadKey();
         }
     }
 }

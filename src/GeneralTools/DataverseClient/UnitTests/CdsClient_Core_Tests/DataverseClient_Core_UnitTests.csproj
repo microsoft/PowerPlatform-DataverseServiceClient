@@ -31,6 +31,9 @@
     <None Update="TestMaterial\EnvVarsSample_1_0_0_2.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="TestMaterial\TestSolution_1_0_0_1.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

@@ -19,5 +19,11 @@
     <ProjectReference Include="..\..\Client\Microsoft.PowerPlatform.Dataverse.Client.csproj" />
     <ProjectReference Include="..\..\Extensions\DynamicsExtension\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.csproj" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <None Update="TestData\TestSolution_1_0_0_1.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
 </Project>

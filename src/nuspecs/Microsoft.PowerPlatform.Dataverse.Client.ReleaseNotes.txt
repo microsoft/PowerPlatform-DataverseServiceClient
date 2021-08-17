@@ -13,6 +13,8 @@ Fixed an issue with ILogger not propagating correctly when used with connection 
 Fixed an issue when attempting to Null a lookup that would cause a Microsoft.OData.ODataException: Does not support untyped value in non-open type error 
 Changed the behavior of Update message to be consistent with Organization Service Update behavior instead of an Upsert behavior.
 Added compensating code to deal with a null ref issue when logging which could cause a client crash.
+Added optional WebAPI support during login and solution import & export operations
+Refactored ServiceClient and ConnectionService
 
 0.4.19:
 Updated behavior of ImportSolutionAsync to leverage updated Dataverse behavior post 9.2 release.

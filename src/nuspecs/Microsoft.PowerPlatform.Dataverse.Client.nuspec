@@ -21,6 +21,7 @@
         <dependency id="Microsoft.Identity.Client" version="4.25.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.20" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="11.0.2" exclude="Build,Analyzers" />
+        <dependency id="System.Text.Json" version="4.6.0" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".NETFramework4.7.2">
         <dependency id="Microsoft.Extensions.DependencyInjection" version="3.1.8" exclude="Build,Analyzers" />
@@ -29,6 +30,7 @@
         <dependency id="Microsoft.Identity.Client" version="4.25.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.20" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="11.0.2" exclude="Build,Analyzers" />
+        <dependency id="System.Text.Json" version="4.7.2" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".NETFramework4.8">
         <dependency id="Microsoft.Extensions.DependencyInjection" version="3.1.8" exclude="Build,Analyzers" />
@@ -37,6 +39,7 @@
         <dependency id="Microsoft.Identity.Client" version="4.25.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.20" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="11.0.2" exclude="Build,Analyzers" />
+        <dependency id="System.Text.Json" version="4.7.2" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".NETCoreApp3.0">
         <dependency id="System.Collections" version="4.3.0" exclude="Build,Analyzers" />
@@ -53,6 +56,7 @@
         <dependency id="System.ServiceModel.Duplex" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.ServiceModel.Http" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.ServiceModel.Primitives" version="4.7.0" exclude="Build,Analyzers" />
+        <dependency id="System.Text.Json" version="4.7.2" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.DependencyInjection" version="3.1.8" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Http" version="3.1.8" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Logging" version="3.1.8" exclude="Build,Analyzers" />
@@ -80,6 +84,7 @@
         <dependency id="System.ServiceModel.Duplex" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.ServiceModel.Http" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.ServiceModel.Primitives" version="4.7.0" exclude="Build,Analyzers" />
+        <dependency id="System.Text.Json" version="4.7.2" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.DependencyInjection" version="3.1.8" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Http" version="3.1.8" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Logging" version="3.1.8" exclude="Build,Analyzers" />

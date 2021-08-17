@@ -1,26 +1,22 @@
-using System;
-using System.Linq;
-using Xunit;
-using Microsoft.Xrm.Sdk;
-using Moq;
+#region using
+using Client_Core_UnitTests;
+using FluentAssertions;
 using Microsoft.Crm.Sdk.Messages;
+using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client;
-using Microsoft.PowerPlatform.Dataverse.Client.Dynamics;
-using Microsoft.Xrm.Sdk.WebServiceClient;
-using System.ServiceModel;
-using System.ServiceModel.Description;
-using System.Collections.Generic;
-using System.Diagnostics;
+using Microsoft.PowerPlatform.Dataverse.Client.Auth;
+using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
-using Client_Core_UnitTests;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Xunit.Abstractions;
+using Moq;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using Microsoft.PowerPlatform.Dataverse.Client.Auth;
-using FluentAssertions;
-using Microsoft.Extensions.Logging;
+using System.Net.Http;
+using Xunit;
+using Xunit.Abstractions;
+#endregion
 
 namespace Client_Core_Tests
 {
@@ -909,10 +905,121 @@ namespace Client_Core_Tests
 
             // Now delete
             client.Delete("account", accountid);
+        }
 
+        [SkippableConnectionTest]
+        [Trait("Category", "Live Connect Required")]
+        public void WhoAmITest()
+        {
+            try
+            {
+                System.Configuration.ConfigurationManager.AppSettings["UseWebApi"] = "true";
 
+                var client = CreateServiceClient();
 
+                var whoAmIResponse = client.Execute(new WhoAmIRequest()) as WhoAmIResponse;
+                whoAmIResponse.Should().NotBeNull();
+                whoAmIResponse.OrganizationId.Should().NotBeEmpty();
+                whoAmIResponse.UserId.Should().NotBeEmpty();
+            }
+            finally
+            {
+                System.Configuration.ConfigurationManager.AppSettings["UseWebApi"] = null;
+            }
+        }
 
+        [SkippableConnectionTest]
+        [Trait("Category", "Live Connect Required")]
+        public void RetrieveOrganizationInfoRequest_Test()
+        {
+            try
+            {
+                System.Configuration.ConfigurationManager.AppSettings["UseWebApi"] = "true";
+
+                var client = CreateServiceClient();
+
+                var request = new RetrieveOrganizationInfoRequest();
+                var response = client.Execute(request) as RetrieveOrganizationInfoResponse;
+                response.Should().NotBeNull();
+                response.organizationInfo.Should().NotBeNull();
+                response.organizationInfo.Solutions.Should().NotBeEmpty();
+            }
+            finally
+            {
+                System.Configuration.ConfigurationManager.AppSettings["UseWebApi"] = null;
+            }
+        }
+        
+        [SkippableConnectionTest]
+        [Trait("Category", "Live Connect Required")]
+        public void ImportListDelete_Solution_Test()
+        {
+            try
+            {
+                System.Configuration.ConfigurationManager.AppSettings["UseWebApi"] = "true";
+
+                // Import
+                var client = CreateServiceClient();
+                client.ImportSolution(Path.Combine("TestData", "TestSolution_1_0_0_1.zip"), out var importId);
+
+                // List solutions and find the one that was imported
+                // Wait a little bit because solution might not be immediately available
+                System.Threading.Thread.Sleep(30000);
+                var listRequest = new RetrieveOrganizationInfoRequest();
+                var listResponse = client.Execute(listRequest) as RetrieveOrganizationInfoResponse;
+                listResponse.Should().NotBeNull();
+                listResponse.organizationInfo.Should().NotBeNull();
+                listResponse.organizationInfo.Solutions.Should().NotBeEmpty();
+
+                var solution = listResponse.organizationInfo.Solutions.Find(s => string.Compare(s.FriendlyName, "TestSolution", StringComparison.OrdinalIgnoreCase) == 0);
+                solution.Should().NotBeNull();
+
+                // Delete it
+                var deleteRequest = new DeleteRequest() { Target = new EntityReference("solution", solution.Id) };
+                var deleteResponse = client.Execute(deleteRequest) as DeleteResponse;
+                deleteResponse.Should().NotBeNull();
+            }
+            finally
+            {
+                System.Configuration.ConfigurationManager.AppSettings["UseWebApi"] = null;
+            }
+        }
+
+        // Not yet implemented
+        //[SkippableConnectionTest]
+        //[Trait("Category", "Live Connect Required")]
+        private void RetrieveUserLicenseInfoTest()
+        {
+            System.Configuration.ConfigurationManager.AppSettings["UseWebApi"] = "true";
+
+            var client = CreateServiceClient();
+
+            client.UseWebApi = true;
+
+            // First get user id
+            var whoAmIResponse = client.Execute(new WhoAmIRequest()) as WhoAmIResponse;
+            whoAmIResponse.Should().NotBeNull();
+            whoAmIResponse.OrganizationId.Should().NotBeEmpty();
+            whoAmIResponse.UserId.Should().NotBeEmpty();
+
+            // RetrieveUserLicenseInfo
+            var retrieveUserLicenseInfoRequest = new RetrieveUserLicenseInfoRequest() { SystemUserId = whoAmIResponse.UserId };
+            var retrieveUserLicenseInfoResponse = client.Execute(retrieveUserLicenseInfoRequest) as RetrieveUserLicenseInfoResponse;
+            retrieveUserLicenseInfoResponse.Should().NotBeNull();
+            retrieveUserLicenseInfoResponse.licenseInfo.Should().NotBeNull();
+        }
+
+        private ServiceClient CreateServiceClient()
+        {
+            var appID = Environment.GetEnvironmentVariable("XUNITCONNTESTAPPID");
+            var secret = Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET");
+            var url = Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
+
+            // connection params + secure string.
+            var client = new ServiceClient(new Uri(url), appID, ServiceClient.MakeSecureString(secret), true, logger: Ilogger);
+            Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
+
+            return client;
         }
 
         #endregion
