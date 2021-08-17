@@ -2,8 +2,8 @@
 Please see [project rename](https://github.com/microsoft/PowerPlatform-DataverseServiceClient/discussions/103) for more information
 
 
-## Current Release Notes
-Current release notes:
+## Change Log
+Current release notes and change log:
 
 [Microsoft.PowerPlatform.Dataverse.Client](src/nuspecs/Microsoft.PowerPlatform.Dataverse.Client.ReleaseNotes.txt)
 
@@ -31,24 +31,20 @@ This encompasses the contents of the following nuget packages:
 This library is and its supporting assemblies are a revision and update of the Microsoft.Xrm.Tooling.Connector.CrmServiceClient and the underlying Microsoft.Xrm.Sdk.Client libraries. 
 
 We are using this effort to for a few key things we have wanted to get done for a number of years, 
+
 1. Refactor and update our client libraries to allow us to spit up Powerplatform Common Data Service SDK support from Microsoft Dynamics 365.
 2. Provide multi targeted library build that targets our supported .net client platforms.
 3. Update connection patterns and behaviors to be consistent with many of the broadly accepted patterns.
 4. Create a pattern to allow developers focus on the use of Common Data Service, or CDS + Dynamics as they need. 
 
-<b>We are currently in ALPHA.</b> 
-What does this mean? 
-Alpha means that we can and will change the api surface, namespaces and behavior from time to time. this is mostly driven by feedback from users of the client (you).   During this process we are also working though ports of many internal tools and will adjust  things based on the needs of those tools were it make sense. 
-
 We encourage you to read the release notes we provide with each nuget packages. As with most of our Nuget packages that are intended as tools or for developer consumption, we extensively comment in release notes. 
 
-At this time: (01/20/2021)
-The alpha version of the SDK libs supports the following and has the following notices: 
+At this time: (08/16/2021)
+The Client SDK libs supports the following and has the following notices: 
 
-* .net full framework 4.6.2, 4.7.2, 4.8 and .net core 3.0, 3.1 
+* .net full framework 4.6.2, 4.7.2, 4.8 and .net core 3.0, 3.1, 5.0
 * We now support all authentication types from CrmServiceClient, ( Client\Secret, Client\Cert, UID\PW Noninteractive, UID\PW interactive.)
-* MSAL Port has been completed,  this Lib is now using MSAL 4.3+
-* The Namespaces of areas may change.  We do not know what they will change too just yet but they will change before we “release” this.
+* MSAL Port has been completed,  this Lib is now using MSAL 4.35+
 * The Message types that are part of the client have been reduced to Dataverse Core server messages only.  Things like “QualifyLeadRequest” have been removed to their own Nuget package ( Microsoft.Dynamics.Sdk.Messages ) 
 * We will likely ship more extension packages that will contain the “CRM” messages,  though over time, we will likely split the namespaces of those messages up based on service line,  think Field Service or Sales or Customer Service, etc..
 * Plugin Development using this Client is NOT supported at this time. 
@@ -58,10 +54,10 @@ From a scenario point of view,  we are particularity interested in any issues or
 We believe for the vast majority of applications working against the older dynamices sdk libs, you should only need Microsoft.PowerPlatform.Dataverse.Client and Microsoft.Dynamics.Sdk.Messages.
 
 If your working against Dataverse Only and or custom entities and sdk messages, you should only need Microsoft.PowerPlatform.Dataverse.Client.  If you do not experience that, or find missing messages in the Dataverse only scenarios, please let us know in the issues area. 
-
  
-<b>Note: Please be aware that during the Alpha \ Beta phases, these nuget packages are not supported via official channels.  
-Support is aware of them, however you will likely be directed back to the community forums for support during the Alpha \ Beta phases.  A number of our dev's and PM's do monitor this channel and can respond to questions and feedback. 
+<b>Note: We are currently providing support for these nuget packages primarily via GitHub and Microsoft Support.  
+Github Issues is the preferred venue at this time as the development team is actively working on this library. 
+A number of our dev's and PM's do monitor this channel and can respond to questions and feedback. 
 
 While we are monitoring the community forums,  you are encouraged to open issue [here](https://github.com/microsoft/PowerPlatform-CdsServiceClient/issues) 
 </b>
@@ -82,7 +78,6 @@ provided by the bot. You will only need to do this once across all repos using o
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
-
 
 ## License
 
