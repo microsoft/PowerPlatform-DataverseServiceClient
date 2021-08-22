@@ -14,7 +14,9 @@ Current release notes and change log:
 ## Overview
 This repository contains the code for the Microsoft.PowerPlatform.Dataverse.Client and its supporting assemblies and classes. 
 
-**IMPORTANT NOTE**
+**IMPORTANT NOTES**
+
+**The Dataverse ServiceClient is in Preview**
 
 **The Dataverse ServiceClient cannot be built outside of Microsoft** 
 This is due to a set of dependencies on nuget packages that are internally available only.  At some point in the future, we will expose the supporting nuget packages when we have updated our server infrastructure to support plugin development on .net core.
