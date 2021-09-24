@@ -1,0 +1,17 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <SolidColorBrush x:Key="ButtonForegroundBrush" Color="#262626"/>
+    <SolidColorBrush x:Key="ButtonTemplateBorderBackgroundBrush" Color="#efefef"/>
+    <SolidColorBrush x:Key="ButtonTemplateInactiveBorderBrush" Color="#d9d9d9"/>
+    <SolidColorBrush x:Key="ButtonTemplateFocusedTriggerBorderBrush" Color="#5dacfa"/>
+    <SolidColorBrush x:Key="ButtonTemplateDefaultTriggerBorderBrush" Color="#3399ff"/>
+    <SolidColorBrush x:Key="ButtonTemplateDisabledBoderBackgroundBrush" Color="#efefef"/>
+    <SolidColorBrush x:Key="ButtonTemplateDisabledBoderBrush" Color="#d9d9d9"/>
+    <SolidColorBrush x:Key="ButtonTemplateDisableForegroundBrush1" Color="#d8d8d8"/>
+    <SolidColorBrush x:Key="ButtonBaseDisabledForegroundBrush" Color="#6d6d6d"/>
+    <SolidColorBrush x:Key="ButtonOnConfirmTemplateDefaultTriggerBorderBrush" Color="#3399ff"/>
+    <SolidColorBrush x:Key="ButtonTemplatePressedTriggerBorderBackgroundBrush" Color="#b1d6f0"/>
+    <SolidColorBrush x:Key="ButtonTemplateDisableBorderBrush" Color="#d9d9d9"/>
+    <SolidColorBrush x:Key="ButtonTemplateDisableForegroundBrush2" Color="#d8d8d8"/>
+</ResourceDictionary>

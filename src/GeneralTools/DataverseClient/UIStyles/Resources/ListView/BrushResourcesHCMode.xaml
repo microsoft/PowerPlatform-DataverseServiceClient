@@ -1,0 +1,34 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <SolidColorBrush x:Key="ListviewItemBorderBrush" Color="{x:Static SystemColors.WindowTextColor}"/>
+    <SolidColorBrush x:Key="ListviewItemBorderForegroundBrush" Color="{x:Static SystemColors.WindowTextColor}"/>
+    <SolidColorBrush x:Key="ListViewItemBackGroundBrush" Color="{x:Static SystemColors.WindowColor}"/>
+    <SolidColorBrush x:Key="listViewItemDisabledForeGroundBrush" Color="{x:Static SystemColors.WindowTextColor}"/>
+    <SolidColorBrush x:Key="ListViewItemOnOverTextBackgroundColor" Color="{x:Static SystemColors.WindowColor}"/>
+    <SolidColorBrush x:Key="listViewItemOnOverForeGroundColor" Color="{x:Static SystemColors.WindowTextColor}"/>
+    <SolidColorBrush x:Key="ListViewItemDisabledBackGroundBrush" Color="{x:Static SystemColors.WindowTextColor}"/>
+
+    <LinearGradientBrush x:Key="ListViewColumnThumbBrush" EndPoint="0.5,1" StartPoint="0.5,0">
+        <GradientStop Color="{x:Static SystemColors.WindowColor}" Offset="0.0" />
+        <GradientStop Color="{x:Static SystemColors.WindowColor}" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="ListViewColumnHeaderBorderBrush" StartPoint="0,0" EndPoint="0,1">
+        <LinearGradientBrush.GradientStops>
+            <GradientStopCollection>
+                <GradientStop Color="{x:Static SystemColors.WindowTextColor}" Offset="0.0" />
+                <GradientStop Color="{x:Static SystemColors.WindowTextColor}" Offset="1.0" />
+            </GradientStopCollection>
+        </LinearGradientBrush.GradientStops>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="ListViewColumnHeaderBackgroundBrush" StartPoint="0,0" EndPoint="0,1">
+        <LinearGradientBrush.GradientStops>
+            <GradientStopCollection>
+                <GradientStop Color="{x:Static SystemColors.WindowColor}" Offset="0.0" />
+                <GradientStop Color="{x:Static SystemColors.WindowColor}" Offset="1.0" />
+            </GradientStopCollection>
+        </LinearGradientBrush.GradientStops>
+    </LinearGradientBrush>
+</ResourceDictionary>

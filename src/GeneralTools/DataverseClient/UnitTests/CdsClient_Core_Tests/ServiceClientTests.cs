@@ -1,7 +1,9 @@
 #region using
 using Client_Core_UnitTests;
+using DataverseClient_Core_UnitTests;
 using FluentAssertions;
 using Microsoft.Crm.Sdk.Messages;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.PowerPlatform.Dataverse.Client.Auth;
@@ -32,19 +34,27 @@ namespace Client_Core_Tests
         public ClientTests(ITestOutputHelper output)
         {
             outputListner = output;
+            //TraceControlSettings.TraceLevel = System.Diagnostics.SourceLevels.Verbose;
+            //TraceConsoleSupport traceConsoleSupport = new TraceConsoleSupport(outputListner);
+            //TraceControlSettings.CloseListeners();
+            //TraceControlSettings.AddTraceListener(traceConsoleSupport);
 
-            TraceControlSettings.TraceLevel = System.Diagnostics.SourceLevels.Verbose;
-            TraceConsoleSupport traceConsoleSupport = new TraceConsoleSupport(outputListner);
-            TraceControlSettings.CloseListeners();
-            TraceControlSettings.AddTraceListener(traceConsoleSupport);
+            IConfiguration config = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .Build();
+
+
 
             ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
                     builder.AddConsole(options =>
                     {
                         options.IncludeScopes = true;
                         options.TimestampFormat = "hh:mm:ss ";
-                    }));
+                    })
+                    .AddConfiguration(config.GetSection("Logging"))
+                    .AddProvider(new TraceConsoleLoggingProvider(output)));
             Ilogger = loggerFactory.CreateLogger<ClientTests>();
+            testSupport.logger = Ilogger;
         }
 
         [Fact]
@@ -681,11 +691,18 @@ namespace Client_Core_Tests
             var Conn_Secret = System.Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET");
             var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
 
-            // Connection string;
-            var connStr = $"AuthType=ClientSecret;AppId={Conn_AppID};ClientSecret={Conn_Secret};Url={Conn_Url}";
-            var client = new ServiceClient(connStr, Ilogger);
-            Assert.True(client.IsReady, "Failed to Create Connection via Connection string");
-
+            ServiceClient client = null;
+            try
+            {
+                // Connection string;
+                var connStr = $"AuthType=ClientSecret;AppId={Conn_AppID};ClientSecret={Conn_Secret};Url={Conn_Url}";
+                client = new ServiceClient(connStr, Ilogger);
+                Assert.True(client.IsReady, "Failed to Create Connection via Connection string");
+            }
+            catch(Exception ex)
+            {
+                Assert.Null(ex);
+            }
             // Check user before we validate connection
             client._connectionSvc.AuthenticationTypeInUse.Should().BeEquivalentTo(Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.ClientSecret);
             client._connectionSvc.AuthContext.Scopes.Should().BeEquivalentTo(new string[] { $"{Conn_Url}/.default" });
@@ -714,7 +731,7 @@ namespace Client_Core_Tests
             var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
 
             // Connection string - Direct connect using Sample ApplicationID's
-            var connStr = $"AuthType=OAuth;Username={Conn_UserName};Password={Conn_PW};Url={Conn_Url};AppId={testSupport._SampleAppID.ToString()};RedirectUri={testSupport._SampleAppRedirect.ToString()};TokenCacheStorePath=c:\\MyTokenCache;LoginPrompt=Never";
+            var connStr = $"AuthType=OAuth;Username={Conn_UserName};Password={Conn_PW};Url={Conn_Url};AppId={testSupport._SampleAppID.ToString()};RedirectUri={testSupport._SampleAppRedirect.ToString()};LoginPrompt=Never";
             var client = new ServiceClient(connStr, Ilogger);
             Assert.True(client.IsReady, "Failed to Create Connection via Connection string");
 
@@ -949,7 +966,7 @@ namespace Client_Core_Tests
                 System.Configuration.ConfigurationManager.AppSettings["UseWebApi"] = null;
             }
         }
-        
+
         [SkippableConnectionTest]
         [Trait("Category", "Live Connect Required")]
         public void ImportListDelete_Solution_Test()

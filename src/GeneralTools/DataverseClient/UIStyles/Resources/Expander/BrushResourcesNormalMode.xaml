@@ -1,0 +1,9 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="ExpanderArrowHoverFill" Color="#FFD0CECE"/>
+    <SolidColorBrush x:Key="ExpanderArrowPressedFill" Color="#FFBCBCBC"/>
+    <SolidColorBrush x:Key="ExpanderArrowFill " Color="#FFD2D2D2"/>
+    <SolidColorBrush x:Key="ExpanderArrowPathStroke" Color="#262626"/>
+    <SolidColorBrush x:Key="ExpnaderIsMoverBackground" Color="#D7EBF9"/>
+    <SolidColorBrush x:Key="ExpanderIsMoverArrowPathStroke" Color="#262626"/>
+</ResourceDictionary>

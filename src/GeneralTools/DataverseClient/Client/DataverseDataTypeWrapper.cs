@@ -20,11 +20,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// </summary>
 		DateTime,
 		/// <summary>
-		/// Decimal, for money, use CrmMoney - Converts from a decimal type
+		/// Decimal, for money, use Money - Converts from a decimal type
 		/// </summary>
 		Decimal,
 		/// <summary>
-		/// Double type, while CRM calls this a float, it is actually a double for money, use CrmMoney - Converts from a double type
+		/// Double type, while Dataverse calls this a float, it is actually a double for money, use Money - Converts from a double type
 		/// </summary>
 		Float,
 		/// <summary>
@@ -32,11 +32,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// </summary>
 		Money,
 		/// <summary>
-		/// CRM whole number - Converts from a Int type
+		/// Whole number - Converts from a Int type
 		/// </summary>
 		Number,
 		/// <summary>
-		/// Ref Type for CDS,  Creates an EntityReference 
+		/// Ref Type for Dataverse,  Creates an EntityReference 
 		/// You need to provide a Guid as a value, and a the name of an entity for the lookup key 
 		/// </summary>
 		Customer,
@@ -45,7 +45,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// </summary>
 		Key,
 		/// <summary>
-		/// Ref Type for CDS,  Creates an EntityReference 
+		/// Ref Type for Dataverse,  Creates an EntityReference 
 		/// You need to provide a Guid as a value, and a the name of an entity for the lookup key 
 		/// </summary>
 		Lookup,
@@ -63,7 +63,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// </summary>
 		UniqueIdentifier,
 		/// <summary>
-		/// User Specified type... will be appended directly. This type must be one of the valid CRM 2011 types
+		/// User Specified type... will be appended directly. This type must be one of the valid Dataverse types
 		/// </summary>
 		Raw
 
@@ -91,14 +91,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		public string ReferencedEntity { get; set; }
 
 		/// <summary>
-		/// Create a new CRM Data Type
+		/// Create a new Data Type
 		/// Default Constructor
 		/// </summary>
 		public DataverseDataTypeWrapper()
 		{ }
 
 		/// <summary>
-		/// Create a new CDS Data Type 
+		/// Create a new Data Type 
 		/// </summary>
 		/// <param name="data">Data to Set</param>
 		/// <param name="CdsFieldType">Type of Data to Set</param>
@@ -110,7 +110,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		}
 
 		/// <summary>
-		/// Create a new CDS Data Type 
+		/// Create a new Data Type 
 		/// </summary>
 		/// <param name="data">Data to Set</param>
 		/// <param name="CdsFieldType">Type of Data to Set</param>

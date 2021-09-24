@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Configuration;
 using System.Linq;
 using System.Net;
@@ -110,14 +111,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             clientRuntime.ClientMessageInspectors.Add(this);
 #endif
 
-            // when Set, this will ask WCF to transit cookies.
-            if (_callerCdsConnectionServiceHandler.EnableCookieRelay)
-            {
-                if (endpoint.Binding is BasicHttpBinding)
-                {
-                    ((BasicHttpBinding)endpoint.Binding).AllowCookies = true;
-                }
-            }
             // Override the Max Fault size if required.
             if (_maxFaultSize != -1)
             {
@@ -133,9 +126,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             // Override the max received size if required.
             if (_maxReceivedMessageSize != -1)
             {
-                if (endpoint.Binding is BasicHttpBinding)
+                if (endpoint.Binding is BasicHttpBinding binding)
                 {
-                    ((BasicHttpBinding)endpoint.Binding).MaxReceivedMessageSize = _maxReceivedMessageSize;
+                    binding.MaxReceivedMessageSize = _maxReceivedMessageSize;
                 }
             }
         }
@@ -152,6 +145,22 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         public void AfterReceiveReply(ref Message reply, object correlationState)
         {
+            try
+            {
+                HttpResponseMessageProperty httpResponseMessage = null;
+                if (reply.Properties.TryGetValue(HttpResponseMessageProperty.Name, out object httpRequestMessageObject))
+                {
+                    httpResponseMessage = httpRequestMessageObject as HttpResponseMessageProperty;
+                }
+
+                if (httpResponseMessage != null && httpResponseMessage.Headers.Count > 0)
+                {
+                    var a = httpResponseMessage.Headers["Set-Cookie"];
+                    if (a != null)
+                        _callerCdsConnectionServiceHandler.CurrentCookieCollection = Utilities.GetAllCookiesFromHeader(httpResponseMessage.Headers["Set-Cookie"] , _callerCdsConnectionServiceHandler.CurrentCookieCollection);
+                }
+            }
+            finally { };
         }
 
         /// <summary/>
@@ -188,22 +197,22 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
 
             // Adding HTTP Headers
+            HttpRequestMessageProperty httpRequestMessage = null;
             object httpRequestMessageObject;
             if (request.Properties.TryGetValue(HttpRequestMessageProperty.Name, out httpRequestMessageObject))
             {
-                HttpRequestMessageProperty httpRequestMessage = httpRequestMessageObject as HttpRequestMessageProperty;
-                if (string.IsNullOrEmpty(httpRequestMessage.Headers[Utilities.RequestHeaders.USER_AGENT_HTTP_HEADER]))
-                {
-                    httpRequestMessage.Headers[Utilities.RequestHeaders.USER_AGENT_HTTP_HEADER] = _userAgent;
-                }
-                if (string.IsNullOrEmpty(httpRequestMessage.Headers[HttpRequestHeader.Connection]))
-                {
-                    httpRequestMessage.Headers.Add(HttpRequestHeader.Connection, Utilities.RequestHeaders.CONNECTION_KEEP_ALIVE);
-                }
-                if (OrganizationRequestId != Guid.Empty && string.IsNullOrEmpty(httpRequestMessage.Headers[Utilities.RequestHeaders.X_MS_CLIENT_REQUEST_ID]))
-                {
-                    httpRequestMessage.Headers[Utilities.RequestHeaders.X_MS_CLIENT_REQUEST_ID] = OrganizationRequestId.ToString();
-                }
+                httpRequestMessage = httpRequestMessageObject as HttpRequestMessageProperty;
+            }
+            else
+            {
+                httpRequestMessage = new HttpRequestMessageProperty();
+            }
+
+            if (httpRequestMessage != null)
+            {
+                httpRequestMessage.Headers[Utilities.RequestHeaders.USER_AGENT_HTTP_HEADER] = _userAgent;
+                httpRequestMessage.Headers.Add(HttpRequestHeader.Connection, Utilities.RequestHeaders.CONNECTION_KEEP_ALIVE);
+                httpRequestMessage.Headers[Utilities.RequestHeaders.X_MS_CLIENT_REQUEST_ID] = OrganizationRequestId.ToString();
                 if ((_callerCdsConnectionServiceHandler != null && (_callerCdsConnectionServiceHandler.SessionTrackingId.HasValue && _callerCdsConnectionServiceHandler.SessionTrackingId.Value != Guid.Empty)) && string.IsNullOrEmpty(httpRequestMessage.Headers[Utilities.RequestHeaders.X_MS_CLIENT_SESSION_ID]))
                 {
                     httpRequestMessage.Headers[Utilities.RequestHeaders.X_MS_CLIENT_SESSION_ID] = _callerCdsConnectionServiceHandler.SessionTrackingId.Value.ToString();
@@ -212,27 +221,16 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 {
                     httpRequestMessage.Headers[Utilities.RequestHeaders.FORCE_CONSISTENCY] = "Strong";
                 }
-            }
-            else
-            {
-                HttpRequestMessageProperty httpRequestMessage = new HttpRequestMessageProperty();
-                httpRequestMessage.Headers.Add(Utilities.RequestHeaders.USER_AGENT_HTTP_HEADER, _userAgent);
-                httpRequestMessage.Headers.Add(HttpRequestHeader.Connection, Utilities.RequestHeaders.CONNECTION_KEEP_ALIVE);
 
-                if (OrganizationRequestId != Guid.Empty)
+                if (_callerCdsConnectionServiceHandler.EnableCookieRelay)
                 {
-                    httpRequestMessage.Headers.Add(Utilities.RequestHeaders.X_MS_CLIENT_REQUEST_ID, OrganizationRequestId.ToString());
-                }
-                if (_callerCdsConnectionServiceHandler != null && (_callerCdsConnectionServiceHandler.SessionTrackingId.HasValue && _callerCdsConnectionServiceHandler.SessionTrackingId.Value != Guid.Empty))
-                {
-                    httpRequestMessage.Headers.Add(Utilities.RequestHeaders.X_MS_CLIENT_SESSION_ID, _callerCdsConnectionServiceHandler.SessionTrackingId.Value.ToString());
-                }
-                if ((_callerCdsConnectionServiceHandler != null && _callerCdsConnectionServiceHandler.ForceServerCacheConsistency && string.IsNullOrEmpty(httpRequestMessage.Headers[Utilities.RequestHeaders.FORCE_CONSISTENCY])))
-                {
-                    httpRequestMessage.Headers.Add(Utilities.RequestHeaders.FORCE_CONSISTENCY, "Strong");
+                    if (_callerCdsConnectionServiceHandler.CurrentCookieCollection != null)
+                        httpRequestMessage.Headers["Cookie"] = Utilities.GetCookiesFromCollectionAsString(_callerCdsConnectionServiceHandler.CurrentCookieCollection);
                 }
 
-                request.Properties.Add(HttpRequestMessageProperty.Name, httpRequestMessage);
+                AddExternalHeaders(httpRequestMessage);
+                if (httpRequestMessageObject == null)
+                    request.Properties.Add(HttpRequestMessageProperty.Name, httpRequestMessage);
             }
 
             // Adding SOAP headers
@@ -243,11 +241,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     callerId = _callerCdsConnectionServiceHandler.WebClient.CallerId;
             }
 
-            if (callerId == Guid.Empty) // Prefer the CRM Caller ID over hte AADObjectID.
+            if (callerId == Guid.Empty) // Prefer the Caller ID over the AADObjectID.
             {
                 if (_callerCdsConnectionServiceHandler != null && (_callerCdsConnectionServiceHandler.CallerAADObjectId.HasValue && _callerCdsConnectionServiceHandler.CallerAADObjectId.Value != Guid.Empty))
                 {
-                    // Add Caller ID to the SOAP Envolope.
+                    // Add Caller ID to the SOAP Envelope.
                     // Set a header request with the AAD Caller Object ID.
                     using (OperationContextScope scope = new OperationContextScope((IContextChannel)channel))
                     {
@@ -284,6 +282,34 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 }
             }
             return null;
+        }
+
+        private void AddExternalHeaders(HttpRequestMessageProperty httpRequestMessage)
+        {
+            if (_callerCdsConnectionServiceHandler.RequestAdditionalHeadersAsync != null)
+            {
+                try
+                {
+                    var addedHeaders = _callerCdsConnectionServiceHandler.RequestAdditionalHeadersAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+                    if (addedHeaders != null && addedHeaders.Count() > 0)
+                    {
+                        foreach (var hrdProp in addedHeaders)
+                        {
+                            // General handling from here on out.
+                            if (httpRequestMessage.Headers.AllKeys.Contains(hrdProp.Key))
+                            {
+                                httpRequestMessage.Headers.Add(hrdProp.Key, hrdProp.Value);
+                            }
+                            else
+                            {
+                                httpRequestMessage.Headers[hrdProp.Key] = hrdProp.Value;
+                            }
+                        }
+                        addedHeaders.Clear();
+                    }
+                }
+                finally { } // do nothing on header failure for now.
+            }
         }
     }
 }

@@ -1,0 +1,252 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="LOGIN_FRM_ASK_FOR_ORG" xml:space="preserve">
+    <value>Mostrar la lista de organizaciones disponibles</value>
+  </data>
+  <data name="LOGIN_FRM_AUTHTYPE_AD" xml:space="preserve">
+    <value>Active Directory</value>
+  </data>
+  <data name="LOGIN_FRM_AUTHTYPE_CONFIG_FILE_NAME" xml:space="preserve">
+    <value>HomeRealmsStore.xml</value>
+  </data>
+  <data name="LOGIN_FRM_AUTHTYPE_IFD" xml:space="preserve">
+    <value>Implementación con conexión a Internet (IFD)</value>
+  </data>
+  <data name="LOGIN_FRM_CANCEL_BTN" xml:space="preserve">
+    <value>_Cancelar</value>
+    <comment>shortcut key is "alt+c"</comment>
+  </data>
+  <data name="LOGIN_FRM_CONNECTSTATUS" xml:space="preserve">
+    <value>Estado de conexión</value>
+  </data>
+  <data name="LOGIN_FRM_CRM_AUTH_SOURCE" xml:space="preserve">
+    <value>Origen de autenticación:</value>
+  </data>
+  <data name="LOGIN_FRM_CRM_PREM_NAME" xml:space="preserve">
+    <value>Local</value>
+  </data>
+  <data name="LOGIN_FRM_DEPLOYMENT_O365" xml:space="preserve">
+    <value>Office 365</value>
+  </data>
+  <data name="LOGIN_FRM_DEPLOYMENT_ONLINE" xml:space="preserve">
+    <value>OnLine</value>
+  </data>
+  <data name="LOGIN_FRM_DEPLOYMENT_PREM" xml:space="preserve">
+    <value>Local</value>
+  </data>
+  <data name="LOGIN_FRM_DEPLOYMENT_TYPE" xml:space="preserve">
+    <value>Tipo de implementación:</value>
+  </data>
+  <data name="LOGIN_FRM_DOMAIN" xml:space="preserve">
+    <value>Dominio</value>
+  </data>
+  <data name="LOGIN_FRM_ERR_FIRST" xml:space="preserve">
+    <value>Error al procesar la solicitud de inicio de sesión. </value>
+  </data>
+  <data name="LOGIN_FRM_ERR_SECOND" xml:space="preserve">
+    <value>Ver registro de errores</value>
+  </data>
+  <data name="LOGIN_FRM_GROUP_TITLE" xml:space="preserve">
+    <value>Inicio de sesión al escritorio del agente</value>
+  </data>
+  <data name="LOGIN_FRM_LOGIN_BTN" xml:space="preserve">
+    <value>_Iniciar sesión</value>
+    <comment>shortcut key is "alt+l"</comment>
+  </data>
+  <data name="LOGIN_FRM_LOGIN_LBL" xml:space="preserve">
+    <value>Iniciar sesión</value>
+  </data>
+  <data name="LOGIN_FRM_MULT_ORG" xml:space="preserve">
+    <value>Hay varias organizaciones de CDS disponibles. Elija la organización CDS a la que desea conectarse.</value>
+  </data>
+  <data name="LOGIN_FRM_ONLINE_REGION" xml:space="preserve">
+    <value>Región en línea</value>
+  </data>
+  <data name="LOGIN_FRM_ORG_HEADER" xml:space="preserve">
+    <value>Nombre de la organización</value>
+  </data>
+  <data name="LOGIN_FRM_PASSWORD" xml:space="preserve">
+    <value>Contraseña</value>
+  </data>
+  <data name="LOGIN_FRM_REG_HEADER" xml:space="preserve">
+    <value>Región CRM</value>
+  </data>
+  <data name="LOGIN_FRM_RETRIEVE" xml:space="preserve">
+    <value>Recuperando organizaciones de CDS</value>
+  </data>
+  <data name="LOGIN_FRM_RETRIEVE_DEF" xml:space="preserve">
+    <value>Iniciar sesión en la organización predeterminada ({0})</value>
+    <comment>{NumberedPlaceholder="{0}"} Placeholder 0 is the organization name.</comment>
+  </data>
+  <data name="LOGIN_FRM_SERVERNAME" xml:space="preserve">
+    <value>Servidor</value>
+  </data>
+  <data name="LOGIN_FRM_SERVERORG" xml:space="preserve">
+    <value>Organización de CDS</value>
+  </data>
+  <data name="LOGIN_FRM_SERVERPORT" xml:space="preserve">
+    <value>Puerto</value>
+  </data>
+  <data name="LOGIN_FRM_TITLE" xml:space="preserve">
+    <value>Inicio de sesión de CDS</value>
+  </data>
+  <data name="LOGIN_FRM_USERNAME" xml:space="preserve">
+    <value>Nombre de usuario</value>
+  </data>
+  <data name="LOGIN_FRM_USE_DEF_CREDS" xml:space="preserve">
+    <value>Iniciar sesión como el usuario actual</value>
+  </data>
+  <data name="LOGIN_FRM_USE_SSL" xml:space="preserve">
+    <value>Usar SSL</value>
+  </data>
+  <data name="ERROR_LOGIN_REQUEST" xml:space="preserve">
+    <value>No se pudo establecer la conexión a CDS. Compruebe el nombre del servidor y las credenciales de inicio de sesión. Consulte el archivo de registro para conocer más detalles.</value>
+  </data>
+  <data name="ERROR_DETAILS" xml:space="preserve">
+    <value>Detalles del error</value>
+  </data>
+  <data name="TITLE" xml:space="preserve">
+    <value>Ventana de error</value>
+  </data>
+  <data name="LOGIN_FRM_ADVANCED" xml:space="preserve">
+    <value>Mostrar opciones avanzadas</value>
+  </data>
+  <data name="LOGIN_FRM_AUTHTYPE_OAUTH" xml:space="preserve">
+    <value>OAuth</value>
+  </data>
+  <data name="LOGIN_FRM_GB_HEADER" xml:space="preserve">
+    <value>Opciones avanzadas</value>
+  </data>
+  <data name="INSTANCEURLCAPTURE_OKBTN" xml:space="preserve">
+    <value>Aceptar</value>
+  </data>
+  <data name="INSTANCEURLCAPTURE_TITLE" xml:space="preserve">
+    <value>Escriba la dirección url de la instancia de la organización</value>
+  </data>
+  <data name="INSTANCEURLCAPTURE_URL_Error" xml:space="preserve">
+    <value>La dirección url especificada no es válida o no tiene el formato correcto</value>
+  </data>
+  <data name="INSTANCEURLCAPTURE_URL_Example" xml:space="preserve">
+    <value>Ejemplo: https://orgname.crm.dynamics.com</value>
+  </data>
+  <data name="INSTANCEURLCAPTURE_URL_LABLE" xml:space="preserve">
+    <value>Dirección Url de la instancia:</value>
+  </data>
+</root>

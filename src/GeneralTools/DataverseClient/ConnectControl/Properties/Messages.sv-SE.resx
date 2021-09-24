@@ -1,0 +1,216 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="CRMCONNECT_ERR_ACCESS" xml:space="preserve">
+    <value>Fel vid begäran av organisationer från identifieringsservern</value>
+  </data>
+  <data name="CRMCONNECT_ERR_MULTIORG" xml:space="preserve">
+    <value>Användaråtgärd krävs</value>
+  </data>
+  <data name="CRMCONNECT_ERR_UNEXPECTED_STATUS" xml:space="preserve">
+    <value>Händelsen Oväntad status</value>
+  </data>
+  <data name="CRMCONNECT_LOGIN_FAILED_TO_GENERATE_LIVE_DEVICEFILE" xml:space="preserve">
+    <value>Det går inte att skapa en liveregistreringsfil. Vänta några minuter och försök igen.</value>
+  </data>
+  <data name="CRMCONNECT_LOGIN_NO_ORGS_FOUND_ONLINE" xml:space="preserve">
+    <value>Du har inte behörighet för åtkomst till någon av organisationerna i den Microsoft Common Data Service-region som du angett. Om du inte är säker på vilken region din organisation hör till kan du välja "Vet inte" som CDS-region och försöka igen. Annars kan du fråga CDS-administratören.</value>
+  </data>
+  <data name="CRMCONNECT_LOGIN_NO_ORGS_FOUND_PREM" xml:space="preserve">
+    <value>Du har inte åtkomstbehörighet till någon av organisationerna på den Microsoft Dynamics CRM-server som du angett. Be din CRM-administratör om hjälp.</value>
+  </data>
+  <data name="CRMCONNECT_LOGIN_PROCESS_CONNECT_TO_UII" xml:space="preserve">
+    <value>Ansluter till Microsoft Common Data Service…</value>
+  </data>
+  <data name="CRMCONNECT_LOGIN_PROCESS_CONNNECTING" xml:space="preserve">
+    <value>Verifierar anslutningen till Microsoft Common Data Service...</value>
+  </data>
+  <data name="CRMCONNECT_LOGIN_PROCESS_GET_ORGS" xml:space="preserve">
+    <value>Hämtar organisationer från Microsoft Common Data Service…</value>
+  </data>
+  <data name="CRMCONNECT_LOGIN_PROCESS_GET_ORGS_LIVE" xml:space="preserve">
+    <value>Hämtar organisationer från Microsoft Common Data Service - {0}...</value>
+    <comment>{NumberedPlaceholder="{0}"} Placeholder 0 is the Organization name.</comment>
+  </data>
+  <data name="CRMCONNECT_LOGIN_PROCESS_INIT_UII_CONNECTION" xml:space="preserve">
+    <value>Initierar anslutningar till Microsoft Common Data Service…</value>
+  </data>
+  <data name="CRMCONNECT_LOGIN_PROCESS_WAIT_TEXT" xml:space="preserve">
+    <value>Vänta...</value>
+  </data>
+  <data name="CRMCONNECT_LOGIN_UNABLE_TO_CONNECT_GENERAL" xml:space="preserve">
+    <value>Kan inte ansluta till Microsoft Common Data Service - {0}.</value>
+    <comment>{NumberedPlaceholder="{0}"} Placeholder 0 is the Organization name.</comment>
+  </data>
+  <data name="CRMCONNECT_LOGIN_VALIDATION_ERR_AUTHTYPE" xml:space="preserve">
+    <value>Autentiseringstypen måste anges.</value>
+  </data>
+  <data name="CRMCONNECT_LOGIN_VALIDATION_ERR_AUTHTYPE_MSG" xml:space="preserve">
+    <value>Ange autentiseringstyp.</value>
+  </data>
+  <data name="CRMCONNECT_LOGIN_VALIDATION_ERR_LOGINTYPE" xml:space="preserve">
+    <value>Inloggningstypen och autentiseringsuppgifterna är inte giltiga.</value>
+  </data>
+  <data name="CRMCONNECT_LOGIN_VALIDATION_ERR_LOGINTYPE_INCOMPATIBLE_LOGIN_TYPE" xml:space="preserve">
+    <value>Standardautentiseringsuppgifter kan bara användas med Active Directory och installation mot Internet. Välj en lämplig autentiseringstyp eller ange autentiseringsuppgifter.</value>
+  </data>
+  <data name="CRMCONNECT_LOGIN_VALIDATION_ERR_PASSWORD" xml:space="preserve">
+    <value>Ett lösenord krävs.</value>
+  </data>
+  <data name="CRMCONNECT_LOGIN_VALIDATION_ERR_PASSWORD_MSG" xml:space="preserve">
+    <value>Ange ett lösenord.</value>
+  </data>
+  <data name="CRMCONNECT_LOGIN_VALIDATION_ERR_SERVER" xml:space="preserve">
+    <value>Ett CDS-servernamn krävs.</value>
+  </data>
+  <data name="CRMCONNECT_LOGIN_VALIDATION_ERR_SERVER_MSG" xml:space="preserve">
+    <value>Ange en CDS-server att ansluta till.</value>
+  </data>
+  <data name="CRMCONNECT_LOGIN_VALIDATION_ERR_USERID" xml:space="preserve">
+    <value>Ett användarnamn krävs.</value>
+  </data>
+  <data name="CRMCONNECT_LOGIN_VALIDATION_ERR_USERID_MSG" xml:space="preserve">
+    <value>Ange ett användarnamn.</value>
+  </data>
+  <data name="CRMCONNECT_MSG_EMPTY_LOGIN_DETAILS" xml:space="preserve">
+    <value>Du har inte behörighet att använda programmet. Kontakta administratören för att få behörighet.</value>
+  </data>
+  <data name="CRMCONNECT_MSG_INVALID_LOGIN_DETAILS" xml:space="preserve">
+    <value>Du har inte konfigurerat dina säkerhetsinställningar korrekt. Kontakta administratören för att uppdatera dina säkerhetsinställningar.</value>
+  </data>
+  <data name="CRMCONNECT_MSG_INVALID_LOGIN_DETAILS_PARAMS" xml:space="preserve">
+    <value>Du har inte konfigurerat dina säkerhetsinställningar korrekt. Kontakta administratören för att uppdatera dina säkerhetsinställningar.\n{0}</value>
+    <comment>{NumberedPlaceholder="{0}"} Placeholder 0 is the login parameter values.</comment>
+  </data>
+  <data name="CRMCONNECT_MSG_LOGIN_FAILURE" xml:space="preserve">
+    <value>Ett fel uppstod vid inloggning på servern. Försök igen senare.</value>
+  </data>
+  <data name="CRMCONNECT_MSG_WEBSERVICE_CLIENT_MISCONFIGURED" xml:space="preserve">
+    <value>Det går inte att logga in - klienten har inte konfigurerats korrekt. Kontakta CDS-administratören.</value>
+  </data>
+  <data name="CRMCONNECT_NOORG_SEL" xml:space="preserve">
+    <value>Du måste välja en CDS-miljö för att kunna fortsätta.</value>
+  </data>
+  <data name="CRMCONNECT_PROFILENAME_INVALID" xml:space="preserve">
+    <value>Profilnamnet är inte giltigt.</value>
+  </data>
+  <data name="CRMCONNECT_SERVER_CONNECT_GOOD" xml:space="preserve">
+    <value>Anslutningen till Microsoft Common Data Service är upprättad</value>
+  </data>
+</root>

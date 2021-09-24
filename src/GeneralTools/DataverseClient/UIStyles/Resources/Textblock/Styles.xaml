@@ -1,0 +1,68 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+					xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+					xmlns:uistyles="clr-namespace:Microsoft.PowerPlatform.Dataverse.Ui.Styles.Resources">
+	<ResourceDictionary.MergedDictionaries>
+        <uistyles:ThemeResources NormalModeResourcesPath="/Microsoft.PowerPlatform.Dataverse.Ui.Styles;component/Resources/Textblock/BrushResourcesNormalMode.xaml"
+								 HCModeResourcesPath="/Microsoft.PowerPlatform.Dataverse.Ui.Styles;component/Resources/Textblock/BrushResourcesHCMode.xaml"/>
+	</ResourceDictionary.MergedDictionaries>
+    <Style x:Key="TextBoxUSDTabStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource TextblockForegroundBrush}"/>
+        <Setter Property="FontWeight" Value="{Binding Path=FontWeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type TextBlock}}}"/>
+    </Style>
+    <Style x:Key="BaseFontStyle">
+		<Setter Property="Control.Foreground" Value="{DynamicResource TextblockForegroundBrush}"/>
+		<Setter Property="Control.FontFamily" Value="Segoe UI"/>
+	</Style>
+	<Style x:Key="TextBlockBaseStyle" TargetType="TextBlock" BasedOn="{StaticResource BaseFontStyle}">
+		<Setter Property="TextWrapping" Value="Wrap"/>
+		<Setter Property="TextTrimming" Value="WordEllipsis"/>
+	</Style>
+	<Style x:Key="TextBlockMessageStyle" BasedOn="{StaticResource TextBlockBaseStyle}" TargetType="TextBlock">
+		<Setter Property="FontSize" Value="12"/>
+	</Style>
+	<Style x:Key="TextBlockPageHeaderStyle" BasedOn="{StaticResource TextBlockBaseStyle}" TargetType="TextBlock">
+		<Setter Property="FontSize" Value="18"/>
+	</Style>
+	<Style x:Key="TextBlockWelcomePageHeaderStyle" BasedOn="{StaticResource TextBlockBaseStyle}" TargetType="TextBlock">
+		<Setter Property="FontSize" Value="15"/>
+		<Setter Property="VerticalAlignment" Value="Center"/>
+		<Setter Property="Margin" Value="5"/>
+	</Style>
+	<Style x:Key="TextBlockWelcomePageTitleStyle" BasedOn="{StaticResource TextBlockBaseStyle}" TargetType="TextBlock">
+		<Setter Property="FontSize" Value="38"/>
+		<Setter Property="Foreground" Value="{DynamicResource TextblockWelcomePagetitle}"/>
+		<Setter Property="HorizontalAlignment" Value="Center"/>
+		<Setter Property="VerticalAlignment" Value="Center"/>
+		<Setter Property="Margin" Value="0,0,0,0"/>
+	</Style>
+	<Style x:Key="TextBlockWelcomePageDescriptionStyle" BasedOn="{StaticResource TextBlockBaseStyle}" TargetType="TextBlock">
+		<Setter Property="FontSize" Value="12"/>
+		<Setter Property="Margin" Value="0,20,0,0"/>
+		<Setter Property="MaxWidth" Value="500"/>
+		<Setter Property="MaxHeight" Value="150"/>
+		<Setter Property="HorizontalAlignment" Value="Center"/>
+		<Setter Property="TextTrimming" Value="None"/>
+	</Style>
+	<Style x:Key="SplashScreenDefaultFontStyle" BasedOn="{StaticResource TextBlockBaseStyle}" TargetType="TextBlock">
+		<Setter Property="FontSize" Value="12px"/>
+		<Setter Property="Foreground" Value="{DynamicResource TextblockSplashScreenFontBrush}"/>
+	</Style>
+	<Style x:Key="SplashDefaultCloseStyle" TargetType="TextBlock">
+		<Setter Property="Foreground" Value="{DynamicResource TextblockForeGroundCloseStyle}"/>
+	</Style>
+	<Style x:Key="FormAppNameLabelStyle" TargetType="TextBlock">
+		<Setter Property="Foreground" Value="{DynamicResource TextblockWelcomePagetitle}"></Setter>
+		<Setter Property="FontFamily" Value="Segoe UI"></Setter>
+		<Setter Property="FontSize" Value="30"></Setter>
+	</Style>
+	<Style x:Key="ListViewItemOnSelectedandOnMouseTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BaseFontStyle}">
+		<Style.Triggers>
+			<DataTrigger Binding="{Binding Path=IsSelected, RelativeSource={RelativeSource AncestorType={x:Type ListViewItem}}}" Value="True">
+				<Setter  Property="Foreground" Value="{DynamicResource TextblocklstviewItenTxtonOverStyle}" />
+			</DataTrigger>
+			<DataTrigger Binding="{Binding Path=IsMouseOver, RelativeSource={RelativeSource AncestorType={x:Type ListViewItem}}}" Value="True">
+				<Setter  Property="Foreground" Value="{DynamicResource TextblocklstviewItenTxtonOverStyle}" />
+			</DataTrigger>
+		</Style.Triggers>
+	</Style>
+</ResourceDictionary>

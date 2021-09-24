@@ -1,0 +1,9 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <SolidColorBrush x:Key="ToolBarFontColor" Color="{x:Static SystemColors.WindowTextColor}"/>
+    <SolidColorBrush x:Key="AirThemeColor" Color="{x:Static SystemColors.HighlightColor}"/>
+    <SolidColorBrush x:Key="ToolBarDropDownGoementryStrokeBrush" Color="{x:Static SystemColors.WindowTextColor}"/>
+    <SolidColorBrush x:Key="ToolBarTextFontHighlightColor" Color="{x:Static SystemColors.HighlightTextColor}"/>
+    <SolidColorBrush x:Key="ToolBarAgentScriptAnswerHighlightColor" Color="{x:Static SystemColors.HighlightTextColor}"/>
+</ResourceDictionary>

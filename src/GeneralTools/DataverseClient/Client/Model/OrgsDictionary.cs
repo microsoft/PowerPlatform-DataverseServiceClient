@@ -10,7 +10,7 @@ using Microsoft.Xrm.Sdk.Discovery;
 namespace Microsoft.PowerPlatform.Dataverse.Client.Model
 {
 	/// <summary>
-	/// Describes a Single Organization returned from a CRM Discovery server
+	/// Describes a Single Organization returned from a Discovery server
 	/// </summary>
 	public sealed class OrgByServer : INotifyPropertyChanged
 	{
@@ -21,22 +21,22 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Model
 
 
 		/// <summary>
-		/// This is the display name for the organization that a user sees when working in CRM
+		/// This is the display name for the organization that a user sees when working in Dataverse
 		/// </summary>
 		public string FriendlyName { get { return _OrgDetail != null ? _OrgDetail.FriendlyName : string.Empty; } }
 
 		/// <summary>
-		/// This is the actual name for the organization in CRM, and is required to connect to CRM
+		/// This is the actual name for the organization in Dataverse, and is required to connect to Dataverse
 		/// </summary>
 		public string UniqueOrgName { get { return _OrgDetail != null ? _OrgDetail.UniqueName : string.Empty; } }
 
 		/// <summary>
-		/// This is the actual name for the organization in CRM, and is required to connect to CRM
+		/// This is the actual name for the organization in Dataverse, and is required to connect to Dataverse
 		/// </summary>
 		public string UrlHostName { get { return _OrgDetail != null ? _OrgDetail.UrlName : string.Empty; } }
 
 		/// <summary>
-		/// This is the details of the Organization, returned directly from CRM
+		/// This is the details of the Organization, returned directly from Dataverse
 		/// </summary>
 		public OrganizationDetail OrgDetail { get { return _OrgDetail; } set { if (value != _OrgDetail) _OrgDetail = value; NotifyPropertyChanged("OrdDetail"); } }
 
@@ -90,7 +90,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Model
 		public ObservableCollection<OrgByServer> OrgsList { get { return _orgsList; } internal set { if (value != _orgsList) _orgsList = value; NotifyPropertyChanged("OrgsList"); } }
 
 		/// <summary>
-		/// Container for CRM Orgs List. 
+		/// Container for Dataverse Orgs List. 
 		/// </summary>
 		public OrgList()
 		{ }

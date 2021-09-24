@@ -10,6 +10,10 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Xunit;
 using System.Net.Http;
+using Xunit.Abstractions;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using DataverseClient_Core_UnitTests;
 
 namespace Client_Core_UnitTests
 {
@@ -17,6 +21,24 @@ namespace Client_Core_UnitTests
     {
         TestSupport testSupport = new TestSupport();
 
+        public ClientDynamicsExtensionsTests(ITestOutputHelper output)
+        {
+            IConfiguration config = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .Build();
+
+
+
+            ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+                    builder.AddConsole(options =>
+                    {
+                        options.IncludeScopes = true;
+                        options.TimestampFormat = "hh:mm:ss ";
+                    })
+                    .AddConfiguration(config.GetSection("Logging"))
+                    .AddProvider(new TraceConsoleLoggingProvider(output)));
+            testSupport.logger = loggerFactory.CreateLogger<ClientDynamicsExtensionsTests>();
+        }
 
         [Fact]
         public void CloseQuoteTest()

@@ -8,9 +8,37 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+***** Breaking Changes *****
+Removed the constructor:
+    public ServiceClient(OrganizationWebProxyClient externalOrgWebProxyClient, ILogger logger = null)
+        Removed as we are refactoring how we will accept an external created client for internal use cases.
+Contract change:
+    Added Support to set token file storage location back to connection string and constructors supporting User Authentication.
+    Modified DiscoverOrganizationsAsync to return a new return object called DiscoverOrganizationsResult
+    Modified Exception type thrown when external authentication fail to return DataverseOperationExecption vs general exception.
+
+Updates:
+Accepted suggestion to Updated logic to detect SDK runtime version for client.  Thanks to GitHub user 0xced
+Updated behavior of Token refresh to reduce cache hits, Optimized token lookup for cache hits over network calls.
+Added Handlers to support timeouts from AAD Token service. (GIT #148)
+Added InMemory Token Cache system for S2S flows. (GIT #144)
+    This pulls a new dependency on Microsoft.Extensions.Caching.Memory, min version 5.0.0
+Added FileToken Storage Provider back into Client - works for User Access flows only... Does not work for S2S accounts.
+Added configuration override support for setting MSAL Token Acquire Timeout, Retry Count, and MSALPIILogger
+    MSAL Token Timeout control : appsetting = MSALRequestTimeoutOverride,  default is 30 seconds.
+    MSAL Token Acquire retry count: appsetting = MSALRequestRetryCountOverride, default is 3.
+    MSAL Allow PII in Log data: appsetting = MSALLogPII, default is false
+Updated Async Implementation older SDK flow ( non-OData ) which should improve thread support. (Git #146)
+Updated Internal interaction behaviors for communication to Dataverse Server
+    Added temp properties to allow for field control of this if the behavior does not work as intended. 
+Fixed an issue where an Guid.Empty Session ID was set the server.
+Fixed an issue where Create and Update Operations would not properly respect API allowed fields for create or update. (Git #163)
+Fixed an issue where logical name was being used instead of Schema name for Activity parties (Git #166)
+
+0.4.20:
 Fixed Connection Creation "Hang" behavior that could occur when trying to create a Dataverse Service Client inside a thread.
 Fixed an issue with ILogger not propagating correctly when used with connection string flows.
-Fixed an issue when attempting to Null a lookup that would cause a Microsoft.OData.ODataException: Does not support untyped value in non-open type error 
+Fixed an issue when attempting to Null a lookup that would cause a Microsoft.OData.ODataException: Does not support untyped value in non-open type error
 Changed the behavior of Update message to be consistent with Organization Service Update behavior instead of an Upsert behavior.
 Added compensating code to deal with a null ref issue when logging which could cause a client crash.
 Added optional WebAPI support during login and solution import & export operations
@@ -18,22 +46,22 @@ Refactored ServiceClient and ConnectionService
 
 0.4.19:
 Updated behavior of ImportSolutionAsync to leverage updated Dataverse behavior post 9.2 release.
-Updated Display name for Northamerica 2 Region to reflect that it is more commonly know as GCC. 
+Updated Display name for Northamerica 2 Region to reflect that it is more commonly know as GCC.
 Updated Newtonsoft.Json to v11.0.2 to match server.
-Fixed an issue with ActivityParty when using an Entity Array vs an EntityCollection for ActivityParties 
+Fixed an issue with ActivityParty when using an Entity Array vs an EntityCollection for ActivityParties
 
 0.4.12:
 Fixed an issue raised when updating some entities\attributes values to null.
-Fixed and issue with DataTime formatting for Timezone independent, Timezone specific, and 'normal' DateTime types. 
+Fixed and issue with DataTime formatting for Timezone independent, Timezone specific, and 'normal' DateTime types.
 Update for Current Dataverse System Messages.
 
 0.4.11:
 Update for Current Dataverse System Messages.
 Fixed an issue where authentication could fail during throttling due to token not being refreshed on retry.
 Adding Exception behaviors for all Metadata Operations.
-Adding EnableAffinityCookie to allow for override of Affinity behavior when interacting with Dataverse. 
+Adding EnableAffinityCookie to allow for override of Affinity behavior when interacting with Dataverse.
     In general, users should not manipulate this property. more details can be found here: https://docs.microsoft.com/en-us/powerapps/developer/data-platform/api-limits#remove-the-affinity-cookie
-Adding support for enhanced features for solution import. 
+Adding support for enhanced features for solution import.
 
 0.4.6:
 Exposing ILogger support on all constructors and Static API commands.

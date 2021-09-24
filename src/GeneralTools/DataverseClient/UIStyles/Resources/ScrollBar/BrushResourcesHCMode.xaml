@@ -1,0 +1,10 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="ScrollBarBackgroundBrush" Color="{x:Static SystemColors.WindowColor}"/>
+    <SolidColorBrush x:Key="ScrollBarBorderBrush" Color="{x:Static SystemColors.ActiveBorderColor}"/>
+    <SolidColorBrush x:Key="ScrollBarCommandForegroundBrush" Color="{x:Static SystemColors.WindowColor}"/>
+    <SolidColorBrush x:Key="ScrollBarIspressedBackgroundBrush" Color="{x:Static SystemColors.WindowColor}"/>
+    <SolidColorBrush x:Key="ScroolBarDisabledForegroundBrush" Color="{x:Static SystemColors.WindowTextColor}"/>
+    <SolidColorBrush x:Key="ScrollBarVerticalBackgroundBrush" Color="{x:Static SystemColors.WindowColor}"/>
+    <SolidColorBrush x:Key="ScrollBarVerticalForegroundBrush" Color="{x:Static SystemColors.WindowTextColor}"/>
+</ResourceDictionary>

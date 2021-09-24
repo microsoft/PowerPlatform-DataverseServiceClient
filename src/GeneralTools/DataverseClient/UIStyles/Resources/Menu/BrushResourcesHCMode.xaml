@@ -1,0 +1,12 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="MenuBackGroundColor" Color="{x:Static SystemColors.WindowColor}"/>
+    <SolidColorBrush x:Key="MenuBorderBrushColor" Color="{x:Static SystemColors.ActiveBorderColor}"/>
+    <SolidColorBrush x:Key="MenuPathcolor" Color="{x:Static SystemColors.WindowColor}"/>
+    <SolidColorBrush x:Key="MenuBorderIsHighLightedBackgroundColor" Color="{x:Static SystemColors.WindowColor}"/>
+    <SolidColorBrush x:Key="MenuBorderIsHighLightedForeGroundColor" Color="{x:Static SystemColors.ActiveBorderColor}"/>
+    <SolidColorBrush x:Key="MenuGridForeGround" Color="{x:Static SystemColors.WindowTextColor}"/>
+    <SolidColorBrush x:Key="MenuBackgroundBorderonovercolor" Color="{x:Static SystemColors.HighlightColor}"/>
+    <SolidColorBrush x:Key="MenuDisabledForeGround" Color="{x:Static SystemColors.WindowTextColor}"/>
+    <SolidColorBrush x:Key="MenucheckMarkColor" Color="{x:Static SystemColors.ActiveBorderColor}"/>
+</ResourceDictionary>

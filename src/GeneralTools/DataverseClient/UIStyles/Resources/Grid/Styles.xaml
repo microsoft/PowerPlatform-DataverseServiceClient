@@ -1,0 +1,11 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+					xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+						 xmlns:uistyles="clr-namespace:Microsoft.PowerPlatform.Dataverse.Ui.Styles.Resources">
+	<ResourceDictionary.MergedDictionaries>
+        <uistyles:ThemeResources NormalModeResourcesPath="/Microsoft.PowerPlatform.Dataverse.Ui.Styles;component/Resources/Grid/BrushResourcesNormalMode.xaml"
+								 HCModeResourcesPath="/Microsoft.PowerPlatform.Dataverse.Ui.Styles;component/Resources/Grid/BrushResourcesHCMode.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+	<Style x:Key="SplashGridBgColor" TargetType="Grid">
+		<Setter Property="Background" Value="{DynamicResource GridBackgroundBrush}"></Setter>
+	</Style>
+</ResourceDictionary>

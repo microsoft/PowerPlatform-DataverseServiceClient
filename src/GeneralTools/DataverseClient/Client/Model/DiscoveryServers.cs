@@ -15,17 +15,17 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Model
 	public class DiscoveryServers : INotifyPropertyChanged , IDisposable
 	{
 		/// <summary>
-		/// CRM Log entry 
+		/// Log entry 
 		/// </summary>
 		DataverseTraceLogger logger = null;
 
 		/// <summary>
-		/// Contains the list of Office 365 CRM enabled Discovery Servers 
+		/// Contains the list of Online Discovery Servers 
 		/// </summary>
 		private ObservableCollection<DiscoveryServer> _OSDPServers = new ObservableCollection<DiscoveryServer>();
 
 		/// <summary>
-		/// Public Property to Access Office 365 discovery servers 
+		/// Public Property to discovery servers 
 		/// </summary>
 		public ObservableCollection<DiscoveryServer> OSDPServers { get { return _OSDPServers; } set { if (value != _OSDPServers) _OSDPServers = value; NotifyPropertyChanged("OSDPServers"); } }
 

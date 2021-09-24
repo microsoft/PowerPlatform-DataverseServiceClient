@@ -1,0 +1,34 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+					xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+	<SolidColorBrush x:Key="ListviewItemBorderBrush" Color="#bdbdbd"/>
+	<SolidColorBrush x:Key="ListviewItemBorderForegroundBrush" Color="#262626"/>
+	<SolidColorBrush x:Key="ListViewItemBackGroundBrush" Color="White"/>
+	<SolidColorBrush x:Key="listViewItemDisabledForeGroundBrush" Color="#d8d8d8"/>
+	<SolidColorBrush x:Key="ListViewItemOnOverTextBackgroundColor" Color="#b1d6f0"/>
+	<SolidColorBrush x:Key="listViewItemOnOverForeGroundColor" Color="#444444"/>
+	<SolidColorBrush x:Key="ListViewItemDisabledBackGroundBrush" Color="White"/>
+
+	<LinearGradientBrush x:Key="ListViewColumnThumbBrush" EndPoint="0.5,1" StartPoint="0.5,0">
+		<GradientStop Color="#d8d8d8" Offset="0.0" />
+		<GradientStop Color="#d8d8d8" Offset="1.0" />
+	</LinearGradientBrush>
+
+	<LinearGradientBrush x:Key="ListViewColumnHeaderBorderBrush" StartPoint="0,0" EndPoint="0,1">
+		<LinearGradientBrush.GradientStops>
+			<GradientStopCollection>
+				<GradientStop Color="#d8d8d8" Offset="0.0" />
+				<GradientStop Color="#d8d8d8" Offset="1.0" />
+			</GradientStopCollection>
+		</LinearGradientBrush.GradientStops>
+	</LinearGradientBrush>
+
+	<LinearGradientBrush x:Key="ListViewColumnHeaderBackgroundBrush" StartPoint="0,0" EndPoint="0,1">
+		<LinearGradientBrush.GradientStops>
+			<GradientStopCollection>
+				<GradientStop Color="White" Offset="0.0" />
+				<GradientStop Color="White" Offset="1.0" />
+			</GradientStopCollection>
+		</LinearGradientBrush.GradientStops>
+	</LinearGradientBrush>
+</ResourceDictionary>

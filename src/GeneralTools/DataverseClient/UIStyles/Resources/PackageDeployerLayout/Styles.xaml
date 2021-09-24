@@ -1,0 +1,32 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style x:Key="LayoutGridHeaderRow" TargetType="RowDefinition">
+        <Setter Property="Height" Value="35"/>        
+    </Style>
+    <Style x:Key="LayoutGridMiddleRow" TargetType="RowDefinition">
+        <Setter Property="Height" Value="*"/>
+    </Style>
+
+    <Style x:Key="LayoutGridNavigationRow" TargetType="RowDefinition">
+        <Setter Property="Height" Value="51"/>
+    </Style>
+    
+    <Style x:Key="NavigationPanelStyle" TargetType="WrapPanel">
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="25,0,25,0"/>
+        <!--<Setter Property="Orientation" Value="Horizontal"/>-->
+    </Style>
+    <Style x:Key="HeaderPanelStyle" TargetType="StackPanel">
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="25,0,25,0"/>
+        <!--<Setter Property="Orientation" Value="Horizontal"/>-->
+    </Style>
+	<Style x:Key="ViewPanelHeaderFirstRowStyle" TargetType="RowDefinition">
+		<Setter Property="Height" Value="0.100*"/>
+	</Style>
+	<Style x:Key="ViewPanelHeadersecondRowStyle" TargetType="RowDefinition">
+		<Setter Property="Height" Value="*"/>
+	</Style>
+</ResourceDictionary>

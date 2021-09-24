@@ -101,7 +101,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
 		#region Properties
 		/// <summary>
-		/// Last Error from CRM
+		/// Last Error from Dataverse
 		/// </summary>
 		public string LastError
 		{
@@ -109,7 +109,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			set { _lastError = value; }
 		}
 		/// <summary>
-		/// Last Exception from CRM
+		/// Last Exception from Dataverse
 		/// </summary>
 		public Exception LastException
 		{
