@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <ComponentAreaName>DataverseConnectControl</ComponentAreaName>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Microsoft.PowerPlatform.Dataverse.WebResourceUtility</RootNamespace>
+    <AssemblyName>Microsoft.PowerPlatform.Dataverse.WebResourceUtility</AssemblyName>
+    <SignAssembly>true</SignAssembly>
+    <RuntimeIdentifier>win</RuntimeIdentifier>
+  </PropertyGroup>
+  <Import Project="..\..\..\Build.Common.StandardAndLegacy.props" />
+  <PropertyGroup>
+    <TargetFrameworks>$(DotNetClassicTargetFrameworks)</TargetFrameworks>
+    <DocumentationFile>$(OutDir)\Microsoft.PowerPlatform.Dataverse.WebResourceUtility.xml</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Client\Microsoft.PowerPlatform.Dataverse.Client.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+  </ItemGroup>
+</Project>

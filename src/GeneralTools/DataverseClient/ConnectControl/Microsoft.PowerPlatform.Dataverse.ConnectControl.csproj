@@ -1,0 +1,90 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <ComponentAreaName>DataverseConnectControl</ComponentAreaName>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Microsoft.PowerPlatform.Dataverse.ConnectControl</RootNamespace>
+    <AssemblyName>Microsoft.PowerPlatform.Dataverse.ConnectControl</AssemblyName>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <Import Project="..\..\..\Build.Common.StandardAndLegacy.props" />
+  <PropertyGroup>
+    <TargetFrameworks>$(DotNetClassicTargetFrameworks)</TargetFrameworks>
+    <DocumentationFile>$(OutDir)\Microsoft.PowerPlatform.Dataverse.CrmConnectControl.xml</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="$(PackageVersion_Adal)" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="ServerLoginControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ErrorWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="IndeterminateProgressBar.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="InstanceUrlCapture.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SelectOrgDlg.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Styles\BrushResourcesHCMode.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\BrushResourcesNormalMode.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Fonts\segoeui.ttf" />
+    <Resource Include="Fonts\segoeuib.ttf" />
+    <Resource Include="Fonts\segoeuii.ttf" />
+    <Resource Include="Fonts\segoeuiz.ttf" />
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Model\HomeRealmsStore.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="ImageResources\SecurityLock.png" />
+    <Resource Include="ImageResources\SymbolCheck.png" />
+    <Resource Include="ImageResources\SymbolError.png" />
+    <Resource Include="ImageResources\SymbolRefresh.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Client\Microsoft.PowerPlatform.Dataverse.Client.csproj" />
+    <ProjectReference Include="..\UIStyles\Microsoft.PowerPlatform.Dataverse.Ui.Styles.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <FilesTobeCopied Include="$(OutDir)$(AssemblyName).dll" />
+  </ItemGroup>
+</Project>

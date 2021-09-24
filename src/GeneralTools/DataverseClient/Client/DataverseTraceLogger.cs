@@ -28,7 +28,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
         #region Properties
         /// <summary>
-        /// Last Error from CRM
+        /// Last Error from Dataverse
         /// </summary>
         public new string LastError
         {

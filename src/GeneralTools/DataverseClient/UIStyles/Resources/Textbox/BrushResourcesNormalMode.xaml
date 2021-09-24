@@ -1,0 +1,9 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="TextBoxFontBrush" Color="#262626"/>
+    <SolidColorBrush x:Key="TextBoxBaseBorderBackgroundBrush"  Color="White"/>
+    <SolidColorBrush x:Key="TextBoxDisabledForegroundBrush" Color="#d8d8d8"/>
+    <SolidColorBrush x:Key="TextBoxPasswordForegroundBrush" Color="Black"/>
+    <SolidColorBrush x:Key="TextBoxBackgroundBrush" Color="white"></SolidColorBrush>
+    <SolidColorBrush x:Key="TextBoxPasswordSolidBackgroundBrush" Color="#bdbdbd"></SolidColorBrush>
+</ResourceDictionary>

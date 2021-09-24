@@ -1,0 +1,10 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="TextBoxFontBrush" Color="{x:Static SystemColors.WindowTextColor}"/>
+    <SolidColorBrush x:Key="TextBoxBaseBorderBackgroundBrush" Color="{x:Static SystemColors.WindowColor}"/>
+    <SolidColorBrush x:Key="TextBoxDisabledForegroundBrush" Color="{x:Static SystemColors.GrayTextColor}"/>
+    <SolidColorBrush x:Key="TextBoxPasswordForegroundBrush" Color="{x:Static SystemColors.WindowTextColor}"/>
+    <SolidColorBrush x:Key="TextBoxBackgroundBrush" Color="{x:Static SystemColors.WindowColor}"/>
+    <SolidColorBrush x:Key="TextBoxPasswordSolidBackgroundBrush" Color="{x:Static SystemColors.WindowColor}"/>
+    <SolidColorBrush x:Key="TbConnectTextblockStatusForegroundBrush" Color="{x:Static SystemColors.HotTrackColor}"/>
+</ResourceDictionary>

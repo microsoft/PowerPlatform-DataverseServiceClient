@@ -1,0 +1,14 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="ComboboxBackgroundBrush" Color="GhostWhite"/>
+    <SolidColorBrush x:Key="ComboboxchkBoxBorderBackgroundBrush" Color="#FFF3F9FF"/>
+    <SolidColorBrush x:Key="ComboboxchkBoxBorderDisabledBackgroundBrush" Color="#FFE6E6E6"/>
+    <SolidColorBrush x:Key="ComboboxchkBoxBorderDisabledBorderBrush" Color="#FFD9ECFF"/>
+    <SolidColorBrush x:Key="ComboboxchkBox2BorderBackgroundBrush" Color="White"/>
+    <SolidColorBrush x:Key="ComboboxchkBoxForegroundBrush" Color="#262626"/>
+    <SolidColorBrush x:Key="ComboboxForegroundBrush" Color="#444444"/>
+    <SolidColorBrush x:Key="ComboboxToggeleButtonPathArrowFillBrush" Color="Black"/>
+    <SolidColorBrush x:Key="ComboboxOnOverBackgroundBrush" Color="#b1d6f0"/>
+    <SolidColorBrush x:Key="ComboboxOnOverForegroundBrush" Color="#444444"/>
+    <SolidColorBrush x:Key="ComboboxDisabledForegroundBrush" Color="#d8d8d8"/>
+</ResourceDictionary>

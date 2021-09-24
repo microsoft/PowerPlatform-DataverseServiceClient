@@ -1,10 +1,12 @@
 #region using
 using Microsoft.Crm.Sdk.Messages;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
 using Microsoft.PowerPlatform.Dataverse.Client.Auth;
+using Microsoft.PowerPlatform.Dataverse.Client.Auth.TokenCache;
 using Microsoft.PowerPlatform.Dataverse.Client.Model;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 using Microsoft.Rest;
@@ -72,8 +74,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
     {
         #region variables
         [NonSerializedAttribute]
-        private OrganizationWebProxyClient _svcWebClientProxy;
-        private OrganizationWebProxyClient _externalWebClientProxy; // OAuth specific web service proxy
+        private OrganizationWebProxyClientAsync _svcWebClientProxy;
+        private OrganizationWebProxyClientAsync _externalWebClientProxy; // OAuth specific web service proxy
 
         [NonSerializedAttribute]
         private WhoAmIResponse user;                        // Dataverse user entity that is the service.
@@ -101,6 +103,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         private SecureString _LivePass;
         private string _DataverseOnlineRegion;                    // Region of Dataverse Online to use.
         private string _ServiceCACHEName = "Microsoft.PowerPlatform.Dataverse.Client.Service"; // this is the base cache key name that will be used to cache the service.
+        private static readonly IMemoryCache _clientMemoryCache = new MemoryCache(new MemoryCacheOptions());   // InMemory Cache for the Local dataverse Client.
 
         //OAuth Params
         private PromptBehavior _promptBehavior;             // prompt behavior
@@ -250,7 +253,24 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// </summary>
         internal IAccount _userAccount = null;
 
+        /// <summary>
+        /// Lock object used to control access to the acquire token flows when in clone mode.
+        /// MSAL does not appear to be threadsafe when multiple threads attempt to access the same MSAL object.
+        /// </summary>
+        internal readonly static object lockObject = new object();
+
+        /// <summary>
+        /// MemoryBacked Token cache object.
+        /// Used for Confidential clients primarily.
+        /// </summary>
+        internal MemoryBackedTokenCache _memoryBackedTokenCache = null;
+
         // ********* End MSAL Properties ********
+
+        /// <summary>
+        /// Memory cache for current instance.
+        /// </summary>
+        internal IMemoryCache LocalMemoryCache { get { return _clientMemoryCache; } }
 
 
         /// <summary>
@@ -373,13 +393,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <summary>
         /// Returns the Dataverse Web Client
         /// </summary>
-        internal OrganizationWebProxyClient WebClient
+        internal OrganizationWebProxyClientAsync WebClient
         {
             get
             {
                 if (_svcWebClientProxy != null)
                 {
-                    RefreshWebProxyClientTokenAsync().GetAwaiter().GetResult(); // Only call this if the connection is not null
+                    RefreshClientTokenAsync().ConfigureAwait(false).GetAwaiter().GetResult(); // Only call this if the connection is not null
                     try
                     {
                         if (!_svcWebClientProxy.Endpoint.EndpointBehaviors.Contains(typeof(DataverseTelemetryBehaviors)))
@@ -524,6 +544,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// </summary>
         internal Func<string, Task<string>> GetAccessTokenAsync { get; set; }
 
+
+        //TODO: COMPLETE EXPOSURE OF ADDITIONAL HEADER FEATURE
+        /// <summary>
+        /// Function to call to get the current headers for this request
+        /// </summary>
+        internal Func<Task<Dictionary<string, string>>> RequestAdditionalHeadersAsync { get; set; }
+
+
         /// <summary>
         /// returns the format string for the baseWebAPI
         /// </summary>
@@ -549,6 +577,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         }
 
         /// <summary>
+        /// Cookies that are being passed though clients, when cookies are used
+        /// </summary>
+        internal Dictionary<string, string> CurrentCookieCollection { get; set; } = null;
+
+        /// <summary>
         /// Value used by the retry system while the code is running,
         /// this value can scale up and down based on throttling limits.
         /// </summary>
@@ -565,11 +598,17 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// TEST Support Constructor.
         /// </summary>
         /// <param name="testIOrganziationSvc"></param>
-        internal ConnectionService(IOrganizationService testIOrganziationSvc)
+        /// <param name="baseConnectUrl"></param>
+        /// <param name="mockClient"></param>
+        /// <param name="logger"></param>
+        internal ConnectionService(IOrganizationService testIOrganziationSvc , string baseConnectUrl, HttpClient mockClient, ILogger logger)
         {
             _testSupportIOrg = testIOrganziationSvc;
-            logEntry = new DataverseTraceLogger();
+            WebApiHttpClient = mockClient;
+            logEntry = new DataverseTraceLogger(logger);
             isLogEntryCreatedLocaly = true;
+            ConnectedOrgPublishedEndpoints = new EndpointCollection();
+            ConnectedOrgPublishedEndpoints.Add(EndpointType.OrganizationDataService, baseConnectUrl);
             RefreshInstanceDetails(testIOrganziationSvc, null).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
@@ -578,7 +617,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// </summary>
         /// <param name="externalOrgWebProxyClient">This is an initialized organization web Service proxy</param>
         /// <param name="logSink">incoming Log Sink</param>
-        internal ConnectionService(OrganizationWebProxyClient externalOrgWebProxyClient, DataverseTraceLogger logSink = null)
+        internal ConnectionService(OrganizationWebProxyClientAsync externalOrgWebProxyClient, DataverseTraceLogger logSink = null)
         {
             if (logSink == null)
             {
@@ -614,9 +653,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="orgName">Organization to Connect too</param>
         /// <param name="livePass">Live Password to use</param>
         /// <param name="liveUserId">Live ID to use</param>
-        /// <param name="crmOnlineRegion">CrmOnlineRegion</param>
-        /// <param name="useUniqueCacheName">flag that will tell the instance to create a Unique Name for the CRM Cache Objects.</param>
-        /// <param name="orgDetail">Dataverse Org Detail object, this is is returned from a query to the CRM Discovery Server service. not required.</param>
+        /// <param name="onlineRegion">OnlineRegion</param>
+        /// <param name="useUniqueCacheName">flag that will tell the instance to create a Unique Name for the connection Cache Objects.</param>
+        /// <param name="orgDetail">Dataverse Org Detail object, this is is returned from a query to the Discovery Server service. not required.</param>
         /// <param name="clientId">Client Id of the registered application.</param>
         /// <param name="redirectUri">RedirectUri for the application redirecting to</param>
         /// <param name="promptBehavior">Whether to prompt when no username/password</param>
@@ -626,23 +665,25 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="logSink">Incoming Log Provide</param>
         /// <param name="instanceToConnectToo">Targeted Instance to connector too.</param>
         /// <param name="useDefaultCreds">(optional) If true attempts login using current user ( Online ) </param>
+        /// <param name="tokenCacheStorePath">(optional) if provided sets the path to write the token cache too.</param>
         internal ConnectionService(
             AuthenticationType authType,    // Only OAuth is supported in this constructor.
-            string orgName,                 // CRM Organization Name your connecting too
+            string orgName,                 // Organization Name your connecting too
             string liveUserId,             // Live ID - Live only
             SecureString livePass,               // Live Pw - Live Only
-            string crmOnlineRegion,
+            string onlineRegion,
             bool useUniqueCacheName,        // tells the system to create a unique cache name for this instance.
             OrganizationDetail orgDetail,
             string clientId,                // The client Id of the client registered with Azure
             Uri redirectUri,                // The redirectUri telling the redirect login window
-            PromptBehavior promptBehavior,  // The prompt behavior for ADAL library
+            PromptBehavior promptBehavior,  // The prompt behavior for MSAL library
             string hostName,                // Host name to connect to
             string port,                    // Port used to connect to
             bool onPrem,
             DataverseTraceLogger logSink = null,
             Uri instanceToConnectToo = null,
-            bool useDefaultCreds = false
+            bool useDefaultCreds = false,
+            string tokenCacheStorePath = null
             )
         {
             if (authType != AuthenticationType.OAuth && authType != AuthenticationType.ClientSecret)
@@ -664,12 +705,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             _organization = orgName;
             _LiveID = liveUserId;
             _LivePass = livePass;
-            _DataverseOnlineRegion = crmOnlineRegion;
+            _DataverseOnlineRegion = onlineRegion;
             _OrgDetail = orgDetail;
             _clientId = clientId;
             _redirectUri = redirectUri;
             _promptBehavior = promptBehavior;
-            _tokenCachePath = string.Empty;  //TODO: Remove / Replace
+            _tokenCachePath = tokenCacheStorePath;
             _hostname = hostName;
             _port = port;
             _isOnPremOAuth = onPrem;
@@ -682,8 +723,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// Sets up and initializes the Dataverse Service interface using Certificate Auth.
         /// </summary>
         /// <param name="authType">Only Certificate flows are supported in this constructor</param>
-        /// <param name="useUniqueCacheName">flag that will tell the instance to create a Unique Name for the CRM Cache Objects.</param>
-        /// <param name="orgDetail">Dataverse Org Detail object, this is is returned from a query to the CRM Discovery Server service. not required.</param>
+        /// <param name="useUniqueCacheName">flag that will tell the instance to create a Unique Name for the Cache Objects.</param>
+        /// <param name="orgDetail">Dataverse Org Detail object, this is is returned from a query to the Discovery Server service. not required.</param>
         /// <param name="clientId">Client Id of the registered application.</param>
         /// <param name="redirectUri">RedirectUri for the application redirecting to</param>
         /// <param name="hostName">Hostname to connect to</param>
@@ -694,6 +735,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="certThumbprint">Thumb print of the Certificate to use for this connection.</param>
         /// <param name="instanceToConnectToo">Direct Instance Uri to Connect To</param>
         /// <param name="logSink">Incoming Log Sink data</param>
+        /// <param name="tokenCacheStorePath">(optional) if provided, sets the path to store or read user tokens</param>
         internal ConnectionService(
             AuthenticationType authType,    // Only Certificate is supported in this constructor.
             Uri instanceToConnectToo,       // set the connection instance to use.
@@ -707,7 +749,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             string hostName,                // Host name to connect to
             string port,                    // Port used to connect to
             bool onPrem,
-            DataverseTraceLogger logSink = null)
+            DataverseTraceLogger logSink = null,
+            string tokenCacheStorePath = null)
         {
             if (authType != AuthenticationType.Certificate && authType != AuthenticationType.ExternalTokenManagement)
                 throw new ArgumentOutOfRangeException("authType", "This constructor only supports the Certificate Auth type");
@@ -729,7 +772,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             _OrgDetail = orgDetail;
             _clientId = clientId;
             _redirectUri = redirectUri;
-            _tokenCachePath = string.Empty;
+            _tokenCachePath = tokenCacheStorePath;
             _hostname = hostName;
             _port = port;
             _isOnPremOAuth = onPrem;
@@ -778,7 +821,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
             if (dvService != null)
             {
-                _svcWebClientProxy = (OrganizationWebProxyClient)dvService;
+                _svcWebClientProxy = (OrganizationWebProxyClientAsync)dvService;
                 return true;
             }
             else
@@ -797,9 +840,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             {
                 try
                 {
-                    var objProspectiveCachedClient = System.Runtime.Caching.MemoryCache.Default[_ServiceCACHEName];
-                    if (objProspectiveCachedClient != null && objProspectiveCachedClient is ConnectionService)
-                        ConnectionObject = (ConnectionService)objProspectiveCachedClient;
+                    var objProspectiveCachedClient = _clientMemoryCache.Get(_ServiceCACHEName);
+                    if (objProspectiveCachedClient != null && objProspectiveCachedClient is ConnectionService service)
+                        ConnectionObject = service;
                     else
                         ConnectionObject = null;
                 }
@@ -820,10 +863,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
                 if (!string.IsNullOrEmpty(_ServiceCACHEName))
                 {
-                    if (System.Runtime.Caching.MemoryCache.Default.Contains(_ServiceCACHEName))
-                        System.Runtime.Caching.MemoryCache.Default.Remove(_ServiceCACHEName);
-                    // Cache the Service for 5 min.
-                    System.Runtime.Caching.MemoryCache.Default.Add(_ServiceCACHEName, this, DateTime.Now.AddMinutes(5));
+                    // Set or update the cache the Service for 5 min.
+                    _clientMemoryCache.Set(_ServiceCACHEName, this, DateTimeOffset.Now.AddMinutes(5));
                 }
                 return localSvc;
             }
@@ -907,7 +948,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         #region AD or SPLA Auth
                         try
                         {
-                            string CrmUrl = string.Empty;
+                            string DvUrl = string.Empty;
                             #region AD
                             if (_OrgDetail == null)
                             {
@@ -915,7 +956,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                                 if (!string.IsNullOrWhiteSpace(_port))
                                 {
                                     // http://<Server>:<port>/XRMServices/2011/Discovery.svc?wsdl
-                                    CrmUrl = String.Format(CultureInfo.InvariantCulture,
+                                    DvUrl = String.Format(CultureInfo.InvariantCulture,
                                         "{0}://{1}:{2}/XRMServices/2011/Discovery.svc",
                                         _InternetProtocalToUse,
                                         _hostname,
@@ -923,16 +964,16 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                                 }
                                 else
                                 {
-                                    CrmUrl = String.Format(CultureInfo.InvariantCulture,
+                                    DvUrl = String.Format(CultureInfo.InvariantCulture,
                                         "{0}://{1}/XRMServices/2011/Discovery.svc",
                                         _InternetProtocalToUse,
                                         _hostname);
                                 }
-                                logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Discovery URI is = {0}", CrmUrl), TraceEventType.Information);
-                                if (!Uri.IsWellFormedUriString(CrmUrl, UriKind.Absolute))
+                                logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Discovery URI is = {0}", DvUrl), TraceEventType.Information);
+                                if (!Uri.IsWellFormedUriString(DvUrl, UriKind.Absolute))
                                 {
                                     // Throw error here.
-                                    logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Discovery URI is malformed = {0}", CrmUrl), TraceEventType.Error);
+                                    logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Discovery URI is malformed = {0}", DvUrl), TraceEventType.Error);
 
                                     return null;
                                 }
@@ -973,31 +1014,31 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             if (_OrgDetail == null)
                             {
                                 // Discover Orgs Url.
-                                Uri uCrmUrl = new Uri(CrmUrl);
+                                Uri uDvUrl = new Uri(DvUrl);
 
                                 // This will try to discover any organizations that the user has access too,  one way supports AD / IFD and the other supports Claims
-                                OrganizationDetailCollection orgs = null;
+                                DiscoverOrganizationsResult discoverOrganizationsResult = null;
 
                                 if (_eAuthType == AuthenticationType.OAuth)
                                 {
-                                    orgs = await DiscoverOrganizationsAsync(uCrmUrl, _UserClientCred, _clientId, _redirectUri, _promptBehavior, true, _authority, logEntry).ConfigureAwait(false);
+                                    discoverOrganizationsResult = await DiscoverOrganizationsAsync(uDvUrl, _UserClientCred, _clientId, _redirectUri, _promptBehavior, true, _authority, logSink: logEntry, tokenCacheStorePath: _tokenCachePath).ConfigureAwait(false);
                                 }
                                 else
                                 {
                                     if (_eAuthType == AuthenticationType.Certificate)
                                     {
-                                        orgs = await DiscoverOrganizationsAsync(uCrmUrl, _certificateOfConnection, _clientId, true, _authority, logEntry).ConfigureAwait(false);
+                                        discoverOrganizationsResult = await DiscoverOrganizationsAsync(uDvUrl, _certificateOfConnection, _clientId, true, _authority, logEntry, tokenCacheStorePath: _tokenCachePath).ConfigureAwait(false);
                                     }
                                 }
 
 
                                 // Check the Result to see if we have Orgs back
-                                if (orgs != null && orgs.Count > 0)
+                                if (discoverOrganizationsResult.OrganizationDetailCollection != null && discoverOrganizationsResult.OrganizationDetailCollection.Count > 0)
                                 {
-                                    logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Found {0} Org(s)", orgs.Count), TraceEventType.Information);
-                                    orgDetail = orgs.FirstOrDefault(o => string.Compare(o.UniqueName, _organization, StringComparison.CurrentCultureIgnoreCase) == 0);
+                                    logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Found {0} Org(s)", discoverOrganizationsResult.OrganizationDetailCollection.Count), TraceEventType.Information);
+                                    orgDetail = discoverOrganizationsResult.OrganizationDetailCollection.FirstOrDefault(o => string.Compare(o.UniqueName, _organization, StringComparison.CurrentCultureIgnoreCase) == 0);
                                     if (orgDetail == null)
-                                        orgDetail = orgs.FirstOrDefault(o => string.Compare(o.FriendlyName, _organization, StringComparison.CurrentCultureIgnoreCase) == 0);
+                                        orgDetail = discoverOrganizationsResult.OrganizationDetailCollection.FirstOrDefault(o => string.Compare(o.FriendlyName, _organization, StringComparison.CurrentCultureIgnoreCase) == 0);
 
                                     if (orgDetail == null)
                                     {
@@ -1015,7 +1056,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             else
                                 orgDetail = _OrgDetail; // Assign to passed in value.
 
-                            // Try to connect to CRM here.
+                            // Try to connect to Dataverse here.
                             dvService = await ConnectAndInitServiceAsync(orgDetail, true, uUserHomeRealm).ConfigureAwait(false);
 
                             if (dvService == null)
@@ -1025,7 +1066,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             }
 
                             if (_eAuthType == AuthenticationType.OAuth || _eAuthType == AuthenticationType.Certificate || _eAuthType == AuthenticationType.ClientSecret)
-                                dvService = (OrganizationWebProxyClient)dvService;
+                                dvService = (OrganizationWebProxyClientAsync)dvService;
 
                             #endregion
 
@@ -1109,7 +1150,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                                             dvService = await ConnectAndInitServiceAsync(orgList.OrgsList.First().OrgDetail, false, null).ConfigureAwait(false);
                                             if (dvService != null)
                                             {
-                                                dvService = (OrganizationWebProxyClient)dvService;
+                                                dvService = (OrganizationWebProxyClientAsync)dvService;
 
                                                 // Update Region
                                                 _DataverseOnlineRegion = onlineServerList.GetServerShortNameByDisplayName(orgList.OrgsList.First().DiscoveryServerName);
@@ -1121,7 +1162,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                                         {
                                             if (!string.IsNullOrWhiteSpace(_organization))
                                             {
-                                                logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Looking for Organization = {0} in the results from CRM's Discovery server list.", _organization), TraceEventType.Information);
+                                                logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Looking for Organization = {0} in the results from Discovery server list.", _organization), TraceEventType.Information);
                                                 // Find the Stored org in the returned collection..
                                                 OrgByServer orgDetail = Utilities.DeterminOrgDataFromOrgInfo(orgList, _organization);
 
@@ -1132,7 +1173,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                                                     dvService = await ConnectAndInitServiceAsync(orgDetail.OrgDetail, false, null).ConfigureAwait(false);
                                                     if (dvService != null)
                                                     {
-                                                        dvService = (OrganizationWebProxyClient)dvService;
+                                                        dvService = (OrganizationWebProxyClientAsync)dvService;
                                                         _DataverseOnlineRegion = onlineServerList.GetServerShortNameByDisplayName(orgList.OrgsList.First().DiscoveryServerName);
                                                         logEntry.Log(string.Format(CultureInfo.InvariantCulture, "User Org ({0}) found in Discovery Server {1}", orgDetail.OrgDetail.UniqueName, _DataverseOnlineRegion));
                                                     }
@@ -1304,11 +1345,19 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
                 var request = new RetrieveCurrentOrganizationRequest() { AccessType = 0, RequestId = guRequestId };
                 RetrieveCurrentOrganizationResponse resp;
-                
-                if (_configuration.Value.UseWebApi)
+
+                if (_configuration.Value.UseWebApiLoginFlow)
                 {
-                    resp = (RetrieveCurrentOrganizationResponse)(await Command_WebAPIProcess_ExecuteAsync(
-                        request, null, false, null, Guid.Empty, false, _configuration.Value.MaxRetryCount, _configuration.Value.RetryPauseTime, new CancellationToken(), uriOfInstance).ConfigureAwait(false));
+                    OrganizationResponse orgResp = await Command_WebAPIProcess_ExecuteAsync(
+                        request, null, false, null, Guid.Empty, false, _configuration.Value.MaxRetryCount, _configuration.Value.RetryPauseTime, new CancellationToken(), uriOfInstance).ConfigureAwait(false);
+                    try
+                    {
+                        resp = (RetrieveCurrentOrganizationResponse)orgResp;
+                    }
+                    catch ( Exception ex )
+                    {
+                        throw new DataverseOperationException($"Failure to convert OrganziationResponse to requested type - request was {request.RequestName}", ex);
+                    }
                 }
                 else
                 {
@@ -1388,7 +1437,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         req.RequestId = trackingID;
 
                     WhoAmIResponse resp;
-                    if (_configuration.Value.UseWebApi)
+                    if (_configuration.Value.UseWebApiLoginFlow)
                     {
                         resp = (WhoAmIResponse)(await Command_WebAPIProcess_ExecuteAsync(
                             req, null, false, null, Guid.Empty, false, _configuration.Value.MaxRetryCount, _configuration.Value.RetryPauseTime, new CancellationToken()).ConfigureAwait(false));
@@ -1436,6 +1485,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             int debugingCloneStateFilter = 0;
             try
             {
+                System.Diagnostics.Trace.WriteLine($"Cloning {sourceClient._connectionSvc._ServiceCACHEName} to create {_ServiceCACHEName}");
+
                 user = sourceClient.SystemUser;
                 debugingCloneStateFilter++;
                 OrganizationVersion = sourceClient._connectionSvc.OrganizationVersion;
@@ -1472,6 +1523,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 debugingCloneStateFilter++;
                 _resource = sourceClient._connectionSvc._resource;
                 debugingCloneStateFilter++;
+                EnableCookieRelay = sourceClient._connectionSvc.EnableCookieRelay;
+                debugingCloneStateFilter++;
             }
             catch (Exception ex)
             {
@@ -1484,7 +1537,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         internal async Task<OrganizationResponse> Command_WebAPIProcess_ExecuteAsync(OrganizationRequest req, string logMessageTag, bool bypassPluginExecution,
             MetadataUtility metadataUtlity, Guid callerId, bool disableConnectionLocking, int maxRetryCount, TimeSpan retryPauseTime, CancellationToken cancellationToken, Uri uriOfInstance = null)
         {
-            if (!Utilities.IsRequestValidForTranslationToWebAPI(req, _configuration.Value.UseWebApi)) // THIS WILL GET REMOVED AT SOME POINT, TEMP FOR TRANSTION  //TODO:REMOVE ON COMPELTE
+            if (!Utilities.IsRequestValidForTranslationToWebAPI(req)) // THIS WILL GET REMOVED AT SOME POINT, TEMP FOR TRANSTION  //TODO:REMOVE ON COMPELTE
             {
                 logEntry.Log("Execute Organization Request failed, WebAPI is only supported for limited type of messages at this time.", TraceEventType.Error);
                 return null;
@@ -1518,12 +1571,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             string bodyOfRequest = string.Empty;
 
             ExpandoObject requestBodyObject = null;
-            
+
             if (cReq != null)
             {
-                requestBodyObject = Utilities.ToExpandoObject(cReq, metadataUtlity);
+                requestBodyObject = Utilities.ToExpandoObject(cReq, metadataUtlity, methodToExecute , logEntry);
                 if (cReq.RelatedEntities != null && cReq.RelatedEntities.Count > 0)
-                    requestBodyObject = Utilities.ReleatedEntitiesToExpandoObject(requestBodyObject, cReq.LogicalName, cReq.RelatedEntities, metadataUtlity);
+                    requestBodyObject = Utilities.ReleatedEntitiesToExpandoObject(requestBodyObject, cReq.LogicalName, cReq.RelatedEntities, metadataUtlity, methodToExecute, logEntry);
             }
             else
             {
@@ -1704,7 +1757,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
                     if (_knownTypesFactory.TryCreate($"{req.RequestName}Response", out var response, json))
                     {
-                        return (OrganizationResponse)response;
+                        OrganizationResponse resp = (OrganizationResponse)response;
+                        if (string.IsNullOrEmpty(resp.ResponseName))
+                            resp.ResponseName = $"{req.RequestName}Response";
+
+                        return resp;
                     }
 
                     var orgResponse = new OrganizationResponse();
@@ -1744,7 +1801,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="uriOfInstance">uri of instance</param>
         /// <param name="requestTrackingId"></param>
         /// <returns></returns>
-        internal async Task<HttpResponseMessage> Command_WebExecuteAsync(string queryString, string body, HttpMethod method, Dictionary<string, List<string>> customHeaders, 
+        internal async Task<HttpResponseMessage> Command_WebExecuteAsync(string queryString, string body, HttpMethod method, Dictionary<string, List<string>> customHeaders,
             string contentType, string errorStringCheck, Guid callerId, bool disableConnectionLocking, int maxRetryCount, TimeSpan retryPauseTime, Uri uriOfInstance = null, Guid requestTrackingId = default(Guid))
         {
             Stopwatch logDt = new Stopwatch();
@@ -1774,7 +1831,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
             // Format URI for request.
             Uri TargetUri = null;
-            ConnectedOrgPublishedEndpoints.TryGetValue(EndpointType.OrganizationDataService, out var webApiUri);
+            string webApiUri = null;
+            ConnectedOrgPublishedEndpoints?.TryGetValue(EndpointType.OrganizationDataService, out webApiUri);
             if (webApiUri == null || !webApiUri.Contains("/data/"))
             {
                 Uri tempUri = string.IsNullOrWhiteSpace(webApiUri) ? uriOfInstance : new Uri(webApiUri);
@@ -1869,12 +1927,39 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             if (ForceServerCacheConsistency && !customHeaders.ContainsKey(Utilities.RequestHeaders.FORCE_CONSISTENCY))
                 customHeaders.Add(Utilities.RequestHeaders.FORCE_CONSISTENCY, new List<string>() { "Strong" });
 
+            // handle added headers added via the RequestAdditionaHeadersAsync method.
+            if (RequestAdditionalHeadersAsync != null)
+            {
+                try
+                {
+                    var addedHeaders = RequestAdditionalHeadersAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+                    if (addedHeaders != null && addedHeaders.Count() > 0)
+                    {
+                        foreach (var hrdProp in addedHeaders)
+                        {
+                            // General handling from here on out.
+                            if (!customHeaders.ContainsKey(hrdProp.Key))
+                            {
+                                customHeaders[hrdProp.Key] = new List<string>() { hrdProp.Value };
+                            }
+                        }
+                        addedHeaders.Clear();
+                    }
+                }
+                finally { } // do nothing on header failure for now.
+            }
+
+            if (EnableCookieRelay && CurrentCookieCollection != null)
+            {
+                customHeaders.Add("Cookie", Utilities.GetCookiesFromCollectionAsArray(CurrentCookieCollection));
+            }
+
             HttpResponseMessage resp = null;
             do
             {
                 // Add authorization header. - Here to catch the situation where a token expires during retry.
                 if (!customHeaders.ContainsKey(Utilities.RequestHeaders.AUTHORIZATION_HEADER))
-                    customHeaders.Add(Utilities.RequestHeaders.AUTHORIZATION_HEADER, new List<string>() { string.Format("Bearer {0}", await RefreshWebProxyClientTokenAsync().ConfigureAwait(false)) });
+                    customHeaders.Add(Utilities.RequestHeaders.AUTHORIZATION_HEADER, new List<string>() { string.Format("Bearer {0}", await RefreshClientTokenAsync().ConfigureAwait(false)) });
 
                 logDt.Restart(); // start clock.
 
@@ -1895,7 +1980,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             contentType: contentType,
                             requestTrackingId: requestTrackingId,
                             sessionTrackingId: SessionTrackingId.HasValue ? SessionTrackingId.Value : Guid.Empty,
-                            suppressDebugMessage: true,
                             providedHttpClient: WebApiHttpClient == null ? ClientServiceProviders.Instance.GetService<IHttpClientFactory>().CreateClient("DataverseHttpClientFactory") : WebApiHttpClient
                             ).ConfigureAwait(false);
 
@@ -1939,6 +2023,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     logDt.Stop();
                 }
             } while (retry);
+
+            if (resp != null)
+            {
+                CurrentCookieCollection = Utilities.GetAllCookiesFromHeader(resp.Headers.SingleOrDefault(header => header.Key == "Set-Cookie").Value?.ToArray(), CurrentCookieCollection);
+            }
+
             return resp;
         }
 
@@ -2027,9 +2117,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="contentType">content type to use when calling into the remote host</param>
         /// <param name="sessionTrackingId">Session Tracking ID to assoicate with the request.</param>
         /// <param name="providedHttpClient"></param>
-        /// <param name="suppressDebugMessage"></param>
         /// <returns></returns>
-        internal static async Task<HttpResponseMessage> ExecuteHttpRequestAsync(string uri, HttpMethod method, string body = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken), DataverseTraceLogger logSink = null, Guid? requestTrackingId = null, string contentType = default(string), Guid? sessionTrackingId = null, bool suppressDebugMessage = false, HttpClient providedHttpClient = null)
+        internal static async Task<HttpResponseMessage> ExecuteHttpRequestAsync(string uri, HttpMethod method, string body = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken), DataverseTraceLogger logSink = null, Guid? requestTrackingId = null, string contentType = default(string), Guid? sessionTrackingId = null, HttpClient providedHttpClient = null)
         {
             bool isLogEntryCreatedLocaly = false;
             if (logSink == null)
@@ -2079,11 +2168,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         if (!_httpRequest.Headers.Contains(Utilities.RequestHeaders.X_MS_CLIENT_REQUEST_ID))
                             _httpRequest.Headers.TryAddWithoutValidation(Utilities.RequestHeaders.X_MS_CLIENT_REQUEST_ID, RequestId.ToString());
 
-                        if (!_httpRequest.Headers.Contains(Utilities.RequestHeaders.X_MS_CLIENT_SESSION_ID) && sessionTrackingId.HasValue)
+                        if (!_httpRequest.Headers.Contains(Utilities.RequestHeaders.X_MS_CLIENT_SESSION_ID) && sessionTrackingId.HasValue && sessionTrackingId != Guid.Empty)
                             _httpRequest.Headers.TryAddWithoutValidation(Utilities.RequestHeaders.X_MS_CLIENT_SESSION_ID, sessionTrackingId.ToString());
 
                         if (!_httpRequest.Headers.Contains("Connection"))
                             _httpRequest.Headers.TryAddWithoutValidation("Connection", "Keep-Alive");
+
                     }
 
                     string _requestContent = null;
@@ -2106,8 +2196,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    if (!suppressDebugMessage)
-                        logSink.Log(string.Format("Begin Sending request to {3} {0} : {2}RequestID={1}", _httpRequest.RequestUri.AbsolutePath, RequestId, sessionTrackingId.HasValue && sessionTrackingId.Value != Guid.Empty ? $" SessionID={sessionTrackingId.Value.ToString()} : " : "", method), TraceEventType.Verbose);
+                    logSink.Log(string.Format("Begin Sending request to {3} {0} : {2}RequestID={1}", _httpRequest.RequestUri.AbsolutePath, RequestId, sessionTrackingId.HasValue && sessionTrackingId.Value != Guid.Empty ? $" SessionID={sessionTrackingId.Value.ToString()} : " : "", method), TraceEventType.Verbose);
 
                     if (providedHttpClient != null)
                     {
@@ -2142,8 +2231,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         }
                     }
                     HttpStatusCode _statusCode = _httpResponse.StatusCode;
-                    if (!suppressDebugMessage)
-                        logSink.Log(string.Format("Response for request to WebAPI {5} {0} : StatusCode={1} : {4}RequestID={2} : Duration={3}", _httpRequest.RequestUri.AbsolutePath, _statusCode, RequestId, logDt.Elapsed.ToString(), sessionTrackingId.HasValue && sessionTrackingId.Value != Guid.Empty ? $" SessionID={sessionTrackingId.Value.ToString()} : " : "", method));
+                    logSink.Log(string.Format("Response for request to WebAPI {5} {0} : StatusCode={1} : {4}RequestID={2} : Duration={3}", _httpRequest.RequestUri.AbsolutePath, _statusCode, RequestId, logDt.Elapsed.ToString(), sessionTrackingId.HasValue && sessionTrackingId.Value != Guid.Empty ? $" SessionID={sessionTrackingId.Value.ToString()} : " : "", method), TraceEventType.Verbose);
 
                     cancellationToken.ThrowIfCancellationRequested();
                     string _responseContent = null;
@@ -2160,9 +2248,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         }
                         ex.Request = new HttpRequestMessageWrapper(_httpRequest, _requestContent);
                         ex.Response = new HttpResponseMessageWrapper(_httpResponse, _responseContent);
-                        if (!suppressDebugMessage)
-                            logSink.Log(string.Format("Failure Response for request to WebAPI {5} {0} : StatusCode={1} : {4}RequestID={3} : {2}", _httpRequest.RequestUri.AbsolutePath, _statusCode, _responseContent, RequestId, sessionTrackingId.HasValue && sessionTrackingId.Value != Guid.Empty ? $" SessionID={sessionTrackingId.Value.ToString()} : " : "", method), TraceEventType.Error);
-
+                        logSink.Log(string.Format("Failure Response for request to WebAPI {5} {0} : StatusCode={1} : {4}RequestID={3} : {2}", _httpRequest.RequestUri.AbsolutePath, _statusCode, _responseContent, RequestId, sessionTrackingId.HasValue && sessionTrackingId.Value != Guid.Empty ? $" SessionID={sessionTrackingId.Value.ToString()} : " : "", method), TraceEventType.Error);
 
                         _httpRequest.Dispose();
                         if (_httpResponse != null)
@@ -2187,205 +2273,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         #endregion
 
         #region Service utilities.
-
-        //      /// <summary>
-        //      /// Find authority and resources
-        //      /// </summary>
-        //      /// <param name="discoveryServiceUri">Service Uri endpoint</param>
-        //      /// <param name="resource">Resource to connect to</param>
-        //      /// <param name="svcDiscoveryProxy">Discovery Service Proxy</param>
-        //      /// <param name="svcWebClientProxy">Organisation Web Proxy</param>
-        //      /// <returns></returns>
-        //      private static string FindAuthorityAndResource(Uri discoveryServiceUri, out string resource, out DiscoveryWebProxyClient svcDiscoveryProxy, out OrganizationWebProxyClient svcWebClientProxy)
-        //{
-        //	resource = discoveryServiceUri.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped);
-
-        //	UriBuilder versionTaggedUriBuilder = GetUriBuilderWithVersion(discoveryServiceUri);
-
-        //	//discoveryServiceProxy
-        //	svcDiscoveryProxy = new DiscoveryWebProxyClient(versionTaggedUriBuilder.Uri);
-        //          svcWebClientProxy = new OrganizationWebProxyClient(versionTaggedUriBuilder.Uri, true);
-
-        //          AuthenticationParameters ap = GetAuthorityFromTargetService(versionTaggedUriBuilder.Uri);
-        //	if (ap != null)
-        //		return ap.Authority;
-        //	else
-        //		return null;
-        //}
-
-        /*
-		/// <summary>
-		/// Forming version tagged UriBuilder
-		/// </summary>
-		/// <param name="discoveryServiceUri"></param>
-		/// <returns></returns>
-		private static UriBuilder GetUriBuilderWithVersion(Uri discoveryServiceUri)
-		{
-			UriBuilder webUrlBuilder = new UriBuilder(discoveryServiceUri);
-			string webPath = "web";
-
-			if (!discoveryServiceUri.AbsolutePath.EndsWith(webPath))
-			{
-				if (discoveryServiceUri.AbsolutePath.EndsWith("/"))
-					webUrlBuilder.Path = string.Concat(webUrlBuilder.Path, webPath);
-				else
-					webUrlBuilder.Path = string.Concat(webUrlBuilder.Path, "/", webPath);
-			}
-
-			UriBuilder versionTaggedUriBuilder = new UriBuilder(webUrlBuilder.Uri);
-			string version = FileVersionInfo.GetVersionInfo(typeof(OrganizationWebProxyClient).Assembly.Location).FileVersion;
-			string versionQueryStringParameter = string.Format("SDKClientVersion={0}", version);
-
-			if (string.IsNullOrEmpty(versionTaggedUriBuilder.Query))
-			{
-				versionTaggedUriBuilder.Query = versionQueryStringParameter;
-			}
-			else if (!versionTaggedUriBuilder.Query.Contains("SDKClientVersion="))
-			{
-				versionTaggedUriBuilder.Query = string.Format("{0}&{1}", versionTaggedUriBuilder.Query, versionQueryStringParameter);
-			}
-
-			return versionTaggedUriBuilder;
-		}
-
-
-		/// <summary>
-		/// Obtaining authentication context
-		/// </summary>
-		private static AuthenticationContext ObtainAuthenticationContext(string Authority, bool requireValidation, string tokenCachePath)
-		{
-			// Do not need to dispose this here as its added ot the authentication context,  its cleaned up with the authentication context later.
-			CdsServiceClientTokenCache tokenCache = new CdsServiceClientTokenCache(tokenCachePath);
-
-#if DEBUG
-			// When in debug mode.. Always disable Authority validation to support NOVA builds.
-			requireValidation = false;
-#endif
-
-			// check in cache
-			AuthenticationContext authenticationContext = null;
-			if (requireValidation == false)
-			{
-				authenticationContext = new AuthenticationContext(Authority, requireValidation, tokenCache);
-			}
-			else
-			{
-				authenticationContext = new AuthenticationContext(Authority, tokenCache);
-			}
-			return authenticationContext;
-		}
-
-#if (NET462 || NET472 || NET48)
-		/// <summary>
-		/// Obtain access token for regular popup based authentication
-		/// </summary>
-		/// <param name="authenticationContext">Authentication Context to be used for connection</param>
-		/// <param name="resource">Resource endpoint to connect</param>
-		/// <param name="clientId">Registered client Id</param>
-		/// <param name="redirectUri">Redirect Uri</param>
-		/// <param name="promptBehavior">Prompt behavior for connecting</param>
-		/// <param name="user">UserIdentifier</param>
-		/// <returns>Authentication result with the access token for the authenticated connection</returns>
-		private static AuthenticationResult ObtainAccessToken(AuthenticationContext authenticationContext, string resource, string clientId, Uri redirectUri, PromptBehavior promptBehavior, UserIdentifier user)
-		{
-			PlatformParameters platformParameters = new PlatformParameters(promptBehavior);
-			AuthenticationResult _authenticationResult = null;
-			if (user != null)//If user enter username and password in connector UX
-				_authenticationResult = authenticationContext.AcquireTokenAsync(resource, clientId, redirectUri, platformParameters, user).Result;
-			else
-				_authenticationResult = authenticationContext.AcquireTokenAsync(resource, clientId, redirectUri, platformParameters).Result;
-			return _authenticationResult;
-		}
-#endif
-
-#if (NET462 || NET472 || NET48)
-		/// <summary>
-		/// Obtain access token for silent login
-		/// </summary>
-		/// <param name="authenticationContext">Authentication Context to be used for connection</param>
-		/// <param name="resource">Resource endpoint to connect</param>
-		/// <param name="clientId">Registered client Id</param>
-		/// <param name="clientCredentials">Credentials passed for creating a connection</param>
-		/// <returns>Authentication result with the access token for the authenticated connection</returns>
-		private static AuthenticationResult ObtainAccessToken(AuthenticationContext authenticationContext, string resource, string clientId, ClientCredentials clientCredentials)
-		{
-			AuthenticationResult _authenticationResult = null;
-			_authenticationResult = authenticationContext.AcquireTokenAsync(resource, clientId, new UserPasswordCredential(clientCredentials.UserName.UserName, clientCredentials.UserName.Password)).Result;
-			return _authenticationResult;
-		}
-#endif
-
-		/// <summary>
-		/// Obtain access token for certificate based login
-		/// </summary>
-		/// <param name="authenticationContext">Authentication Context to be used for connection</param>
-		/// <param name="resource">Resource endpoint to connect</param>
-		/// <param name="clientId">Registered client Id</param>
-		/// <param name="clientCert">X509Certificate to use to connect</param>
-		/// <returns>Authentication result with the access token for the authenticated connection</returns>
-		private static AuthenticationResult ObtainAccessToken(AuthenticationContext authenticationContext, string resource, string clientId, X509Certificate2 clientCert)
-		{
-			ClientAssertionCertificate cred = new ClientAssertionCertificate(clientId, clientCert);
-			AuthenticationResult _authenticationResult = null;
-			_authenticationResult = authenticationContext.AcquireTokenAsync(resource, cred).Result;
-			return _authenticationResult;
-		}
-
-#if (NET462 || NET472 || NET48)
-		/// <summary>
-		/// Obtain access token for ClientSecret Based Login.
-		/// </summary>
-		/// <param name="authenticationContext">Authentication Context to be used for connection</param>
-		/// <param name="resource">Resource endpoint to connect</param>
-		/// <param name="clientId">Registered client Id</param>
-		/// <param name="clientSecret">Client Secret used to connect</param>
-		/// <returns>Authentication result with the access token for the authenticated connection</returns>
-		private static AuthenticationResult ObtainAccessToken(AuthenticationContext authenticationContext, string resource, string clientId, SecureString clientSecret)
-		{
-			ClientCredential clientCredential = new ClientCredential(clientId, new SecureClientSecret(clientSecret));
-			AuthenticationResult _authenticationResult = null;
-			_authenticationResult = authenticationContext.AcquireTokenAsync(resource, clientCredential).Result;
-			return _authenticationResult;
-		}
-#else
-		/// <summary>
-		/// Obtain access token for ClientSecret Based Login.
-		/// </summary>
-		/// <param name="authenticationContext">Authentication Context to be used for connection</param>
-		/// <param name="resource">Resource endpoint to connect</param>
-		/// <param name="clientId">Registered client Id</param>
-		/// <param name="clientSecret">Client Secret used to connect</param>
-		/// <returns>Authentication result with the access token for the authenticated connection</returns>
-		private static AuthenticationResult ObtainAccessToken(AuthenticationContext authenticationContext, string resource, string clientId, string clientSecret)
-		{
-			ClientCredential clientCredential = new ClientCredential(clientId, clientSecret);
-			AuthenticationResult _authenticationResult = null;
-			_authenticationResult = authenticationContext.AcquireTokenAsync(resource, clientCredential).Result;
-			return _authenticationResult;
-		}
-#endif
-
-		/// <summary>
-		/// Trues to get the current users login token for the target resource.
-		/// </summary>
-		/// <param name="authenticationContext">Authentication Context to be used for connection</param>
-		/// <param name="resource">Resource endpoint to connect</param>
-		/// <param name="clientId">Registered client Id</param>
-		/// <param name="clientCredentials">Credentials passed for creating a connection, username only is honored.</param>
-		/// <returns>Authentication result with the access token for the authenticated connection</returns>
-		private static AuthenticationResult ObtainAccessTokenCurrentUser(AuthenticationContext authenticationContext, string resource, string clientId, ClientCredentials clientCredentials)
-		{
-			AuthenticationResult _authenticationResult = null;
-			if (clientCredentials != null && clientCredentials.UserName != null && !string.IsNullOrEmpty(clientCredentials.UserName.UserName))
-				_authenticationResult = authenticationContext.AcquireTokenAsync(resource, clientId, new UserCredential(clientCredentials.UserName.UserName)).Result;
-			else
-				_authenticationResult = authenticationContext.AcquireTokenAsync(resource, clientId, new UserCredential()).Result;
-
-			return _authenticationResult;
-		}
-
-		*/
-
         /// <summary>
         /// Discovers the organizations (OAuth Specific)
         /// </summary>
@@ -2400,8 +2287,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="useGlobalDisco">Use the global disco path. </param>
         /// <param name="useDefaultCreds">(optional) If true attempts login using current user</param>
         /// <param name="externalLogger">Logging provider <see cref="ILogger"/></param>
+        /// <param name="tokenCacheStorePath">(optional) path to log store</param>
         /// <returns>The list of organizations discovered.</returns>
-        internal static async Task<OrganizationDetailCollection> DiscoverOrganizationsAsync(Uri discoveryServiceUri, ClientCredentials clientCredentials, string clientId, Uri redirectUri, PromptBehavior promptBehavior, bool isOnPrem, string authority, DataverseTraceLogger logSink = null, bool useGlobalDisco = false, bool useDefaultCreds = false, ILogger externalLogger = null)
+        internal static async Task<DiscoverOrganizationsResult> DiscoverOrganizationsAsync(Uri discoveryServiceUri, ClientCredentials clientCredentials, string clientId, Uri redirectUri, PromptBehavior promptBehavior, bool isOnPrem, string authority, DataverseTraceLogger logSink = null, bool useGlobalDisco = false, bool useDefaultCreds = false, string tokenCacheStorePath = null, ILogger externalLogger = null)
         {
             bool isLogEntryCreatedLocaly = false;
             if (logSink == null)
@@ -2414,10 +2302,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             {
                 logSink.Log("DiscoverOrganizations - Called using user of MFA Auth for : " + discoveryServiceUri.ToString());
                 if (!useGlobalDisco)
-                    return await DiscoverOrganizations_InternalAsync(discoveryServiceUri, clientCredentials, null, clientId, redirectUri, promptBehavior, isOnPrem, authority, useDefaultCreds, logSink).ConfigureAwait(false);
+                    return await DiscoverOrganizations_InternalAsync(discoveryServiceUri, clientCredentials, null, clientId, redirectUri, promptBehavior, isOnPrem, authority, useDefaultCreds, tokenCacheStorePath: tokenCacheStorePath, logSink: logSink).ConfigureAwait(false);
                 else
                 {
-                    return await DiscoverGlobalOrganizationsAsync(discoveryServiceUri, clientCredentials, null, clientId, redirectUri, promptBehavior, isOnPrem, authority, logSink, useDefaultCreds: useDefaultCreds).ConfigureAwait(false);
+                    return await DiscoverGlobalOrganizationsAsync(discoveryServiceUri, clientCredentials, null, clientId, redirectUri, promptBehavior, isOnPrem, authority, logSink: logSink, useDefaultCreds: useDefaultCreds, tokenCacheStorePath: tokenCacheStorePath).ConfigureAwait(false);
                 }
 
             }
@@ -2438,8 +2326,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="authority">The authority identifying the registered tenant</param>
         /// <param name="logSink">(optional) Initialized CdsTraceLogger Object</param>
         /// <param name="useDefaultCreds">(optional) If true, attempts login with current user.</param>
+        /// <param name="tokenCacheStorePath">(optional) path to log store</param>
         /// <returns>The list of organizations discovered.</returns>
-        internal static async Task<OrganizationDetailCollection> DiscoverOrganizationsAsync(Uri discoveryServiceUri, X509Certificate2 loginCertificate, string clientId, bool isOnPrem, string authority, DataverseTraceLogger logSink = null, bool useDefaultCreds = false)
+        internal static async Task<DiscoverOrganizationsResult> DiscoverOrganizationsAsync(Uri discoveryServiceUri, X509Certificate2 loginCertificate, string clientId, bool isOnPrem, string authority, DataverseTraceLogger logSink = null, bool useDefaultCreds = false, string tokenCacheStorePath = null)
         {
             bool isLogEntryCreatedLocaly = false;
             if (logSink == null)
@@ -2450,7 +2339,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             try
             {
                 logSink.Log("DiscoverOrganizations - Called using Certificate Auth for : " + discoveryServiceUri.ToString());
-                return await DiscoverOrganizations_InternalAsync(discoveryServiceUri, null, loginCertificate, clientId, null, PromptBehavior.Never, isOnPrem, authority, useDefaultCreds, logSink).ConfigureAwait(false);
+                return await DiscoverOrganizations_InternalAsync(discoveryServiceUri, null, loginCertificate, clientId, null, PromptBehavior.Never, isOnPrem, authority, useDefaultCreds, logSink: logSink, tokenCacheStorePath: tokenCacheStorePath).ConfigureAwait(false);
             }
             finally
             {
@@ -2467,8 +2356,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="tokenProviderFunction">Pointer to the token provider handler</param>
         /// <param name="logSink">Logging endpoint (optional)</param>
         /// <param name="externalLogger">Logging provider <see cref="ILogger"/></param>
+        /// <param name="tokenCacheStorePath">(optional) path to log store</param>
         /// <returns>Populated OrganizationDetailCollection or Null.</returns>
-        internal static async Task<OrganizationDetailCollection> DiscoverGlobalOrganizationsAsync(Uri discoveryServiceUri, Func<string, Task<string>> tokenProviderFunction, DataverseTraceLogger logSink = null, ILogger externalLogger = null)
+        internal static async Task<OrganizationDetailCollection> DiscoverGlobalOrganizationsAsync(Uri discoveryServiceUri, Func<string, Task<string>> tokenProviderFunction, DataverseTraceLogger logSink = null, string tokenCacheStorePath = null, ILogger externalLogger = null)
         {
             bool isLogEntryCreatedLocaly = false;
             if (logSink == null)
@@ -2511,8 +2401,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="authority">The authority identifying the registered tenant</param>
         /// <param name="logSink">(optional) Initialized CdsTraceLogger Object</param>
         /// <param name="useDefaultCreds">(optional) If true, tries to login with current users credentials</param>
+        /// <param name="tokenCacheStorePath">(optional) token filePath, if set to empty string, the default path is used</param>
         /// <returns>The list of organizations discovered.</returns>
-        private static async Task<OrganizationDetailCollection> DiscoverOrganizations_InternalAsync(Uri discoveryServiceUri, ClientCredentials clientCredentials, X509Certificate2 loginCertificate, string clientId, Uri redirectUri, PromptBehavior promptBehavior, bool isOnPrem, string authority, bool useDefaultCreds = false, DataverseTraceLogger logSink = null)
+        private static async Task<DiscoverOrganizationsResult> DiscoverOrganizations_InternalAsync(Uri discoveryServiceUri, ClientCredentials clientCredentials, X509Certificate2 loginCertificate, string clientId, Uri redirectUri, PromptBehavior promptBehavior, bool isOnPrem, string authority, bool useDefaultCreds = false, string tokenCacheStorePath = null, DataverseTraceLogger logSink = null)
         {
             bool createdLogSource = false;
             Stopwatch dtStartQuery = new Stopwatch();
@@ -2537,9 +2428,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 // Execute Authentication Request and return token And ServiceURI
                 IAccount user = null;
                 object msalAuthClientOut = null;
-                ExecuteAuthenticationResults authRequestResult = await AuthProcessor.ExecuteAuthenticateServiceProcessAsync(discoveryServiceUri, clientCredentials, loginCertificate, clientId, redirectUri, promptBehavior, isOnPrem, authority, null, logSink: logSink, useDefaultCreds: useDefaultCreds, addVersionInfoToUri: false).ConfigureAwait(false);
+                ExecuteAuthenticationResults authRequestResult = await AuthProcessor.ExecuteAuthenticateServiceProcessAsync(discoveryServiceUri, clientCredentials, loginCertificate, clientId, redirectUri, promptBehavior, isOnPrem, authority, null, logSink: logSink, useDefaultCreds: useDefaultCreds, addVersionInfoToUri: false, tokenCacheStorePath: tokenCacheStorePath).ConfigureAwait(false);
                 AuthenticationResult authenticationResult = null;
-                authToken = authRequestResult.GetAuthTokenAndProperties(out authenticationResult, out targetServiceUrl, out msalAuthClientOut, out authority, out resource, out user);
+                authToken = authRequestResult.GetAuthTokenAndProperties(out authenticationResult, out targetServiceUrl, out msalAuthClientOut, out authority, out resource, out user, out MemoryBackedTokenCache memTokenCache);
+                memTokenCache.ClearCache();
+                memTokenCache = null;
 
                 svcDiscoveryProxy = new DiscoveryWebProxyClient(targetServiceUrl);
                 svcDiscoveryProxy.HeaderToken = authToken;
@@ -2563,7 +2456,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     logSink.Log(string.Format(CultureInfo.InvariantCulture, "DiscoverOrganizations - Discovery Server Get Orgs Call Complete - Elapsed:{0}", dtStartQuery.Elapsed.ToString()));
 
                     // Return the collection.
-                    return orgResponse.Details;
+                    return new DiscoverOrganizationsResult(orgResponse.Details, user);
                 }
                 catch (System.Exception ex)
                 {
@@ -2599,8 +2492,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="logSink">(optional) Initialized CdsTraceLogger Object</param>
         /// <param name="useGlobalDisco">(optional) utilize Global discovery service</param>
         /// <param name="useDefaultCreds">(optional) if true, attempts login with the current users credentials</param>
+        /// <param name="tokenCacheStorePath">(optional) token filePath, if set to empty string, the default path is used</param>
         /// <returns>The list of organizations discovered.</returns>
-        private static async Task<OrganizationDetailCollection> DiscoverGlobalOrganizationsAsync(Uri discoveryServiceUri, ClientCredentials clientCredentials, X509Certificate2 loginCertificate, string clientId, Uri redirectUri, PromptBehavior promptBehavior, bool isOnPrem, string authority, DataverseTraceLogger logSink = null, bool useGlobalDisco = false, bool useDefaultCreds = false)
+        private static async Task<DiscoverOrganizationsResult> DiscoverGlobalOrganizationsAsync(Uri discoveryServiceUri, ClientCredentials clientCredentials, X509Certificate2 loginCertificate, string clientId, Uri redirectUri, PromptBehavior promptBehavior, bool isOnPrem, string authority, DataverseTraceLogger logSink = null, bool useGlobalDisco = false, bool useDefaultCreds = false, string tokenCacheStorePath = null)
         {
             bool createdLogSource = false;
             try
@@ -2638,16 +2532,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
                 // Execute Authentication Request and return token And ServiceURI
                 //Uri targetResourceRequest = new Uri(string.Format("{0}://{1}/api/discovery/", discoveryServiceUri.Scheme , discoveryServiceUri.DnsSafeHost));
-                IAccount user = null;
-                object msalAuthClientOut = null;
-                AuthenticationResult authenticationResult = null;
-                ExecuteAuthenticationResults authRequestResult = await AuthProcessor.ExecuteAuthenticateServiceProcessAsync(authChallengeUri, clientCredentials, loginCertificate, clientId, redirectUri, promptBehavior, isOnPrem, authority, null, logSink: logSink, useDefaultCreds: useDefaultCreds, addVersionInfoToUri: false).ConfigureAwait(false);
-                authToken = authRequestResult.GetAuthTokenAndProperties(out authenticationResult, out targetServiceUrl, out msalAuthClientOut, out authority, out resource, out user);
-
+                ExecuteAuthenticationResults authRequestResult = await AuthProcessor.ExecuteAuthenticateServiceProcessAsync(authChallengeUri, clientCredentials, loginCertificate, clientId, redirectUri, promptBehavior, isOnPrem, authority, null, logSink: logSink, useDefaultCreds: useDefaultCreds, addVersionInfoToUri: false, tokenCacheStorePath: tokenCacheStorePath).ConfigureAwait(false);
+                authToken = authRequestResult.GetAuthTokenAndProperties(out AuthenticationResult authenticationResult, out targetServiceUrl, out object msalAuthClientOut, out authority, out resource, out IAccount user, out MemoryBackedTokenCache _);
 
                 // Get the GD Info and return.
-                return await QueryGlobalDiscoveryAsync(authToken, discoveryServiceUri, logSink).ConfigureAwait(false);
+                var organizationDetailCollection = await QueryGlobalDiscoveryAsync(authToken, discoveryServiceUri, logSink).ConfigureAwait(false);
 
+                return new DiscoverOrganizationsResult(organizationDetailCollection, user);
             }
             finally
             {
@@ -2689,8 +2580,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             try
             {
                 var headers = new Dictionary<string, List<string>>();
-                headers.Add("Authorization", new List<string>());
-                headers["Authorization"].Add(string.Format("Bearer {0}", authToken));
+                headers.Add(Utilities.RequestHeaders.AUTHORIZATION_HEADER, new List<string>());
+                headers[Utilities.RequestHeaders.AUTHORIZATION_HEADER].Add(string.Format("Bearer {0}", authToken));
 
                 var a = await ExecuteHttpRequestAsync(discoveryServiceUri.ToString(), HttpMethod.Get, customHeaders: headers, logSink: logSink).ConfigureAwait(false);
                 string body = await a.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -2845,31 +2736,30 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         {
             //_ActualOrgDetailUsed = orgdata;
             _ActualDataverseOrgUri = BuildOrgConnectUri(orgdata);
-            logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Organization Service URI is = {0}", _ActualDataverseOrgUri.ToString()), TraceEventType.Information);
+            logEntry.Log($"Organization Service URI is '{_ActualDataverseOrgUri}'", TraceEventType.Information);
 
             // Set the Org into system config
             _organization = orgdata.UniqueName;
             ConnectedOrgFriendlyName = orgdata.FriendlyName;
             ConnectedOrgPublishedEndpoints = orgdata.Endpoints;
 
-            Stopwatch logDt = new Stopwatch();
+            var logDt = new Stopwatch();
             logDt.Start();
             // Build User Credential
             logEntry.Log("ConnectAndInitService - Initializing Organization Service Object", TraceEventType.Verbose);
             // this to provide trouble shooting information when determining org connect failures.
-            logEntry.Log(string.Format(CultureInfo.InvariantCulture, "ConnectAndInitService - Requesting connection to Organization with Dataverse Version: {0}", orgdata.OrganizationVersion == null ? "No organization data available" : orgdata.OrganizationVersion), TraceEventType.Information);
+            logEntry.Log($"ConnectAndInitService - Requesting connection to Organization with Dataverse Version: {(orgdata.OrganizationVersion == null ? "No organization data available" : orgdata.OrganizationVersion)}", TraceEventType.Information);
 
             // try to create a version number from the org.
             OrganizationVersion = null;
             try
             {
-                Version tempVer = null;
-                if (Version.TryParse(orgdata.OrganizationVersion, out tempVer))
+                if (Version.TryParse(orgdata.OrganizationVersion, out var tempVer))
                     OrganizationVersion = tempVer;
             }
             catch { };
 
-            OrganizationWebProxyClient svcWebClientProxy = null;
+            OrganizationWebProxyClientAsync svcWebClientProxy = null;
             if (_eAuthType == AuthenticationType.OAuth
                 || _eAuthType == AuthenticationType.Certificate
                 || _eAuthType == AuthenticationType.ExternalTokenManagement
@@ -2906,11 +2796,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 else
                 {
                     // Execute Authentication Request and return token And ServiceURI
-                    ExecuteAuthenticationResults authRequestResult = await AuthProcessor.ExecuteAuthenticateServiceProcessAsync(_ActualDataverseOrgUri, _UserClientCred, _certificateOfConnection, _clientId, _redirectUri, _promptBehavior, IsOnPrem, _authority, _MsalAuthClient, logEntry, useDefaultCreds: _isDefaultCredsLoginForOAuth, clientSecret: _eAuthType == AuthenticationType.ClientSecret ? _LivePass : null).ConfigureAwait(false);
-                    authToken = authRequestResult.GetAuthTokenAndProperties(out _authenticationResultContainer, out targetServiceUrl, out _MsalAuthClient, out _authority, out _resource, out _userAccount);
+                    ExecuteAuthenticationResults authRequestResult = await AuthProcessor.ExecuteAuthenticateServiceProcessAsync(_ActualDataverseOrgUri, _UserClientCred, _certificateOfConnection, _clientId, _redirectUri, _promptBehavior, IsOnPrem, _authority, _MsalAuthClient, logEntry, useDefaultCreds: _isDefaultCredsLoginForOAuth, clientSecret: _eAuthType == AuthenticationType.ClientSecret ? _LivePass : null, tokenCacheStorePath: _tokenCachePath).ConfigureAwait(false);
+                    authToken = authRequestResult.GetAuthTokenAndProperties(out _authenticationResultContainer, out targetServiceUrl, out _MsalAuthClient, out _authority, out _resource, out _userAccount, out _memoryBackedTokenCache);
                 }
                 _ActualDataverseOrgUri = targetServiceUrl;
-                svcWebClientProxy = new OrganizationWebProxyClient(targetServiceUrl, true);
+                svcWebClientProxy = new OrganizationWebProxyClientAsync(targetServiceUrl, true);
                 AttachWebProxyHander(svcWebClientProxy);
                 svcWebClientProxy.HeaderToken = authToken;
 
@@ -2933,14 +2823,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// This method us used to wire up the telemetry behaviors to the webProxy connection
         /// </summary>
         /// <param name="proxy">Connection proxy to attach telemetry too</param>
-        internal void AttachWebProxyHander(OrganizationWebProxyClient proxy)
+        internal void AttachWebProxyHander(OrganizationWebProxyClientAsync proxy)
         {
             proxy.ChannelFactory.Opening += WebProxyChannelFactory_Opening;
         }
 
 
         /// <summary>
-        /// Grab the Channel factory Open event and add the CrmHook Service behaviors.
+        /// Grab the Channel factory Open event and add the Telemetry behaviors.
         /// </summary>
         /// <param name="sender">incoming ChannelFactory</param>
         /// <param name="e">ignored</param>
@@ -2987,14 +2877,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// - This is done, potentially replacing the original string, to deal with the discovery service returning an unusable string, for example, a DNS name that does not resolve.
         /// </summary>
         /// <param name="orgdata">Org Data found from the Discovery Service.</param>
-        /// <returns>CRM Connection URI</returns>
+        /// <returns>Connection URI</returns>
         private Uri BuildOrgConnectUri(OrganizationDetail orgdata)
         {
 
             logEntry.Log("BuildOrgConnectUri CoreClass ()", TraceEventType.Start);
 
             // Build connection URL
-            string CrmUrl = string.Empty;
+            string DvUrl = string.Empty;
             Uri OrgEndPoint = new Uri(orgdata.Endpoints[EndpointType.OrganizationService]);
 
             logEntry.Log("DiscoveryServer indicated organization service location = " + OrgEndPoint.ToString(), TraceEventType.Verbose);
@@ -3006,7 +2896,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 #endif
             if (Utilities.IsValidOnlineHost(OrgEndPoint))
             {
-                // CRM Online ..> USE PROVIDED URI.
+                // Online ..> USE PROVIDED URI.
                 logEntry.Log("BuildOrgConnectUri CoreClass ()", TraceEventType.Stop);
                 return OrgEndPoint;
             }
@@ -3032,17 +2922,17 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     if (!string.IsNullOrWhiteSpace(_port))
                     {
 
-                        CrmUrl = String.Format(CultureInfo.InvariantCulture,
+                        DvUrl = String.Format(CultureInfo.InvariantCulture,
                             "{0}://{1}:{2}{3}", _InternetProtocalToUse, _hostname, _port, OrgEndPoint.PathAndQuery);
                     }
                     else
                     {
-                        CrmUrl = String.Format(CultureInfo.InvariantCulture,
+                        DvUrl = String.Format(CultureInfo.InvariantCulture,
                             "{0}://{1}{2}", _InternetProtocalToUse, _hostname, OrgEndPoint.PathAndQuery);
                     }
 
                     logEntry.Log("BuildOrgConnectUri CoreClass ()", TraceEventType.Stop);
-                    return new Uri(CrmUrl);
+                    return new Uri(DvUrl);
                 }
             }
 
@@ -3056,7 +2946,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         private async Task<OrgList> FindDiscoveryServerAsync(DiscoveryServers onlineServerList)
         {
             OrgList orgsList = new OrgList();
-            OrganizationDetailCollection col = null;
+            DiscoverOrganizationsResult discoverResult = null;
 
             if (_OrgDetail == null)
             {
@@ -3073,12 +2963,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             if (svr.RegionalGlobalDiscoveryServer == null)
                             {
                                 logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Trying Discovery Server, ({1}) URI is = {0}", svr.DiscoveryServerUri.ToString(), svr.DisplayName), TraceEventType.Information);
-                                col = await QueryLiveDiscoveryServerAsync(svr.DiscoveryServerUri).ConfigureAwait(false); // Defaults to not using GD.
+                                discoverResult = await QueryLiveDiscoveryServerAsync(svr.DiscoveryServerUri).ConfigureAwait(false); // Defaults to not using GD.
                             }
                             else
                             {
                                 logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Trying Regional Global Discovery Server, ({1}) URI is = {0}", svr.RegionalGlobalDiscoveryServer.ToString(), svr.DisplayName), TraceEventType.Information);
-                                await QueryOnlineServersListAsync(onlineServerList.OSDPServers, col, orgsList, svr.DiscoveryServerUri, svr.RegionalGlobalDiscoveryServer).ConfigureAwait(false);
+                                await QueryOnlineServersListAsync(onlineServerList.OSDPServers, orgsList, svr.DiscoveryServerUri, svr.RegionalGlobalDiscoveryServer).ConfigureAwait(false);
                                 //col = QueryLiveDiscoveryServer(svr.DiscoveryServer); // Defaults to not using GD.
                                 return orgsList;
                             }
@@ -3089,14 +2979,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             {
                                 // OAuth, and GD is allowed.
                                 logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Trying Global Discovery Server ({0}) and filtering to region {1}", GlobalDiscoveryAllInstancesUri, _DataverseOnlineRegion), TraceEventType.Information);
-                                await QueryOnlineServersListAsync(onlineServerList.OSDPServers, col, orgsList, svr.DiscoveryServerUri).ConfigureAwait(false);
+                                await QueryOnlineServersListAsync(onlineServerList.OSDPServers, orgsList, svr.DiscoveryServerUri).ConfigureAwait(false);
                                 return orgsList;
                             }
                             else
                             {
-                                col = await QueryLiveDiscoveryServerAsync(svr.DiscoveryServerUri).ConfigureAwait(false);
-                                if (col != null)
-                                    AddOrgToOrgList(col, svr.DisplayName, svr.DiscoveryServerUri, ref orgsList);
+                                discoverResult = await QueryLiveDiscoveryServerAsync(svr.DiscoveryServerUri).ConfigureAwait(false);
+                                if (discoverResult.OrganizationDetailCollection != null)
+                                    AddOrgToOrgList(discoverResult.OrganizationDetailCollection, svr.DisplayName, svr.DiscoveryServerUri, ref orgsList);
                             }
                         }
                         return orgsList;
@@ -3109,11 +2999,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 if (_eAuthType == AuthenticationType.OAuth)
                 {
                     // use GD.
-                    col = await QueryLiveDiscoveryServerAsync(new Uri(GlobalDiscoveryAllInstancesUri), true).ConfigureAwait(false);
-                    if (col != null)
+                    discoverResult = await QueryLiveDiscoveryServerAsync(new Uri(GlobalDiscoveryAllInstancesUri), true).ConfigureAwait(false);
+                    if (discoverResult.OrganizationDetailCollection != null)
                     {
                         bool isOnPrem = false;
-                        foreach (var itm in col)
+                        foreach (var itm in discoverResult.OrganizationDetailCollection)
                         {
                             var orgObj = Utilities.DeterminDiscoveryDataFromOrgDetail(new Uri(itm.Endpoints[EndpointType.OrganizationService]), out isOnPrem);
                             AddOrgToOrgList(itm, orgObj.DisplayName, ref orgsList);
@@ -3122,13 +3012,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     return orgsList;
                 }
                 else
-                    await QueryOnlineServersListAsync(onlineServerList.OSDPServers, col, orgsList).ConfigureAwait(false);
+                    await QueryOnlineServersListAsync(onlineServerList.OSDPServers, orgsList).ConfigureAwait(false);
             }
             else
             {
                 // the org was preexisting
                 logEntry.Log("User Specified Org details are used.", TraceEventType.Information);
-                col = new OrganizationDetailCollection();
+                var col = new OrganizationDetailCollection();
                 col.Add(_OrgDetail);
                 AddOrgToOrgList(col, "User Defined Org Detail", new Uri(_OrgDetail.Endpoints[EndpointType.OrganizationService]), ref orgsList);
             }
@@ -3140,12 +3030,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// Iterate over the discovery servers available.
         /// </summary>
         /// <param name="svrs"></param>
-        /// <param name="col"></param>
         /// <param name="orgsList"></param>
         /// <param name="trimToDiscoveryUri">Forces the results to be trimmed to this region when present</param>
         /// <param name="globalDiscoUriToUse">Overriding Global Discovery URI</param>
-        private async Task<bool> QueryOnlineServersListAsync(ObservableCollection<DiscoveryServer> svrs, OrganizationDetailCollection col, OrgList orgsList, Uri trimToDiscoveryUri = null, Uri globalDiscoUriToUse = null)
+        private async Task<bool> QueryOnlineServersListAsync(ObservableCollection<DiscoveryServer> svrs, OrgList orgsList, Uri trimToDiscoveryUri = null, Uri globalDiscoUriToUse = null)
         {
+            DiscoverOrganizationsResult discoverResult;
+
             // CHANGE HERE FOR GLOBAL DISCO ----
             // Execute Global Discovery
             if (_eAuthType == AuthenticationType.OAuth)
@@ -3154,27 +3045,25 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 logEntry.Log(string.Format("Trying Global Discovery Server, ({1}) URI is = {0}", gdUriToUse.ToString(), "Global Discovery"), TraceEventType.Information);
                 try
                 {
-                    col = await QueryLiveDiscoveryServerAsync(gdUriToUse, true).ConfigureAwait(false);
+                    discoverResult = await QueryLiveDiscoveryServerAsync(gdUriToUse, true).ConfigureAwait(false);
                 }
                 catch (MessageSecurityException)
                 {
                     logEntry.Log(string.Format("MessageSecurityException while trying to connect Discovery Server, ({1}) URI is = {0}", gdUriToUse.ToString(), "Global Discovery"), TraceEventType.Warning);
-                    col = null;
                     return false;
                 }
                 catch (Exception ex)
                 {
                     logEntry.Log(string.Format("Exception while trying to connect Discovery Server, ({1}) URI is = {0}", gdUriToUse.ToString(), "Global Discovery"), TraceEventType.Error, ex);
-                    col = null;
                     return false;
                 }
 
                 // if we have results.. add them to the AddOrgToOrgList object. ( need to iterate over the objects to match region to result. )
 
-                if (col != null)
+                if (discoverResult.OrganizationDetailCollection != null)
                 {
                     bool isOnPrem = false;
-                    foreach (var itm in col)
+                    foreach (var itm in discoverResult.OrganizationDetailCollection)
                     {
                         var orgObj = Utilities.DeterminDiscoveryDataFromOrgDetail(new Uri(itm.Endpoints[EndpointType.OrganizationService]), out isOnPrem);
                         if (trimToDiscoveryUri != null && !trimToDiscoveryUri.Equals(orgObj.DiscoveryServerUri))
@@ -3195,20 +3084,18 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
                         logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Trying Live Discovery Server, ({1}) URI is = {0}", svr.DiscoveryServerUri.ToString(), svr.DisplayName), TraceEventType.Information);
 
-                        col = await QueryLiveDiscoveryServerAsync(svr.DiscoveryServerUri).ConfigureAwait(false);
-                        if (col != null)
-                            AddOrgToOrgList(col, svr.DisplayName, svr.DiscoveryServerUri, ref orgsList);
+                        discoverResult = await QueryLiveDiscoveryServerAsync(svr.DiscoveryServerUri).ConfigureAwait(false);
+                        if (discoverResult.OrganizationDetailCollection != null)
+                            AddOrgToOrgList(discoverResult.OrganizationDetailCollection, svr.DisplayName, svr.DiscoveryServerUri, ref orgsList);
                     }
                     catch (MessageSecurityException)
                     {
                         logEntry.Log(string.Format("MessageSecurityException while trying to connect Discovery Server, ({1}) URI is = {0}", svr.DiscoveryServerUri.ToString(), svr.DisplayName), TraceEventType.Warning);
-                        col = null;
                         return false;
                     }
                     catch (Exception)
                     {
                         logEntry.Log(string.Format("Exception while trying to connect Discovery Server, ({1}) URI is = {0}", svr.DiscoveryServerUri.ToString(), svr.DisplayName), TraceEventType.Error);
-                        col = null;
                         return false;
                     }
                 }
@@ -3223,20 +3110,20 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="discoServer"></param>
         /// <param name="useGlobal">when try, uses global discovery</param>
         /// <returns></returns>
-        private async Task<OrganizationDetailCollection> QueryLiveDiscoveryServerAsync(Uri discoServer, bool useGlobal = false)
+        private async Task<DiscoverOrganizationsResult> QueryLiveDiscoveryServerAsync(Uri discoServer, bool useGlobal = false)
         {
             logEntry.Log("QueryLiveDiscoveryServer()", TraceEventType.Start);
             try
             {
                 if (_eAuthType == AuthenticationType.OAuth || _eAuthType == AuthenticationType.ClientSecret)
                 {
-                    return await DiscoverOrganizationsAsync(discoServer, _UserClientCred, _clientId, _redirectUri, _promptBehavior, false, _authority, logEntry, useGlobalDisco: useGlobal).ConfigureAwait(false);
+                    return await DiscoverOrganizationsAsync(discoServer, _UserClientCred, _clientId, _redirectUri, _promptBehavior, false, _authority, logSink: logEntry, useGlobalDisco: useGlobal, tokenCacheStorePath: _tokenCachePath).ConfigureAwait(false);
                 }
                 else
                 {
                     if (_eAuthType == AuthenticationType.Certificate)
                     {
-                        return await DiscoverOrganizationsAsync(discoServer, _certificateOfConnection, _clientId, false, _authority, logEntry).ConfigureAwait(false);
+                        return await DiscoverOrganizationsAsync(discoServer, _certificateOfConnection, _clientId, false, _authority, logEntry, tokenCacheStorePath: _tokenCachePath).ConfigureAwait(false);
                     }
 
                     return null;
@@ -3287,31 +3174,35 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <summary>
         /// Refresh web proxy client token
         /// </summary>
-		internal async Task<string> RefreshWebProxyClientTokenAsync()
+		internal async Task<string> RefreshClientTokenAsync()
         {
             string clientToken = string.Empty;
             if (_authenticationResultContainer != null && !string.IsNullOrEmpty(_resource) && !string.IsNullOrEmpty(_clientId))
             {
-                if (_MsalAuthClient is IPublicClientApplication pClient)
+                if (_authenticationResultContainer.ExpiresOn.ToUniversalTime() < DateTime.UtcNow.AddMinutes(1))
                 {
-                    // this is a user based application.
-                    if (_isCalledbyExecuteRequest && _promptBehavior != PromptBehavior.Never)
+#if DEBUG
+                    System.Diagnostics.Trace.WriteLine($">>>>>>>>>>>>>>>>>>>> REQUESTING TOKEN {_ServiceCACHEName} - {Thread.CurrentThread.ManagedThreadId} - IsAClone {IsAClone} >>>>>>>>>>>>>>>>>>>>");
+#endif
+
+                    if (_MsalAuthClient is IPublicClientApplication pClient)
                     {
-                        _isCalledbyExecuteRequest = false;
+                        // this is a user based application.
+                        if (_isCalledbyExecuteRequest && _promptBehavior != PromptBehavior.Never)
+                        {
+                            _isCalledbyExecuteRequest = false;
+                        }
                         _authenticationResultContainer = await AuthProcessor.ObtainAccessTokenAsync(pClient, _authenticationResultContainer.Scopes.ToList(), _authenticationResultContainer.Account, _promptBehavior, _UserClientCred, _isDefaultCredsLoginForOAuth, logEntry).ConfigureAwait(false);
                     }
                     else
                     {
-                        _authenticationResultContainer = await AuthProcessor.ObtainAccessTokenAsync(pClient, _authenticationResultContainer.Scopes.ToList(), _authenticationResultContainer.Account, _promptBehavior, _UserClientCred, _isDefaultCredsLoginForOAuth, logEntry).ConfigureAwait(false);
+                        if (_MsalAuthClient is IConfidentialClientApplication cClient)
+                        {
+                            _authenticationResultContainer = await AuthProcessor.ObtainAccessTokenAsync(cClient, _authenticationResultContainer.Scopes.ToList(), logEntry).ConfigureAwait(false);
+                        }
                     }
                 }
-                else
-                {
-                    if (_MsalAuthClient is IConfidentialClientApplication cClient)
-                    {
-                        _authenticationResultContainer = await AuthProcessor.ObtainAccessTokenAsync(cClient, _authenticationResultContainer.Scopes.ToList(), logEntry).ConfigureAwait(false);
-                    }
-                }
+
                 clientToken = _authenticationResultContainer.AccessToken;
                 if (_svcWebClientProxy != null)
                     _svcWebClientProxy.HeaderToken = clientToken;
@@ -3329,12 +3220,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             _svcWebClientProxy.HeaderToken = clientToken;
                     }
                     else
-                        throw new Exception("External Authentication Requested but not configured correctly. Faulted In Request Access Token 004");
+                        throw new DataverseOperationException("External Authentication Requested but not configured correctly. Faulted In Request Access Token 004");
 
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("External Authentication Requested but not configured correctly. 005", ex);
+                    throw new DataverseOperationException("External Authentication Requested but not configured correctly. 005", ex);
                 }
             }
 
@@ -3376,7 +3267,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     if (unqueInstance)
                     {
                         // Clean the connect out of memory.
-                        System.Runtime.Caching.MemoryCache.Default.Remove(_ServiceCACHEName);
+                        _clientMemoryCache.Remove(_ServiceCACHEName);
                     }
 
                     try
@@ -3386,8 +3277,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             if (_svcWebClientProxy.Endpoint.EndpointBehaviors.Contains(typeof(DataverseTelemetryBehaviors)))
                             {
                                 _svcWebClientProxy.ChannelFactory.Opening -= WebProxyChannelFactory_Opening;
-                                _svcWebClientProxy.ChannelFactory.Endpoint.EndpointBehaviors.Remove(typeof(DataverseTelemetryBehaviors));
-                                _svcWebClientProxy.Endpoint.EndpointBehaviors.Remove(typeof(DataverseTelemetryBehaviors));
+                                if (_svcWebClientProxy.ChannelFactory.Endpoint.EndpointBehaviors.Contains(typeof(DataverseTelemetryBehaviors)))
+                                {
+                                    _svcWebClientProxy.ChannelFactory.Endpoint.EndpointBehaviors.Remove(typeof(DataverseTelemetryBehaviors));
+                                }
+
+                                if (_svcWebClientProxy.Endpoint.EndpointBehaviors.Contains(typeof(DataverseTelemetryBehaviors)))
+                                {
+                                    _svcWebClientProxy.Endpoint.EndpointBehaviors.Remove(typeof(DataverseTelemetryBehaviors));
+                                }
                             }
                         }
                     }

@@ -32,7 +32,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		}
 
 		/// <summary>
-		/// Retrieve metadata for a single CRM record
+		/// Retrieve metadata for a single Dataverse record
 		/// </summary>
 		/// <param name="entityName">A string name of the entity type being retrieved e.g. contact</param>
 		/// <param name="entityId">A Guid representing the record id we want to retrieve</param>

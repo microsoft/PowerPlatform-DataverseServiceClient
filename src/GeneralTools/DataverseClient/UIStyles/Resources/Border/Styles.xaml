@@ -1,0 +1,13 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+					xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+					xmlns:uistyles="clr-namespace:Microsoft.PowerPlatform.Dataverse.Ui.Styles.Resources">
+	<ResourceDictionary.MergedDictionaries>
+        <uistyles:ThemeResources NormalModeResourcesPath="/Microsoft.PowerPlatform.Dataverse.Ui.Styles;component/Resources/Border/BrushResourcesNormalMode.xaml"
+								 HCModeResourcesPath="/Microsoft.PowerPlatform.Dataverse.Ui.Styles;component/Resources/Border/BrushResourcesHCMode.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+	<Style TargetType="Border" x:Key="BaseBorderStyle" >
+		<Setter Property="BorderBrush" Value="{DynamicResource BdrBorderBrush}"/>
+		<Setter Property="Background" Value="{DynamicResource BdrBorderBackgroundBrush}"/>
+		<Setter Property="BorderThickness" Value="1"/>
+	</Style>
+</ResourceDictionary>

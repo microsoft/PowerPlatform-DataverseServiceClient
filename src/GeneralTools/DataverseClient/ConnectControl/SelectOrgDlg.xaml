@@ -1,0 +1,58 @@
+﻿<Window
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:AgentDesktop_CrmConnect_Model="clr-namespace:Microsoft.PowerPlatform.Dataverse.ConnectControl.Model" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
+	x:Class="Microsoft.PowerPlatform.Dataverse.ConnectControl.SelectOrgDlg"
+	x:Name="Window"
+	Title="Multiple Organizations Found."
+	Width="440"
+	Height="280" 
+	WindowStyle="ToolWindow" 
+	ResizeMode="NoResize"
+	Topmost="True"
+	WindowStartupLocation="CenterScreen" 
+    Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
+    FontFamily="/Microsoft.PowerPlatform.Dataverse.ConnectControl;Component/Fonts/#Segoe UI" 
+    xmlns:my="clr-namespace:Microsoft.PowerPlatform.Dataverse.ConnectControl.Utility"
+    Loaded="Window_Loaded">
+    <Window.Resources>
+        <AgentDesktop_CrmConnect_Model:CrmOrgList x:Key="CrmOrgListDataSource" d:IsDataSource="True"/>
+        <my:OrgNameFormater x:Key="OrgNameFormat" />
+    </Window.Resources>
+
+    <Grid x:Name="LayoutRoot" DataContext="{Binding Source={StaticResource CrmOrgListDataSource}}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="56.026"/>
+            <RowDefinition Height="0.832*"/>
+            <RowDefinition Height="0.168*"/>
+        </Grid.RowDefinitions>
+        <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Multiple CRM Organizations are available to you,  Please chose the CRM Organizations you would like to connect to. " VerticalAlignment="Center" Margin="8,3,3,0" FontSize="13.333"/>
+        <Grid Margin="8,0" Grid.Row="1">
+            <ListView x:Name="lvOrgList"  ItemsSource="{Binding OrgsList}" SelectionMode="Single">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn DisplayMemberBinding="{Binding DiscoveryServerName}" Width="150">
+                            <GridViewColumnHeader Content="CRM Region" Tag="DiscoveryServerName" Click="Sort_Click" />
+                        </GridViewColumn>
+                        <GridViewColumn Width="240" x:Name="OrgCol">
+                            <GridViewColumnHeader Content="Organization Name" Tag="FriendlyName" Click="Sort_Click" />
+                            <GridViewColumn.DisplayMemberBinding>
+                                <MultiBinding
+                                    Converter="{StaticResource OrgNameFormat}">
+                                    <Binding Path="FriendlyName" />
+                                    <Binding Path="UniqueOrdName" />
+                                </MultiBinding>
+                            </GridViewColumn.DisplayMemberBinding>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Grid>
+        <StackPanel HorizontalAlignment="Right" Margin="0" Grid.Row="2" VerticalAlignment="Center" Orientation="Horizontal">
+            <Button x:Name="btnSelect" Content="Select" Width="75" Margin="0,0,3,0" IsDefault="True" Click="btnSelect_Click"/>
+            <Button x:Name="btnCancel" Content="Cancel" Width="75" Margin="0,0,8,0" IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

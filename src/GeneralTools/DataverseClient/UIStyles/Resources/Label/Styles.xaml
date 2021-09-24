@@ -1,0 +1,19 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+					xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+					  xmlns:uistyles="clr-namespace:Microsoft.PowerPlatform.Dataverse.Ui.Styles.Resources">
+	<ResourceDictionary.MergedDictionaries>
+        <uistyles:ThemeResources NormalModeResourcesPath="/Microsoft.PowerPlatform.Dataverse.Ui.Styles;component/Resources/Label/BrushResourcesNormalMode.xaml"
+								 HCModeResourcesPath="/Microsoft.PowerPlatform.Dataverse.Ui.Styles;component/Resources/Label/BrushResourcesHCMode.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+	<Style x:Key="BaselabelStyle" TargetType="Label">
+		<Setter Property="Foreground" Value="{DynamicResource LabelForegroundBrush}"></Setter>
+		<Setter Property="FontFamily" Value="/UnifiedServiceDesk;component/Fonts/#Segoe UI"></Setter>
+		<Setter Property="FlowDirection" Value="LeftToRight"></Setter>
+	</Style>
+	<Style x:Key="SplashVersionLabelStyle" TargetType="Label" BasedOn="{StaticResource BaselabelStyle}">
+		<Setter Property="FontSize" Value="8"></Setter>
+	</Style>
+	<Style x:Key="SplashAppNameLabelStyle" TargetType="Label"  BasedOn="{StaticResource BaselabelStyle}">
+		<Setter Property="FontSize" Value="40"></Setter>
+	</Style>
+</ResourceDictionary>

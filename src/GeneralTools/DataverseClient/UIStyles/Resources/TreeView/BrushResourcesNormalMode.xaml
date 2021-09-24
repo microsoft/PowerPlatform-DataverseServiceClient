@@ -1,0 +1,7 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="TreeviewBorderBrush" Color="#bdbdbd"/>
+    <SolidColorBrush x:Key="TreeviewItemBorderBackgroundBrush" Color="#b1d6f0"/>
+    <SolidColorBrush x:Key="TreeviewItemOnOverBorderBackgroundBrush" Color="#d7ebf9"/>
+    <SolidColorBrush x:Key="TreeviewItemDisabledForegroundBrush" Color="#d8d8d8"/>
+</ResourceDictionary>

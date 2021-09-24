@@ -1,0 +1,9 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="TextblockForegroundBrush" Color="#262626"/>
+    <SolidColorBrush x:Key="TextblockWelcomePagetitle" Color="#002050"/>
+    <SolidColorBrush x:Key="TextblockSplashScreenFontBrush" Color="#DBDBDB"/>
+    <SolidColorBrush x:Key="TextblockForeGroundCloseStyle" Color="White"/>
+    <SolidColorBrush x:Key="TextblocklstviewItenTxtonOverStyle" Color="#262626"/>
+    <SolidColorBrush x:Key="TbConnectTextblockStatusForegroundBrush" Color="#FE662F"/>
+</ResourceDictionary>

@@ -69,14 +69,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		}
 
 		/// <summary>
-		/// Retrieves all metadata from the CRM solution.. this is a time consuming task
+		/// Retrieves all metadata from the solution.. this is a time consuming task
 		/// </summary>
 		/// <param name="onlyPublished">only return "published" or "published state" of entities</param>
 		/// <param name="filter">the depth if detail on the entity to retrieve</param>
 		/// <returns></returns>
 		public List<EntityMetadata> GetAllEntityMetadata(bool onlyPublished, EntityFilters filter = EntityFilters.Default)
 		{
-			// this will force a retrieve of all metatdata from CRM's entities
+			// this will force a retrieve of all metatdata from entities
 			List<EntityMetadata> results = new List<EntityMetadata>();
 
 			RetrieveAllEntitiesRequest request = new RetrieveAllEntitiesRequest();
@@ -115,13 +115,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
 		/// <summary>
 		/// Returns Entity Metadata for requested entity.
-		/// Applies returns all data available based on CRM version type
+		/// Applies returns all data available based on version type
 		/// </summary>
 		/// <param name="entityName">Name of the Entity, data is being requested on</param>
 		/// <returns>Entity data</returns>
 		public EntityMetadata GetEntityMetadata(string entityName)
 		{
-			// Filter the EntityFitlers based on the version of CRM being connected too.
+			// Filter the EntityFitlers based on the version of Dataverse being connected too.
 			if (svcAct.ConnectedOrgVersion < Version.Parse("7.1.0.0"))
 				return GetEntityMetadata(EntityFilters.Attributes | EntityFilters.Entity | EntityFilters.Privileges | EntityFilters.Relationships , entityName);
 			else
@@ -293,7 +293,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			EntityMetadata entityMetadata = GetEntityMetadata(entityName);
 			if (entityMetadata != null)
 			{
-				// Added to deal with failed call to CRM.
+				// Added to deal with failed call to Dataverse.
 				if (entityMetadata.Attributes != null)
 				{
 					List<AttributeMetadata> results = new List<AttributeMetadata>();
@@ -350,7 +350,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			// Create the RetrieveOption Set
 			RetrieveOptionSetRequest optReq = new RetrieveOptionSetRequest { Name = optionSetName };
 
-			// query CRM
+			// query Dataverse
 			RetrieveOptionSetResponse response = (RetrieveOptionSetResponse)svcAct.Command_Execute(optReq, "GetGlobalOptionSetMetadata");
 			if (response != null)
 			{

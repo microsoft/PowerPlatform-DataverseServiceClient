@@ -1,0 +1,10 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+					xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="CheckBoxBackgroundBrush" Color="{x:Static SystemColors.WindowColor}"/>
+    <SolidColorBrush x:Key="CheckBoxOverTemplateBackgroundBrush" Color="{x:Static SystemColors.WindowColor}"/>
+    <SolidColorBrush x:Key="CheckBoxOverTemplateBorderBrush" Color="{x:Static SystemColors.WindowTextColor}"/>
+    <SolidColorBrush x:Key="CheckboxOptionMarkPathBrush" Color="{x:Static SystemColors.WindowTextColor}"/>
+    <SolidColorBrush x:Key="CheckboxDisabledForeGroundBrush" Color="{x:Static SystemColors.WindowTextColor}"/>
+    <SolidColorBrush x:Key="CheckBoxOnPressBackgroundBrush" Color="{x:Static SystemColors.WindowColor}"/>
+    <SolidColorBrush x:Key="CheckBoxOnPressBorderBrush" Color="{x:Static SystemColors.WindowTextColor}"/>
+</ResourceDictionary>

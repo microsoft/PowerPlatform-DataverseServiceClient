@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+  <ClaimsHomeRealmOptions>
+    <HomeRealm DisplayName="fabrikam.com" Uri="https://federoad-1.federoad.com/adfs/services/trust/mex/" />
+    <HomeRealm DisplayName="contosoTel.com" Uri="https://blank" />
+  </ClaimsHomeRealmOptions>
+

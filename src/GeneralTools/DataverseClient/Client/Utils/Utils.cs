@@ -1,14 +1,18 @@
 ﻿#region using
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.PowerPlatform.Dataverse.Client.Model;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Discovery;
 using Microsoft.Xrm.Sdk.Metadata;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
@@ -86,7 +90,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// </summary>
         /// <param name="serviceUri">Service Uri to parse</param>
         /// <param name="isOnPrem">if OnPrem, will be set to true, else false.</param>
-        /// <param name="onlineRegion">Name of the CRM on line Region serving this request</param>
+        /// <param name="onlineRegion">Name of the Dataverse Online Region serving this request</param>
         /// <param name="organizationName">Name of the Organization extracted from the Service URI</param>
         public static void GetOrgnameAndOnlineRegionFromServiceUri(Uri serviceUri, out string onlineRegion, out string organizationName, out bool isOnPrem)
         {
@@ -105,7 +109,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     elements.RemoveAt(0); // remove the first ( org name ) from the Uri.
 
 
-                    // construct Prospective CRM Online path.
+                    // construct Prospective Dataverse Online path.
                     System.Text.StringBuilder buildPath = new System.Text.StringBuilder();
                     foreach (var item in elements)
                     {
@@ -113,14 +117,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             continue; // Skip the .api. when running via this path.
                         buildPath.AppendFormat("{0}.", item);
                     }
-                    string crmKey = buildPath.ToString().TrimEnd('.').TrimEnd('/');
+                    string dvKey = buildPath.ToString().TrimEnd('.').TrimEnd('/');
                     buildPath.Clear();
-                    if (!string.IsNullOrEmpty(crmKey))
+                    if (!string.IsNullOrEmpty(dvKey))
                     {
                         using (DiscoveryServers discoSvcs = new DiscoveryServers())
                         {
                             // drop in the discovery region if it can be determined.  if not, default to scanning.
-                            var locatedDiscoServer = discoSvcs.OSDPServers.Where(w => w.DiscoveryServerUri != null && w.DiscoveryServerUri.Host.Contains(crmKey)).FirstOrDefault();
+                            var locatedDiscoServer = discoSvcs.OSDPServers.Where(w => w.DiscoveryServerUri != null && w.DiscoveryServerUri.Host.Contains(dvKey)).FirstOrDefault();
                             if (locatedDiscoServer != null && !string.IsNullOrEmpty(locatedDiscoServer.ShortName))
                                 onlineRegion = locatedDiscoServer.ShortName;
                         }
@@ -228,14 +232,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             continue; // Skip the .api. when running via this path.
                         buildPath.AppendFormat("{0}.", item);
                     }
-                    string crmKey = buildPath.ToString().TrimEnd('.').TrimEnd('/');
+                    string dvKey = buildPath.ToString().TrimEnd('.').TrimEnd('/');
                     buildPath.Clear();
-                    if (!string.IsNullOrEmpty(crmKey))
+                    if (!string.IsNullOrEmpty(dvKey))
                     {
                         using (DiscoveryServers discoSvcs = new DiscoveryServers())
                         {
                             // drop in the discovery region if it can be determined.  if not, default to scanning.
-                            var locatedDiscoServer = discoSvcs.OSDPServers.Where(w => w.DiscoveryServerUri != null && w.DiscoveryServerUri.Host.Contains(crmKey)).FirstOrDefault();
+                            var locatedDiscoServer = discoSvcs.OSDPServers.Where(w => w.DiscoveryServerUri != null && w.DiscoveryServerUri.Host.Contains(dvKey)).FirstOrDefault();
                             if (locatedDiscoServer != null && !string.IsNullOrEmpty(locatedDiscoServer.ShortName))
                                 return locatedDiscoServer;
                         }
@@ -291,24 +295,25 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// This is a temp method to support the staged transition to the webAPI and will be removed or reintegrated with the overall pipeline at some point in the future.
         /// </summary>
         /// <param name="req"></param>
-        /// <param name="useWebApi">useWebApi</param>
         /// <returns></returns>
-        internal static bool IsRequestValidForTranslationToWebAPI(OrganizationRequest req, bool useWebApi)
+        internal static bool IsRequestValidForTranslationToWebAPI(OrganizationRequest req)
         {
+            bool useWebApi = ClientServiceProviders.Instance.GetService<IOptions<AppSettingsConfiguration>>().Value.UseWebApi;
+            bool useWebApiForLogin = ClientServiceProviders.Instance.GetService<IOptions<AppSettingsConfiguration>>().Value.UseWebApiLoginFlow;
             switch (req.RequestName.ToLowerInvariant())
             {
                 case "create":
                 case "update":
                 case "delete":
-                    return true;
-                case "retrievecurrentorganization":
-                case "retrieveorganizationinfo":
-                case "retrieveversion":
-                case "whoami":
                 case "importsolution":
                 case "exportsolution":
                 case "stagesolution":
                     return useWebApi; // Only supported with useWebApi flag
+                case "retrievecurrentorganization":
+                case "retrieveorganizationinfo":
+                case "retrieveversion":
+                case "whoami":
+                    return useWebApiForLogin; // Separate webAPI login methods from general WebAPI use.
                 case "upsert":
                 // Disabling WebAPI support for upsert right now due to issues with generating the response.
 
@@ -357,7 +362,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         }
 
         /// <summary>
-        /// Constructs Web API request url and adds public request properties to the url as key/value pairs 
+        /// Constructs Web API request url and adds public request properties to the url as key/value pairs
         /// </summary>
         internal static string ConstructWebApiRequestUrl(OrganizationRequest request, HttpMethod httpMethod, Entity entity, EntityMetadata entityMetadata)
         {
@@ -443,7 +448,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="retryCount">retryCount</param>
         /// <param name="isThrottled">when set indicated this was caused by a Throttle</param>
         /// <param name="webUriReq"></param>
-        internal static void RetryRequest(OrganizationRequest req, Guid requestTrackingId, TimeSpan LockWait, Stopwatch logDt, 
+        internal static void RetryRequest(OrganizationRequest req, Guid requestTrackingId, TimeSpan LockWait, Stopwatch logDt,
             DataverseTraceLogger logEntry, Guid? sessionTrackingId, bool disableConnectionLocking, TimeSpan retryPauseTimeRunning,
             Exception ex, string errorStringCheck, ref int retryCount, bool isThrottled, string webUriReq = "")
         {
@@ -457,9 +462,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// Parses an attribute array into a object that can be used to create a JSON request.
         /// </summary>
         /// <param name="sourceEntity">Entity to process</param>
-        /// <param name="mUtil"></param>
-        /// <returns></returns>
-        internal static ExpandoObject ToExpandoObject(Entity sourceEntity, MetadataUtility mUtil)
+        /// <param name="mUtil">Metadata interface utility</param>
+        /// <param name="requestedMethod">Operation being executed</param>
+        /// <param name="logger">Log sink</param>
+        /// <returns>ExpandoObject</returns>
+        internal static ExpandoObject ToExpandoObject(Entity sourceEntity, MetadataUtility mUtil, HttpMethod requestedMethod, DataverseTraceLogger logger )
         {
             dynamic expando = new ExpandoObject();
 
@@ -484,19 +491,32 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 var keyValuePair = attrib;
                 var value = keyValuePair.Value;
                 var key = keyValuePair.Key;
+
                 if (value is EntityReference entityReference)
                 {
                     var attributeInfo = mUtil.GetAttributeMetadata(sourceEntity.LogicalName, key.ToLower());
+
+                    if (!IsAttributeValidForOperation(attributeInfo, requestedMethod))
+                        continue;
+
                     // Get Lookup attribute meta data for the ER to check for polymorphic relationship.
-                    if (attributeInfo is Xrm.Sdk.Metadata.LookupAttributeMetadata attribData)
+                    if (attributeInfo is LookupAttributeMetadata attribData)
                     {
                         // Now get relationship to make sure we use the correct name.
-                        var eData = mUtil.GetEntityMetadata(Xrm.Sdk.Metadata.EntityFilters.Relationships, sourceEntity.LogicalName);
+                        var eData = mUtil.GetEntityMetadata(EntityFilters.Relationships, sourceEntity.LogicalName);
                         var ERNavName = eData.ManyToOneRelationships.FirstOrDefault(w => w.ReferencingAttribute.Equals(attribData.LogicalName) &&
                                                                                 w.ReferencedEntity.Equals(entityReference.LogicalName))
                                                                                 ?.ReferencingEntityNavigationPropertyName;
+
                         if (!string.IsNullOrEmpty(ERNavName))
+                        {
                             key = ERNavName;
+                        }
+                        else
+                        {
+                            logger.Log($"{key} describes an entity reference but does not have a corresponding relationship. Skipping adding it in the {requestedMethod} operation");
+                            continue;
+                        }
 
                         // Populate Key property
                         key = $"{key}@odata.bind";
@@ -519,7 +539,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     }
 
 
-                    value = $"/{mUtil.GetEntityMetadata(Xrm.Sdk.Metadata.EntityFilters.Entity, entityReference.LogicalName).EntitySetName}({entityReferanceValue})";
+                    value = $"/{mUtil.GetEntityMetadata(EntityFilters.Entity, entityReference.LogicalName).EntitySetName}({entityReferanceValue})";
                 }
                 else
                 {
@@ -541,7 +561,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         // build linked collection here.
                         foreach (var ent in (value as EntityCollection).Entities)
                         {
-                            ExpandoObject rslt = ToExpandoObject(ent, mUtil);
+                            ExpandoObject rslt = ToExpandoObject(ent, mUtil, requestedMethod , logger);
                             if (isActivityParty)
                             {
                                 var tempDict = ((IDictionary<string, object>)rslt);
@@ -563,7 +583,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             string mselectValueString = string.Empty;
                             foreach (var opt in optionSetValues)
                             {
-                                mselectValueString += $"{opt.Value.ToString()},";
+                                mselectValueString += $"{opt.Value},";
                             }
                             value = mselectValueString.Remove(mselectValueString.Length - 1);
                         }
@@ -574,21 +594,21 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         else if (value is DateTime dateTimeValue)
                         {
                             var attributeInfo = mUtil.GetAttributeMetadata(sourceEntity.LogicalName, key.ToLower());
-                            if (attributeInfo is Xrm.Sdk.Metadata.DateTimeAttributeMetadata attribDateTimeData)
+                            if (attributeInfo is DateTimeAttributeMetadata attribDateTimeData)
                             {
-                                if (attribDateTimeData.DateTimeBehavior == Xrm.Sdk.Metadata.DateTimeBehavior.DateOnly)
+                                if (attribDateTimeData.DateTimeBehavior == DateTimeBehavior.DateOnly)
                                 {
                                     value = dateTimeValue.ToUniversalTime().ToString("yyyy-MM-dd");
                                 }
                                 else
                                 {
-                                    if (attribDateTimeData.DateTimeBehavior == Xrm.Sdk.Metadata.DateTimeBehavior.TimeZoneIndependent)
+                                    if (attribDateTimeData.DateTimeBehavior == DateTimeBehavior.TimeZoneIndependent)
                                     {
                                         value = dateTimeValue.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fff");
                                     }
                                     else
                                     {
-                                        if (attribDateTimeData.DateTimeBehavior == Xrm.Sdk.Metadata.DateTimeBehavior.UserLocal)
+                                        if (attribDateTimeData.DateTimeBehavior == DateTimeBehavior.UserLocal)
                                         {
                                             value = dateTimeValue.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
                                         }
@@ -611,10 +631,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         else if (value is null)
                         {
                             var attributeInfo = mUtil.GetAttributeMetadata(sourceEntity.LogicalName, key.ToLower());
+
+                            if (!IsAttributeValidForOperation((AttributeMetadata)attrib.Value, requestedMethod))
+                                continue;
+
                             if (attributeInfo is Xrm.Sdk.Metadata.LookupAttributeMetadata attribData)
                             {
                                 // This will not work for Polymorphic currently.
-                                var eData = mUtil.GetEntityMetadata(Xrm.Sdk.Metadata.EntityFilters.Relationships, sourceEntity.LogicalName);
+                                var eData = mUtil.GetEntityMetadata(EntityFilters.Relationships, sourceEntity.LogicalName);
                                 var ERNavName = eData.ManyToOneRelationships.FirstOrDefault(w => w.ReferencingAttribute.Equals(attribData.LogicalName) &&
                                                                                w.ReferencedEntity.Equals(attribData.Targets.FirstOrDefault()))
                                                                                ?.ReferencingEntityNavigationPropertyName;
@@ -634,11 +658,38 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             // Check to see if this contained an activity party
             if (partiesCollection?.Count > 0)
             {
-                expandoObject.Add($"{sourceEntity.LogicalName}_activity_parties", partiesCollection);
+                var sourceMdata = mUtil.GetEntityMetadata(sourceEntity.LogicalName);
+                if (sourceMdata != null )
+                    expandoObject.Add($"{sourceMdata.SchemaName}_activity_parties", partiesCollection);
             }
 
 
             return (ExpandoObject)expandoObject;
+        }
+
+        /// <summary>
+        /// Checks if the operation being preformed is permitted for the attribute.
+        /// </summary>
+        /// <param name="attrib"></param>
+        /// <param name="requestedMethod"></param>
+        /// <returns></returns>
+        private static bool IsAttributeValidForOperation(AttributeMetadata attrib, HttpMethod requestedMethod)
+        {
+            switch (requestedMethod.ToString().ToLowerInvariant())
+            {
+                case "post":
+                case "put":
+                    if (attrib.IsValidForCreate.HasValue && !attrib.IsValidForCreate.Value)
+                        return false;
+                    break;
+                case "patch":
+                    if (attrib.IsValidForUpdate.HasValue && !attrib.IsValidForUpdate.Value)
+                        return false;
+                    break;
+                default:
+                    break;
+            }
+            return true;
         }
 
         /// <summary>
@@ -665,8 +716,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="entityName">parent entity</param>
         /// <param name="entityCollection">collection of relationships</param>
         /// <param name="mUtil">meta-data utility</param>
+        /// <param name="requestedMethod">Operation being executed</param>
+        /// <param name="logger">Logger</param>
         /// <returns></returns>
-        internal static ExpandoObject ReleatedEntitiesToExpandoObject(ExpandoObject rootExpando, string entityName, RelatedEntityCollection entityCollection, MetadataUtility mUtil)
+        internal static ExpandoObject ReleatedEntitiesToExpandoObject(ExpandoObject rootExpando, string entityName, RelatedEntityCollection entityCollection, MetadataUtility mUtil, HttpMethod requestedMethod, DataverseTraceLogger logger)
         {
             if (rootExpando == null)
                 return rootExpando;
@@ -688,7 +741,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 List<ExpandoObject> childCollection = new List<ExpandoObject>();
 
                 // Get the Entity relationship key and entity and reverse it back to the entity key name
-                var eData = mUtil.GetEntityMetadata(Xrm.Sdk.Metadata.EntityFilters.Relationships, entItem.Value.Entities[0].LogicalName);
+                var eData = mUtil.GetEntityMetadata(EntityFilters.Relationships, entItem.Value.Entities[0].LogicalName);
 
                 // Find the relationship that is referenced.
                 var ERM21 = eData.ManyToOneRelationships.FirstOrDefault(w1 => w1.SchemaName.ToLower().Equals(entItem.Key.SchemaName.ToLower()));
@@ -728,20 +781,20 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     // Check to see if the entity itself has related entities
                     if (ent.RelatedEntities != null && ent.RelatedEntities.Count > 0)
                     {
-                        childEntities = ReleatedEntitiesToExpandoObject(childEntities, entityName, ent.RelatedEntities, mUtil);
+                        childEntities = ReleatedEntitiesToExpandoObject(childEntities, entityName, ent.RelatedEntities, mUtil, requestedMethod, logger);
                     }
 
                     // generate object.
-                    ExpandoObject ent1 = ToExpandoObject(ent, mUtil);
+                    ExpandoObject ent1 = ToExpandoObject(ent, mUtil, requestedMethod , logger);
 
                     if (((IDictionary<string, object>)childEntities).Count() > 0)
                     {
-                        foreach (var item in (IDictionary<string, object>)childEntities)
+                        foreach (var item in childEntities)
                         {
                             ((IDictionary<string, object>)ent1).Add(item.Key, item.Value);
                         }
                     }
-                    childCollection?.Add((ExpandoObject)ent1);
+                    childCollection?.Add(ent1);
                 }
                 if (childCollection.Count == 1 && isArrayRequired == false)
                     ((IDictionary<string, object>)rootExpando).Add(key, childCollection[0]);
@@ -786,9 +839,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         {
             if (_autoRetryRetrieveEntityList == null)
             {
-                _autoRetryRetrieveEntityList = new List<string>();
-                _autoRetryRetrieveEntityList.Add("asyncoperation"); // to support failures when looking for async Jobs.
-                _autoRetryRetrieveEntityList.Add("importjob"); // to support failures when looking for importjob.
+                _autoRetryRetrieveEntityList = new List<string>
+                {
+                    "asyncoperation", // to support failures when looking for async Jobs.
+                    "importjob" // to support failures when looking for importjob.
+                };
             }
 
             foreach (var itm in _autoRetryRetrieveEntityList)
@@ -826,39 +881,39 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             /// <summary>
             /// Populated with the host process
             /// </summary>
-            public static readonly string USER_AGENT_HTTP_HEADER = "User-Agent";
+            public const string USER_AGENT_HTTP_HEADER = "User-Agent";
             /// <summary>
             /// Session ID used to track all operations associated with a given group of calls.
             /// </summary>
-            public static readonly string X_MS_CLIENT_SESSION_ID = "x-ms-client-session-id";
+            public const string X_MS_CLIENT_SESSION_ID = "x-ms-client-session-id";
             /// <summary>
             /// PerRequest ID used to track a specific request.
             /// </summary>
-            public static readonly string X_MS_CLIENT_REQUEST_ID = "x-ms-client-request-id";
+            public const string X_MS_CLIENT_REQUEST_ID = "x-ms-client-request-id";
             /// <summary>
             /// Content type of WebAPI request.
             /// </summary>
-            public static readonly string CONTENT_TYPE = "Content-Type";
+            public const string CONTENT_TYPE = "Content-Type";
             /// <summary>
             /// Header loaded with the AADObjectID of the user to impersonate
             /// </summary>
-            public static readonly string AAD_CALLER_OBJECT_ID_HTTP_HEADER = "CallerObjectId";
+            public const string AAD_CALLER_OBJECT_ID_HTTP_HEADER = "CallerObjectId";
             /// <summary>
-            /// Header loaded with the CRM user ID of the user to impersonate
+            /// Header loaded with the Dataverse user ID of the user to impersonate
             /// </summary>
-            public static readonly string CALLER_OBJECT_ID_HTTP_HEADER = "MSCRMCallerID";
+            public const string CALLER_OBJECT_ID_HTTP_HEADER = "MSCRMCallerID";
             /// <summary>
             /// Header used to pass the token for the user
             /// </summary>
-            public static readonly string AUTHORIZATION_HEADER = "Authorization";
+            public const string AUTHORIZATION_HEADER = "Authorization";
             /// <summary>
             /// Header requesting the connection be kept alive.
             /// </summary>
-            public static readonly string CONNECTION_KEEP_ALIVE = "Keep-Alive";
+            public const string CONNECTION_KEEP_ALIVE = "Keep-Alive";
             /// <summary>
             /// Header requiring Cache Consistency Server side.
             /// </summary>
-            public static readonly string FORCE_CONSISTENCY = "Consistency";
+            public const string FORCE_CONSISTENCY = "Consistency";
 
             /// <summary>
             /// This key used to indicate if the custom plugins need to be bypassed during the execution of the request.
@@ -982,6 +1037,158 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
         }
 
+
+        #region CookieHelpers
+        /// <summary>
+        /// Manage Pushing Cookies Forward in a switchable manner.
+        /// </summary>
+        /// <param name="strHeader">Header string to start with</param>
+        /// <param name="cookieCollection">Collection of cookies currently in the system</param>
+        /// <returns></returns>
+        internal static Dictionary<string, string> GetAllCookiesFromHeader(string strHeader, Dictionary<string, string> cookieCollection)
+        {
+            ArrayList al = ConvertCookieHeaderToArrayList(strHeader);
+            return ConvertCookieArraysToCookieDictionary(al, cookieCollection);
+        }
+
+        /// <summary>
+        /// Manage Pushing Cookies Forward in a switchable manner.
+        /// </summary>
+        /// <param name="strHeaderList">Header string to start with</param>
+        /// <param name="cookieCollection"> collection of cookies currently in the system</param>
+        /// <returns></returns>
+        internal static Dictionary<string, string> GetAllCookiesFromHeader(string[] strHeaderList, Dictionary<string, string> cookieCollection)
+        {
+            if (strHeaderList != null)
+            {
+                return ConvertCookieArraysToCookieDictionary(ConvertCookieListToArrayList(strHeaderList), cookieCollection);
+            }
+            else
+            {
+                return cookieCollection;
+            }
+        }
+
+        internal static string GetCookiesFromCollectionAsString(Dictionary<string, string> cookieCollection)
+        {
+            if (cookieCollection == null || cookieCollection.Count == 0)
+                return string.Empty;
+
+            string cookieString = "";
+            if (cookieCollection != null)
+            {
+                foreach (var itm in cookieCollection)
+                {
+                    cookieString += $"{itm.Key}={itm.Value};";
+                }
+            }
+            return cookieString;
+        }
+
+        internal static List<string> GetCookiesFromCollectionAsArray(Dictionary<string, string> cookieCollection)
+        {
+            if (cookieCollection == null || cookieCollection.Count == 0)
+                return null;
+
+            string s = "";
+            List<string> cookieItems = new List<string>();
+            foreach (var itm in cookieCollection)
+            {
+                //cookieItems.Add($"{itm.Key}={itm.Value}; ");
+                s += $"{itm.Key}={itm.Value}; ";
+            }
+            cookieItems.Add(s);
+            return cookieItems;
+        }
+
+        /// <summary>
+        /// Create an array list of cookies
+        /// </summary>
+        /// <param name="strCookHeader"></param>
+        /// <returns></returns>
+        private static ArrayList ConvertCookieHeaderToArrayList(string strCookHeader)
+        {
+            if (string.IsNullOrEmpty(strCookHeader))
+                return null;
+
+            strCookHeader = strCookHeader.Replace("\r", "");
+            strCookHeader = strCookHeader.Replace("\n", "");
+            string[] strCookTemp = strCookHeader.Split(',');
+
+            return ConvertCookieListToArrayList(strCookTemp);
+
+        }
+
+        private static ArrayList ConvertCookieListToArrayList(string[] potentalCookieList)
+        {
+            ArrayList al = new ArrayList();
+            int i = 0;
+            int n = potentalCookieList.Length;
+            try
+            {
+                while (i < n)
+                {
+                    if (potentalCookieList[i].IndexOf("expires=", StringComparison.OrdinalIgnoreCase) > 0)
+                    {
+                        if (n == (i + 1))
+                        {
+                            al.Add(potentalCookieList[i]);
+                        }
+                        else
+                        {
+                            al.Add(potentalCookieList[i] + "," + potentalCookieList[i + 1]);
+                        }
+                        i++;
+                    }
+                    else
+                    {
+                        al.Add(potentalCookieList[i]);
+                    }
+                    i++;
+                }
+            }
+            finally { } // No op.. let it fail if it could not parse the cookie.
+            return al;
+        }
+
+        /// <summary>
+        /// Generate Cookie collection for the Array.
+        /// </summary>
+        /// <param name="al"></param>
+        /// <param name="cookieCollection"> Cookie collection to populate or update</param>
+        /// <returns></returns>
+        private static Dictionary<string, string> ConvertCookieArraysToCookieDictionary(ArrayList al, Dictionary<string, string> cookieCollection)
+        {
+            if (cookieCollection == null)
+                cookieCollection = new Dictionary<string, string>();
+
+            int alcount = al.Count;
+            string strEachCook;
+            string[] strEachCookParts;
+            for (int i = 0; i < alcount; i++)
+            {
+                strEachCook = al[i].ToString();
+                strEachCookParts = strEachCook.Split(';');
+                int intEachCookPartsCount = strEachCookParts.Length;
+                Cookie cookTemp = new Cookie();
+
+                string strCNameAndCValue = strEachCookParts[0];
+                if (!string.IsNullOrEmpty(strCNameAndCValue))
+                {
+                    int firstEqual = strCNameAndCValue.IndexOf("=");
+                    string firstName = strCNameAndCValue.Substring(0, firstEqual);
+                    string allValue = strCNameAndCValue.Substring(firstEqual + 1, strCNameAndCValue.Length - (firstEqual + 1));
+                    cookTemp.Name = firstName;
+                    cookTemp.Value = allValue;
+                    if (cookieCollection.ContainsKey(firstName))
+                        cookieCollection[firstName] = allValue;
+                    else
+                        cookieCollection.Add(firstName, allValue);
+                }
+            }
+            return cookieCollection;
+        }
+        #endregion
 
     }
 }

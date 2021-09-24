@@ -1,0 +1,16 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+					xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+	<SolidColorBrush x:Key="WindowBaseBackgroundBrush" Color="White"/>
+	<SolidColorBrush x:Key="WindowDefaultButtonForegroundBrush" Color="#262626"/>
+	<SolidColorBrush x:Key="WindowFlatButtonOnFocusBackgroundBrush" Color="#d7ebf9"/>
+	<SolidColorBrush x:Key="WindowFlatButtonOnFocusBorderBrush" Color="#bdbdbd"/>
+	<SolidColorBrush x:Key="WindowTextBlockForegroundBrush" Color="#002050"/>
+	<SolidColorBrush x:Key="WindowBorderBush" Color="#173561"/>
+	<SolidColorBrush x:Key="WindowForegroundBrush" Color="#444444"/>
+	<SolidColorBrush x:Key="WindowStatusTextBlockForegroundBrush" Color="#002050"/>
+	<SolidColorBrush x:Key="WindowNotesTextBlockForegroundBrush" Color="#262626"/>
+	<SolidColorBrush x:Key="WindowNotesBorderBrush" Color="#d6d6d6"/>
+	<SolidColorBrush x:Key="WindowNotesForegroundBrush" Color="#444444"/>
+	<SolidColorBrush x:Key="WindowButtonOnFocusForegroundBrush" Color="#d7ebf9"/>
+	<SolidColorBrush x:Key="ControlButtonForegroundBrush" Color="#262626"/>
+</ResourceDictionary>

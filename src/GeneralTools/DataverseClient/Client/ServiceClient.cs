@@ -7,7 +7,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Security;
 using System.ServiceModel;
 using System.ServiceModel.Description;
@@ -22,17 +21,15 @@ using Microsoft.Xrm.Sdk.WebServiceClient;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.Net.Http;
-using Microsoft.Rest;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
-using Newtonsoft.Json.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.PowerPlatform.Dataverse.Client.Auth;
-using Microsoft.PowerPlatform.Dataverse.Client;
 using System.Threading;
-using System.Dynamic;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.PowerPlatform.Dataverse.Client.Model;
+using System.Reflection;
+using Microsoft.Extensions.Caching.Memory;
 #endregion
 
 namespace Microsoft.PowerPlatform.Dataverse.Client
@@ -40,7 +37,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
     /// <summary>
     /// Primary implementation of the API interface for Dataverse.
     /// </summary>
-    public sealed class ServiceClient : IOrganizationService, IOrganizationServiceAsync, IDisposable
+    public sealed class ServiceClient : IOrganizationService, IOrganizationServiceAsync2, IDisposable
     {
         #region Vars
 
@@ -125,7 +122,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <summary>
         ///  Exposed OrganizationWebProxyClient for consumers
         /// </summary>
-        internal OrganizationWebProxyClient OrganizationWebProxyClient
+        internal OrganizationWebProxyClientAsync OrganizationWebProxyClient
         {
             get
             {
@@ -276,7 +273,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     _connectionSvc.AuthenticationTypeInUse == AuthenticationType.ExternalTokenManagement ||
                     _connectionSvc.AuthenticationTypeInUse == AuthenticationType.ClientSecret))
                 {
-                    return _connectionSvc.RefreshWebProxyClientTokenAsync().Result;
+                    return _connectionSvc.RefreshClientTokenAsync().Result;
                 }
                 else
                     return string.Empty;
@@ -316,6 +313,25 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 // Added to support testing of ServiceClient direct code.
                 if (_testOrgSvcInterface != null)
                     return _testOrgSvcInterface;
+
+                if (_connectionSvc != null)
+                {
+                    return _connectionSvc.WebClient;
+                }
+                else return null;
+            }
+        }
+
+        /// <summary>
+        /// Pointer to Dataverse Service.
+        /// </summary>
+        internal IOrganizationServiceAsync DataverseServiceAsync
+        {
+            get
+            {
+                // Added to support testing of ServiceClient direct code.
+                //if (_testOrgSvcInterface != null)
+                //    return _testOrgSvcInterface;
 
                 if (_connectionSvc != null)
                 {
@@ -535,7 +551,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             {
                 if (string.IsNullOrEmpty(_sdkVersionProperty))
                 {
-                    _sdkVersionProperty = FileVersionInfo.GetVersionInfo(typeof(OrganizationWebProxyClient).Assembly.Location).FileVersion;
+                    _sdkVersionProperty = typeof(OrganizationDetail).Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version ?? FileVersionInfo.GetVersionInfo(typeof(OrganizationDetail).Assembly.Location).FileVersion;
                 }
                 return _sdkVersionProperty;
             }
@@ -574,7 +590,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         }
 
         /// <summary>
-        /// Use Web API instead of legacy SOAP org service
+        /// Use Web API instead of org service where possible.
+        /// WARNING. THEASE ARE TEMPORARY SETTINGS AND WILL BE REMOVED IN THE FUTURE
         /// </summary>
         public bool UseWebApi
         {
@@ -598,8 +615,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="orgSvc"></param>
         /// <param name="httpClient"></param>
         /// <param name="targetVersion"></param>
+        /// <param name="baseConnectUrl"></param>
         /// <param name="logger">Logging provider <see cref="ILogger"/></param>
-        internal ServiceClient(IOrganizationService orgSvc, HttpClient httpClient, Version targetVersion = null, ILogger logger = null)
+        internal ServiceClient(IOrganizationService orgSvc, HttpClient httpClient, string baseConnectUrl, Version targetVersion = null, ILogger logger = null)
         {
             _testOrgSvcInterface = orgSvc;
             _logEntry = new DataverseTraceLogger(logger)
@@ -607,8 +625,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 LogRetentionDuration = new TimeSpan(0, 10, 0),
                 EnabledInMemoryLogCapture = true
             };
-            _connectionSvc = new ConnectionService(orgSvc);
-            _connectionSvc.WebApiHttpClient = httpClient;
+            _connectionSvc = new ConnectionService(orgSvc, baseConnectUrl , httpClient, logger);
 
             if (targetVersion != null)
                 _connectionSvc.OrganizationVersion = targetVersion;
@@ -631,17 +648,20 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             ConnectToService(dataverseConnectionString, logger);
         }
 
-        /// <summary>
-        /// Uses the Organization Web proxy Client provided by the user
-        /// </summary>
-        /// <param name="externalOrgWebProxyClient">User Provided Organization Web Proxy Client</param>
-        /// <param name="logger">Logging provider <see cref="ILogger"/></param>
-        public ServiceClient(OrganizationWebProxyClient externalOrgWebProxyClient, ILogger logger = null)
-        {
-            CreateServiceConnection(null, AuthenticationType.OAuth, string.Empty, string.Empty, string.Empty, null, string.Empty,
-                MakeSecureString(string.Empty), string.Empty, string.Empty, string.Empty, false, false, null, string.Empty, null,
-                PromptBehavior.Auto, externalOrgWebProxyClient, externalLogger: logger);
-        }
+        //REMOVED FROM BUILD FOR NOW
+        ///// <summary>
+        ///// Uses the Organization Web proxy Client provided by the user
+        ///// </summary>
+        ///// <param name="externalOrgWebProxyClient">User Provided Organization Web Proxy Client</param>
+        ///// <param name="logger">Logging provider <see cref="ILogger"/></param>
+        //internal ServiceClient(OrganizationWebProxyClient externalOrgWebProxyClient, ILogger logger = null)
+        //{
+        //    // Disabled for this build as we determine how to support server side Native Client
+
+        //    //CreateServiceConnection(null, AuthenticationType.OAuth, string.Empty, string.Empty, string.Empty, null, string.Empty,
+        //    //    MakeSecureString(string.Empty), string.Empty, string.Empty, string.Empty, false, false, null, string.Empty, null,
+        //    //    PromptBehavior.Auto, externalOrgWebProxyClient, externalLogger: logger);
+        //}
 
         /// <summary>
         /// Creates an instance of ServiceClient who's authentication is managed by the caller.
@@ -679,14 +699,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="redirectUri">The redirect URI application will be redirected post OAuth authentication.</param>
         /// <param name="promptBehavior">The prompt Behavior.</param>
         /// <param name="useDefaultCreds">(optional) If true attempts login using current user ( Online ) </param>
+        /// <param name="tokenCacheStorePath">(Optional)The token cache path where token cache file is placed. if string.empty, will use default cache file store, if null, will use in memory cache</param>
         /// <param name="logger">Logging provider <see cref="ILogger"/></param>
         public ServiceClient(string userId, SecureString password, string regionGeo, string orgName, bool useUniqueInstance, OrganizationDetail orgDetail,
-                string clientId, Uri redirectUri, PromptBehavior promptBehavior = PromptBehavior.Auto, bool useDefaultCreds = false, ILogger logger = null)
+                string clientId, Uri redirectUri, PromptBehavior promptBehavior = PromptBehavior.Auto, bool useDefaultCreds = false, string tokenCacheStorePath = null, ILogger logger = null)
         {
             CreateServiceConnection(
                     null, AuthenticationType.OAuth, string.Empty, string.Empty, orgName, null,
                     userId, password, string.Empty, regionGeo, string.Empty, true, useUniqueInstance, orgDetail,
-                    clientId, redirectUri, promptBehavior, null, useDefaultCreds: useDefaultCreds, externalLogger: logger);
+                    clientId, redirectUri, promptBehavior, null, useDefaultCreds: useDefaultCreds, externalLogger: logger, tokenCacheStorePath: tokenCacheStorePath);
         }
 
         /// <summary>
@@ -703,14 +724,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="promptBehavior">The prompt Behavior.</param>
         /// <param name="useDefaultCreds">(optional) If true attempts login using current user ( Online ) </param>
         /// <param name="hostUri">API or Instance URI to access the Dataverse environment.</param>
+        /// <param name="tokenCacheStorePath">(Optional)The token cache path where token cache file is placed. if string.empty, will use default cache file store, if null, will use in memory cache</param>
         /// <param name="logger">Logging provider <see cref="ILogger"/></param>
         public ServiceClient(string userId, SecureString password, Uri hostUri, bool useUniqueInstance,
-                string clientId, Uri redirectUri, PromptBehavior promptBehavior = PromptBehavior.Auto, bool useDefaultCreds = false, ILogger logger = null)
+                string clientId, Uri redirectUri, PromptBehavior promptBehavior = PromptBehavior.Auto, bool useDefaultCreds = false, string tokenCacheStorePath = null, ILogger logger = null)
         {
             CreateServiceConnection(
                     null, AuthenticationType.OAuth, string.Empty, string.Empty, null, null,
                     userId, password, string.Empty, null, string.Empty, true, useUniqueInstance, null,
-                    clientId, redirectUri, promptBehavior, null, useDefaultCreds: useDefaultCreds, instanceUrl: hostUri, externalLogger: logger);
+                    clientId, redirectUri, promptBehavior, null, useDefaultCreds: useDefaultCreds, instanceUrl: hostUri, externalLogger: logger, tokenCacheStorePath: tokenCacheStorePath);
         }
 
         /// <summary>
@@ -728,14 +750,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="clientId">The registered client Id on Azure portal.</param>
         /// <param name="redirectUri">The redirect URI application will be redirected post OAuth authentication.</param>
         /// <param name="promptBehavior">The prompt Behavior.</param>
+        /// <param name="tokenCacheStorePath">(Optional)The token cache path where token cache file is placed. if string.empty, will use default cache file store, if null, will use in memory cache</param>
         /// <param name="logger">Logging provider <see cref="ILogger"/></param>
         public ServiceClient(string userId, SecureString password, string domain, string hostName, string port, string orgName, bool useSsl, bool useUniqueInstance,
-                OrganizationDetail orgDetail, string clientId, Uri redirectUri, PromptBehavior promptBehavior = PromptBehavior.Auto, ILogger logger = null)
+                OrganizationDetail orgDetail, string clientId, Uri redirectUri, PromptBehavior promptBehavior = PromptBehavior.Auto, string tokenCacheStorePath = null, ILogger logger = null)
         {
             CreateServiceConnection(
                     null, AuthenticationType.OAuth, hostName, port, orgName, null,
                     userId, password, domain, string.Empty, string.Empty, useSsl, useUniqueInstance, orgDetail,
-                    clientId, redirectUri, promptBehavior, null, externalLogger: logger);
+                    clientId, redirectUri, promptBehavior, null, externalLogger: logger, tokenCacheStorePath: tokenCacheStorePath);
         }
 
         /// <summary>
@@ -751,10 +774,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="orgDetail">Dataverse Org Detail object, this is is returned from a query to the Dataverse Discovery Server service. not required.</param>
         /// <param name="clientId">The registered client Id on Azure portal.</param>
         /// <param name="redirectUri">The redirect URI application will be redirected post OAuth authentication.</param>
-        /// <param name="tokenCachePath">The token cache path where token cache file is placed.</param>
         /// <param name="logger">Logging provider <see cref="ILogger"/></param>
         public ServiceClient(X509Certificate2 certificate, StoreName certificateStoreName, string certificateThumbPrint, Uri instanceUrl, string orgName, bool useSsl, bool useUniqueInstance,
-                OrganizationDetail orgDetail, string clientId, Uri redirectUri, string tokenCachePath, ILogger logger = null)
+                OrganizationDetail orgDetail, string clientId, Uri redirectUri, ILogger logger = null)
         {
             if ((string.IsNullOrEmpty(clientId) || redirectUri == null))
             {
@@ -900,7 +922,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
                     CreateServiceConnection(null, parsedConnStr.AuthenticationType, hostname, port, orgName, networkCredentials, userId,
                                                 MakeSecureString(password), domainname, onlineRegion, homesRealm, useSsl, parsedConnStr.UseUniqueConnectionInstance,
-                                                    null, clientId, redirectUri, parsedConnStr.PromptBehavior, instanceUrl: parsedConnStr.SkipDiscovery ? parsedConnStr.ServiceUri : null, useDefaultCreds: parsedConnStr.UseCurrentUser, externalLogger: logger);
+                                                    null, clientId, redirectUri, parsedConnStr.PromptBehavior, instanceUrl: parsedConnStr.SkipDiscovery ? parsedConnStr.ServiceUri : null,
+                                                    useDefaultCreds: parsedConnStr.UseCurrentUser, externalLogger: logger, tokenCacheStorePath: parsedConnStr.TokenCacheStorePath);
                     break;
                 case AuthenticationType.Certificate:
                     hostname = parsedConnStr.IsOnPremOauth ? hostname : string.Empty; //
@@ -948,7 +971,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="orginalAuthType">Auth type of source connection</param>
         /// <param name="sourceOrgVersion">source organization version</param>
         /// <param name="logger">Logging provider <see cref="ILogger"/></param>
-        internal ServiceClient(OrganizationWebProxyClient externalOrgWebProxyClient, bool isCloned = true, AuthenticationType orginalAuthType = AuthenticationType.OAuth, Version sourceOrgVersion = null, ILogger logger = null)
+        internal ServiceClient(OrganizationWebProxyClientAsync externalOrgWebProxyClient, bool isCloned = true, AuthenticationType orginalAuthType = AuthenticationType.OAuth, Version sourceOrgVersion = null, ILogger logger = null)
         {
             CreateServiceConnection(null, orginalAuthType, string.Empty, string.Empty, string.Empty, null, string.Empty,
                 MakeSecureString(string.Empty), string.Empty, string.Empty, string.Empty, false, false, null, string.Empty, null,
@@ -986,6 +1009,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="useDefaultCreds">(optional) If true attempts login using current user ( Online ) </param>
         /// <param name="incomingOrgVersion">Incoming Org Version, used as part of clone.</param>
         /// <param name="externalLogger">Logging provider <see cref="ILogger"/></param>
+        /// <param name="tokenCacheStorePath">path for token file storage</param>
         internal void CreateServiceConnection(
             object externalOrgServiceProxy,
             AuthenticationType requestedAuthType,
@@ -1004,7 +1028,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             string clientId = "",
             Uri redirectUri = null,
             PromptBehavior promptBehavior = PromptBehavior.Auto,
-            OrganizationWebProxyClient externalOrgWebProxyClient = null,
+            OrganizationWebProxyClientAsync externalOrgWebProxyClient = null,
             string certificateThumbPrint = "",
             StoreName certificateStoreName = StoreName.My,
             X509Certificate2 certificate = null,
@@ -1012,7 +1036,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             bool isCloned = false,
             bool useDefaultCreds = false,
             Version incomingOrgVersion = null,
-            ILogger externalLogger = null
+            ILogger externalLogger = null,
+            string tokenCacheStorePath = null
             )
         {
 
@@ -1045,21 +1070,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             try
             {
                 // Support for things like Excel that do not run from a local directory.
-                if (File.Exists("microsoft.cds.sdk.dll"))
+                Version fileVersion = new Version(SdkVersionProperty);
+                if (!(Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(fileVersion, Utilities.FeatureVersionMinimums.DataverseVersionForThisAPI)))
                 {
-                    // Do CDS Assembly version Check...
-                    // Must be assemblies of version 5.0.9688.1533 or newer.
-                    FileVersionInfo fv = FileVersionInfo.GetVersionInfo("microsoft.cds.sdk.dll");
-
-                    if (fv != null)
-                    {
-                        Version fileVersion = new Version(fv.ProductVersion);
-                        if (!(Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(fileVersion, Utilities.FeatureVersionMinimums.DataverseVersionForThisAPI)))
-                        {
-                            _logEntry.Log("!!WARNING!!! The version of the Dataverse product assemblies is less than the recommend version for this API; you must use version 5.0.9688.1533 or newer (Newer then the Oct-2011 service release)", TraceEventType.Warning);
-                            _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Dataverse Version found is {0}", fv.ProductVersion), TraceEventType.Warning);
-                        }
-                    }
+                    _logEntry.Log("!!WARNING!!! The version of the Dataverse product assemblies is less than the recommend version for this API; you must use version 5.0.9688.1533 or newer (Newer then the Oct-2011 service release)", TraceEventType.Warning);
+                    _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Dataverse Version found is {0}", SdkVersionProperty), TraceEventType.Warning);
                 }
             }
             catch
@@ -1090,7 +1105,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             useUniqueInstance,
                             orgDetail, clientId,
                             redirectUri, certificateThumbPrint,
-                            certificateStoreName, certificate, hostName, port, false, logSink: _logEntry);
+                            certificateStoreName, certificate, hostName, port, false, logSink: _logEntry, tokenCacheStorePath: tokenCacheStorePath);
 
                     if (GetAccessToken != null)
                         _connectionSvc.GetAccessTokenAsync = GetAccessToken;
@@ -1106,20 +1121,20 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     if (requestedAuthType == AuthenticationType.OAuth)
                     {
                         if (!String.IsNullOrEmpty(hostName))
-                            _connectionSvc = new ConnectionService(requestedAuthType, orgName, userId, password, Geo, useUniqueInstance, orgDetail, clientId, redirectUri, promptBehavior, hostName, port, true, instanceToConnectToo: instanceUrl, logSink: _logEntry, useDefaultCreds: useDefaultCreds);
+                            _connectionSvc = new ConnectionService(requestedAuthType, orgName, userId, password, Geo, useUniqueInstance, orgDetail, clientId, redirectUri, promptBehavior, hostName, port, true, instanceToConnectToo: instanceUrl, logSink: _logEntry, useDefaultCreds: useDefaultCreds, tokenCacheStorePath: tokenCacheStorePath);
                         else
-                            _connectionSvc = new ConnectionService(requestedAuthType, orgName, userId, password, Geo, useUniqueInstance, orgDetail, clientId, redirectUri, promptBehavior, hostName, port, false, instanceToConnectToo: instanceUrl, logSink: _logEntry, useDefaultCreds: useDefaultCreds);
+                            _connectionSvc = new ConnectionService(requestedAuthType, orgName, userId, password, Geo, useUniqueInstance, orgDetail, clientId, redirectUri, promptBehavior, hostName, port, false, instanceToConnectToo: instanceUrl, logSink: _logEntry, useDefaultCreds: useDefaultCreds, tokenCacheStorePath: tokenCacheStorePath);
                     }
                     else if (requestedAuthType == AuthenticationType.Certificate)
                     {
-                        _connectionSvc = new ConnectionService(requestedAuthType, instanceUrl, useUniqueInstance, orgDetail, clientId, redirectUri, certificateThumbPrint, certificateStoreName, certificate, hostName, port, !String.IsNullOrEmpty(hostName), logSink: _logEntry);
+                        _connectionSvc = new ConnectionService(requestedAuthType, instanceUrl, useUniqueInstance, orgDetail, clientId, redirectUri, certificateThumbPrint, certificateStoreName, certificate, hostName, port, !String.IsNullOrEmpty(hostName), logSink: _logEntry, tokenCacheStorePath: tokenCacheStorePath);
                     }
                     else if (requestedAuthType == AuthenticationType.ClientSecret)
                     {
                         if (!String.IsNullOrEmpty(hostName))
-                            _connectionSvc = new ConnectionService(requestedAuthType, orgName, userId, password, Geo, useUniqueInstance, orgDetail, clientId, redirectUri, promptBehavior, hostName, port, true, instanceToConnectToo: instanceUrl, logSink: _logEntry, useDefaultCreds: useDefaultCreds);
+                            _connectionSvc = new ConnectionService(requestedAuthType, orgName, userId, password, Geo, useUniqueInstance, orgDetail, clientId, redirectUri, promptBehavior, hostName, port, true, instanceToConnectToo: instanceUrl, logSink: _logEntry, useDefaultCreds: useDefaultCreds, tokenCacheStorePath: tokenCacheStorePath);
                         else
-                            _connectionSvc = new ConnectionService(requestedAuthType, orgName, userId, password, Geo, useUniqueInstance, orgDetail, clientId, redirectUri, promptBehavior, hostName, port, false, instanceToConnectToo: instanceUrl, logSink: _logEntry, useDefaultCreds: useDefaultCreds);
+                            _connectionSvc = new ConnectionService(requestedAuthType, orgName, userId, password, Geo, useUniqueInstance, orgDetail, clientId, redirectUri, promptBehavior, hostName, port, false, instanceToConnectToo: instanceUrl, logSink: _logEntry, useDefaultCreds: useDefaultCreds, tokenCacheStorePath: tokenCacheStorePath);
                     }
                 }
             }
@@ -1133,7 +1148,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     _connectionSvc.InternetProtocalToUse = useSsl ? "https" : "http";
                     if (!_connectionSvc.DoLogin(out tempConnectService))
                     {
-                        this._logEntry.Log("Unable to Login to Dataverse", TraceEventType.Error);
+                        _logEntry.Log("Unable to Login to Dataverse", TraceEventType.Error);
                         IsReady = false;
                         return;
                     }
@@ -1159,7 +1174,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 }
                 catch (Exception ex)
                 {
-                    throw new Utils.DataverseConnectionException("Failed to connect to Dataverse", ex);
+                    throw new DataverseConnectionException("Failed to connect to Dataverse", ex);
                 }
             }
         }
@@ -1214,13 +1229,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 return null;
             }
 
-            OrganizationWebProxyClient proxy = null;
+            OrganizationWebProxyClientAsync proxy = null;
             if (_connectionSvc.ConnectOrgUriActual != null)
             {
                 if (strongTypeAsm == null)
-                    proxy = new OrganizationWebProxyClient(_connectionSvc.ConnectOrgUriActual, true);
+                    proxy = new OrganizationWebProxyClientAsync(_connectionSvc.ConnectOrgUriActual, true);
                 else
-                    proxy = new OrganizationWebProxyClient(_connectionSvc.ConnectOrgUriActual, strongTypeAsm);
+                    proxy = new OrganizationWebProxyClientAsync(_connectionSvc.ConnectOrgUriActual, strongTypeAsm);
             }
             else
             {
@@ -1228,9 +1243,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 if (orgWebClient != null)
                 {
                     if (strongTypeAsm == null)
-                        proxy = new OrganizationWebProxyClient(orgWebClient.Endpoint.Address.Uri, true);
+                        proxy = new OrganizationWebProxyClientAsync(orgWebClient.Endpoint.Address.Uri, true);
                     else
-                        proxy = new OrganizationWebProxyClient(orgWebClient.Endpoint.Address.Uri, strongTypeAsm);
+                        proxy = new OrganizationWebProxyClientAsync(orgWebClient.Endpoint.Address.Uri, strongTypeAsm);
                 }
                 else
                 {
@@ -1262,6 +1277,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 }
                 catch (Exception ex)
                 {
+                    _logEntry.Log(ex);
                     throw new DataverseConnectionException("Failed to Clone Connection", ex);
                 }
             }
@@ -1284,11 +1300,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="promptBehavior">The prompt behavior.</param>
         /// <param name="authority">The authority provider for OAuth tokens. Unique if any already known.</param>
         /// <param name="useDefaultCreds">(Optional) if specified, tries to use the current user</param>
+        /// <param name="tokenCacheStorePath">(optional) path to log store</param>
         /// <param name="logger">Logging provider <see cref="ILogger"/></param>
         /// <returns>A collection of organizations</returns>
-        public static async Task<OrganizationDetailCollection> DiscoverOnPremiseOrganizationsAsync(Uri discoveryServiceUri, ClientCredentials clientCredentials, string clientId, Uri redirectUri, string authority, PromptBehavior promptBehavior = PromptBehavior.Auto, bool useDefaultCreds = false, ILogger logger = null)
+        public static async Task<DiscoverOrganizationsResult> DiscoverOnPremiseOrganizationsAsync(Uri discoveryServiceUri, ClientCredentials clientCredentials, string clientId, Uri redirectUri, string authority, PromptBehavior promptBehavior = PromptBehavior.Auto, bool useDefaultCreds = false, string tokenCacheStorePath = null, ILogger logger = null)
         {
-            return await ConnectionService.DiscoverOrganizationsAsync(discoveryServiceUri, clientCredentials, clientId, redirectUri, promptBehavior, isOnPrem: true, authority, useDefaultCreds: useDefaultCreds, externalLogger: logger).ConfigureAwait(false);
+            return await ConnectionService.DiscoverOrganizationsAsync(discoveryServiceUri, clientCredentials, clientId, redirectUri, promptBehavior, isOnPrem: true, authority, useDefaultCreds: useDefaultCreds, externalLogger: logger, tokenCacheStorePath: tokenCacheStorePath).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -1302,11 +1319,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="isOnPrem">The deployment type: OnPrem or Online.</param>
         /// <param name="authority">The authority provider for OAuth tokens. Unique if any already known.</param>
         /// <param name="useDefaultCreds">(Optional) if specified, tries to use the current user</param>
+        /// <param name="tokenCacheStorePath">(optional) path to log store</param>
         /// <param name="logger">Logging provider <see cref="ILogger"/></param>
         /// <returns>A collection of organizations</returns>
-        public static async Task<OrganizationDetailCollection> DiscoverOnlineOrganizationsAsync(Uri discoveryServiceUri, ClientCredentials clientCredentials, string clientId, Uri redirectUri, bool isOnPrem, string authority, PromptBehavior promptBehavior = PromptBehavior.Auto, bool useDefaultCreds = false, ILogger logger = null)
+        public static async Task<DiscoverOrganizationsResult> DiscoverOnlineOrganizationsAsync(Uri discoveryServiceUri, ClientCredentials clientCredentials, string clientId, Uri redirectUri, bool isOnPrem, string authority, PromptBehavior promptBehavior = PromptBehavior.Auto, bool useDefaultCreds = false, string tokenCacheStorePath = null, ILogger logger = null)
         {
-            return await ConnectionService.DiscoverOrganizationsAsync(discoveryServiceUri, clientCredentials, clientId, redirectUri, promptBehavior, isOnPrem, authority, useGlobalDisco: true, useDefaultCreds: useDefaultCreds, externalLogger: logger).ConfigureAwait(false);
+            return await ConnectionService.DiscoverOrganizationsAsync(discoveryServiceUri, clientCredentials, clientId, redirectUri, promptBehavior, isOnPrem, authority, useGlobalDisco: true, useDefaultCreds: useDefaultCreds, externalLogger: logger, tokenCacheStorePath: tokenCacheStorePath).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -1323,9 +1341,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="isOnPrem">The deployment type: OnPrem or Online.</param>
         /// <param name="authority">The authority provider for OAuth tokens. Unique if any already known.</param>
         /// <param name="useDefaultCreds">(Optional) if specified, tries to use the current user</param>
+        /// <param name="tokenCacheStorePath">(optional) path to log store</param>
         /// <param name="logger">Logging provider <see cref="ILogger"/></param>
         /// <returns>A collection of organizations</returns>
-        public static async Task<OrganizationDetailCollection> DiscoverOnlineOrganizationsAsync(string userId, string password, string clientId, Uri redirectUri, bool isOnPrem, string authority, PromptBehavior promptBehavior = PromptBehavior.Auto, bool useDefaultCreds = false, Model.DiscoveryServer discoServer = null, ILogger logger = null)
+        public static async Task<DiscoverOrganizationsResult> DiscoverOnlineOrganizationsAsync(string userId, string password, string clientId, Uri redirectUri, bool isOnPrem, string authority, PromptBehavior promptBehavior = PromptBehavior.Auto, bool useDefaultCreds = false, Model.DiscoveryServer discoServer = null, string tokenCacheStorePath = null, ILogger logger = null)
         {
             Uri discoveryUriToUse = null;
             if (discoServer != null && discoServer.RequiresRegionalDiscovery)
@@ -1344,7 +1363,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             clientCredentials.UserName.UserName = userId;
             clientCredentials.UserName.Password = password;
 
-            return await ConnectionService.DiscoverOrganizationsAsync(discoveryUriToUse, clientCredentials, clientId, redirectUri, promptBehavior, isOnPrem, authority, useGlobalDisco: true, useDefaultCreds: useDefaultCreds, externalLogger: logger).ConfigureAwait(false);
+            return await ConnectionService.DiscoverOrganizationsAsync(discoveryUriToUse, clientCredentials, clientId, redirectUri, promptBehavior, isOnPrem, authority, useGlobalDisco: true, useDefaultCreds: useDefaultCreds, externalLogger: logger, tokenCacheStorePath: tokenCacheStorePath).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -1352,14 +1371,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// </summary>
         /// <param name="discoveryServiceUri">Global discovery base URI to use to connect too,  if null will utilize the commercial Global Discovery Server.</param>
         /// <param name="tokenProviderFunction">Function that will provide access token to the discovery call.</param>
+        /// <param name="tokenCacheStorePath">(optional) path to log store</param>
         /// <param name="logger">Logging provider <see cref="ILogger"/></param>
         /// <returns></returns>
-        public static async Task<OrganizationDetailCollection> DiscoverOnlineOrganizationsAsync(Func<string, Task<string>> tokenProviderFunction, Uri discoveryServiceUri = null, ILogger logger = null)
+        public static async Task<OrganizationDetailCollection> DiscoverOnlineOrganizationsAsync(Func<string, Task<string>> tokenProviderFunction, Uri discoveryServiceUri = null, string tokenCacheStorePath = null, ILogger logger = null)
         {
             if (discoveryServiceUri == null)
                 discoveryServiceUri = new Uri(ConnectionService.GlobalDiscoveryAllInstancesUri); // use commercial GD
 
-            return await ConnectionService.DiscoverGlobalOrganizationsAsync(discoveryServiceUri, tokenProviderFunction, externalLogger: logger).ConfigureAwait(false);
+            return await ConnectionService.DiscoverGlobalOrganizationsAsync(discoveryServiceUri, tokenProviderFunction, externalLogger: logger, tokenCacheStorePath: tokenCacheStorePath).ConfigureAwait(false);
         }
 
         #endregion
@@ -4679,8 +4699,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             // Check for existence of cached list.
             if (_CachObject == null)
             {
+                object objc = _connectionSvc.LocalMemoryCache.Get(_cachObjecName);
+                if (objc is Dictionary<string, Dictionary<string, object>> workingObj)
+                    _CachObject = workingObj;
 
-                _CachObject = (Dictionary<string, Dictionary<string, object>>)System.Runtime.Caching.MemoryCache.Default[_cachObjecName];
                 if (_CachObject == null)
                     _CachObject = new Dictionary<string, Dictionary<string, object>>();
             }
@@ -4723,7 +4745,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     _CachObject.Add(entName.ToString(), new Dictionary<string, object>());
                 _CachObject[entName.ToString()].Add(Value, guResultID);
 
-                System.Runtime.Caching.MemoryCache.Default.Add(_cachObjecName, _CachObject, DateTime.Now.AddMinutes(5));
+                _connectionSvc.LocalMemoryCache.Set(_cachObjecName, _CachObject, DateTime.Now.AddMinutes(5));
             }
 
             return guResultID;
@@ -4982,7 +5004,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         {
             if (req != null)
             {
-                useWebAPI = Utilities.IsRequestValidForTranslationToWebAPI(req, UseWebApi) ? useWebAPI : false;
+                useWebAPI = Utilities.IsRequestValidForTranslationToWebAPI(req);
                 if (!useWebAPI)
                 {
                     return Command_Execute(req, logMessageTag, bypassPluginExecution);
@@ -5004,7 +5026,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         {
             if (req != null)
             {
-                useWebAPI = Utilities.IsRequestValidForTranslationToWebAPI(req, UseWebApi) ? useWebAPI : false;
+                useWebAPI = Utilities.IsRequestValidForTranslationToWebAPI(req);
                 if (!useWebAPI)
                 {
                     return await Command_ExecuteAsync(req, logMessageTag, cancellationToken, bypassPluginExecution).ConfigureAwait(false);
@@ -5362,9 +5384,112 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <returns>Result of create request or null.</returns>
         internal async Task<OrganizationResponse> Command_ExecuteAsync(OrganizationRequest req, string errorStringCheck, System.Threading.CancellationToken cancellationToken, bool bypassPluginExecution = false)
         {
-            return await Task.Run(() => Command_Execute(req, errorStringCheck, bypassPluginExecution), cancellationToken).ConfigureAwait(false);
+            if (DataverseServiceAsync != null)
+            {
+                // if created based on Async Client.
+                return await Command_ExecuteAsyncImpl(req, errorStringCheck, cancellationToken, bypassPluginExecution).ConfigureAwait(false);
+            }
+            else
+            {
+                // if not use task.run().
+                return await Task.Run(() => Command_Execute(req, errorStringCheck, bypassPluginExecution), cancellationToken).ConfigureAwait(false);
+            }
+
         }
 
+        /// <summary>
+        /// Executes a Dataverse Create Request and returns the organization response object.
+        /// </summary>
+        /// <param name="req">Request to run</param>
+        /// <param name="errorStringCheck">Formatted Error string</param>
+        /// <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Result of create request or null.</returns>
+        internal async Task<OrganizationResponse> Command_ExecuteAsyncImpl(OrganizationRequest req, string errorStringCheck, System.Threading.CancellationToken cancellationToken, bool bypassPluginExecution = false)
+        {
+            Guid requestTrackingId = Guid.NewGuid();
+            OrganizationResponse resp = null;
+            Stopwatch logDt = new Stopwatch();
+            TimeSpan LockWait = TimeSpan.Zero;
+            int retryCount = 0;
+            bool retry = false;
+
+            do
+            {
+                try
+                {
+                    _retryPauseTimeRunning = _configuration.Value.RetryPauseTime;
+                    retry = false;
+                    if (!_disableConnectionLocking)
+                        if (_lockObject == null)
+                            _lockObject = new object();
+
+                    if (_connectionSvc != null && _connectionSvc.AuthenticationTypeInUse == AuthenticationType.OAuth)
+                        _connectionSvc.CalledbyExecuteRequest = true;
+                    OrganizationResponse rsp = null;
+
+                    // Check to see if a Tracking ID has allready been assigned,
+                    if (!req.RequestId.HasValue || (req.RequestId.HasValue && req.RequestId.Value == Guid.Empty))
+                    {
+                        // Assign Tracking ID
+                        req.RequestId = requestTrackingId;
+                    }
+                    else
+                    {
+                        // assign request Id to the tracking id.
+                        requestTrackingId = req.RequestId.Value;
+                    }
+
+                    // if request should bypass plugin exec.
+                    if (bypassPluginExecution && Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(_connectionSvc?.OrganizationVersion, Utilities.FeatureVersionMinimums.AllowBypassCustomPlugin))
+                        req.Parameters.Add(Utilities.RequestHeaders.BYPASSCUSTOMPLUGINEXECUTION, true);
+
+                    _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Execute Command - {0}{1}: RequestID={2} {3}",
+                        req.RequestName,
+                        string.IsNullOrEmpty(errorStringCheck) ? "" : $" : {errorStringCheck} ",
+                        requestTrackingId.ToString(),
+                        SessionTrackingId.HasValue && SessionTrackingId.Value != Guid.Empty ? $"SessionID={SessionTrackingId.Value.ToString()} : " : ""
+                        ), TraceEventType.Verbose);
+
+                    logDt.Restart();
+                    rsp = await DataverseServiceAsync.ExecuteAsync(req);
+
+                    logDt.Stop();
+                    _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Executed Command - {0}{2}: {5}RequestID={3} {4}: duration={1}",
+                        req.RequestName,
+                        logDt.Elapsed.ToString(),
+                        string.IsNullOrEmpty(errorStringCheck) ? "" : $" : {errorStringCheck} ",
+                        requestTrackingId.ToString(),
+                        LockWait == TimeSpan.Zero ? string.Empty : string.Format(": LockWaitDuration={0} ", LockWait.ToString()),
+                        SessionTrackingId.HasValue && SessionTrackingId.Value != Guid.Empty ? $"SessionID={SessionTrackingId.Value.ToString()} : " : ""
+                        ), TraceEventType.Verbose);
+                    resp = rsp;
+                }
+                catch (Exception ex)
+                {
+                    bool isThrottled = false;
+                    retry = ShouldRetry(req, ex, retryCount, out isThrottled);
+                    if (retry)
+                    {
+                        Utilities.RetryRequest(req, requestTrackingId, LockWait, logDt, _logEntry, SessionTrackingId, _disableConnectionLocking, _retryPauseTimeRunning, ex, errorStringCheck, ref retryCount, isThrottled);
+                    }
+                    else
+                    {
+                        _logEntry.LogRetry(retryCount, req, _retryPauseTimeRunning, true, isThrottled: isThrottled);
+                        _logEntry.LogException(req, ex, errorStringCheck);
+                        //keep it in end so that LastError could be a better message.
+                        _logEntry.LogFailure(req, requestTrackingId, SessionTrackingId, _disableConnectionLocking, LockWait, logDt, ex, errorStringCheck, true);
+                    }
+                    resp = null;
+                }
+                finally
+                {
+                    logDt.Stop();
+                }
+            } while (retry);
+
+            return resp;
+        }
 
         /// <summary>
         /// Executes a Dataverse Create Request and returns the organization response object.
