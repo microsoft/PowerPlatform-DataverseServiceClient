@@ -8,6 +8,16 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Fixed and issue with the client being non-castable to IOrganizationServiceAsync, Client will now cast again. (Internal Report)
+    Special note: 
+        IOrganizationServiceAsync has async methods without cancellation support. this is required for service mapping as the dataverse server does not natively support this feature. 
+        IOrganizationServiceAsync2 has async methods WITH cancellation support.  
+        This surfaces in the client as 2 forms of each async method and is currently necessary to support internal auto generation of contracts for service communication. We will work to improve this in the future.
+        Cancellation events will currently raise an OperationCancelled Exception, this can either be the topmost exception, or embedded in a DataverseException.
+        Cancellation methods are 'preferred' if you need to support cancellation in your application.
+Fixed an issue with External authentication type not being properly passed though to cloned clients.  (git #162)
+
+0.5.2:
 ***** Breaking Changes *****
 Removed the constructor:
     public ServiceClient(OrganizationWebProxyClient externalOrgWebProxyClient, ILogger logger = null)

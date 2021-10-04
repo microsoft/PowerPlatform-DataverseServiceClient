@@ -1088,7 +1088,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             // if using an user provided connection,.
             if (externalOrgWebProxyClient != null)
             {
-                _connectionSvc = new ConnectionService(externalOrgWebProxyClient, _logEntry);
+                _connectionSvc = new ConnectionService(externalOrgWebProxyClient, requestedAuthType , _logEntry);
                 _connectionSvc.IsAClone = isCloned;
                 if (isCloned && incomingOrgVersion != null)
                 {
@@ -4955,8 +4955,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="body">Content your passing to the request</param>
         /// <param name="customHeaders">Headers in addition to the default headers added by for Executing a web request</param>
         /// <param name="contentType">Content Type attach to the request.  this defaults to application/json if not set.</param>
+        /// <param name="cancellationToken">Cancellation token for the request</param>
         /// <returns></returns>
-        public HttpResponseMessage ExecuteWebRequest(HttpMethod method, string queryString, string body, Dictionary<string, List<string>> customHeaders, string contentType = default(string))
+        public HttpResponseMessage ExecuteWebRequest(HttpMethod method, string queryString, string body, Dictionary<string, List<string>> customHeaders, string contentType = default, CancellationToken cancellationToken = default)
         {
             _logEntry.ResetLastError();  // Reset Last Error
             if (DataverseService == null)
@@ -4981,7 +4982,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     queryString = baseQueryString;
             }
 
-            var result = _connectionSvc.Command_WebExecuteAsync(queryString, body, method, customHeaders, contentType, string.Empty, CallerId, _disableConnectionLocking, MaxRetryCount, RetryPauseTime).Result;
+            var result = _connectionSvc.Command_WebExecuteAsync(queryString, body, method, customHeaders, contentType, string.Empty, CallerId, _disableConnectionLocking, MaxRetryCount, RetryPauseTime, cancellationToken: cancellationToken).Result;
             if (result == null)
                 throw LastException;
             else
@@ -5024,6 +5025,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
         private async Task<OrganizationResponse> ExecuteOrganizationRequestAsyncImpl(OrganizationRequest req, CancellationToken cancellationToken, string logMessageTag = "User Defined", bool useWebAPI = false, bool bypassPluginExecution = false)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (req != null)
             {
                 useWebAPI = Utilities.IsRequestValidForTranslationToWebAPI(req);
@@ -5418,6 +5420,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             {
                 try
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     _retryPauseTimeRunning = _configuration.Value.RetryPauseTime;
                     retry = false;
                     if (!_disableConnectionLocking)
@@ -6163,6 +6166,99 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         #endregion
 
         #region IOrganzationServiceAsync helper - Proxy object
+        /// <summary>
+        /// Associate an entity with a set of entities
+        /// </summary>
+        /// <param name="entityName"></param>
+        /// <param name="entityId"></param>
+        /// <param name="relationship"></param>
+        /// <param name="relatedEntities"></param>
+        public async Task AssociateAsync(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities)
+        {
+            await AssociateAsync(entityName, entityId, relationship, relatedEntities, CancellationToken.None).ConfigureAwait(false);
+            return;
+        }
+
+        /// <summary>
+        /// Create an entity and process any related entities
+        /// </summary>
+        /// <param name="entity">entity to create</param>
+        /// <returns>The ID of the created record</returns>
+        public async Task<Guid> CreateAsync(Entity entity)
+        {
+            return await CreateAsync(entity, CancellationToken.None).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Delete instance of an entity
+        /// </summary>
+        /// <param name="entityName">Logical name of entity</param>
+        /// <param name="id">Id of entity</param>
+        public async Task DeleteAsync(string entityName, Guid id)
+        {
+            await DeleteAsync(entityName, id, CancellationToken.None).ConfigureAwait(false);
+            return;
+        }
+
+        /// <summary>
+        /// Disassociate an entity with a set of entities
+        /// </summary>
+        /// <param name="entityName"></param>
+        /// <param name="entityId"></param>
+        /// <param name="relationship"></param>
+        /// <param name="relatedEntities"></param>
+        public async Task DisassociateAsync(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities)
+        {
+            await DisassociateAsync(entityName, entityId, relationship, relatedEntities, CancellationToken.None).ConfigureAwait(false);
+            return;
+        }
+
+        /// <summary>
+        /// Perform an action in an organization specified by the request.
+        /// </summary>
+        /// <param name="request">Refer to SDK documentation for list of messages that can be used.</param>
+        /// <returns>Results from processing the request</returns>
+        public async Task<OrganizationResponse> ExecuteAsync(OrganizationRequest request)
+        {
+            return await ExecuteAsync(request, CancellationToken.None).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Retrieves instance of an entity
+        /// </summary>
+        /// <param name="entityName">Logical name of entity</param>
+        /// <param name="id">Id of entity</param>
+        /// <param name="columnSet">Column Set collection to return with the request</param>
+        /// <returns>Selected Entity</returns>
+        public async Task<Entity> RetrieveAsync(string entityName, Guid id, ColumnSet columnSet)
+        {
+            return await RetrieveAsync(entityName, id, columnSet, CancellationToken.None).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Retrieves a collection of entities
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns>Returns an EntityCollection Object containing the results of the query</returns>
+        public async Task<EntityCollection> RetrieveMultipleAsync(QueryBase query)
+        {
+            return await RetrieveMultipleAsync(query, CancellationToken.None).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Updates an entity and process any related entities
+        /// </summary>
+        /// <param name="entity">entity to update</param>
+        public async Task UpdateAsync(Entity entity)
+        {
+            await UpdateAsync(entity, CancellationToken.None).ConfigureAwait(false);
+            return;
+        }
+
+
+        #endregion
+
+        #region IOrganzationServiceAsync2 helper - Proxy object
 
         /// <summary>
         /// Associate an entity with a set of entities
@@ -6192,7 +6288,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="entity">entity to create</param>
         /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
         /// <returns>The ID of the created record</returns>
-        public async Task<Guid> CreateAsync(Entity entity, CancellationToken cancellationToken = default)
+        public async Task<Guid> CreateAsync(Entity entity, CancellationToken cancellationToken)
         {
             // Relay to Update request.
             CreateResponse resp = (CreateResponse)await ExecuteOrganizationRequestAsyncImpl(
@@ -6209,14 +6305,22 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             return resp.id;
         }
 
-
         /// <summary>
         /// Create an entity and process any related entities
         /// </summary>
         /// <param name="entity">entity to create</param>
         /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
         /// <returns>Returns the newly created record</returns>
-        public Task<Entity> CreateAndReturnAsync(Entity entity, CancellationToken cancellationToken = default)
+        public Task<Entity> CreateAndReturnAsync(Entity entity, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+        /// <summary>
+        /// Create an entity and process any related entities
+        /// </summary>
+        /// <param name="entity">entity to create</param>
+        /// <returns>Returns the newly created record</returns>
+        public Task<Entity> CreateAndReturnAsync(Entity entity)
         {
             throw new NotImplementedException();
         }
@@ -6227,7 +6331,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="entityName">Logical name of entity</param>
         /// <param name="id">Id of entity</param>
         /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
-        public async Task DeleteAsync(string entityName, Guid id, CancellationToken cancellationToken = default)
+        public async Task DeleteAsync(string entityName, Guid id, CancellationToken cancellationToken)
         {
             DeleteResponse resp = (DeleteResponse)await ExecuteOrganizationRequestAsyncImpl(
                new DeleteRequest()
@@ -6249,7 +6353,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="relationship"></param>
         /// <param name="relatedEntities"></param>
         /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
-        public async Task DisassociateAsync(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities, CancellationToken cancellationToken = default)
+        public async Task DisassociateAsync(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities, CancellationToken cancellationToken)
         {
             DisassociateResponse resp = (DisassociateResponse)await ExecuteOrganizationRequestAsyncImpl(new DisassociateRequest()
             {
@@ -6269,7 +6373,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="request">Refer to SDK documentation for list of messages that can be used.</param>
         /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
         /// <returns>Results from processing the request</returns>
-        public async Task<OrganizationResponse> ExecuteAsync(OrganizationRequest request, CancellationToken cancellationToken = default)
+        public async Task<OrganizationResponse> ExecuteAsync(OrganizationRequest request, CancellationToken cancellationToken)
         {
             OrganizationResponse resp = await ExecuteOrganizationRequestAsyncImpl(request
                 , cancellationToken
@@ -6280,7 +6384,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             return resp;
         }
 
-
         /// <summary>
         /// Retrieves instance of an entity
         /// </summary>
@@ -6289,7 +6392,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="columnSet">Column Set collection to return with the request</param>
         /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
         /// <returns>Selected Entity</returns>
-        public async Task<Entity> RetrieveAsync(string entityName, Guid id, ColumnSet columnSet, CancellationToken cancellationToken = default)
+        public async Task<Entity> RetrieveAsync(string entityName, Guid id, ColumnSet columnSet, CancellationToken cancellationToken)
         {
             RetrieveResponse resp = (RetrieveResponse)await ExecuteOrganizationRequestAsyncImpl(
             new RetrieveRequest()
@@ -6311,7 +6414,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="query"></param>
         /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
         /// <returns>Returns an EntityCollection Object containing the results of the query</returns>
-        public async Task<EntityCollection> RetrieveMultipleAsync(QueryBase query, CancellationToken cancellationToken = default)
+        public async Task<EntityCollection> RetrieveMultipleAsync(QueryBase query, CancellationToken cancellationToken)
         {
             RetrieveMultipleResponse resp = (RetrieveMultipleResponse)await ExecuteOrganizationRequestAsyncImpl(new RetrieveMultipleRequest() { Query = query }, cancellationToken, "RetrieveMultiple to Dataverse via IOrganizationService").ConfigureAwait(false);
             if (resp == null)
@@ -6325,7 +6428,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// </summary>
         /// <param name="entity">entity to update</param>
         /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
-        public async Task UpdateAsync(Entity entity, CancellationToken cancellationToken = default)
+        public async Task UpdateAsync(Entity entity, CancellationToken cancellationToken)
         {
             // Relay to Update request.
             UpdateResponse resp = (UpdateResponse)await ExecuteOrganizationRequestAsyncImpl(

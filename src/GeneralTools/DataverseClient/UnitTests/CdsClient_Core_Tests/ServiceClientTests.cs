@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.PowerPlatform.Dataverse.Client.Auth;
+using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
@@ -213,6 +214,21 @@ namespace Client_Core_Tests
             // Test low level create
             respId = cli.Create(acctEntity);
             Assert.Equal(testSupport._DefaultId, respId);
+
+            // Test low level createAsync
+            respId = cli.CreateAsync(acctEntity).GetAwaiter().GetResult();
+            Assert.Equal(testSupport._DefaultId, respId);
+
+            try
+            {
+                // Test low level createAsyncwithCancelationToken
+                System.Threading.CancellationToken tok = new System.Threading.CancellationToken(true);
+                respId = cli.CreateAsync(acctEntity, tok).GetAwaiter().GetResult();
+            }
+            catch(Exception ex)
+            {
+                Assert.IsType<OperationCanceledException>(ex);
+            }
 
             // Test Helper create
             respId = cli.CreateNewRecord("account", newFields);

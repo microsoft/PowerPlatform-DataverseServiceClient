@@ -616,8 +616,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// Sets up an initialized the Dataverse Service interface.
         /// </summary>
         /// <param name="externalOrgWebProxyClient">This is an initialized organization web Service proxy</param>
+        /// <param name="authType">Authentication Type to use</param>
         /// <param name="logSink">incoming Log Sink</param>
-        internal ConnectionService(OrganizationWebProxyClientAsync externalOrgWebProxyClient, DataverseTraceLogger logSink = null)
+        internal ConnectionService(OrganizationWebProxyClientAsync externalOrgWebProxyClient, AuthenticationType authType, DataverseTraceLogger logSink = null)
         {
             if (logSink == null)
             {
@@ -643,7 +644,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
             UseExternalConnection = true;
             GenerateCacheKeys(true);
-            _eAuthType = AuthenticationType.OAuth;
+            _eAuthType = authType;
         }
 
         /// <summary>
@@ -1337,82 +1338,103 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             // Load the organization instance details
             if (dvService != null)
             {
-                //TODO:// Add Logic here to improve perf by connecting to global disco.
-                Guid guRequestId = Guid.NewGuid();
-                logEntry.Log(string.Format("Querying Organization Instance Details. Request ID: {0}", guRequestId));
-                Stopwatch dtQueryTimer = new Stopwatch();
-                dtQueryTimer.Restart();
-
-                var request = new RetrieveCurrentOrganizationRequest() { AccessType = 0, RequestId = guRequestId };
-                RetrieveCurrentOrganizationResponse resp;
-
-                if (_configuration.Value.UseWebApiLoginFlow)
-                {
-                    OrganizationResponse orgResp = await Command_WebAPIProcess_ExecuteAsync(
-                        request, null, false, null, Guid.Empty, false, _configuration.Value.MaxRetryCount, _configuration.Value.RetryPauseTime, new CancellationToken(), uriOfInstance).ConfigureAwait(false);
-                    try
-                    {
-                        resp = (RetrieveCurrentOrganizationResponse)orgResp;
-                    }
-                    catch ( Exception ex )
-                    {
-                        throw new DataverseOperationException($"Failure to convert OrganziationResponse to requested type - request was {request.RequestName}", ex);
-                    }
-                }
-                else
-                {
-                    resp = (RetrieveCurrentOrganizationResponse)dvService.Execute(request);
-                }
-
-                dtQueryTimer.Stop();
-                logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Completed Querying Organization Instance Details, total duration: {0}", dtQueryTimer.Elapsed.ToString()));
-                if (resp.Detail != null)
-                {
-                    _OrgDetail = new OrganizationDetail();
-                    //Add Endpoints.
-                    foreach (var ep in resp.Detail.Endpoints)
-                    {
-                        string endPointName = ep.Key.ToString();
-                        EndpointType epd = EndpointType.OrganizationDataService;
-                        Enum.TryParse<EndpointType>(endPointName, out epd);
-
-                        if (!_OrgDetail.Endpoints.ContainsKey(epd))
-                            _OrgDetail.Endpoints.Add(epd, ep.Value);
-                        else
-                            _OrgDetail.Endpoints[epd] = ep.Value;
-                    }
-                    _OrgDetail.FriendlyName = resp.Detail.FriendlyName;
-                    _OrgDetail.OrganizationId = resp.Detail.OrganizationId;
-                    _OrgDetail.OrganizationVersion = resp.Detail.OrganizationVersion;
-                    _OrgDetail.EnvironmentId = resp.Detail.EnvironmentId;
-                    _OrgDetail.TenantId = resp.Detail.TenantId;
-                    _OrgDetail.Geo = resp.Detail.Geo;
-                    _OrgDetail.UrlName = resp.Detail.UrlName;
-
-                    OrganizationState ostate = OrganizationState.Disabled;
-                    Enum.TryParse<OrganizationState>(_OrgDetail.State.ToString(), out ostate);
-
-                    _OrgDetail.State = ostate;
-                    _OrgDetail.UniqueName = resp.Detail.UniqueName;
-                    _OrgDetail.UrlName = resp.Detail.UrlName;
-                }
-
-                _organization = _OrgDetail.UniqueName;
-                ConnectedOrgFriendlyName = _OrgDetail.FriendlyName;
-                ConnectedOrgPublishedEndpoints = _OrgDetail.Endpoints;
-
-                // try to create a version number from the org.
-                OrganizationVersion = new Version("0.0.0.0");
                 try
                 {
-                    Version outVer = null;
-                    if (Version.TryParse(_OrgDetail.OrganizationVersion, out outVer))
+                    //TODO:// Add Logic here to improve perf by connecting to global disco.
+                    Guid trackingID = Guid.NewGuid();
+                    logEntry.Log(string.Format("Querying Organization Instance Details. Request ID: {0}", trackingID));
+                    Stopwatch dtQueryTimer = new Stopwatch();
+                    dtQueryTimer.Restart();
+
+                    var request = new RetrieveCurrentOrganizationRequest() { AccessType = 0, RequestId = trackingID };
+                    RetrieveCurrentOrganizationResponse resp;
+                    logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Execute Command - RetrieveCurrentOrganizationRequest : RequestId={0}", dtQueryTimer.Elapsed.ToString()));
+                    if (_configuration.Value.UseWebApiLoginFlow)
                     {
-                        OrganizationVersion = outVer;
+                        OrganizationResponse orgResp = await Command_WebAPIProcess_ExecuteAsync(
+                            request, null, false, null, Guid.Empty, false, _configuration.Value.MaxRetryCount, _configuration.Value.RetryPauseTime, new CancellationToken(), uriOfInstance).ConfigureAwait(false);
+                        try
+                        {
+                            resp = (RetrieveCurrentOrganizationResponse)orgResp;
+                        }
+                        catch (Exception ex)
+                        {
+                            dtQueryTimer.Stop();
+                            logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Failed to Executed Command - RetrieveCurrentOrganizationRequest : RequestId={1} : total duration: {0}", dtQueryTimer.Elapsed.ToString(), trackingID.ToString()), TraceEventType.Error);
+                            logEntry.Log("************ Exception - Failed to lookup current organization information", TraceEventType.Error, ex);
+                            throw new DataverseOperationException($"Failure to convert OrganziationResponse to requested type - request was {request.RequestName}", ex);
+                        }
                     }
+                    else
+                    {
+                        try
+                        {
+                            resp = (RetrieveCurrentOrganizationResponse)dvService.Execute(request);
+                        }
+                        catch(Exception ex)
+                        {
+                            dtQueryTimer.Stop();
+                            logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Failed to Executed Command - RetrieveCurrentOrganizationRequest : RequestId={1} : total duration: {0}", dtQueryTimer.Elapsed.ToString(), trackingID.ToString()), TraceEventType.Error);
+                            logEntry.Log("************ Exception - Failed to lookup current organization information", TraceEventType.Error, ex);
+                            throw new DataverseOperationException("Exception - Failed to lookup current organization data", ex);
+                        }
+                    }
+                    dtQueryTimer.Stop();
+                    // Left in information mode intentionally
+                    logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Executed Command - RetrieveCurrentOrganizationRequest : RequestId={1} : total duration: {0}", dtQueryTimer.Elapsed.ToString(), trackingID.ToString()));
+
+                    if (resp.Detail != null)
+                    {
+                        _OrgDetail = new OrganizationDetail();
+                        //Add Endpoints.
+                        foreach (var ep in resp.Detail.Endpoints)
+                        {
+                            string endPointName = ep.Key.ToString();
+                            EndpointType epd = EndpointType.OrganizationDataService;
+                            Enum.TryParse<EndpointType>(endPointName, out epd);
+
+                            if (!_OrgDetail.Endpoints.ContainsKey(epd))
+                                _OrgDetail.Endpoints.Add(epd, ep.Value);
+                            else
+                                _OrgDetail.Endpoints[epd] = ep.Value;
+                        }
+                        _OrgDetail.FriendlyName = resp.Detail.FriendlyName;
+                        _OrgDetail.OrganizationId = resp.Detail.OrganizationId;
+                        _OrgDetail.OrganizationVersion = resp.Detail.OrganizationVersion;
+                        _OrgDetail.EnvironmentId = resp.Detail.EnvironmentId;
+                        _OrgDetail.TenantId = resp.Detail.TenantId;
+                        _OrgDetail.Geo = resp.Detail.Geo;
+                        _OrgDetail.UrlName = resp.Detail.UrlName;
+
+                        OrganizationState ostate = OrganizationState.Disabled;
+                        Enum.TryParse<OrganizationState>(_OrgDetail.State.ToString(), out ostate);
+
+                        _OrgDetail.State = ostate;
+                        _OrgDetail.UniqueName = resp.Detail.UniqueName;
+                        _OrgDetail.UrlName = resp.Detail.UrlName;
+                    }
+
+                    _organization = _OrgDetail.UniqueName;
+                    ConnectedOrgFriendlyName = _OrgDetail.FriendlyName;
+                    ConnectedOrgPublishedEndpoints = _OrgDetail.Endpoints;
+
+                    // try to create a version number from the org.
+                    OrganizationVersion = new Version("0.0.0.0");
+                    try
+                    {
+                        if (Version.TryParse(_OrgDetail.OrganizationVersion, out Version outVer))
+                        {
+                            OrganizationVersion = outVer;
+                        }
+                    }
+                    catch { };
+                    logEntry.Log("Completed Parsing Organization Instance Details", TraceEventType.Verbose);
                 }
-                catch { };
-                logEntry.Log("Completed Parsing Organization Instance Details", TraceEventType.Verbose);
+                catch (Exception ex)
+                {
+                    logEntry.Log("************ Exception - Fault While initializing client - RefreshInstanceDetails", TraceEventType.Error, ex);
+                    throw new DataverseConnectionException("Exception - Fault While initializing client - RefreshInstanceDetails", ex);
+                }
             }
         }
 
@@ -1421,7 +1443,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// </summary>
         /// <param name="trackingID"></param>
         /// <param name="dvService"></param>
-        internal async Task<WhoAmIResponse> GetWhoAmIDetails(IOrganizationService dvService, Guid trackingID = default(Guid))
+        internal async Task<WhoAmIResponse> GetWhoAmIDetails(IOrganizationService dvService, Guid trackingID = default)
         {
             if (dvService != null)
             {
@@ -1436,6 +1458,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     if (trackingID != Guid.Empty) // Add Tracking number of present.
                         req.RequestId = trackingID;
 
+                    logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Execute Command - WhoAmIRequest : RequestId={0}", trackingID.ToString()));
                     WhoAmIResponse resp;
                     if (_configuration.Value.UseWebApiLoginFlow)
                     {
@@ -1447,7 +1470,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         resp = (WhoAmIResponse)dvService.Execute(req);
                     }
 
-                    // Left in information mode intentionaly.
+                    // Left in information mode intentionally.
                     logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Executed Command - WhoAmIRequest : RequestId={1} : total duration: {0}", dtQueryTimer.Elapsed.ToString(), trackingID.ToString()));
                     return resp;
                 }
@@ -1455,7 +1478,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 {
                     logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Failed to Executed Command - WhoAmIRequest : RequestId={1} : total duration: {0}", dtQueryTimer.Elapsed.ToString(), trackingID.ToString()), TraceEventType.Error);
                     logEntry.Log("************ Exception - Failed to lookup current user", TraceEventType.Error, ex);
-                    throw ex;
+                    throw new DataverseOperationException("Exception - Failed to lookup current user", ex);
                 }
                 finally
                 {
@@ -1537,6 +1560,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         internal async Task<OrganizationResponse> Command_WebAPIProcess_ExecuteAsync(OrganizationRequest req, string logMessageTag, bool bypassPluginExecution,
             MetadataUtility metadataUtlity, Guid callerId, bool disableConnectionLocking, int maxRetryCount, TimeSpan retryPauseTime, CancellationToken cancellationToken, Uri uriOfInstance = null)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (!Utilities.IsRequestValidForTranslationToWebAPI(req)) // THIS WILL GET REMOVED AT SOME POINT, TEMP FOR TRANSTION  //TODO:REMOVE ON COMPELTE
             {
                 logEntry.Log("Execute Organization Request failed, WebAPI is only supported for limited type of messages at this time.", TraceEventType.Error);
@@ -1558,6 +1583,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             if (cReq != null)
             {
                 // if CRUD type. get Entity
+                cancellationToken.ThrowIfCancellationRequested();
                 entityMetadata = metadataUtlity.GetEntityMetadata(EntityFilters.Relationships, cReq.LogicalName);
                 if (entityMetadata == null)
                 {
@@ -1574,6 +1600,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
             if (cReq != null)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 requestBodyObject = Utilities.ToExpandoObject(cReq, metadataUtlity, methodToExecute , logEntry);
                 if (cReq.RelatedEntities != null && cReq.RelatedEntities.Count > 0)
                     requestBodyObject = Utilities.ReleatedEntitiesToExpandoObject(requestBodyObject, cReq.LogicalName, cReq.RelatedEntities, metadataUtlity, methodToExecute, logEntry);
@@ -1721,7 +1748,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
 
             // Execute request
-            var sResp = await Command_WebExecuteAsync(postUri, bodyOfRequest, methodToExecute, headers, "application/json", logMessageTag, callerId, disableConnectionLocking, maxRetryCount, retryPauseTime, uriOfInstance).ConfigureAwait(false);
+            var sResp = await Command_WebExecuteAsync(postUri, bodyOfRequest, methodToExecute, headers, "application/json", logMessageTag, callerId, disableConnectionLocking, maxRetryCount, retryPauseTime, uriOfInstance, cancellationToken: cancellationToken).ConfigureAwait(false);
             if (sResp != null && sResp.IsSuccessStatusCode)
             {
                 if (req is CreateRequest)
@@ -1800,9 +1827,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="retryPauseTime">retry pause time</param>
         /// <param name="uriOfInstance">uri of instance</param>
         /// <param name="requestTrackingId"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         internal async Task<HttpResponseMessage> Command_WebExecuteAsync(string queryString, string body, HttpMethod method, Dictionary<string, List<string>> customHeaders,
-            string contentType, string errorStringCheck, Guid callerId, bool disableConnectionLocking, int maxRetryCount, TimeSpan retryPauseTime, Uri uriOfInstance = null, Guid requestTrackingId = default(Guid))
+            string contentType, string errorStringCheck, Guid callerId, bool disableConnectionLocking, int maxRetryCount, TimeSpan retryPauseTime, Uri uriOfInstance = null, Guid requestTrackingId = default, CancellationToken cancellationToken = default)
         {
             Stopwatch logDt = new Stopwatch();
             int retryCount = 0;
@@ -1974,6 +2002,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     resp = await ConnectionService.ExecuteHttpRequestAsync(
                             TargetUri.ToString(),
                             method,
+                            cancellationToken: cancellationToken,
                             body: body,
                             customHeaders: customHeaders,
                             logSink: logEntry,
