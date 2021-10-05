@@ -8,6 +8,10 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Fixed a nuget dependency issue for Microsoft.Extensions.Caching.Memory
+    Microsoft.Extensions.Caching.Memory, min version 3.1.8
+
+0.5.4:
 Fixed and issue with the client being non-castable to IOrganizationServiceAsync, Client will now cast again. (Internal Report)
     Special note: 
         IOrganizationServiceAsync has async methods without cancellation support. this is required for service mapping as the dataverse server does not natively support this feature. 
