@@ -37,7 +37,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
     /// <summary>
     /// Primary implementation of the API interface for Dataverse.
     /// </summary>
-    public sealed class ServiceClient : IOrganizationService, IOrganizationServiceAsync2, IDisposable
+    public class ServiceClient : IOrganizationService, IOrganizationServiceAsync2, IDisposable
     {
         #region Vars
 
