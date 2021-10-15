@@ -632,7 +632,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         {
                             var attributeInfo = mUtil.GetAttributeMetadata(sourceEntity.LogicalName, key.ToLower());
 
-                            if (!IsAttributeValidForOperation((AttributeMetadata)attrib.Value, requestedMethod))
+                            if (!IsAttributeValidForOperation((AttributeMetadata)attributeInfo, requestedMethod))
                                 continue;
 
                             if (attributeInfo is Xrm.Sdk.Metadata.LookupAttributeMetadata attribData)

@@ -8,6 +8,11 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Removed Sealed attribute from the Service Client Class. 
+Fixed an issue with null values being sent to the API causing a null exception to be raised. 
+Fixed missing nuget dependency for Microsoft.Identity.Client.Extensions.Msal, Nuget now properly includes that package. 
+
+0.5.5: 
 Fixed a nuget dependency issue for Microsoft.Extensions.Caching.Memory
     Microsoft.Extensions.Caching.Memory, min version 3.1.8
 
