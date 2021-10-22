@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>Microsoft.Dynamics.Sdk.Messages</RootNamespace>
     <ComponentAreaName>DataverseClient</ComponentAreaName>
@@ -8,7 +8,8 @@
   <Import Project="..\..\..\..\Build.Common.core.props" />
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Dynamics.Sdk.Messages.Internal" Version="$(PackageVersion_CDSServerNuget)" />
+    <PackageReference Include="Microsoft.Xrm.Sdk" Version="$(PackageVersion_CdsSdk)" />
+    <PackageReference Include="Microsoft.Dynamics.Sdk.Messages.Internal" Version="$(PackageVersion_CdsSdkProxy)" />
   </ItemGroup>
 
 </Project>

@@ -8,6 +8,15 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Added new property "RecommendedDegreesOfParallelism". 
+    This property will report the recommended number of threads for communicating with Dataverse.
+
+0.5.8:
+Changed internal dependencies to better align with Dataverse Server.
+Fixed an issue with updating ManyToOneRelationship based attributes.
+Fixed an issue with activity parties relationships.
+
+0.5.7:
 Removed Sealed attribute from the Service Client Class. 
 Fixed an issue with null values being sent to the API causing a null exception to be raised. 
 Fixed missing nuget dependency for Microsoft.Identity.Client.Extensions.Msal, Nuget now properly includes that package. 

@@ -1,4 +1,4 @@
-﻿#region using
+#region using
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.PowerPlatform.Dataverse.Client.Model;
@@ -503,10 +503,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     if (attributeInfo is LookupAttributeMetadata attribData)
                     {
                         // Now get relationship to make sure we use the correct name.
-                        var eData = mUtil.GetEntityMetadata(EntityFilters.Relationships, sourceEntity.LogicalName);
-                        var ERNavName = eData.ManyToOneRelationships.FirstOrDefault(w => w.ReferencingAttribute.Equals(attribData.LogicalName) &&
+                        EntityMetadata eData = mUtil.GetEntityMetadata(EntityFilters.Relationships, sourceEntity.LogicalName);
+                        string ERNavName = eData.ManyToOneRelationships.FirstOrDefault(w => w.ReferencingAttribute.Equals(attribData.LogicalName) &&
                                                                                 w.ReferencedEntity.Equals(entityReference.LogicalName))
                                                                                 ?.ReferencingEntityNavigationPropertyName;
+                        if (string.IsNullOrEmpty(ERNavName ))
+                        {
+                            ERNavName = eData.ManyToOneRelationships.FirstOrDefault(w => w.ReferencingAttribute.Equals(attribData.LogicalName))?.ReferencingEntityNavigationPropertyName;
+                        }
 
                         if (!string.IsNullOrEmpty(ERNavName))
                         {
@@ -660,9 +664,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             {
                 var sourceMdata = mUtil.GetEntityMetadata(sourceEntity.LogicalName);
                 if (sourceMdata != null )
-                    expandoObject.Add($"{sourceMdata.SchemaName}_activity_parties", partiesCollection);
+                    expandoObject.Add($"{sourceMdata.LogicalName}_activity_parties", partiesCollection);
             }
-
 
             return (ExpandoObject)expandoObject;
         }
@@ -743,33 +746,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 // Get the Entity relationship key and entity and reverse it back to the entity key name
                 var eData = mUtil.GetEntityMetadata(EntityFilters.Relationships, entItem.Value.Entities[0].LogicalName);
 
-                // Find the relationship that is referenced.
-                var ERM21 = eData.ManyToOneRelationships.FirstOrDefault(w1 => w1.SchemaName.ToLower().Equals(entItem.Key.SchemaName.ToLower()));
-                var ERM2M = eData.ManyToManyRelationships.FirstOrDefault(w2 => w2.SchemaName.ToLower().Equals(entItem.Key.SchemaName.ToLower()));
-                var ER12M = eData.OneToManyRelationships.FirstOrDefault(w3 => w3.SchemaName.ToLower().Equals(entItem.Key.SchemaName.ToLower()));
-
-                // Determine which one hit
-                if (ERM21 != null)
-                {
-                    isArrayRequired = true;
-                    key = ERM21.ReferencedEntityNavigationPropertyName;
-                }
-                else if (ERM2M != null)
-                {
-                    isArrayRequired = true;
-                    if (ERM2M.Entity1LogicalName.ToLower().Equals(entityName))
-                    {
-                        key = ERM2M.Entity1NavigationPropertyName;
-                    }
-                    else
-                    {
-                        key = ERM2M.Entity2NavigationPropertyName;
-                    }
-                }
-                else if (ER12M != null)
-                {
-                    key = ER12M.ReferencingAttribute;
-                }
+                key = ExtractKeyNameFromRelationship(entItem.Key.SchemaName.ToLower(), entityName, ref isArrayRequired, eData);
 
                 if (string.IsNullOrEmpty(key)) // Failed to find key
                 {
@@ -785,7 +762,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     }
 
                     // generate object.
-                    ExpandoObject ent1 = ToExpandoObject(ent, mUtil, requestedMethod , logger);
+                    ExpandoObject ent1 = ToExpandoObject(ent, mUtil, requestedMethod, logger);
 
                     if (((IDictionary<string, object>)childEntities).Count() > 0)
                     {
@@ -802,6 +779,49 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     ((IDictionary<string, object>)rootExpando).Add(key, childCollection);
             }
             return rootExpando;
+        }
+
+
+        /// <summary>
+        /// Helper to extract key name from one of the relationships.
+        /// </summary>
+        /// <param name="schemaName"></param>
+        /// <param name="entityName"></param>
+        /// <param name="isArrayRequired"></param>
+        /// <param name="eData"></param>
+        /// <returns></returns>
+        private static string ExtractKeyNameFromRelationship(string schemaName, string entityName,  ref bool isArrayRequired, EntityMetadata eData)
+        {
+            string key = ""; 
+            // Find the relationship that is referenced.
+            OneToManyRelationshipMetadata ERM21 = eData.ManyToOneRelationships.FirstOrDefault(w1 => w1.SchemaName.ToLower().Equals(schemaName.ToLower()));
+            ManyToManyRelationshipMetadata ERM2M = eData.ManyToManyRelationships.FirstOrDefault(w2 => w2.SchemaName.ToLower().Equals(schemaName.ToLower()));
+            OneToManyRelationshipMetadata ER12M = eData.OneToManyRelationships.FirstOrDefault(w3 => w3.SchemaName.ToLower().Equals(schemaName.ToLower()));
+
+            // Determine which one hit
+            if (ERM21 != null)
+            {
+                isArrayRequired = true;
+                key = ERM21.ReferencedEntityNavigationPropertyName;
+            }
+            else if (ERM2M != null)
+            {
+                isArrayRequired = true;
+                if (ERM2M.Entity1LogicalName.ToLower().Equals(entityName))
+                {
+                    key = ERM2M.Entity1NavigationPropertyName;
+                }
+                else
+                {
+                    key = ERM2M.Entity2NavigationPropertyName;
+                }
+            }
+            else if (ER12M != null)
+            {
+                key = ER12M.ReferencingAttribute;
+            }
+
+            return key; 
         }
 
         /// <summary>
@@ -948,6 +968,19 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             /// </summary>
             public const string DATAVERSEHEADERPROPERTYPREFIX = "MSCRM.";
 
+        }
+
+        internal static class ResponseHeaders
+        {
+            /// <summary>
+            /// Recomended number of client connection threads Hint 
+            /// </summary>
+            public const string RECOMMENDEDDEGREESOFPARALLELISM = "x-ms-dop-hint";
+
+            /// <summary>
+            /// header for Cookie's
+            /// </summary>
+            public const string SETCOOKIE = "Set-Cookie";
         }
 
         /// <summary>

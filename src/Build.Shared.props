@@ -5,8 +5,9 @@
     <PackageVersion_AppInsights>2.9.1</PackageVersion_AppInsights>
     <PackageVersion_Adal>3.19.8</PackageVersion_Adal>
     <PackageVersion_MSAL>4.35.1</PackageVersion_MSAL>
-    <PackageVersion_CdsSdk>4.6.4784-weekly-2107.4</PackageVersion_CdsSdk>
-    <PackageVersion_CDSServerNuget>4.6.4784-weekly-2107.4</PackageVersion_CDSServerNuget>
+    <PackageVersion_CdsSdk>4.6.6061-weekly-2108.5</PackageVersion_CdsSdk>
+    <PackageVersion_CDSServerNuget>4.6.6061-weekly-2108.5</PackageVersion_CDSServerNuget>
+    <PackageVersion_CdsSdkProxy>4.7.6346-master</PackageVersion_CdsSdkProxy>
     <PackageVersion_Newtonsoft>11.0.2</PackageVersion_Newtonsoft>
     <PackageVersion_RestClientRuntime>2.3.20</PackageVersion_RestClientRuntime>
     <PackageVersion_XrmSdk>9.0.2.42</PackageVersion_XrmSdk>

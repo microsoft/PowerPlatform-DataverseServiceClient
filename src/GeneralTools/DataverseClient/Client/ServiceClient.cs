@@ -131,7 +131,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     if (_connectionSvc.WebClient == null)
                     {
                         if (_logEntry != null)
-                            _logEntry.Log("OrganizationWebProxyClient is null", TraceEventType.Error);
+                            _logEntry.Log("OrganizationWebProxyClientAsync is null", TraceEventType.Error);
                         return null;
                     }
                     else
@@ -140,12 +140,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 else
                 {
                     if (_logEntry != null)
-                        _logEntry.Log("OrganizationWebProxyClient is null", TraceEventType.Error);
+                        _logEntry.Log("OrganizationWebProxyClientAsync is null", TraceEventType.Error);
                     return null;
                 }
             }
         }
-
 
         /// <summary>
         /// Enabled Log Capture in memory
@@ -598,6 +597,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             get => _configuration.Value.UseWebApi;
             set => _configuration.Value.UseWebApi = value;
         }
+
+        /// <summary>
+        /// Server Hint for the number of concurrent threads that would provbide optimal processing. 
+        /// </summary>
+        public int RecommendedDegreesOfParallelism => _connectionSvc.RecommendedDegreesOfParallelism;
 
         #endregion
 

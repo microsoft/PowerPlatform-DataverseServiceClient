@@ -659,6 +659,36 @@ namespace Client_Core_Tests
 
         //}
 
+        [Fact]
+        public void TestResponseHeaderBehavior()
+        {
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            ServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
+
+            // Setup handlers to deal with both orgRequest and WebAPI request.
+            int baseTestDOP = 10;
+            int defaultDOP = 5; 
+            var httpResp = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+            httpResp.Headers.Add(Utilities.ResponseHeaders.RECOMMENDEDDEGREESOFPARALLELISM, baseTestDOP.ToString());
+            fakHttpMethodHander.Setup(s => s.Send(It.Is<HttpRequestMessage>(f => f.Method.ToString().Equals("delete", StringComparison.OrdinalIgnoreCase)))).Returns(httpResp);
+            orgSvc.Setup(f => f.Execute(It.Is<DeleteRequest>(p => p.Target.LogicalName.Equals("account") && p.Target.Id.Equals(testSupport._DefaultId)))).Returns(new DeleteResponse());
+
+            // Tests/ 
+            cli.UseWebApi = false; 
+            bool rslt = cli.ExecuteEntityDeleteRequest("account", testSupport._DefaultId);
+            Assert.True(rslt);
+            Assert.Equal(defaultDOP, cli.RecommendedDegreesOfParallelism);
+
+            cli.UseWebApi = true;
+            cli.Delete("account", testSupport._DefaultId);
+            Assert.Equal(baseTestDOP, cli.RecommendedDegreesOfParallelism);
+
+
+        }
+
         #region LiveConnectedTests
 
         [SkippableConnectionTest]

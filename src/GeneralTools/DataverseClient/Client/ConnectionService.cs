@@ -232,6 +232,17 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// </summary>
         private IOrganizationService _testSupportIOrg;
 
+        /// <summary>
+        /// Value used by the retry system while the code is running,
+        /// this value can scale up and down based on throttling limits.
+        /// </summary>
+        private TimeSpan _retryPauseTimeRunning;
+
+        /// <summary>
+        /// Known types factory
+        /// </summary>
+        private KnownTypesFactory _knownTypesFactory = new KnownTypesFactory();
+
         #endregion
 
         #region Properties
@@ -580,17 +591,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// Cookies that are being passed though clients, when cookies are used
         /// </summary>
         internal Dictionary<string, string> CurrentCookieCollection { get; set; } = null;
-
+        
         /// <summary>
-        /// Value used by the retry system while the code is running,
-        /// this value can scale up and down based on throttling limits.
+        /// Server Hint for the number of concurrent threads that would provbide optimal processing. 
         /// </summary>
-        private TimeSpan _retryPauseTimeRunning;
-
-        /// <summary>
-        /// Known types factory
-        /// </summary>
-        private KnownTypesFactory _knownTypesFactory = new KnownTypesFactory();
+        internal int RecommendedDegreesOfParallelism { get; set; } = 5; // Default value. 
 
         #endregion
 
@@ -601,7 +606,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="baseConnectUrl"></param>
         /// <param name="mockClient"></param>
         /// <param name="logger"></param>
-        internal ConnectionService(IOrganizationService testIOrganziationSvc , string baseConnectUrl, HttpClient mockClient, ILogger logger)
+        internal ConnectionService(IOrganizationService testIOrganziationSvc, string baseConnectUrl, HttpClient mockClient, ILogger logger)
         {
             _testSupportIOrg = testIOrganziationSvc;
             WebApiHttpClient = mockClient;
@@ -1371,7 +1376,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         {
                             resp = (RetrieveCurrentOrganizationResponse)dvService.Execute(request);
                         }
-                        catch(Exception ex)
+                        catch (Exception ex)
                         {
                             dtQueryTimer.Stop();
                             logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Failed to Executed Command - RetrieveCurrentOrganizationRequest : RequestId={1} : total duration: {0}", dtQueryTimer.Elapsed.ToString(), trackingID.ToString()), TraceEventType.Error);
@@ -1601,7 +1606,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             if (cReq != null)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                requestBodyObject = Utilities.ToExpandoObject(cReq, metadataUtlity, methodToExecute , logEntry);
+                requestBodyObject = Utilities.ToExpandoObject(cReq, metadataUtlity, methodToExecute, logEntry);
                 if (cReq.RelatedEntities != null && cReq.RelatedEntities.Count > 0)
                     requestBodyObject = Utilities.ReleatedEntitiesToExpandoObject(requestBodyObject, cReq.LogicalName, cReq.RelatedEntities, metadataUtlity, methodToExecute, logEntry);
             }
@@ -2055,7 +2060,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
             if (resp != null)
             {
-                CurrentCookieCollection = Utilities.GetAllCookiesFromHeader(resp.Headers.SingleOrDefault(header => header.Key == "Set-Cookie").Value?.ToArray(), CurrentCookieCollection);
+                CurrentCookieCollection = Utilities.GetAllCookiesFromHeader(resp.Headers.SingleOrDefault(header => header.Key == Utilities.ResponseHeaders.SETCOOKIE).Value?.ToArray(), CurrentCookieCollection);
+                string dregreeofparallelismHint = resp.Headers.SingleOrDefault(header => header.Key == Utilities.ResponseHeaders.RECOMMENDEDDEGREESOFPARALLELISM).Value?.FirstOrDefault();
+                if (!string.IsNullOrEmpty(dregreeofparallelismHint))
+                {
+                    if (int.TryParse(dregreeofparallelismHint, out int idop))
+                    {
+                        RecommendedDegreesOfParallelism = idop;
+                    }
+                }
             }
 
             return resp;
