@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Configuration;
 using System.Linq;
@@ -155,9 +155,23 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
                 if (httpResponseMessage != null && httpResponseMessage.Headers.Count > 0)
                 {
-                    var a = httpResponseMessage.Headers["Set-Cookie"];
-                    if (a != null)
-                        _callerCdsConnectionServiceHandler.CurrentCookieCollection = Utilities.GetAllCookiesFromHeader(httpResponseMessage.Headers["Set-Cookie"] , _callerCdsConnectionServiceHandler.CurrentCookieCollection);
+                    string cookieHeader = httpResponseMessage.Headers[Utilities.ResponseHeaders.SETCOOKIE];
+                    if (cookieHeader != null)
+                    {
+                        _callerCdsConnectionServiceHandler.CurrentCookieCollection = Utilities.GetAllCookiesFromHeader(httpResponseMessage.Headers[Utilities.ResponseHeaders.SETCOOKIE] , _callerCdsConnectionServiceHandler.CurrentCookieCollection);
+                    }
+
+                    string dregreeofparallelismHint = httpResponseMessage.Headers[Utilities.ResponseHeaders.RECOMMENDEDDEGREESOFPARALLELISM];
+                    if (!string.IsNullOrEmpty(dregreeofparallelismHint))
+                    {
+                        if(int.TryParse(dregreeofparallelismHint, out int idop))
+                        {
+                            if (_callerCdsConnectionServiceHandler != null)
+                            {
+                                _callerCdsConnectionServiceHandler.RecommendedDegreesOfParallelism = idop;
+                            }
+                        }
+                    }
                 }
             }
             finally { };
