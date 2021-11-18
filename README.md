@@ -69,7 +69,7 @@ Samples and such will be updated overtime on the PowerApps Samples GitHub Site a
 
 For connections strings, docs on supported patterns are here: [Connection String Docs](https://docs.microsoft.com/en-us/powerapps/developer/common-data-service/xrm-tooling/use-connection-strings-xrm-tooling-connect)
 
-For General docs on the CrmServiceClient, which is what CdsServiceClient is modeled on: [CrmServiceClient Docs](https://docs.microsoft.com/en-us/powerapps/developer/common-data-service/xrm-tooling/build-windows-client-applications-xrm-tools)
+For General docs on the CrmServiceClient, which is what Dataverse ServiceClient is modeled on: [CrmServiceClient Docs](https://docs.microsoft.com/en-us/powerapps/developer/common-data-service/xrm-tooling/build-windows-client-applications-xrm-tools)
 
 ## Contributing
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us the rights to use your contribution. For details, visit https://cla.microsoft.com.
