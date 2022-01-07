@@ -591,7 +591,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// Cookies that are being passed though clients, when cookies are used
         /// </summary>
         internal Dictionary<string, string> CurrentCookieCollection { get; set; } = null;
-        
+
         /// <summary>
         /// Server Hint for the number of concurrent threads that would provbide optimal processing. 
         /// </summary>
@@ -1581,7 +1581,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
             else if (req.Parameters.ContainsKey("Target") && req.Parameters["Target"] is EntityReference entRef) // this should cover things that have targets.
             {
-                cReq = new Entity(entRef.LogicalName, entRef.Id);
+                cReq = entRef.KeyAttributes.Any()
+                    ? new Entity(entRef.LogicalName, entRef.KeyAttributes)
+                    : new Entity(entRef.LogicalName, entRef.Id);
             }
 
             EntityMetadata entityMetadata = null;

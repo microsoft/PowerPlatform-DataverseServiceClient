@@ -8,6 +8,13 @@ Notice:
     Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+ Accepted fix requested here: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/205
+  fixing delete by alternate key request in client. 
+ Fixed dependency issue for System.Security.Premisions  (git #203)  
+ Refactored AuthorityResolver to discover AAD authentication authorities to allow for direct access by other clients. 
+
+
+0.5.10:
 Added new property "RecommendedDegreesOfParallelism". 
     This property will report the recommended number of threads for communicating with Dataverse.
 

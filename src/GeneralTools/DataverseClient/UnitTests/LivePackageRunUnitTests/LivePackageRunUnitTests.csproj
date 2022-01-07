@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ProjectSpecificFx>true</ProjectSpecificFx>
+    <!-- only test with one of the Classic and Core frameworks each -->
+    <TargetFrameworks>net462;net472;net48;netcoreapp3.1;net5.0</TargetFrameworks>
+    <SignAssembly>true</SignAssembly>
+    <ComponentAreaName>DataverseClient-Tests-Package</ComponentAreaName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <Import Project="..\..\..\..\Build.Common.core.props" />
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
+    <PackageReference Include="xunit" Version="$(PackageVersion_XUnit)" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="$(PackageVersion_XUnit)" />
+    <PackageReference Include="coverlet.collector" Version="1.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LivePackageTestsConsole\LivePackageTestsConsole.csproj" />
+  </ItemGroup>
+
+</Project>

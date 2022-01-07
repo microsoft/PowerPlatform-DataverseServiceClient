@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <ComponentAreaName>DataverseConnectControl</ComponentAreaName>
+    <ComponentAreaName>DataverseClient</ComponentAreaName>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.PowerPlatform.Dataverse.ConnectControl</RootNamespace>
@@ -11,7 +11,7 @@
   <Import Project="..\..\..\Build.Common.StandardAndLegacy.props" />
   <PropertyGroup>
     <TargetFrameworks>$(DotNetClassicTargetFrameworks)</TargetFrameworks>
-    <DocumentationFile>$(OutDir)\Microsoft.PowerPlatform.Dataverse.CrmConnectControl.xml</DocumentationFile>
+    <DocumentationFile>$(OutDir)\Microsoft.PowerPlatform.Dataverse.ConnectControl.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="$(PackageVersion_Adal)" />
