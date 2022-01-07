@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <ComponentAreaName>DataverseConnectControl</ComponentAreaName>
+    <ComponentAreaName>DataverseClient</ComponentAreaName>
     <SignAssembly>true</SignAssembly>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.PowerPlatform.Dataverse.Ui.Styles</RootNamespace>

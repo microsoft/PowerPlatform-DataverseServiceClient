@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.31729.503
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LivePackageTestsConsole", "UnitTests\LivePackageTestsConsole\LivePackageTestsConsole.csproj", "{AD21CFD4-EDA7-4F31-9A07-CC90C03B4C27}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LivePackageRunUnitTests", "UnitTests\LivePackageRunUnitTests\LivePackageRunUnitTests.csproj", "{F90838B9-F2D2-499B-8C37-4F8389380743}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{AD21CFD4-EDA7-4F31-9A07-CC90C03B4C27}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD21CFD4-EDA7-4F31-9A07-CC90C03B4C27}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD21CFD4-EDA7-4F31-9A07-CC90C03B4C27}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F90838B9-F2D2-499B-8C37-4F8389380743}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F90838B9-F2D2-499B-8C37-4F8389380743}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F90838B9-F2D2-499B-8C37-4F8389380743}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F90838B9-F2D2-499B-8C37-4F8389380743}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

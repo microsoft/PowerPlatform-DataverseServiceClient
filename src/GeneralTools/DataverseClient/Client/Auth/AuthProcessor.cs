@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Client;
 using Microsoft.PowerPlatform.Dataverse.Client.Auth.TokenCache;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
@@ -90,11 +90,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
                 }
                 else
                 {
-                    var rslt = GetAuthorityFromTargetServiceAsync(ClientServiceProviders.Instance.GetService<IHttpClientFactory>(), processResult.TargetServiceUrl, logSink).ConfigureAwait(false).GetAwaiter().GetResult();
-                    if (!string.IsNullOrEmpty(rslt.Authority))
+                    var details = GetAuthorityFromTargetServiceAsync(ClientServiceProviders.Instance.GetService<IHttpClientFactory>(), processResult.TargetServiceUrl, logSink).ConfigureAwait(false).GetAwaiter().GetResult();
+                    if (details.Success)
                     {
-                        Authority = rslt.Authority;
-                        Resource = rslt.Resource;
+                        Authority = details.Authority.AbsoluteUri;
+                        Resource = details.Resource.AbsoluteUri;
                     }
                     else
                         throw new ArgumentNullException("Authority", "Need a non-empty authority");
@@ -446,18 +446,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
             return versionTaggedUriBuilder;
         }
 
-
-        private const string AuthenticateHeader = "WWW-Authenticate";
-        private const string Bearer = "bearer";
-        private const string AuthorityKey = "authorization_uri";
-        private const string ResourceKey = "resource_id";
-
-        internal class AuthRoutingProperties
-        {
-            public string Authority { get; set; }
-            public string Resource { get; set; }
-        }
-
         /// <summary>
         /// Get authority and resource for this instance.
         /// </summary>
@@ -465,66 +453,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
         /// <param name="logger">Logger to write info too</param>
         /// <param name="clientFactory">HTTP Client factory to use for this request.</param>
         /// <returns></returns>
-        private static async Task<AuthRoutingProperties> GetAuthorityFromTargetServiceAsync(IHttpClientFactory clientFactory, Uri targetServiceUrl, DataverseTraceLogger logger)
+        private static async Task<AuthenticationDetails> GetAuthorityFromTargetServiceAsync(IHttpClientFactory clientFactory, Uri targetServiceUrl, DataverseTraceLogger logger)
         {
-            AuthRoutingProperties authRoutingProperties = new AuthRoutingProperties();
             var client = clientFactory.CreateClient("DataverseHttpClientFactory");
-            var rslt = await client.GetAsync(targetServiceUrl).ConfigureAwait(false);
-
-            if (rslt.StatusCode == System.Net.HttpStatusCode.NotFound || rslt.StatusCode == System.Net.HttpStatusCode.BadRequest)
-            {
-                // didn't find endpoint.
-                logger.Log($"Failed to get Authority and Resource error. Attempt to Access Endpoint {targetServiceUrl.ToString()} resulted in {rslt.StatusCode}.", TraceEventType.Error);
-                return authRoutingProperties;
-            }
-
-            if (rslt.Headers.Contains("WWW-Authenticate"))
-            {
-                var authenticateHeader = rslt.Headers.GetValues("WWW-Authenticate").FirstOrDefault();
-                authenticateHeader = authenticateHeader.Trim();
-
-                // This also checks for cases like "BearerXXXX authorization_uri=...." and "Bearer" and "Bearer "
-                if (!authenticateHeader.StartsWith(Bearer, StringComparison.OrdinalIgnoreCase)
-                    || authenticateHeader.Length < Bearer.Length + 2
-                    || !char.IsWhiteSpace(authenticateHeader[Bearer.Length]))
-                {
-                    //var ex = new ArgumentException(AdalErrorMessage.InvalidAuthenticateHeaderFormat,
-                    //	nameof(authenticateHeader));
-                    //CoreLoggerBase.Default.Error(AdalErrorMessage.InvalidAuthenticateHeaderFormat);
-                    //CoreLoggerBase.Default.ErrorPii(ex);
-                    //throw ex;
-                }
-
-                authenticateHeader = authenticateHeader.Substring(Bearer.Length).Trim();
-
-                IDictionary<string, string> authenticateHeaderItems = null;
-                try
-                {
-                    authenticateHeaderItems =
-                        EncodingHelper.ParseKeyValueListStrict(authenticateHeader, ',', false, true);
-                }
-                catch //(ArgumentException ex)
-                {
-                    //var newEx = new ArgumentException(AdalErrorMessage.InvalidAuthenticateHeaderFormat,
-                    //	nameof(authenticateHeader), ex);
-                    //CoreLoggerBase.Default.Error(AdalErrorMessage.InvalidAuthenticateHeaderFormat);
-                    //CoreLoggerBase.Default.ErrorPii(newEx);
-                    //throw newEx;
-                }
-
-                if (authenticateHeaderItems != null)
-                {
-                    string param;
-                    authenticateHeaderItems.TryGetValue(AuthorityKey, out param);
-                    authRoutingProperties.Authority =
-                        param.Replace("oauth2/authorize", "") // swap out the old oAuth pattern.
-                        .Replace("common", "organizations"); // swap common for organizations because MSAL reasons.
-                    authenticateHeaderItems.TryGetValue(ResourceKey, out param);
-                    authRoutingProperties.Resource = param;
-                }
-            }
-
-            return authRoutingProperties;
+            var resolver = new AuthorityResolver(client, (t, msg) => logger.Log(msg, t));
+            return await resolver.ProbeForExpectedAuthentication(targetServiceUrl);
         }
 
         /// <summary>

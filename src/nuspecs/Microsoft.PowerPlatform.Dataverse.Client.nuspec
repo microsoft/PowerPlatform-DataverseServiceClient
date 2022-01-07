@@ -58,10 +58,10 @@
         <dependency id="System.Reflection.TypeExtensions" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Runtime.Serialization.Primitives" version="4.3.0" exclude="Build,Analyzers" />
         <dependency id="System.Runtime.Serialization.Xml" version="4.3.0" exclude="Build,Analyzers" />
-        <dependency id="System.Security.Permissions" version="4.7.0" exclude="Build,Analyzers" />
-        <dependency id="System.ServiceModel.Duplex" version="4.7.0" exclude="Build,Analyzers" />
-        <dependency id="System.ServiceModel.Http" version="4.7.0" exclude="Build,Analyzers" />
-        <dependency id="System.ServiceModel.Primitives" version="4.7.0" exclude="Build,Analyzers" />
+        <dependency id="System.Security.Permissions" version="5.0.0" exclude="Build,Analyzers" />
+        <dependency id="System.ServiceModel.Duplex" version="4.8.1" exclude="Build,Analyzers" />
+        <dependency id="System.ServiceModel.Http" version="4.8.1" exclude="Build,Analyzers" />
+        <dependency id="System.ServiceModel.Primitives" version="4.8.1" exclude="Build,Analyzers" />
         <dependency id="System.Text.Json" version="5.0.2" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.DependencyInjection" version="3.1.8" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Http" version="3.1.8" exclude="Build,Analyzers" />
@@ -88,10 +88,10 @@
         <dependency id="System.Reflection.TypeExtensions" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Runtime.Serialization.Primitives" version="4.3.0" exclude="Build,Analyzers" />
         <dependency id="System.Runtime.Serialization.Xml" version="4.3.0" exclude="Build,Analyzers" />
-        <dependency id="System.Security.Permissions" version="4.7.0" exclude="Build,Analyzers" />
-        <dependency id="System.ServiceModel.Duplex" version="4.7.0" exclude="Build,Analyzers" />
-        <dependency id="System.ServiceModel.Http" version="4.7.0" exclude="Build,Analyzers" />
-        <dependency id="System.ServiceModel.Primitives" version="4.7.0" exclude="Build,Analyzers" />
+        <dependency id="System.Security.Permissions" version="5.0.0" exclude="Build,Analyzers" />
+        <dependency id="System.ServiceModel.Duplex" version="4.8.1" exclude="Build,Analyzers" />
+        <dependency id="System.ServiceModel.Http" version="4.8.1" exclude="Build,Analyzers" />
+        <dependency id="System.ServiceModel.Primitives" version="4.8.1" exclude="Build,Analyzers" />
         <dependency id="System.Text.Json" version="5.0.2" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.DependencyInjection" version="3.1.8" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Http" version="3.1.8" exclude="Build,Analyzers" />

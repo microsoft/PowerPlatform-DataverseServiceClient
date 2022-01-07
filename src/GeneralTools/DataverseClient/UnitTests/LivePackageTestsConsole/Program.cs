@@ -5,9 +5,10 @@ namespace LivePackageTestsConsole
     /// <summary>
     /// This program will test run against live tests on a known Nuget Package version. 
     /// </summary>
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static bool SkipStop { get; set; } = false; 
+        public static void Main(string[] args)
         {
             Console.WriteLine("Starting Tests");
 
@@ -48,6 +49,12 @@ namespace LivePackageTestsConsole
 
                     tests.Run();
                 }
+                else if ( string.Compare(args[0], "CUDTest", StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    var tests = new CUDTest();
+                    tests.RunTest();
+                    tests.RunTest2();
+                }
             }
             else
             {
@@ -55,7 +62,8 @@ namespace LivePackageTestsConsole
                 tests.Run();
             }
 
-            Console.ReadKey();
+            if (!SkipStop)
+                Console.ReadKey();
         }
     }
 }

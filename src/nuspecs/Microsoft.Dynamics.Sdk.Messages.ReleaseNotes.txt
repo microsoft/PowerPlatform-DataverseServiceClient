@@ -6,6 +6,9 @@ Notice:
         https://docs.microsoft.com/en-us/dotnet/api/microsoft.crm.sdk.messages?view=dynamics-general-ce-9
 
 ++CURRENTRELEASEID++
+    Updated Min dependency to DV ServiceClient 0.5.10
+
+0.5.10:
     Updated Newtonsoft.Json to v11.0.2 to match server.
 
 0.4.12:

@@ -17,7 +17,7 @@
     <RestoreAdditionalProjectSources>
       $(RepoRoot)\binSigned\$(Configuration)\packages
     </RestoreAdditionalProjectSources>
-    <TargetDvClientPackageVersion Condition=" '$(targetDvClientPackageVersion)' == '' ">0.5.9</TargetDvClientPackageVersion>
+    <TargetDvClientPackageVersion Condition=" '$(TargetDvClientPackageVersion)' == '' ">0.5.9</TargetDvClientPackageVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net462|AnyCPU'">
@@ -28,7 +28,7 @@
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="5.10.3" />
     <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="$(TargetDvClientPackageVersion)" />
-    <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client.Dynamics" Version="$(targetDvClientPackageVersion)" />
+    <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client.Dynamics" Version="$(TargetDvClientPackageVersion)" />
   </ItemGroup>
   
   <ItemGroup>
