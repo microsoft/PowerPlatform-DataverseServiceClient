@@ -1,0 +1,16 @@
+<Project>
+  <!-- See: https://docs.microsoft.com/en-us/visualstudio/msbuild/customize-your-build?view=vs-2019#directorybuildprops-and-directorybuildtargets -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove($(MSBuildThisFile), '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- These variables define the object and binary roots, respectively. -->
+    <!-- The parent area folder name is intended to resolve potentially duplicate MSBuildProjectName's across the repo -->
+    <_parentAreaFolderName>$([System.IO.Path]::GetFileName( $([System.IO.Path]::GetFullPath( $([System.IO.Path]::Combine($(MSBuildProjectDirectory), "..")) )) ))</_parentAreaFolderName>
+    <!-- Setting the base obj folder to the root of the repo to help avoid build errors due to extremely long file paths -->
+    <BaseIntermediateOutputPath>$(RepoRoot)\obj\$(_parentAreaFolderName)\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>

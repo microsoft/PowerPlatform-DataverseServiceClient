@@ -19,10 +19,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Ui.Styles.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Ui.Styles.Properties {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.PowerPlatform.Dataverse.Ui.Styles.Properties.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Ui.Styles.Properties {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Ui.Styles.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Close.
         /// </summary>
-        internal static string Close {
+        public static string Close {
             get {
                 return ResourceManager.GetString("Close", resourceCulture);
             }
@@ -72,7 +72,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Ui.Styles.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Maximize.
         /// </summary>
-        internal static string Maximize {
+        public static string Maximize {
             get {
                 return ResourceManager.GetString("Maximize", resourceCulture);
             }
@@ -81,7 +81,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Ui.Styles.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Minimize.
         /// </summary>
-        internal static string Minimize {
+        public static string Minimize {
             get {
                 return ResourceManager.GetString("Minimize", resourceCulture);
             }

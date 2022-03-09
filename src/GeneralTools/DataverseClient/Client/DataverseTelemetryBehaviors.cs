@@ -1,3 +1,7 @@
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.PowerPlatform.Dataverse.Client.Model;
+using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 using System;
 using System.Collections;
 using System.Configuration;
@@ -21,10 +25,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         private ConnectionService _callerCdsConnectionServiceHandler;
         private int _maxFaultSize = -1;
         private int _maxReceivedMessageSize = -1;
+        private int _maxBufferPoolSize = -1;
         private string _userAgent;
         #endregion
 
         #region Const
+        private const int MAXBUFFERPOOLDEFAULT = 524288;
         private const int MAXFAULTSIZEDEFAULT = 131072;
         private const int MAXRECVMESSAGESIZEDEFAULT = 2147483647;
         #endregion
@@ -35,6 +41,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         public DataverseTelemetryBehaviors(ConnectionService cli)
         {
             _callerCdsConnectionServiceHandler = cli;
+            IOptions<ConfigurationOptions> _configuration = ClientServiceProviders.Instance.GetService<IOptions<ConfigurationOptions>>();
+
 
             // reading overrides from app config if present..
             // these values override the values that are set on the client from the server.
@@ -50,9 +58,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
                 _userAgent = $"{_userAgent} (DataverseSvcClient:{Environs.FileVersion})";
 
-                if (_maxFaultSize == -1 && ConfigurationManager.AppSettings.AllKeys.Contains("MaxFaultSizeOverride"))
+                if (_maxFaultSize == -1 && !string.IsNullOrEmpty(_configuration.Value.MaxFaultSizeOverride))
                 {
-                    var maxFaultSz = ConfigurationManager.AppSettings["MaxFaultSizeOverride"];
+                    var maxFaultSz = _configuration.Value.MaxFaultSizeOverride;
                     if (maxFaultSz is string && !string.IsNullOrWhiteSpace(maxFaultSz))
                     {
                         int.TryParse(maxFaultSz, out _maxFaultSize);
@@ -69,9 +77,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         logg.Log($"Failed to parse MaxFaultSizeOverride property. Value found: {maxFaultSz}. MaxFaultSizeOverride must be a valid integer.", System.Diagnostics.TraceEventType.Warning);
                 }
 
-                if (_maxReceivedMessageSize == -1 && ConfigurationManager.AppSettings.AllKeys.Contains("MaxReceivedMessageSizeOverride"))
+                if (_maxReceivedMessageSize == -1 && !string.IsNullOrEmpty(_configuration.Value.MaxReceivedMessageSizeOverride))
                 {
-                    var maxRecvSz = ConfigurationManager.AppSettings["MaxReceivedMessageSizeOverride"];
+                    var maxRecvSz = _configuration.Value.MaxReceivedMessageSizeOverride;
                     if (maxRecvSz is string && !string.IsNullOrWhiteSpace(maxRecvSz))
                     {
                         int.TryParse(maxRecvSz, out _maxReceivedMessageSize);
@@ -87,10 +95,30 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     else
                         logg.Log($"Failed to parse MaxReceivedMessageSizeOverride property. Value found: {maxRecvSz}. MaxReceivedMessageSizeOverride must be a valid integer.", System.Diagnostics.TraceEventType.Warning);
                 }
+
+                if (_maxBufferPoolSize == -1 && !string.IsNullOrEmpty(_configuration.Value.MaxBufferPoolSizeOveride))
+                {
+                    var maxBufferPoolSz = _configuration.Value.MaxBufferPoolSizeOveride;
+                    if (maxBufferPoolSz is string && !string.IsNullOrWhiteSpace(maxBufferPoolSz))
+                    {
+                        int.TryParse(maxBufferPoolSz, out _maxBufferPoolSize);
+                        if (_maxBufferPoolSize != -1)
+                        {
+                            if (_maxBufferPoolSize < MAXBUFFERPOOLDEFAULT)
+                            {
+                                _maxBufferPoolSize = -1;
+                                logg.Log($"Failed to set MaxBufferPoolSizeOveride property. Value found: {maxBufferPoolSz}. Size must be larger then {MAXBUFFERPOOLDEFAULT}.", System.Diagnostics.TraceEventType.Warning);
+                            }
+                        }
+                    }
+                    else
+                        logg.Log($"Failed to parse MaxBufferPoolSizeOveride property. Value found: {maxBufferPoolSz}. MaxReceivedMessageSizeOverride must be a valid integer.", System.Diagnostics.TraceEventType.Warning);
+                }
+
             }
             catch (Exception ex)
             {
-                logg.Log("Failed to process binding override properties,  Only MaxFaultSizeOverride and MaxReceivedMessageSizeOverride are supported and must be integers.", System.Diagnostics.TraceEventType.Warning, ex);
+                logg.Log("Failed to process binding override properties,  Only MaxFaultSizeOverride, MaxReceivedMessageSizeOverride and MaxBufferPoolSizeOveride are supported and must be integers.", System.Diagnostics.TraceEventType.Warning, ex);
             }
             finally
             {
@@ -131,6 +159,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     binding.MaxReceivedMessageSize = _maxReceivedMessageSize;
                 }
             }
+
+            if (_maxBufferPoolSize != -1)
+            {
+                if (endpoint.Binding is BasicHttpBinding binding1)
+                {
+                    binding1.MaxBufferPoolSize = _maxBufferPoolSize;
+                }
+            }
         }
 
         public void ApplyDispatchBehavior(ServiceEndpoint endpoint, EndpointDispatcher endpointDispatcher)
@@ -158,13 +194,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     string cookieHeader = httpResponseMessage.Headers[Utilities.ResponseHeaders.SETCOOKIE];
                     if (cookieHeader != null)
                     {
-                        _callerCdsConnectionServiceHandler.CurrentCookieCollection = Utilities.GetAllCookiesFromHeader(httpResponseMessage.Headers[Utilities.ResponseHeaders.SETCOOKIE] , _callerCdsConnectionServiceHandler.CurrentCookieCollection);
+                        _callerCdsConnectionServiceHandler.CurrentCookieCollection = Utilities.GetAllCookiesFromHeader(httpResponseMessage.Headers[Utilities.ResponseHeaders.SETCOOKIE], _callerCdsConnectionServiceHandler.CurrentCookieCollection);
                     }
 
                     string dregreeofparallelismHint = httpResponseMessage.Headers[Utilities.ResponseHeaders.RECOMMENDEDDEGREESOFPARALLELISM];
                     if (!string.IsNullOrEmpty(dregreeofparallelismHint))
                     {
-                        if(int.TryParse(dregreeofparallelismHint, out int idop))
+                        if (int.TryParse(dregreeofparallelismHint, out int idop))
                         {
                             if (_callerCdsConnectionServiceHandler != null)
                             {
@@ -253,6 +289,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             {
                 if (_callerCdsConnectionServiceHandler.WebClient != null)
                     callerId = _callerCdsConnectionServiceHandler.WebClient.CallerId;
+                if (_callerCdsConnectionServiceHandler.OnPremClient != null)
+                    callerId = _callerCdsConnectionServiceHandler.OnPremClient.CallerId;
             }
 
             if (callerId == Guid.Empty) // Prefer the Caller ID over the AADObjectID.

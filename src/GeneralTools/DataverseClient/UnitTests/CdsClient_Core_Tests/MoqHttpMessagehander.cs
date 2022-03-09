@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -16,7 +16,11 @@ namespace Client_Core_UnitTests
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)
         {
-            return Task.FromResult(Send(request));
+            lock (this)
+            {
+                return Task.FromResult(Send(request));
+            }
+            
         }
     }
 }

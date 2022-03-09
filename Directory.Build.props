@@ -1,0 +1,39 @@
+<Project InitialTargets="VerifyBuildProps">
+  <!-- See: https://docs.microsoft.com/en-us/visualstudio/msbuild/customize-your-build?view=vs-2019#directorybuildprops-and-directorybuildtargets -->
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <IsOfficialBuild Condition="'$(IsOfficialBuild)' == ''">false</IsOfficialBuild>
+
+    <!-- Because the default value in MSBuild doesn't get set until after Directory.Build.props, and we need it, we set the default here. -->
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Build layout">
+    <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
+    <SrcRoot>$(RepoRoot)src\</SrcRoot>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Official build defaults" Condition="'$(IsOfficialBuild)' == 'true'">
+    <Enable_Telemetry>true</Enable_Telemetry>
+  </PropertyGroup>
+
+  <!-- Use our dev nuget config when requested. -->
+  <PropertyGroup Label="Dev Nuget config" Condition="'$(UseNugetDevConfig)' == 'true' and '$(IsOfficialBuild)' != 'true'">
+    <RestoreConfigFile Condition="'$(RestoreConfigFile)' == ''">$(RepoRoot)nuget.dev.config</RestoreConfigFile>
+
+    <!-- since we're using dev nuget packages, lets prevent dirtying up the local nuget cache folder -->
+    <RestorePackagesPath>$(RepoRoot)obj\.nuget-cache</RestorePackagesPath>
+  </PropertyGroup>
+
+  <Target Name="VerifyBuildProps">
+    <Error Condition="'$(isOfficialBuild)' == 'true' and '$(UseNugetDevConfig)' == 'true'"
+           Text="UseNugetDevConfig cannot be set for official builds." />
+    <Error Condition="'$(isOfficialBuild)' == 'true' and '$(PublishToDevNugetFeed)' == 'true'"
+           Text="PublishToDevNugetFeed cannot be set for official builds." />
+
+    <Error Condition="('$(UseNugetDevConfig)' == 'true' or '$(PublishToDevNugetFeed)' == 'true') and '$(NUGET_LOCAL_DEV_PACKAGES)' == ''"
+           Text="The environment variable 'NUGET_LOCAL_DEV_PACKAGES' is not set. This is required to use any of the arguments: UseNugetDevConfig, PublishToDevNugetFeed" />
+    <Error Condition="'$(NUGET_LOCAL_DEV_PACKAGES)' != '' and !Exists('$(NUGET_LOCAL_DEV_PACKAGES)')"
+           Text="The environment variable 'NUGET_LOCAL_DEV_PACKAGES' is set, but does not exist. Ensure it exists if specified." />
+  </Target>
+</Project>

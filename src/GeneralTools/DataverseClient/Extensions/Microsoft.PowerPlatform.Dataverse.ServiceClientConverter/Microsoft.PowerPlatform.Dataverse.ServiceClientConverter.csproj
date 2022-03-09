@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<RootNamespace>Microsoft.PowerPlatform.Dataverse.ServiceClientConverter</RootNamespace>
+		<ComponentAreaName>DataverseClient-Converter</ComponentAreaName>
+		<SignAssembly>true</SignAssembly>
+	</PropertyGroup>
+	<Import Project="..\..\..\..\Build.Common.core.props" />
+
+	<PropertyGroup>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<DocumentationFile>$(OutDir)\Microsoft.PowerPlatform.Dataverse.ServiceClientConverter.xml</DocumentationFile>
+	</PropertyGroup>
+</Project>
+

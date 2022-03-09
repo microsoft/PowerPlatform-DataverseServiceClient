@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -152,7 +152,7 @@
     <value>On-premises</value>
   </data>
   <data name="LOGIN_FRM_DEPLOYMENT_TYPE" xml:space="preserve">
-    <value>Deployment Type:</value>
+    <value>Deployment Type</value>
   </data>
   <data name="LOGIN_FRM_DOMAIN" xml:space="preserve">
     <value>Domain</value>
@@ -247,6 +247,6 @@
     <value>Example: https://orgname.crm.dynamics.com</value>
   </data>
   <data name="INSTANCEURLCAPTURE_URL_LABLE" xml:space="preserve">
-    <value>Instance url:</value>
+    <value>Instance url</value>
   </data>
 </root>

@@ -1,6 +1,7 @@
-﻿#region using
+#region using
 using FluentAssertions;
 using Microsoft.Crm.Sdk.Messages;
+using Microsoft.PowerPlatform.Dataverse.Client.InternalExtensions;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 using System;
 using System.Collections.Generic;

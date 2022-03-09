@@ -1,4 +1,4 @@
-﻿#region
+#region
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 namespace Microsoft.PowerPlatform.Dataverse.Client.Model
 {
     /// <summary>
-    /// App settings configuration
+    /// Client Configuration Options Array.
     /// </summary>
-    public class AppSettingsConfiguration
+    public class ConfigurationOptions
     {
         #region Dataverse Interaction Settings
         private int _maxRetryCount = Utils.AppSettingsHelper.GetAppSetting("ApiOperationRetryCountOverride", 10);
@@ -58,6 +58,67 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Model
             get => _useWebApiLoginFlow;
             set => _useWebApiLoginFlow = value;
         }
+
+        private bool _enableAffinityCookie = Utils.AppSettingsHelper.GetAppSetting<bool>("EnableAffinityCookie", true);
+        /// <summary>
+        /// Defaults to True.
+        /// <para>When true, this setting applies the default connection routing strategy to connections to Dataverse.</para>
+        /// <para>This will 'prefer' a given node when interacting with Dataverse which improves overall connection performance.</para>
+        /// <para>When set to false, each call to Dataverse will be routed to any given node supporting your organization. </para>
+        /// <para>See https://docs.microsoft.com/en-us/powerapps/developer/data-platform/api-limits#remove-the-affinity-cookie for proper use.</para>
+        /// </summary>
+        public bool EnableAffinityCookie
+        {
+            get => _enableAffinityCookie;
+            set => _enableAffinityCookie = value;
+        }
+
+        // For future work...
+
+        //private TimeSpan _maxConnectionTimeout = Utils.AppSettingsHelper.GetAppSettingTimeSpan("MaxDataverseConnectionTimeOutMinutes", Utils.AppSettingsHelper.TimeSpanFromKey.Minutes, TimeSpan.FromMinutes(4));
+
+        ///// <summary>
+        ///// Max connection timeout property
+        ///// https://docs.microsoft.com/en-us/azure/app-service/faq-availability-performance-application-issues#why-does-my-request-time-out-after-230-seconds
+        ///// Azure Load Balancer has a default idle timeout setting of four minutes. This is generally a reasonable response time limit for a web request.
+        ///// </summary>
+        //public TimeSpan MaxConnectionTimeout
+        //{
+        //    get => _maxConnectionTimeout;
+        //    set => _maxConnectionTimeout = value;
+
+        //}
+
+        private string _maxFaultSizeOverride = Utils.AppSettingsHelper.GetAppSetting<string>("MaxFaultSizeOverride", null);
+        /// <summary>
+        /// MaxFaultSize override. - Use under Microsoft Direction only. 
+        /// </summary>
+        public string MaxFaultSizeOverride
+        {
+            get => _maxFaultSizeOverride;
+            set => _maxFaultSizeOverride = value;
+        }
+
+        private string _maxReceivedMessageSize = Utils.AppSettingsHelper.GetAppSetting<string>("MaxReceivedMessageSizeOverride", null);
+        /// <summary>
+        /// MaxReceivedMessageSize override. - Use under Microsoft Direction only. 
+        /// </summary>
+        public string MaxReceivedMessageSizeOverride
+        {
+            get => _maxReceivedMessageSize;
+            set => _maxReceivedMessageSize = value;
+        }
+
+        private string _maxBufferPoolSizeOveride = Utils.AppSettingsHelper.GetAppSetting<string>("MaxBufferPoolSizeOveride", null);
+        /// <summary>
+        /// MaxBufferPoolSize override. - Use under Microsoft Direction only. 
+        /// </summary>
+        public string MaxBufferPoolSizeOveride
+        {
+            get => _maxBufferPoolSizeOveride;
+            set => _maxBufferPoolSizeOveride = value;
+        }
+
 
         #endregion
 

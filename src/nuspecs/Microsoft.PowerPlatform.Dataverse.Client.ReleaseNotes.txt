@@ -1,13 +1,40 @@
 Notice:
     This package is in a public preview release.
-    This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8, .net core 3.0, 3.1 and 5.0
+    This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8, .net core 3.1, 5.0 and 6.0
     General Documentation is the same as CrmServiceClient and can be found here:
         https://docs.microsoft.com/en-us/dotnet/api/microsoft.xrm.tooling.connector.crmserviceclient?view=dynamics-xrmtooling-ce-9
     Connection String Docs can be found here:
         https://docs.microsoft.com/en-us/powerapps/developer/common-data-service/xrm-tooling/use-connection-strings-xrm-tooling-connect
-    Note: that only OAuth, Certificate, ClientSecret Authentication types are supported at this time.
+    Note: that only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Minor Bump to 0.6.x - *Should* be last bump prior to 1.0. 
+
+Added initial support for AD auth for OnPremise.  This will work for full framework only. 
+Added new constructor that will accept a ConnectionOptions class and a ConfigurationOptions Options Object.  This constructor is currently not fully implemented. 
+    This is prep work for a builder process and intended to unify the connection flow to a single constructor at some point in the future. 
+    The goal of this work will be to resolve the issues caused by lazy loading hosts. 
+Fixed a bug in Logger when working with Connection Strings where log events would not be correctly generated. 
+Speculative fix for GIT issue #219 and #220
+Fixed a bug where LastError was not properly reset, fixed Git #229
+Fixed Error message issue between onPrem and onLine , Fixed Git #232
+Added configuration support to allow for better memory management of very large return sets,  Git #207 
+    New AppSetting is called "MaxBufferPoolSizeOveride" - there is currently not a way to set this via code at runtime. 
+    Support for configuration of this will be added as part of the new Constructor for .net core, .net framework can use it by setting the appsetting value now.
+Fixed exceptions not being thrown from several paths during login flows. 
+
+-- WARNING -- 
+.net 3.0 Target Removed from Nuget packages. 
+REFACTORED helpers and utilities for the DataverseServiceClient into the Microsoft.PowerPlatform.Dataverse.Client.Extensions Namespace of the DataverseClient.
+Dependency changes:
+    Removed Microsoft.Dynamics.Messages.Sdk.nuspec for Dynamics messages at this time.  This will return in the future in some form. 
+    Removed Microsoft.Cds.Sdk.Proxy.dll from Package and replaced with Microsoft.Crm.Sdk.Proxy.dll in package. 
+    System.Text.Json moved to 6.0.2 min dependency.
+        -- Note: As of this writing, when using Azure functions you cannot use Microsoft.Net.Sdk.Functions.3.0.12 or .3.0.13 due to blocks on System.Text.Json dependencies.  You need to either use .3.0.11 or move up to 4.x 
+    System.ServiceModel.Http moved to 4.9.0 due to internal dependencies on Microsoft.Xrm.Sdk
+
+
+0.5.17:
  Accepted fix requested here: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/205
   fixing delete by alternate key request in client. 
  Fixed dependency issue for System.Security.Premisions  (git #203)  

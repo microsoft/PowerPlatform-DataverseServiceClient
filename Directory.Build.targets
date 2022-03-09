@@ -1,0 +1,11 @@
+<Project>
+  <!-- See: https://docs.microsoft.com/en-us/visualstudio/msbuild/customize-your-build?view=vs-2019#directorybuildprops-and-directorybuildtargets -->
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Build options for telemetry">
+    <!-- This needs to be done in .targets, as some projects set DefineConstants but don't concatenate with existing values. -->
+    <DefineConstants Condition="'$(Enable_Telemetry)' == 'true'">$(DefineConstants);PROD_CUSTOMER_TELEMETRY</DefineConstants>
+  </PropertyGroup>
+</Project>

@@ -1,4 +1,4 @@
-﻿using Microsoft.PowerPlatform.Dataverse.Client;
+using Microsoft.PowerPlatform.Dataverse.ConnectControl.InternalExtensions;
 using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;

@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Text;
-#if NET462
+#if NETFRAMEWORK
 using Microsoft.VisualBasic.Logging;
 #endif
 using System.IO;
@@ -14,7 +14,7 @@ using System.Globalization;
 
 namespace Microsoft.PowerPlatform.Dataverse.Client
 {
-#if NET462 // Only available in 4.6.2 right now. 
+#if NETFRAMEWORK // Only available in 4.6.2 right now. 
     /// <summary>
     /// Extension to the FileLogTraceListner class.
     /// </summary>

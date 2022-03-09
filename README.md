@@ -9,7 +9,7 @@ Current release notes and change log:
 
 [Microsoft.PowerPlatform.Dataverse.Client.Dynamics](src/nuspecs/Microsoft.PowerPlatform.Dataverse.Client.Dynamics.ReleaseNotes.txt)
 
-[Microsoft.Dynamics.Sdk.Messages](src/nuspecs/Microsoft.Dynamics.Sdk.Messages.ReleaseNotes.txt)
+This nuget package has been deprecated (for now) ~~[Microsoft.Dynamics.Sdk.Messages](src/nuspecs/Microsoft.Dynamics.Sdk.Messages.ReleaseNotes.txt)~~
 
 ## Overview
 This repository contains the code for the Microsoft.PowerPlatform.Dataverse.Client and its supporting assemblies and classes. 
@@ -27,34 +27,33 @@ This encompasses the contents of the following nuget packages:
 
 [Microsoft.PowerPlatform.Dataverse.Client.Dynamics](https://www.nuget.org/packages/Microsoft.PowerPlatform.Dataverse.Client.Dynamics)
 
-[Microsoft.Dynamics.Sdk.Messages](https://www.nuget.org/packages/Microsoft.Dynamics.Sdk.Messages)
+This nuget package has been deprecated (for now) ~~[Microsoft.Dynamics.Sdk.Messages](https://www.nuget.org/packages/Microsoft.Dynamics.Sdk.Messages)~~
 
 
 This library is and its supporting assemblies are a revision and update of the Microsoft.Xrm.Tooling.Connector.CrmServiceClient and the underlying Microsoft.Xrm.Sdk.Client libraries. 
 
 We are using this effort to for a few key things we have wanted to get done for a number of years, 
 
-1. Refactor and update our client libraries to allow us to spit up Powerplatform Common Data Service SDK support from Microsoft Dynamics 365.
+1. Refactor and update our client libraries to allow us to spit up PowerPlatform Common Data Service SDK support from Microsoft Dynamics 365.
 2. Provide multi targeted library build that targets our supported .net client platforms.
 3. Update connection patterns and behaviors to be consistent with many of the broadly accepted patterns.
-4. Create a pattern to allow developers focus on the use of Common Data Service, or CDS + Dynamics as they need. 
+4. Create a pattern to allow developers focus on the use of Dataverse, or Dataverse + Dynamics as they need. 
 
 We encourage you to read the release notes we provide with each nuget packages. As with most of our Nuget packages that are intended as tools or for developer consumption, we extensively comment in release notes. 
 
-At this time: (08/16/2021)
+At this time: (03/06/2022)
 The Client SDK libs supports the following and has the following notices: 
 
+* 0.6.x is **expected** to be the final preview release, followed by 1.0
+* 0.6.x refactors much of the primary ServiceClient interface, narrowing its focus to primary operations against Dataverse. the ballance of the feature set has been moved to Microsoft.PowerPlatform.Dataverse.Client.Extensions. - We are seeking feedback on this refactor. 
 * .net full framework 4.6.2, 4.7.2, 4.8 and .net core 3.0, 3.1, 5.0, 6.0
-* We now support all authentication types from CrmServiceClient, ( Client\Secret, Client\Cert, UID\PW Noninteractive, UID\PW interactive.)
+* We now support all authentication types from CrmServiceClient for .net framework, ( Client\Secret, Client\Cert, UID\PW Noninteractive, UID\PW interactive.)
+* We support the following authentication types from CrmServiceClient for .net core: Client\Secret, Client\Cert, UID\PW interactive.
 * MSAL Port has been completed,  this Lib is now using MSAL 4.35+
-* The Message types that are part of the client have been reduced to Dataverse Core server messages only.  Things like “QualifyLeadRequest” have been removed to their own Nuget package ( Microsoft.Dynamics.Sdk.Messages ) 
-* We will likely ship more extension packages that will contain the “CRM” messages,  though over time, we will likely split the namespaces of those messages up based on service line,  think Field Service or Sales or Customer Service, etc..
 * Plugin Development using this Client is NOT supported at this time. 
 
 From a scenario point of view,  we are particularity interested in any issues or challenges when using these library in either Asp.net Core, Azure Functions, and Linux based scenarios. 
  
-We believe for the vast majority of applications working against the older dynamices sdk libs, you should only need Microsoft.PowerPlatform.Dataverse.Client and Microsoft.Dynamics.Sdk.Messages.
-
 If your working against Dataverse Only and or custom entities and sdk messages, you should only need Microsoft.PowerPlatform.Dataverse.Client.  If you do not experience that, or find missing messages in the Dataverse only scenarios, please let us know in the issues area. 
  
 <b>Note: We are currently providing support for these nuget packages primarily via GitHub and Microsoft Support.  

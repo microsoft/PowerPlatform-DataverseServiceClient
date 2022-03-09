@@ -7,6 +7,9 @@ using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
 using Microsoft.PowerPlatform.Dataverse.Client.Auth;
 using Microsoft.PowerPlatform.Dataverse.Client.Auth.TokenCache;
+using Microsoft.PowerPlatform.Dataverse.Client.Connector;
+using Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises;
+using Microsoft.PowerPlatform.Dataverse.Client.InternalExtensions;
 using Microsoft.PowerPlatform.Dataverse.Client.Model;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 using Microsoft.Rest;
@@ -46,6 +49,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
     public enum AuthenticationType
     {
         /// <summary>
+        /// Active Directory Auth
+        /// </summary>
+        AD = 0,
+        /// <summary>
         /// OAuth based Auth
         /// </summary>
         OAuth = 5,
@@ -75,6 +82,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         #region variables
         [NonSerializedAttribute]
         private OrganizationWebProxyClientAsync _svcWebClientProxy;
+        private OrganizationServiceProxyAsync _svcOnPremClientProxy;
         private OrganizationWebProxyClientAsync _externalWebClientProxy; // OAuth specific web service proxy
 
         [NonSerializedAttribute]
@@ -116,13 +124,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <summary>
         /// Configuration
         /// </summary>
-        private IOptions<AppSettingsConfiguration> _configuration = ClientServiceProviders.Instance.GetService<IOptions<AppSettingsConfiguration>>();
-
-        /// <summary>
-        /// If set to true, will relay any received cookie back to the server.
-        /// Defaulted to true.
-        /// </summary>
-        private bool _enableCookieRelay = Utils.AppSettingsHelper.GetAppSetting<bool>("PreferConnectionAffinity", true);
+        private IOptions<ConfigurationOptions> _configuration = ClientServiceProviders.Instance.GetService<IOptions<ConfigurationOptions>>();
 
         /// <summary>
         /// TimeSpan used to control the offset of the token reacquire behavior for none user Auth flows.
@@ -425,6 +427,26 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         }
 
         /// <summary>
+        /// Returns the Dataverse Client for OnPrem. 
+        /// </summary>
+        internal OrganizationServiceProxyAsync OnPremClient
+        {
+            get
+            {
+                if (_svcOnPremClientProxy != null)
+                {
+                    RefreshClientTokenAsync().ConfigureAwait(false).GetAwaiter().GetResult(); // Only call this if the connection is not null
+                    try
+                    {
+                        AttachProxyHander(_svcOnPremClientProxy);
+                    }
+                    catch { }
+                }
+                return _svcOnPremClientProxy;
+            }
+        }
+
+        /// <summary>
         /// Get / Set the Dataverse Organization that the customer exists in
         /// </summary>
         internal string CustomerOrganization
@@ -583,8 +605,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// </summary>
         internal bool EnableCookieRelay
         {
-            get { return _enableCookieRelay; }
-            set { _enableCookieRelay = value; }
+            get => _configuration.Value.EnableAffinityCookie;
+            set => _configuration.Value.EnableAffinityCookie = value;
         }
 
         /// <summary>
@@ -593,7 +615,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         internal Dictionary<string, string> CurrentCookieCollection { get; set; } = null;
 
         /// <summary>
-        /// Server Hint for the number of concurrent threads that would provbide optimal processing. 
+        /// Server Hint for the number of concurrent threads that would provide optimal processing. 
         /// </summary>
         internal int RecommendedDegreesOfParallelism { get; set; } = 5; // Default value. 
 
@@ -653,6 +675,54 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         }
 
         /// <summary>
+		/// Sets up a Connection to Dataverse OnPremsie 
+		/// </summary>
+		/// <param name="authType">Type of Authentication to use, AD or IDF  </param>
+		/// <param name="hostName">Host name to connect too</param>
+		/// <param name="port">Port Number to Connect too</param>
+		/// <param name="orgName">Organization to Connect to</param>
+		/// <param name="providedCredential">Credential to use to connect</param>
+		/// <param name="useUniqueCacheName">flag that will tell the instance to create a Unique Name for the Dataverse Cache Objects.</param>
+		/// <param name="orgDetail">Dataverse Org Detail object, this is is returned from a query to the Dataverse Discovery Server service. not required.</param>
+		/// <param name="logSink">incoming LogSink</param>
+		/// <param name="instanceToConnectToo">instance to connect too</param>
+		internal ConnectionService(
+            AuthenticationType authType,                        // type of auth, AD 
+            string hostName,                                    // Host name your connecting too.. AD only
+            string port,                                        // Host Port your connecting too.. AD only
+            string orgName,                                     // Dataverse Organization Name your connecting too
+            System.Net.NetworkCredential providedCredential,    // Network credential to use to connect to CRM
+            bool useUniqueCacheName,                            // tells the system to create a unique cache name for this instance.
+            OrganizationDetail orgDetail,                       // Tells the client connection to bypass all discovery server behaviors and use this detail object.
+            DataverseTraceLogger logSink = null,
+            Uri instanceToConnectToo = null)
+        {
+            if (authType != AuthenticationType.AD)
+                throw new ArgumentOutOfRangeException("authType", "Invalid Authentication type");
+
+            if (logSink == null)
+            {
+                logEntry = new DataverseTraceLogger();
+                isLogEntryCreatedLocaly = true;
+            }
+            else
+            {
+                logEntry = logSink;
+                isLogEntryCreatedLocaly = false;
+            }
+
+            UseExternalConnection = false;
+            _eAuthType = authType;
+            _hostname = hostName;
+            _port = port;
+            _organization = orgName;
+            _AccessCred = providedCredential;
+            _OrgDetail = orgDetail;
+            _targetInstanceUriToConnectTo = instanceToConnectToo;
+            GenerateCacheKeys(useUniqueCacheName);
+        }
+
+        /// <summary>
         /// Sets up and initializes the Dataverse Service interface using OAuth for user flows.
         /// </summary>
         /// <param name="authType">Only OAuth User flows are supported in this constructor</param>
@@ -675,8 +745,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         internal ConnectionService(
             AuthenticationType authType,    // Only OAuth is supported in this constructor.
             string orgName,                 // Organization Name your connecting too
-            string liveUserId,             // Live ID - Live only
-            SecureString livePass,               // Live Pw - Live Only
+            string liveUserId,              // Live ID - Live only
+            SecureString livePass,          // Live PW - Live Only
             string onlineRegion,
             bool useUniqueCacheName,        // tells the system to create a unique cache name for this instance.
             OrganizationDetail orgDetail,
@@ -827,7 +897,23 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
             if (dvService != null)
             {
-                _svcWebClientProxy = (OrganizationWebProxyClientAsync)dvService;
+                if (_svcWebClientProxy != null)
+                    _svcWebClientProxy.Dispose();
+
+                if (_svcOnPremClientProxy != null)
+                    _svcOnPremClientProxy.Dispose();
+
+                if (dvService is OrganizationWebProxyClientAsync orgWebClient)
+                {
+                    _svcWebClientProxy = orgWebClient;
+                }
+                else
+                {
+                    if (dvService is OrganizationServiceProxyAsync orgOnPremClient)
+                    {
+                        _svcOnPremClientProxy = orgOnPremClient;
+                    }
+                }
                 return true;
             }
             else
@@ -949,121 +1035,139 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 }
                 else
                 {
-                    if ((_eAuthType == AuthenticationType.OAuth && _isOnPremOAuth == true) || (_eAuthType == AuthenticationType.Certificate && _isOnPremOAuth == true))
+                    if (_eAuthType == AuthenticationType.AD ||(_eAuthType == AuthenticationType.OAuth && _isOnPremOAuth == true) || (_eAuthType == AuthenticationType.Certificate && _isOnPremOAuth == true))
                     {
                         #region AD or SPLA Auth
                         try
                         {
-                            string DvUrl = string.Empty;
-                            #region AD
-                            if (_OrgDetail == null)
+                            if (_targetInstanceUriToConnectTo == null) // This is TEMP until Discovery Services interface is working for OnPrem. 
+                                throw new DataverseConnectionException("Environment URL is required when connecting to On Premises"); // Block discovery. 
+
+                            // Given Direct Url.. connect to the Direct URL
+                            if (_targetInstanceUriToConnectTo != null)
                             {
-                                // Build Discovery Server Connection
-                                if (!string.IsNullOrWhiteSpace(_port))
-                                {
-                                    // http://<Server>:<port>/XRMServices/2011/Discovery.svc?wsdl
-                                    DvUrl = String.Format(CultureInfo.InvariantCulture,
-                                        "{0}://{1}:{2}/XRMServices/2011/Discovery.svc",
-                                        _InternetProtocalToUse,
-                                        _hostname,
-                                        _port);
-                                }
-                                else
-                                {
-                                    DvUrl = String.Format(CultureInfo.InvariantCulture,
-                                        "{0}://{1}/XRMServices/2011/Discovery.svc",
-                                        _InternetProtocalToUse,
-                                        _hostname);
-                                }
-                                logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Discovery URI is = {0}", DvUrl), TraceEventType.Information);
-                                if (!Uri.IsWellFormedUriString(DvUrl, UriKind.Absolute))
-                                {
-                                    // Throw error here.
-                                    logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Discovery URI is malformed = {0}", DvUrl), TraceEventType.Error);
-
-                                    return null;
-                                }
-                            }
-                            else
-                                logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Process is bypassed.. OrgDetail object was provided"), TraceEventType.Information);
-
-
-                            _UserClientCred = new ClientCredentials();
-                            Uri uUserHomeRealm = null;
-
-
-                            if (_eAuthType == AuthenticationType.Certificate)
-                            {
-                                // Certificate based .. get the Cert.
-                                if (_certificateOfConnection == null && !string.IsNullOrEmpty(_certificateThumbprint))
-                                {
-                                    // Certificate is not passed in. Thumbprint found... try to acquire the cert.
-                                    _certificateOfConnection = FindCertificate(_certificateThumbprint, _certificateStoreLocation, logEntry);
-                                    if (_certificateOfConnection == null)
-                                    {
-                                        // Fail.. no Cert.
-                                        throw new Exception("Failed to locate or read certificate from passed thumbprint.", logEntry.LastException);
-                                    }
-                                }
+                                dvService = await DoDirectLoginAsync(true).ConfigureAwait(false);
                             }
                             else
                             {
-                                if (_eAuthType == AuthenticationType.OAuth)
+                                //TODO :/// Remove Discovery support for Onprem. 
+                                #region TO BE DELETED
+                                string DvUrl = string.Empty;
+                                #region AD
+                                if (_OrgDetail == null)
                                 {
-                                    // oAuthBased.
-                                    _UserClientCred.UserName.Password = string.Empty;
-                                    _UserClientCred.UserName.UserName = string.Empty;
-                                }
-                            }
-
-                            OrganizationDetail orgDetail = null;
-                            if (_OrgDetail == null)
-                            {
-                                // Discover Orgs Url.
-                                Uri uDvUrl = new Uri(DvUrl);
-
-                                // This will try to discover any organizations that the user has access too,  one way supports AD / IFD and the other supports Claims
-                                DiscoverOrganizationsResult discoverOrganizationsResult = null;
-
-                                if (_eAuthType == AuthenticationType.OAuth)
-                                {
-                                    discoverOrganizationsResult = await DiscoverOrganizationsAsync(uDvUrl, _UserClientCred, _clientId, _redirectUri, _promptBehavior, true, _authority, logSink: logEntry, tokenCacheStorePath: _tokenCachePath).ConfigureAwait(false);
-                                }
-                                else
-                                {
-                                    if (_eAuthType == AuthenticationType.Certificate)
+                                    // Build Discovery Server Connection
+                                    if (!string.IsNullOrWhiteSpace(_port))
                                     {
-                                        discoverOrganizationsResult = await DiscoverOrganizationsAsync(uDvUrl, _certificateOfConnection, _clientId, true, _authority, logEntry, tokenCacheStorePath: _tokenCachePath).ConfigureAwait(false);
+                                        // http://<Server>:<port>/XRMServices/2011/Discovery.svc?wsdl
+                                        DvUrl = String.Format(CultureInfo.InvariantCulture,
+                                            "{0}://{1}:{2}/XRMServices/2011/Discovery.svc",
+                                            _InternetProtocalToUse,
+                                            _hostname,
+                                            _port);
                                     }
-                                }
-
-
-                                // Check the Result to see if we have Orgs back
-                                if (discoverOrganizationsResult.OrganizationDetailCollection != null && discoverOrganizationsResult.OrganizationDetailCollection.Count > 0)
-                                {
-                                    logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Found {0} Org(s)", discoverOrganizationsResult.OrganizationDetailCollection.Count), TraceEventType.Information);
-                                    orgDetail = discoverOrganizationsResult.OrganizationDetailCollection.FirstOrDefault(o => string.Compare(o.UniqueName, _organization, StringComparison.CurrentCultureIgnoreCase) == 0);
-                                    if (orgDetail == null)
-                                        orgDetail = discoverOrganizationsResult.OrganizationDetailCollection.FirstOrDefault(o => string.Compare(o.FriendlyName, _organization, StringComparison.CurrentCultureIgnoreCase) == 0);
-
-                                    if (orgDetail == null)
+                                    else
                                     {
-                                        logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Organization not found. Org = {0}", _organization), TraceEventType.Error);
+                                        DvUrl = String.Format(CultureInfo.InvariantCulture,
+                                            "{0}://{1}/XRMServices/2011/Discovery.svc",
+                                            _InternetProtocalToUse,
+                                            _hostname);
+                                    }
+                                    logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Discovery URI is = {0}", DvUrl), TraceEventType.Information);
+                                    if (!Uri.IsWellFormedUriString(DvUrl, UriKind.Absolute))
+                                    {
+                                        // Throw error here.
+                                        logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Discovery URI is malformed = {0}", DvUrl), TraceEventType.Error);
+
                                         return null;
                                     }
                                 }
                                 else
-                                {
-                                    // error here.
-                                    logEntry.Log("No Organizations found.", TraceEventType.Error);
-                                    return null;
-                                }
-                            }
-                            else
-                                orgDetail = _OrgDetail; // Assign to passed in value.
+                                    logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Process is bypassed.. OrgDetail object was provided"), TraceEventType.Information);
 
-                            // Try to connect to Dataverse here.
-                            dvService = await ConnectAndInitServiceAsync(orgDetail, true, uUserHomeRealm).ConfigureAwait(false);
+
+                                _UserClientCred = new ClientCredentials();
+                                Uri uUserHomeRealm = null;
+
+
+                                if (_eAuthType == AuthenticationType.Certificate)
+                                {
+                                    // Certificate based .. get the Cert.
+                                    if (_certificateOfConnection == null && !string.IsNullOrEmpty(_certificateThumbprint))
+                                    {
+                                        // Certificate is not passed in. Thumbprint found... try to acquire the cert.
+                                        _certificateOfConnection = FindCertificate(_certificateThumbprint, _certificateStoreLocation, logEntry);
+                                        if (_certificateOfConnection == null)
+                                        {
+                                            // Fail.. no Cert.
+                                            throw new Exception("Failed to locate or read certificate from passed thumbprint.", logEntry.LastException);
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    if (_eAuthType == AuthenticationType.OAuth)
+                                    {
+                                        // oAuthBased.
+                                        _UserClientCred.UserName.Password = string.Empty;
+                                        _UserClientCred.UserName.UserName = string.Empty;
+                                    }
+                                }
+
+                                OrganizationDetail orgDetail = null;
+                                if (_OrgDetail == null)
+                                {
+                                    // Discover Orgs Url.
+                                    Uri uDvUrl = new Uri(DvUrl);
+
+                                    // This will try to discover any organizations that the user has access too,  one way supports AD / IFD and the other supports Claims
+                                    DiscoverOrganizationsResult discoverOrganizationsResult = null;
+
+                                    if (_eAuthType == AuthenticationType.OAuth)
+                                    {
+                                        discoverOrganizationsResult = await DiscoverOrganizationsAsync(uDvUrl, _UserClientCred, _clientId, _redirectUri, _promptBehavior, true, _authority, logSink: logEntry, tokenCacheStorePath: _tokenCachePath).ConfigureAwait(false);
+                                    }
+                                    else
+                                    {
+                                        if (_eAuthType == AuthenticationType.Certificate)
+                                        {
+                                            discoverOrganizationsResult = await DiscoverOrganizationsAsync(uDvUrl, _certificateOfConnection, _clientId, true, _authority, logEntry, tokenCacheStorePath: _tokenCachePath).ConfigureAwait(false);
+                                        }
+                                    }
+
+
+                                    // Check the Result to see if we have Orgs back
+                                    if (discoverOrganizationsResult.OrganizationDetailCollection != null && discoverOrganizationsResult.OrganizationDetailCollection.Count > 0)
+                                    {
+                                        logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Found {0} Org(s)", discoverOrganizationsResult.OrganizationDetailCollection.Count), TraceEventType.Information);
+                                        orgDetail = discoverOrganizationsResult.OrganizationDetailCollection.FirstOrDefault(o => string.Compare(o.UniqueName, _organization, StringComparison.CurrentCultureIgnoreCase) == 0);
+                                        if (orgDetail == null)
+                                            orgDetail = discoverOrganizationsResult.OrganizationDetailCollection.FirstOrDefault(o => string.Compare(o.FriendlyName, _organization, StringComparison.CurrentCultureIgnoreCase) == 0);
+
+                                        if (orgDetail == null)
+                                        {
+                                            logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Organization not found. Org = {0}", _organization), TraceEventType.Error);
+                                            return null;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // error here.
+                                        logEntry.Log("No Organizations found.", TraceEventType.Error);
+                                        return null;
+                                    }
+                                }
+                                else
+                                    orgDetail = _OrgDetail; // Assign to passed in value.
+
+                                // Try to connect to Dataverse here.
+                                dvService = await ConnectAndInitServiceAsync(orgDetail, true, uUserHomeRealm).ConfigureAwait(false);
+
+                                #endregion
+                                #endregion
+
+                            }
+
 
                             if (dvService == null)
                             {
@@ -1074,7 +1178,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             if (_eAuthType == AuthenticationType.OAuth || _eAuthType == AuthenticationType.Certificate || _eAuthType == AuthenticationType.ClientSecret)
                                 dvService = (OrganizationWebProxyClientAsync)dvService;
 
-                            #endregion
+
 
                         }
                         catch (Exception ex)
@@ -1086,7 +1190,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                                 ((OrganizationWebProxyClient)dvService).Dispose();
                                 dvService = null;
                             }
-                            return null;
+                            throw;
                         }
                         #endregion
                     }
@@ -1289,16 +1393,24 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <summary>
         /// Executes a direct login using the current configuration.
         /// </summary>
+        /// <param name="IsOnPrem">if set indicates an onPrem Authentication</param>
         /// <returns></returns>
-        private async Task<IOrganizationService> DoDirectLoginAsync()
+        private async Task<IOrganizationService> DoDirectLoginAsync(bool IsOnPrem = false)
         {
             logEntry.Log("Direct Login Process Started", TraceEventType.Verbose);
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
             IOrganizationService dvService = null;
-
-            Uri OrgWorkingURI = new Uri(string.Format(SoapOrgUriFormat, _targetInstanceUriToConnectTo.Scheme, _targetInstanceUriToConnectTo.DnsSafeHost));
+            Uri OrgWorkingURI = null;
+            if (!IsOnPrem || _eAuthType == AuthenticationType.OAuth) // Use this even if its onPrem, when auth type == oauth. 
+            {
+                OrgWorkingURI = new Uri(string.Format(SoapOrgUriFormat, _targetInstanceUriToConnectTo.Scheme, _targetInstanceUriToConnectTo.DnsSafeHost));
+            }
+            else
+            {
+                OrgWorkingURI = new Uri(string.Format(SoapOrgUriFormat, _targetInstanceUriToConnectTo.Scheme, $"{_targetInstanceUriToConnectTo.DnsSafeHost}/{_organization}"));
+            }
             _targetInstanceUriToConnectTo = OrgWorkingURI;
 
             logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Attempting to Connect to Uri {0}", _targetInstanceUriToConnectTo.ToString()), TraceEventType.Information);
@@ -1306,7 +1418,71 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             orgDetail.OrgDetail = new OrganizationDetail();
             orgDetail.OrgDetail.Endpoints[EndpointType.OrganizationService] = _targetInstanceUriToConnectTo.ToString();
 
-            dvService = await ConnectAndInitServiceAsync(orgDetail.OrgDetail, false, null).ConfigureAwait(false);
+            if (!IsOnPrem)
+            {
+                dvService = await ConnectAndInitServiceAsync(orgDetail.OrgDetail, false, null).ConfigureAwait(false);
+            }
+            else 
+            {
+                _UserClientCred = new ClientCredentials();
+                Uri uUserHomeRealm = null;
+
+                if (_eAuthType == AuthenticationType.OAuth)
+                {
+                    // oAuthBased.
+                    if (_LivePass != null )
+                        _UserClientCred.UserName.Password =  _LivePass.ToUnsecureString();
+                    _UserClientCred.UserName.UserName = _LiveID;
+                }
+                // You cannot use Default config for anything other then AD or IFD Setting's in the Auth Realm.
+                else
+                {
+                    if (//_eAuthType == AuthenticationType.IFD ||
+                         _eAuthType == AuthenticationType.AD)
+                    {
+                        //IFD or AD ...
+                        // Credentials support Default Credentials...
+                        if (_AccessCred == null)
+                            _AccessCred = System.Net.CredentialCache.DefaultNetworkCredentials; // Use default creds..
+                        else
+                            _UserClientCred = GetClientCredentials(_AccessCred);
+                    }
+                    else
+                    {
+                        // CLAIMS FOR THE MOMENT 
+                        
+                        //// Credentials Required.
+                        //if (!string.IsNullOrWhiteSpace(_HomeRealmUrl))
+                        //{
+                        //    if (!Uri.IsWellFormedUriString(_HomeRealmUrl, UriKind.RelativeOrAbsolute))
+                        //    {
+                        //        logEntry.Log($"HomeRealm URL is bad : URL = {_HomeRealmUrl}", TraceEventType.Error);
+                        //        return null;
+                        //    }
+                        //    uUserHomeRealm = new Uri(_HomeRealmUrl);
+
+                        //    logEntry.Log(string.Format(CultureInfo.InvariantCulture, "HomeRealm is = {0}", uUserHomeRealm.ToString()), TraceEventType.Information);
+                        //}
+                        //else
+                        //    uUserHomeRealm = null;
+
+                        //_DeviceCredentials = new ClientCredentials();
+                        //string userName = _ClaimsuserId.Split('@')[0];
+
+                        //_DeviceCredentials.UserName.UserName = _ClaimsuserId;
+                        //_DeviceCredentials.UserName.Password = _Claimspassword.ToUnsecureString();
+
+                        //if (_UserClientCred == null)
+                        //    _UserClientCred = new ClientCredentials();
+
+                        //_UserClientCred.UserName.UserName = userName;
+                        //_UserClientCred.UserName.Password = _Claimspassword.ToUnsecureString();
+                    }
+                }
+                dvService = await ConnectAndInitServiceAsync(orgDetail.OrgDetail, true, uUserHomeRealm).ConfigureAwait(false);
+            }
+            
+            
             if (dvService != null)
             {
                 await RefreshInstanceDetails(dvService, _targetInstanceUriToConnectTo).ConfigureAwait(false);
@@ -2803,7 +2979,26 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
             catch { };
 
+            // uses the R7 added connection models to support faster and more precise control of Auth.
+            bool useR7Connect = true;
+            if (IsOnPrem)
+            {
+                try
+                {
+                    if (!string.IsNullOrWhiteSpace(orgdata.OrganizationVersion))
+                    {
+
+                        if (OrganizationVersion != null)
+                            if (OrganizationVersion.Major >= 5 && OrganizationVersion.Build > 9688)
+                                useR7Connect = true;
+                    }
+                }
+                catch { } // Do nothing here... if this fails,  then the version number From CRM didn't return correctly or was not present. Use IServiceManagement
+            }
+
+            OrganizationServiceProxyAsync proxy = null;
             OrganizationWebProxyClientAsync svcWebClientProxy = null;
+
             if (_eAuthType == AuthenticationType.OAuth
                 || _eAuthType == AuthenticationType.Certificate
                 || _eAuthType == AuthenticationType.ExternalTokenManagement
@@ -2856,11 +3051,82 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     svcWebClientProxy.Endpoint.Binding.ReceiveTimeout = _MaxConnectionTimeout;
                 }
             }
+            else if (useR7Connect)
+            {
+                // R7Connect flow 
+                logEntry.Log("ConnectAndInitServiceAsync - OnPREM - Using ISerivceManagement");
+                //var targetServiceUrl = AuthProcessor.GetUriBuilderWithVersion(_ActualDataverseOrgUri).Uri;
+                //svcWebClientProxy = new OrganizationWebProxyClientAsync(targetServiceUrl, true, _UserClientCred.Windows.ClientCredential);
+                //svcWebClientProxy.ClientCredentials.Windows.ClientCredential = new NetworkCredential(_UserClientCred.Windows.ClientCredential.UserName, _UserClientCred.Windows.ClientCredential.SecurePassword, _UserClientCred.Windows.ClientCredential.Domain);
+                //AttachWebProxyHander(svcWebClientProxy);
+
+                Xrm.Sdk.Client.IServiceManagement<IOrganizationServiceAsync> organizationSvcConfig = null;
+                object objectRlst = OnPremises_Auth.CreateAndAuthenticateProxy<IOrganizationServiceAsync>(organizationSvcConfig, _ActualDataverseOrgUri, homeRealmUri, _UserClientCred, "ConnectAndInitServiceAsync - OnPREM - ", MaxConnectionTimeout, logEntry);
+                if (objectRlst != null && objectRlst is OrganizationServiceProxyAsync)
+                    proxy = (OrganizationServiceProxyAsync)objectRlst;
+
+                if (proxy != null)
+                    AttachProxyHander(proxy);
+            }
+            else
+            {
+                logEntry.Log("ConnectAndInitCrmOrgService - Using ISerivceConfig");
+                try
+                {
+                    if (IsOnPrem)
+                    {
+                        if (homeRealmUri != null)
+                        {
+                            logEntry.Log("Connecting to CRM via Claims", TraceEventType.Information);
+
+                            if (homeRealmUri.Host.Contains("blank"))
+                                proxy = new OrganizationServiceProxyAsync(_ActualDataverseOrgUri, null, _UserClientCred, null);
+                            else
+                                proxy = new OrganizationServiceProxyAsync(_ActualDataverseOrgUri, homeRealmUri, _UserClientCred, null);
+                        }
+                        else
+                        {
+                            // Create the CRM Service Connection.
+                            logEntry.Log("Connecting to CRM via AD or IFD", TraceEventType.Information);
+                            proxy = new OrganizationServiceProxyAsync(_ActualDataverseOrgUri, null, GetClientCredentials(_AccessCred), null);
+                        }
+                    }
+                    else
+                    {
+                        //TODO:// RE-REMOVE THIS CODE. 
+
+                        // Connecting to Online via Live.
+                        if (string.IsNullOrWhiteSpace(_LiveID))
+                        {
+                            // Error here .. Cannot use Default with Online.
+                            proxy = null;
+                        }
+                        else
+                        {
+                            logEntry.Log("Connecting to CRM via Live", TraceEventType.Information);
+                            proxy = new OrganizationServiceProxyAsync(_ActualDataverseOrgUri, null, _UserClientCred, null);
+                        }
+                    }
+                    if (proxy != null)
+                        AttachProxyHander(proxy);
+                }
+                catch
+                {
+                    if (proxy != null)
+                        proxy.Dispose();
+
+                    throw;
+                }
+            }
+
 
             logDt.Stop();
             logEntry.Log(string.Format(CultureInfo.InvariantCulture, "ConnectAndInitService - Proxy created, total elapsed time: {0}", logDt.Elapsed.ToString()));
 
-            return svcWebClientProxy;
+            if (svcWebClientProxy != null)
+                return svcWebClientProxy;
+            else
+                return proxy; // OnPrem
         }
 
         /// <summary>
@@ -2870,6 +3136,19 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         internal void AttachWebProxyHander(OrganizationWebProxyClientAsync proxy)
         {
             proxy.ChannelFactory.Opening += WebProxyChannelFactory_Opening;
+        }
+
+        /// <summary>
+        /// This method us used to wire up the telemetry behaviors to the onPrem connection
+        /// </summary>
+        /// <param name="proxy">Connection proxy to attach telemetry too</param>
+        internal void AttachProxyHander(OrganizationServiceProxyAsync proxy)
+        {
+            if (proxy.ServiceConfiguration != null && !proxy.ServiceConfiguration.CurrentServiceEndpoint.EndpointBehaviors.Contains(typeof(Xrm.Sdk.Client.ProxyTypesBehavior)))
+                proxy.ServiceConfiguration.CurrentServiceEndpoint.EndpointBehaviors.Add(new Xrm.Sdk.Client.ProxyTypesBehavior());
+
+            if (proxy.ServiceConfiguration != null)
+                proxy.ServiceConfiguration.CurrentServiceEndpoint.EndpointBehaviors.Add(new DataverseTelemetryBehaviors(this));
         }
 
 

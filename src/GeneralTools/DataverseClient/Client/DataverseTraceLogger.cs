@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 using Microsoft.Rest;
 using Microsoft.Xrm.Sdk;
@@ -96,7 +96,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         public override void ResetLastError()
         {
             if (base.LastError.Length > 0)
-                base.LastError.Remove(0, LastError.Length - 1);
+                base.LastError = base.LastError.Remove(0, LastError.Length - 1);
             LastException = null;
             _ActiveExceptionsList.Clear();
         }
@@ -229,7 +229,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
             else
             {
-                Log($"Retry No={retryCount} Retry=Started IsThrottle={isThrottled} Delay={retryPauseTimeRunning} for Command {reqName}", TraceEventType.Verbose);
+                Log($"Retry No={retryCount} Retry=Started IsThrottle={isThrottled} Delay={retryPauseTimeRunning} for Command {reqName}", TraceEventType.Warning);
             }
         }
 
@@ -277,8 +277,16 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             if (req != null)
             {
                 Log(string.Format(CultureInfo.InvariantCulture, "{6}Failed to Execute Command - {0}{1} : {5}RequestID={2} {3}: {8} duration={4} ExceptionMessage = {7}",
-                    req.RequestName, disableConnectionLocking ? " : DisableCrossThreadSafeties=true :" : string.Empty, requestTrackingId.ToString(), LockWait == TimeSpan.Zero ? string.Empty : string.Format(": LockWaitDuration={0} ", LockWait.ToString()), logDt.Elapsed.ToString(),
-                        sessionTrackingId.HasValue && sessionTrackingId.Value != Guid.Empty ? $"SessionID={sessionTrackingId} : " : "", isTerminalFailure ? "[TerminalFailure] " : "", ex.Message, errorStringCheck), TraceEventType.Error, ex);
+                    req.RequestName,
+                    disableConnectionLocking ? " : DisableCrossThreadSafeties=true :" : string.Empty,
+                    requestTrackingId.ToString(),
+                    LockWait == TimeSpan.Zero ? string.Empty : string.Format(": LockWaitDuration={0} ", LockWait.ToString()),
+                    logDt.Elapsed.ToString(),
+                    sessionTrackingId.HasValue && sessionTrackingId.Value != Guid.Empty ? $"SessionID={sessionTrackingId} : " : "",
+                    isTerminalFailure ? "[TerminalFailure] " : "",
+                    ex.Message,
+                    errorStringCheck),
+                    TraceEventType.Error, ex);
             }
             else if (ex is HttpOperationException httpOperationException)
             {

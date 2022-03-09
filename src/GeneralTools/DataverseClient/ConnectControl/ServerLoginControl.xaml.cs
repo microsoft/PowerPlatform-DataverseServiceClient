@@ -1,4 +1,5 @@
-﻿using System;
+#region using
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -9,6 +10,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using Microsoft.PowerPlatform.Dataverse.Client.InternalExtensions;
 using System.Windows.Threading;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.PowerPlatform.Dataverse.ConnectControl.Utility;
@@ -18,31 +20,31 @@ using Microsoft.PowerPlatform.Dataverse.Ui.Styles;
 using System.Globalization;
 using System.Configuration;
 using Microsoft.PowerPlatform.Dataverse.Client.Model;
+using System.Media;
+#endregion
 
 namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 {
 	/// <summary>
-	/// This control provides the UI components and interaction logic with the CrmConnectionManager Class.
+	/// This control provides the UI components and interaction logic with the ConnectionManager Class.
 	/// </summary>
 	public partial class ServerLoginControl : UserControl
 	{
 		#region Vars
-		private GridViewColumnHeader _CurSortCol = null;
-		private SortAdorner _CurAdorner = null;
+
+		private GridViewColumnHeader _curSortCol = null;
+		private SortAdorner _curAdorner = null;
 		private bool _isSortButtonClicked = false;
 		private bool _isConnected = false;
-		private bool bOnlineMultiOrgFix = false;
-		private bool showtitle = false;
-		private double iRow3;
-		private double iRow4;
-		private double iRow5;
-        private double iRow6;
-        private double iRow7;
-		private double iRow8;
-		private double iRow9;
-		private double advRow0;
-		private double advRow3;
-		private bool hideCancel = false;
+		private bool _bOnlineMultiOrgFix = false;
+		private bool _showTitle = false;
+        private double _iRow6;
+        private double _iRow7;
+		private double _iRow8;
+		private double _iRow9;
+		private double _iRow10;
+		private bool _hideCancel = false;
+
 		/// <summary>
 		/// Configures how the control will act in various modes. 
 		/// </summary>
@@ -56,7 +58,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		/// <summary>
 		/// Connection manager
 		/// </summary>
-		private ConnectionManager _connectionManager;
+		public ConnectionManager ConnectionManager { get; private set; }
 
 		/// <summary>
 		/// Storyboard for going Online
@@ -106,6 +108,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		#endregion
 
 		#region Events
+
 		/// <summary>
 		/// Raised when a Status event is raised
 		/// </summary>
@@ -148,7 +151,8 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		{
 			get
 			{
-				if (_connectionManager != null) return _connectionManager.ConnectedOrgFriendlyName;
+				if (ConnectionManager != null) 
+					return ConnectionManager.ConnectedOrgFriendlyName;
 
 				else return string.Empty;
 			}
@@ -162,11 +166,11 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		{
 			get
 			{
-				return (bool)hideCancel;
+				return (bool)_hideCancel;
 			}
 			set
 			{
-				hideCancel = value;
+				_hideCancel = value;
 				if (value)
 				{
 					btn_Cancel.Visibility = Visibility.Collapsed;
@@ -184,11 +188,11 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		{
 			get
 			{
-				return (bool)showtitle;
+				return (bool)_showTitle;
 			}
 			set
 			{
-				showtitle = value;
+				_showTitle = value;
 				if (!value)
 				{
 					LoginGrid.RowDefinitions[0].Height = new GridLength(0);
@@ -245,34 +249,34 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		/// <summary>
 		/// Sets the Server storage pointer.
 		/// </summary>
-		/// <param name="globalStore"></param>
-		public void SetGlobalStoreAccess(ConnectionManager globalStore)
+		/// <param name="connectionManager"></param>
+		public void SetGlobalStoreAccess(ConnectionManager connectionManager)
 		{
-			if (globalStore.ParentControl == null)
-				globalStore.ParentControl = this;
+			if (connectionManager.ParentControl == null)
+				connectionManager.ParentControl = this;
 
-			_connectionManager = globalStore;
+			ConnectionManager = connectionManager;
 
 			// Set the CRM Server List here from the UI.. 
 			object oCrmDiscoServices = FindResource("OnlineDiscoveryServersDataSource");
 			if (oCrmDiscoServices != null && oCrmDiscoServices is Model.OnlineDiscoveryServers)
-				_connectionManager.OnlineDiscoveryServerList = (Model.OnlineDiscoveryServers)oCrmDiscoServices;
+				ConnectionManager.OnlineDiscoveryServerList = (Model.OnlineDiscoveryServers)oCrmDiscoServices;
 
 			if (AuthTypeListSource != null)
 			{
 				if (AuthTypeListSource.Items.Count == 0)
 				{
-					if (_connectionManager != null)
+					if (ConnectionManager != null)
 					{
 						LoadHomeRealmData(); // Load HomeRealm Information from Config.
-						ServerConfigKeys = _connectionManager.LoadConfigFromFile();
+						ServerConfigKeys = ConnectionManager.LoadConfigFromFile();
 						if (ServerConfigKeys != null && ServerConfigKeys.Count > 3)
 							LoadDisplayWithAppSettingsData();
 						else
 							SetInitialDefaultData();
 					}
 				}
-				_connectionManager.HomeRealmServersList = AuthTypeListSource;
+				ConnectionManager.HomeRealmServersList = AuthTypeListSource;
 			}
 		}
 
@@ -295,6 +299,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		{
 			return OrgSelectGrid.Visibility;
 		}
+
 		/// <summary>
 		/// Loads the UI with initial Default data from Configuration environment. 
 		/// </summary>
@@ -319,10 +324,9 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 			tbCrmServerName.Text = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmServerName);
 			tbCrmServerPort.Text = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmPort);
 
-
-			tbUserId.Text = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmUserName);
-			tbDomain.Text = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmDomain);
-
+			AdvancedOptions.tbUserId.Text = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmUserName);
+			AdvancedOptions.tbConnectUrl.Text = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.DirectConnectionUri);
+			AdvancedOptions.tbDomain.Text = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmDomain);
 
 			// Get Bool Settings
 			bool tempBool = true;
@@ -333,10 +337,10 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 				{
 					SecureString password = StorageUtils.GetConfigKey<SecureString>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmPassword);
 					if (password != null)
-						tbPassword.Password = password.ToUnsecureString();
+						AdvancedOptions.tbPassword.Password = password.ToUnsecureString();
 				}
 				else
-					tbPassword.Password = string.Empty;
+					AdvancedOptions.tbPassword.Password = string.Empty;
 			else
 				tempBool = true; // Set to support next step.. check for Default Cred switch. 
 
@@ -355,13 +359,13 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 
 			// On Prem vs Online vs 365 Switch. 
 			// Value is not a bool.. check to see if there is a value. 
-			_connectionManager.LastDeploymentType = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmDeploymentType);
-			if (string.IsNullOrWhiteSpace(_connectionManager.LastDeploymentType))
+			ConnectionManager.LastDeploymentType = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmDeploymentType);
+			if (string.IsNullOrWhiteSpace(ConnectionManager.LastDeploymentType))
 				rbOnPrem.IsChecked = true;  // Default ...  
 			else
 			{
 				// there is a value. 
-				if (_connectionManager.LastDeploymentType.Equals(CrmDeploymentType.O365.ToString(), StringComparison.OrdinalIgnoreCase))
+				if (ConnectionManager.LastDeploymentType.Equals(CrmDeploymentType.O365.ToString(), StringComparison.OrdinalIgnoreCase))
 					rbOn365.IsChecked = true;
 				else
 					rbOnPrem.IsChecked = true;
@@ -409,13 +413,13 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 				// Modify to detect which array to set too.. o365 or Live. 
 				if (rbOn365.IsChecked.Value)
 				{
-					Model.OnlineDiscoveryServer svr = _connectionManager.OnlineDiscoveryServerList.GetServerByShortName(StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmOnlineRegion), true);
+					var svr = ConnectionManager.OnlineDiscoveryServerList.GetServerByShortName(StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmOnlineRegion), true);
 					if (ddlCrmOnlineRegions.Items.Contains(svr))
 						ddlCrmOnlineRegions.SelectedItem = svr;
 				}
 				else
 				{
-					Model.OnlineDiscoveryServer svr = _connectionManager.OnlineDiscoveryServerList.GetServerByShortName(StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmOnlineRegion));
+					var svr = ConnectionManager.OnlineDiscoveryServerList.GetServerByShortName(StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmOnlineRegion));
 					if (ddlCrmOnlineRegions.Items.Contains(svr))
 						ddlCrmOnlineRegions.SelectedItem = svr;
 				}
@@ -438,9 +442,10 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 			else
 				StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmDeploymentType, CrmDeploymentType.Prem.ToString());
 
-			StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmUserName, tbUserId.Text.Trim());
-			StorageUtils.SetConfigKey<SecureString>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmPassword, tbPassword.SecurePassword);
-			StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmDomain, tbDomain.Text.Trim());
+			StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmUserName, AdvancedOptions.tbUserId.Text.Trim());
+			StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.DirectConnectionUri, AdvancedOptions.tbConnectUrl.Text.Trim());
+			StorageUtils.SetConfigKey<SecureString>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmPassword, AdvancedOptions.tbPassword.SecurePassword);
+			StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmDomain, AdvancedOptions.tbDomain.Text.Trim());
 			StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.UseDefaultCreds, cbUseDefaultCreds.IsChecked.Value.ToString());
 			StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmUseSSL, cbUseSSL.IsChecked.Value.ToString());
 			if (ddlCrmOnlineRegions.SelectedValue != null && ddlCrmOnlineRegions.SelectedValue is Model.OnlineDiscoveryServer)
@@ -467,7 +472,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 
 
 #if DEBUG
-			this.UpdateTestHelperData();
+			UpdateTestHelperData();
 #endif
 		}
 
@@ -480,7 +485,6 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 			{
 				TestingHelper.Instance.SelectedOption = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmOnlineRegion);
 			}
-			
 		}
 #endif
 
@@ -517,37 +521,20 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		/// </summary>
 		public void StartConnectCheck()
 		{
-
 			if (ConnectionCheckBegining != null)
 				ConnectionCheckBegining(this, null);
+
 			// hide the error alert if its there.. 
-			if (stkMessage.IsVisible) stkMessage.Visibility = Visibility.Collapsed;
-
-			// Check for skip discovery flag 
-			if (IsSkipDiscoverySet())
-			{
-				// If true pop the URL dialog. 
-				InstanceUrlCapture captureFrm = new InstanceUrlCapture();
-				if (this.Parent is Window)
-					captureFrm.Owner = (Window)this.Parent;
-				else
-					captureFrm.WindowStartupLocation = WindowStartupLocation.CenterScreen; 
-
-				if (captureFrm.ShowDialog().Value)
-				{
-					StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.UseDirectConnection, true.ToString());
-					StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.DirectConnectionUri, captureFrm.tbConnectUrl.Text);
-				}
-
-			}
+			if (stkMessage.IsVisible) 
+				stkMessage.Visibility = Visibility.Collapsed;
 
 			// Update config data. 
 			UpdateServerConfigKeysFromUI();
-			_connectionManager.SetConfigKeyInformation(ServerConfigKeys);
-			_connectionManager.ConnectionCheckComplete += new EventHandler<ServerConnectStatusEventArgs>(storageAccess_ConnectionCheckComplete);
-			_connectionManager.ServerConnectionStatusUpdate += new EventHandler<ServerConnectStatusEventArgs>(storageAccess_ServerConnectionStatusUpdate);
-			_connectionManager.ForceFirstOAuthPrompt = true; // Forces OAuth to prompt for Creds
-			_connectionManager.ConnectToServerCheck();
+			ConnectionManager.SetConfigKeyInformation(ServerConfigKeys);
+			ConnectionManager.ConnectionCheckComplete += new EventHandler<ServerConnectStatusEventArgs>(storageAccess_ConnectionCheckComplete);
+			ConnectionManager.ServerConnectionStatusUpdate += new EventHandler<ServerConnectStatusEventArgs>(storageAccess_ServerConnectionStatusUpdate);
+			ConnectionManager.ForceFirstOAuthPrompt = true; // Forces OAuth to prompt for Creds
+			ConnectionManager.ConnectToServerCheck();
 			
 			MessageGrid.Visibility = Visibility.Visible;
 			LoginGrid.Visibility = Visibility.Collapsed;
@@ -558,7 +545,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		/// </summary>
 		private void CancelConnectCheck()
 		{
-			_connectionManager.CancelConnectToServerCheck();
+			ConnectionManager.CancelConnectToServerCheck();
 		}
 
 		/// <summary>
@@ -592,12 +579,12 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		/// </summary>
 		private void ShowSelectOrgDialog()
 		{
-			if (_connectionManager != null && !bOnlineMultiOrgFix)
+			if (ConnectionManager != null && !_bOnlineMultiOrgFix)
 			{
 				MessageGrid.Visibility = Visibility.Collapsed;
 				LoginGrid.Visibility = Visibility.Collapsed;
 				OrgSelectGrid.Visibility = Visibility.Visible;
-				lvOrgList.ItemsSource = _connectionManager.CrmOrgsFoundForUser.OrgsList;
+				lvOrgList.ItemsSource = ConnectionManager.CrmOrgsFoundForUser.OrgsList;
 			}
 		}
 
@@ -620,9 +607,9 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 
 				String field = column.Tag as String;
 
-				if (_CurSortCol != null)
+				if (_curSortCol != null)
 				{
-					AdornerLayer.GetAdornerLayer(_CurSortCol).Remove(_CurAdorner);
+					AdornerLayer.GetAdornerLayer(_curSortCol).Remove(_curAdorner);
 					lvOrgList.Items.SortDescriptions.Clear();
 				}
 
@@ -630,26 +617,26 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 				if (_isSortButtonClicked)
 				{
 					//Changing sort direction only on sort button click
-					if (_CurSortCol == column && _CurAdorner.Direction == newDir)
+					if (_curSortCol == column && _curAdorner.Direction == newDir)
 						newDir = ListSortDirection.Descending;
 
 					_isSortButtonClicked = false;
 				}
-				else if (_CurAdorner != null)
+				else if (_curAdorner != null)
 				{
-					newDir = _CurAdorner.Direction;
+					newDir = _curAdorner.Direction;
 				}
 
-				_CurSortCol = column;
+				_curSortCol = column;
 
-				_CurAdorner = new SortAdorner(_CurSortCol, newDir, "ConnectControlSortOrderBrush");
+				_curAdorner = new SortAdorner(_curSortCol, newDir, "ConnectControlSortOrderBrush");
 				lvOrgList.Items.SortDescriptions.Add(
 					new SortDescription(field, newDir));
 
 				// Check to see if the adorner
-				var Layer = AdornerLayer.GetAdornerLayer(_CurSortCol);
+				var Layer = AdornerLayer.GetAdornerLayer(_curSortCol);
 				if (Layer != null)
-					Layer.Add(_CurAdorner);
+					Layer.Add(_curAdorner);
 			}
 			catch (Exception)
 			{
@@ -665,9 +652,8 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		private void ConnectionCheckComplete(ServerConnectStatusEventArgs e)
 		{
 			// Sync to main UI thread. 
-
-			_connectionManager.ConnectionCheckComplete -= new EventHandler<ServerConnectStatusEventArgs>(storageAccess_ConnectionCheckComplete);
-			_connectionManager.ServerConnectionStatusUpdate -= new EventHandler<ServerConnectStatusEventArgs>(storageAccess_ServerConnectionStatusUpdate);
+			ConnectionManager.ConnectionCheckComplete -= new EventHandler<ServerConnectStatusEventArgs>(storageAccess_ConnectionCheckComplete);
+			ConnectionManager.ServerConnectionStatusUpdate -= new EventHandler<ServerConnectStatusEventArgs>(storageAccess_ServerConnectionStatusUpdate);
 
 			if (e.Connected)
 			{
@@ -776,7 +762,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		/// <param name="e"></param>
 		private void UpdateConnectStatusText(ServerConnectStatusEventArgs e)
 		{
-			bOnlineMultiOrgFix = false;
+			_bOnlineMultiOrgFix = false;
 			if (e.exEvent != null)
 			{
 				//// Error here .. 
@@ -812,18 +798,18 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 
 					if (MessageGrid.IsVisible)
 					{ //Found Single Org
-						if (_connectionManager != null && !string.IsNullOrEmpty(_connectionManager.ConnectedOrgFriendlyName))
+						if (ConnectionManager != null && !string.IsNullOrEmpty(ConnectionManager.ConnectedOrgFriendlyName))
 						{
 							if (e.StatusMessage.Equals(uiMessages.CRMCONNECT_LOGIN_PROCESS_CONNNECTING, StringComparison.CurrentCultureIgnoreCase))
 							{
 								if (!bMultiOrg)
 								{
-									lblCrmOrg.Text = string.Format(uiResources.LOGIN_FRM_RETRIEVE_DEF, _connectionManager.ConnectedOrgFriendlyName);
+									lblCrmOrg.Text = string.Format(uiResources.LOGIN_FRM_RETRIEVE_DEF, ConnectionManager.ConnectedOrgFriendlyName);
 								}
 							}
 							else
 							{
-								lblCrmOrg.Text = string.Format(uiMessages.CRMCONNECT_SERVER_CONNECT_GOOD + " - {0}", _connectionManager.ConnectedOrgFriendlyName);
+								lblCrmOrg.Text = string.Format(uiMessages.CRMCONNECT_SERVER_CONNECT_GOOD + " - {0}", ConnectionManager.ConnectedOrgFriendlyName);
 								ipb.Visibility = Visibility.Collapsed;
 							}
 						}
@@ -917,7 +903,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 			if (bSuccess)
 			{
 				// Save settings
-				_connectionManager.SaveConfigToFile(ServerConfigKeys);
+				ConnectionManager.SaveConfigToFile(ServerConfigKeys);
 
 				// Force a reload to pick up any special bits. 
 				LoadDisplayWithAppSettingsData();
@@ -940,36 +926,16 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		private void SetAdvancedGridWidth()
 		{
 			//To make sure Inner grid(Advanced Grid) alligmrnt is inline with parent grid(Login Grid)
-			if (LastBoardWasOnline)
-			{
-				//Office365: Reseting width of Advanced Grid
-				AdvancedGrid.ColumnDefinitions[0].Width = GridLength.Auto;
-			}
-			else
+			if (!LastBoardWasOnline)
 			{
 				// On-Prem: Seting Login Grid width to Advanced Grid
 				GridLength LgnGridColumn0length = new GridLength(LoginGrid.ColumnDefinitions[0].ActualWidth);
-				AdvancedGrid.ColumnDefinitions[0].Width = LgnGridColumn0length;
 			}
-		}
-
-		/// <summary>
-		/// Checks to see if the skip discovery flag is set, if so, requires the user to provide a full URI to connect to the remote server. 
-		/// </summary>
-		/// <returns></returns>
-		private bool IsSkipDiscoverySet()
-		{
-			if (ConfigurationManager.AppSettings != null)
-				if (ConfigurationManager.AppSettings["SkipDiscovery"] != null && ConfigurationManager.AppSettings["SkipDiscovery"].Equals("true", StringComparison.OrdinalIgnoreCase))
-				{
-					return true; 
-				};
-			return false; 
 		}
 
 		#endregion
 
-		#region Events
+		#region Event handlers
 
 		/// <summary>
 		///  Raised when the Connect to Server Button is Pushed.  
@@ -981,9 +947,10 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		{
 			bMultiOrg = false;
 			btnCancel.Visibility = Visibility.Collapsed;
-			_connectionManager.ServiceClient = null;
+			ConnectionManager.ServiceClient = null;
 			StartConnectCheck();
 		}
+
 		/// <summary>
 		/// Raised when the Default Credentials Check box State changes
 		/// Sets the visible state for using the setting of the Default Credentials control
@@ -995,12 +962,10 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 			tracer.Log(string.Format("Use Current User Checkbox State = {0}", cbUseDefaultCreds.IsChecked.Value));
 
 			// set to the opposite of the initial value
-			tbUserId.IsEnabled = !cbUseDefaultCreds.IsChecked.Value;
-			tbPassword.IsEnabled = !cbUseDefaultCreds.IsChecked.Value;
-			tbDomain.IsEnabled = !cbUseDefaultCreds.IsChecked.Value;
-			if (rbOn365.IsChecked.Value)
-				tbDomain.IsEnabled = false;
-
+			AdvancedOptions.tbUserId.IsEnabled = !cbUseDefaultCreds.IsChecked.Value;
+			AdvancedOptions.tbPassword.IsEnabled = !cbUseDefaultCreds.IsChecked.Value;
+			AdvancedOptions.tbDomain.IsEnabled = !cbUseDefaultCreds.IsChecked.Value;
+			AdvancedOptions.DomainVisible = !rbOn365.IsChecked.Value;
 		}
 
 		/// <summary>
@@ -1020,35 +985,41 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		private void UiiServerConnectionCtrl_Loaded(object sender, RoutedEventArgs e)
+		private void OnLoaded(object sender, RoutedEventArgs e)
 		{
 			if (!DesignerProperties.GetIsInDesignMode(new DependencyObject()))
 			{
-				iRow3 = LoginGrid.RowDefinitions[3].Height.Value == 0 ? 31.0 : LoginGrid.RowDefinitions[3].Height.Value;
-				iRow4 = LoginGrid.RowDefinitions[4].Height.Value == 0 ? 31.0 : LoginGrid.RowDefinitions[4].Height.Value;
-				iRow5 = LoginGrid.RowDefinitions[5].Height.Value == 0 ? 31.0 : LoginGrid.RowDefinitions[5].Height.Value;
-                iRow6 = LoginGrid.RowDefinitions[6].Height.Value == 0 ? 31.0 : LoginGrid.RowDefinitions[6].Height.Value;
-                iRow7 = LoginGrid.RowDefinitions[7].Height.Value == 0 ? 31.0 : LoginGrid.RowDefinitions[7].Height.Value;
-				iRow8 = LoginGrid.RowDefinitions[8].Height.Value == 93 ? 115.0 : LoginGrid.RowDefinitions[8].Height.Value;
-				iRow9 = LoginGrid.RowDefinitions[9].Height.Value == 0 ? 31.0 : LoginGrid.RowDefinitions[9].Height.Value;
-				advRow0 = AdvancedGrid.RowDefinitions[0].Height.Value == 0 ? 31.0 : AdvancedGrid.RowDefinitions[0].Height.Value;
-				advRow3 = AdvancedGrid.RowDefinitions[3].Height.Value == 0 ? 31.0 : AdvancedGrid.RowDefinitions[3].Height.Value;
+				// This allows control to be dragged by mouse at any point
+				var parentWindow = Window.GetWindow(this);
+				parentWindow.MouseDown += delegate (object s, MouseButtonEventArgs mbEventArgs) 
+				{ 
+					if (mbEventArgs.ChangedButton == MouseButton.Left) parentWindow.DragMove(); 
+				};
 
-				LoginGrid.RowDefinitions[4].Height = new GridLength(0);
-				if (LoginGrid.RowDefinitions[5].Height.Value == 0) 
-					LoginGrid.RowDefinitions[5].Height = new GridLength(iRow5);
-				//In config file if CrmDeploymentType is O365 need to manualy set the height of iRow8
-				if ((iRow8 == 0 || iRow8 == 31) && LastBoardWasOnline)
-					iRow8 = 115;
+				// Make sure first control in tab order has keyboard focus
+				MoveFocus(new TraversalRequest(FocusNavigationDirection.First));
 
-				if (iRow5 == 115 && LastBoardWasOnline)
-					iRow5 = 31;
+				_iRow6 = LoginGrid.RowDefinitions[6].Height.Value == 0 ? 31.0 : LoginGrid.RowDefinitions[6].Height.Value;
+                _iRow7 = LoginGrid.RowDefinitions[7].Height.Value == 0 ? 31.0 : LoginGrid.RowDefinitions[7].Height.Value;
+                _iRow8 = LoginGrid.RowDefinitions[8].Height.Value == 0 ? 31.0 : LoginGrid.RowDefinitions[8].Height.Value;
+				_iRow9 = LoginGrid.RowDefinitions[9].Height.Value == 93 ? 115.0 : LoginGrid.RowDefinitions[9].Height.Value;
+				_iRow10 = LoginGrid.RowDefinitions[10].Height.Value == 0 ? 31.0 : LoginGrid.RowDefinitions[10].Height.Value;
+
+				LoginGrid.RowDefinitions[5].Height = new GridLength(0);
+				if (LoginGrid.RowDefinitions[6].Height.Value == 0) 
+					LoginGrid.RowDefinitions[6].Height = new GridLength(_iRow6);
+				// In config file if CrmDeploymentType is O365 need to manualy set the height of iRow8
+				if ((_iRow9 == 0 || _iRow9 == 31) && LastBoardWasOnline)
+					_iRow9 = 115;
+
+				if (_iRow6 == 115 && LastBoardWasOnline)
+					_iRow6 = 31;
 
 				// Load Stored settings here. 
-				if (_connectionManager != null)
+				if (ConnectionManager != null)
 				{
 					LoadHomeRealmData(); // Load HomeRealm Information from Config.
-					ServerConfigKeys = _connectionManager.LoadConfigFromFile();
+					ServerConfigKeys = ConnectionManager.LoadConfigFromFile();
 					if (ServerConfigKeys != null && ServerConfigKeys.Count > 3)
 						LoadDisplayWithAppSettingsData();
 					else
@@ -1057,42 +1028,35 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 			}
 		}
 
-
 		/// <summary>
-		/// Sets the UI state when either the CRM Online or Prem Radio buttons are checked
+		/// Sets the UI state when either the Dataverse Online or Prem Radio buttons are checked
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		private void rbOnlinePrem_Click(object sender, System.Windows.RoutedEventArgs e)
+		private void rbOnlinePrem_Click(object sender, RoutedEventArgs e)
 		{
 			// Storyboard execution moved out of triggers, to here, to support the not unnecessary replaying a storyboard
 
 			// Bind to O365 Servers. 
-			ddlCrmOnlineRegions.ItemsSource = _connectionManager.OnlineDiscoveryServerList.OSDPServers;
+			//ddlCrmOnlineRegions.ItemsSource = _connectionManager.OnlineDiscoveryServerList.OSDPServers;
 
 			if (rbOnPrem.IsChecked.Value)
 			{
 				LoginGrid.RowDefinitions[3].Height = new GridLength(0);
 				LoginGrid.RowDefinitions[4].Height = new GridLength(31);
 				LoginGrid.RowDefinitions[5].Height = new GridLength(31);
-                LoginGrid.RowDefinitions[6].Height = new GridLength(iRow6);
-                LoginGrid.RowDefinitions[7].Height = new GridLength(iRow7);
+                LoginGrid.RowDefinitions[6].Height = new GridLength(_iRow6);
+                LoginGrid.RowDefinitions[7].Height = new GridLength(_iRow7);
 				LoginGrid.RowDefinitions[8].Height = new GridLength(93);
-				LoginGrid.RowDefinitions[9].Height = new GridLength(iRow9);
+				LoginGrid.RowDefinitions[9].Height = new GridLength(_iRow9);
 
-				AdvancedGrid.RowDefinitions[0].Height = new GridLength(0);
-				AdvancedGrid.RowDefinitions[3].Height = new GridLength(advRow3);
-				GbAdvanced.Margin = new Thickness(-6, -20, -6, -20);
+				AdvancedOptions.tbUserId.IsEnabled = !cbUseDefaultCreds.IsChecked.Value;
+				AdvancedOptions.tbPassword.IsEnabled = !cbUseDefaultCreds.IsChecked.Value;
+				AdvancedOptions.tbDomain.IsEnabled = !cbUseDefaultCreds.IsChecked.Value;
 
-				tbUserId.IsEnabled = !cbUseDefaultCreds.IsChecked.Value;
-				tbPassword.IsEnabled = !cbUseDefaultCreds.IsChecked.Value;
-				tbDomain.IsEnabled = !cbUseDefaultCreds.IsChecked.Value;
+				AdvancedOptions.GbAdvanced.Visibility = Visibility.Visible;
 
-				GbAdvanced.Visibility = Visibility.Visible;
-				GbAdvanced.Header = "";
-				GbAdvanced.BorderThickness = new Thickness(0);
-
-				Grid.SetRow(GbAdvanced, 8);
+				Grid.SetRow(AdvancedOptions, 8);
 				Grid.SetRow(stkOrg, 9);
 
 				if (goPrem != null)
@@ -1104,12 +1068,13 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
                 LoginGrid.RowDefinitions[3].Height = new GridLength(22);
                 LoginGrid.RowDefinitions[4].Height = new GridLength(22);
                 LoginGrid.RowDefinitions[5].Height = new GridLength(22);
-				LoginGrid.RowDefinitions[7].Height = new GridLength(0);
-				LoginGrid.RowDefinitions[9].Height = new GridLength(0);
+                LoginGrid.RowDefinitions[6].Height = new GridLength(22);
+				LoginGrid.RowDefinitions[8].Height = new GridLength(0);
+				LoginGrid.RowDefinitions[10].Height = new GridLength(0);
 
-                Grid.SetRow(stkUseDefaultCreds, 3);
-                Grid.SetRow(stkOrg, 4);
-                Grid.SetRow(stkAdvanced, 5);
+				Grid.SetRow(stkUseDefaultCreds, 4);
+				Grid.SetRow(stkOrg, 5);
+                Grid.SetRow(stkAdvanced, 6);
 
 				// Do UI.. 
 				if (!LastBoardWasOnline)
@@ -1134,19 +1099,20 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 				&& ((Model.ClaimsHomeRealmOptionsHomeRealm)ddlAuthSource.SelectedValue).DisplayName.Equals(uiResources.LOGIN_FRM_AUTHTYPE_OAUTH))
 			{
 				//Disabling Username, Password and Domain textboxes on select of OAuth (On-Prem).
-				GbAdvanced.IsEnabled = false;
-				tbUserId.Clear();
-				tbPassword.Clear();
-				tbDomain.Clear();
+				AdvancedOptions.IsEnabled = false;
+				AdvancedOptions.tbUserId.Clear();
+				AdvancedOptions.tbPassword.Clear();
+				AdvancedOptions.tbDomain.Clear();
 				LastSelectionWasOAuth = true;
 			}
 			else if (LastSelectionWasOAuth)
 			{
-				GbAdvanced.IsEnabled = true;
+				AdvancedOptions.GbAdvanced.IsEnabled = true;
 
 				//Reading Username, Password and Domain from config file
-				tbUserId.Text = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmUserName);
-				tbDomain.Text = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmDomain);
+				AdvancedOptions.tbUserId.Text = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmUserName);
+				AdvancedOptions.tbConnectUrl.Text = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.DirectConnectionUri);
+				AdvancedOptions.tbDomain.Text = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmDomain);
 
 				bool tempBool = true;
 
@@ -1156,10 +1122,10 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 					{
 						SecureString password = StorageUtils.GetConfigKey<SecureString>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmPassword);
 						if (password != null)
-							tbPassword.Password = password.ToUnsecureString();
+							AdvancedOptions.tbPassword.Password = password.ToUnsecureString();
 					}
 					else
-						tbPassword.Password = string.Empty;
+						AdvancedOptions.tbPassword.Password = string.Empty;
 				}
 				LastSelectionWasOAuth = false;
 			}
@@ -1189,12 +1155,12 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 			   e.Key == Key.NumPad9 ||
 			   e.Key == Key.Tab)
 				return;
-			else
+            else
+            {
 				e.Handled = true;
-
+				SystemSounds.Hand.Play();
+			}
 		}
-
-		#endregion
 
 		private void btnCancel_Click(object sender, RoutedEventArgs e)
 		{
@@ -1226,6 +1192,20 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 			ConnectToSelectedOrg();
 		}
 
+		private void btnCancelOrg_Click(object sender, RoutedEventArgs e)
+		{
+			CancelConnectCheck();
+			if (UserCancelClicked != null)
+				UserCancelClicked(this, null);
+		}
+
+		private void lvOrgList_Loaded(object sender, RoutedEventArgs e)
+		{
+			SetSort((GridViewColumnHeader)OrgCol.Header);
+		}
+
+		#endregion
+
 		/// <summary>
 		/// To Connect to Selected Org
 		/// </summary>
@@ -1249,35 +1229,23 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 					ipb.Visibility = Visibility.Visible;
 					btnCancel.Visibility = Visibility.Collapsed;
 
-					_connectionManager.ConnectionCheckComplete -= storageAccess_ConnectionCheckComplete;
-					_connectionManager.ServerConnectionStatusUpdate -= storageAccess_ServerConnectionStatusUpdate;
+					ConnectionManager.ConnectionCheckComplete -= storageAccess_ConnectionCheckComplete;
+					ConnectionManager.ServerConnectionStatusUpdate -= storageAccess_ServerConnectionStatusUpdate;
 
-					_connectionManager.ConnectionCheckComplete += storageAccess_ConnectionCheckComplete;
-					_connectionManager.ServerConnectionStatusUpdate += storageAccess_ServerConnectionStatusUpdate;
-					_connectionManager.ConnectToServerCheck(selectedorg);
+					ConnectionManager.ConnectionCheckComplete += storageAccess_ConnectionCheckComplete;
+					ConnectionManager.ServerConnectionStatusUpdate += storageAccess_ServerConnectionStatusUpdate;
+					ConnectionManager.ConnectToServerCheck(selectedorg);
 					if (stkMessageOrg.IsVisible) stkMessageOrg.Visibility = Visibility.Collapsed;
 					return;
 				}
 			}
-			if (_connectionManager != null)
+			if (ConnectionManager != null)
 			{
 				stkMessageOrg.Visibility = Visibility.Visible;
 				tbConnectStatusOrg.Text = uiMessages.CRMCONNECT_NOORG_SEL;
 				storageAccess_ServerConnectionStatusUpdate(this, new ServerConnectStatusEventArgs(uiMessages.CRMCONNECT_NOORG_SEL, false));
 				ConnectionCheckComplete(new ServerConnectStatusEventArgs(uiMessages.CRMCONNECT_NOORG_SEL, false));
 			}
-		}
-
-		private void btnCancelOrg_Click(object sender, RoutedEventArgs e)
-		{
-			CancelConnectCheck();
-			if (UserCancelClicked != null)
-				UserCancelClicked(this, null);
-		}
-
-		private void lvOrgList_Loaded(object sender, RoutedEventArgs e)
-		{
-			SetSort((GridViewColumnHeader)OrgCol.Header);
 		}
 
 		/// <summary>
@@ -1289,6 +1257,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		{
 			SetAdvancedGridWidth();
 		}
+
 		/// <summary>
 		///  API Called when Client wants to go back to login and cancel connect.
 		/// </summary>
@@ -1300,6 +1269,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 			MessageGrid.Visibility = Visibility.Collapsed;
 			LoginGrid.Visibility = Visibility.Visible;
 		}
+
 		/// <summary>
 		///  API Called when Client wants to cancel connect.
 		/// </summary>
@@ -1312,6 +1282,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 					UserCancelClicked(this, null);
 			}
 		}
+
 		/// <summary>
 		/// Called when the client wants to show the message grid. 
 		/// </summary>
@@ -1328,32 +1299,21 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 				if (goAdvancedCheck != null)
 					goAdvancedCheck.Begin();
 
-				GbAdvanced.Visibility = Visibility.Visible;
-				LoginGrid.RowDefinitions[6].Height = new GridLength(iRow8);
-				LoginGrid.RowDefinitions[8].Height = new GridLength(iRow5);
-				AdvancedGrid.RowDefinitions[0].Height = new GridLength(advRow0);
-				AdvancedGrid.RowDefinitions[3].Height = new GridLength(0);
+				AdvancedOptions.Visibility = Visibility.Visible;
+				LoginGrid.RowDefinitions[7].Height = new GridLength(_iRow9);
+				LoginGrid.RowDefinitions[9].Height = new GridLength(_iRow7);
+				Grid.SetRow(AdvancedOptions, 7);
 
-				GbAdvanced.BorderThickness = new Thickness(1);
-				GbAdvanced.Header = uiResources.LOGIN_FRM_GB_HEADER;
-				GbAdvanced.Margin = new Thickness(0, 0, 0, 0);
-				Grid.SetRow(GbAdvanced, 6);
-
-                tbUserId.IsEnabled = !cbUseDefaultCreds.IsChecked.Value;
-                tbPassword.IsEnabled = !cbUseDefaultCreds.IsChecked.Value;
-                tbDomain.IsEnabled = !cbUseDefaultCreds.IsChecked.Value;
-                if (rbOn365.IsChecked.Value)
-                    tbDomain.IsEnabled = false;
+				AdvancedOptions.tbUserId.IsEnabled = !cbUseDefaultCreds.IsChecked.Value;
+				AdvancedOptions.tbPassword.IsEnabled = !cbUseDefaultCreds.IsChecked.Value;
+				AdvancedOptions.tbDomain.IsEnabled = !cbUseDefaultCreds.IsChecked.Value;
+				AdvancedOptions.DomainVisible = !rbOn365.IsChecked.Value;
             }
 			else
 			{
-				GbAdvanced.Header = "";
-				GbAdvanced.BorderThickness = new Thickness(0);
-				AdvancedGrid.RowDefinitions[0].Height = new GridLength(advRow0);
-				AdvancedGrid.RowDefinitions[3].Height = new GridLength(0);
 				if (goAdvancedUncheck != null)
 					goAdvancedUncheck.Begin();
-				GbAdvanced.Visibility = Visibility.Collapsed;
+				AdvancedOptions.Visibility = Visibility.Collapsed;
 			}
 		}
 		

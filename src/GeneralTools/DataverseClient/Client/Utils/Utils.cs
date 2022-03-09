@@ -141,6 +141,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 if (serviceUri.Segments.Count() >= 2)
                 {
                     organizationName = serviceUri.Segments[1].TrimEnd('/'); // Fix for bug 294040 http://vstfmbs:8080/tfs/web/wi.aspx?pcguid=12e6d33f-1461-4da4-b3d9-5517a4567489&id=294040
+                }else
+                {
+                    // IFD style. 
+                    var segementsList = serviceUri.DnsSafeHost.Split('.');
+                    if ( segementsList.Length > 1)
+                    {
+                        organizationName = segementsList[0];
+                    }
                 }
             }
 
@@ -298,8 +306,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <returns></returns>
         internal static bool IsRequestValidForTranslationToWebAPI(OrganizationRequest req)
         {
-            bool useWebApi = ClientServiceProviders.Instance.GetService<IOptions<AppSettingsConfiguration>>().Value.UseWebApi;
-            bool useWebApiForLogin = ClientServiceProviders.Instance.GetService<IOptions<AppSettingsConfiguration>>().Value.UseWebApiLoginFlow;
+            bool useWebApi = ClientServiceProviders.Instance.GetService<IOptions<ConfigurationOptions>>().Value.UseWebApi;
+            bool useWebApiForLogin = ClientServiceProviders.Instance.GetService<IOptions<ConfigurationOptions>>().Value.UseWebApiLoginFlow;
             switch (req.RequestName.ToLowerInvariant())
             {
                 case "create":

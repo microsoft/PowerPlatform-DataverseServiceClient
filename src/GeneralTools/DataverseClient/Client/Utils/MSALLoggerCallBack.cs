@@ -1,4 +1,4 @@
-﻿using Microsoft.Identity.Client;
+using Microsoft.Identity.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.PowerPlatform.Dataverse.Client.Model;
@@ -27,11 +27,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Utils
         static public void Log(LogLevel level, string message, bool containsPii)
         {
             if (_logEntry == null)
-                _logEntry = new DataverseTraceLogger("Microsoft.IdentityModel.Clients.ActiveDirectory"); // set up logging client.
+                _logEntry = new DataverseTraceLogger(typeof(LogCallback).Assembly.GetName().Name); // set up logging client.
 
             if (!EnabledPIILogging.HasValue)
             {
-                EnabledPIILogging = ClientServiceProviders.Instance.GetService<IOptions<AppSettingsConfiguration>>().Value.MSALEnabledLogPII;
+                EnabledPIILogging = ClientServiceProviders.Instance.GetService<IOptions<ConfigurationOptions>>().Value.MSALEnabledLogPII;
                 _logEntry.Log($"Setting MSAL PII Logging Feature to {EnabledPIILogging.Value}", System.Diagnostics.TraceEventType.Information);
             }
 

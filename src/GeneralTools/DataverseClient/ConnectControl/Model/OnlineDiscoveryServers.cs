@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
@@ -21,7 +21,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl.Model
 		/// <summary>
 		/// Contains the List of Discovery Servers
 		/// </summary>
-		private ObservableCollection<OnlineDiscoveryServer> _Servers = new ObservableCollection<OnlineDiscoveryServer>();
+		private ObservableCollection<OnlineDiscoveryServer> _servers = new ObservableCollection<OnlineDiscoveryServer>();
 
 		/// <summary>
 		/// Contains the list of Office 365 CRM enabled Discovery Servers
@@ -29,9 +29,24 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl.Model
 		private ObservableCollection<OnlineDiscoveryServer> _OSDPServers = new ObservableCollection<OnlineDiscoveryServer>();
 
 		/// <summary>
+		/// Contains the List of Discovery Servers for each cloud
+		/// </summary>
+		public ObservableCollection<OnlineDiscoveryServer> CloudServers { get; private set; } = new ObservableCollection<OnlineDiscoveryServer>();
+
+		/// <summary>
+		/// Contains the List of Discovery Servers for each region
+		/// </summary>
+		public ObservableCollection<OnlineDiscoveryServer> RegionalServers { get; private set; } = new ObservableCollection<OnlineDiscoveryServer>();
+
+		/// <summary>
+		/// Contains the List of test Discovery Servers
+		/// </summary>
+		public ObservableCollection<OnlineDiscoveryServer> TestServers { get; private set; } = new ObservableCollection<OnlineDiscoveryServer>();
+
+		/// <summary>
 		/// Public Property to Access the Servers available.
 		/// </summary>
-		public ObservableCollection<OnlineDiscoveryServer> Servers { get { return _Servers; } set { if (value != _Servers) _Servers = value; NotifyPropertyChanged("Servers"); } }
+		public ObservableCollection<OnlineDiscoveryServer> Servers { get { return _servers; } set { if (value != _servers) _servers = value; NotifyPropertyChanged("Servers"); } }
 
 		/// <summary>
 		/// Public Property to Access Office 365 discovery servers
@@ -46,25 +61,40 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl.Model
 			if (logger == null)
 				logger = new Utility.LoginTracer();
 
-			if (_Servers == null)
-				_Servers = new ObservableCollection<OnlineDiscoveryServer>();
-
-			_Servers.Add(new OnlineDiscoveryServer() { DiscoveryServer = null, DisplayName = "Don’t Know", ShortName = "" });
-			_Servers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://dev.crm.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "North America", ShortName = "NorthAmerica" });
-			_Servers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://dev.crm4.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Europe, Middle East and Africa", ShortName = "EMEA" });
-			_Servers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://dev.crm5.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Asia Pacific Area", ShortName = "APAC" });
+			_servers.Add(new OnlineDiscoveryServer() { DiscoveryServer = null, DisplayName = "Public", ShortName = "" });
+			_servers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://dev.crm.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "North America", ShortName = "NorthAmerica" });
+			_servers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://dev.crm4.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Europe, Middle East and Africa", ShortName = "EMEA" });
+			_servers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://dev.crm5.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Asia Pacific Area", ShortName = "APAC" });
 #if DEBUG
 			var internalEnvInfo = new InternalEnvInfo();
-			_Servers.Add(new OnlineDiscoveryServer(internalEnvInfo.CrmLiveTie));
-			_Servers.Add(new OnlineDiscoveryServer(internalEnvInfo.CrmLiveDebug));
-			_Servers.Add(new OnlineDiscoveryServer(internalEnvInfo.CrmLiveTodayDebugLIVE));
+			_servers.Add(new OnlineDiscoveryServer(internalEnvInfo.CrmLiveTie));
+			_servers.Add(new OnlineDiscoveryServer(internalEnvInfo.CrmLiveDebug));
+			_servers.Add(new OnlineDiscoveryServer(internalEnvInfo.CrmLiveTodayDebugLIVE));
 #endif
 
-			if (_OSDPServers == null)
-				_OSDPServers = new ObservableCollection<OnlineDiscoveryServer>();
+			CloudServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = null, DisplayName = "Public", ShortName = "" });
+			CloudServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm.appsplatform.us/XRMServices/2011/Discovery.svc"), DisplayName = "US Gov DoD", ShortName = "DoD", GeoCode = "DOD", RequiresRegionalDiscovery = true, RegionalGlobalDiscoveryServer = new Uri("https://globaldisco.crm.appsplatform.us") });
+			CloudServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm.microsoftdynamics.us/XRMServices/2011/Discovery.svc"), DisplayName = "US Gov High", ShortName = "USG", GeoCode = "USG", RequiresRegionalDiscovery = true, RegionalGlobalDiscoveryServer = new Uri("https://globaldisco.crm.microsoftdynamics.us") });
+			CloudServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm.Microsoftdynamics.de/XRMServices/2011/Discovery.svc"), DisplayName = "Germany", ShortName = "DEU", RequiresRegionalDiscovery = true, GeoCode = "DEU" });
+			CloudServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm.dynamics.cn/XRMServices/2011/Discovery.svc"), DisplayName = "China", ShortName = "CHN", GeoCode = "CHN", RequiresRegionalDiscovery = true, RegionalGlobalDiscoveryServer = new Uri("https://globaldisco.crm.dynamics.cn") });
 
-			_OSDPServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = null, DisplayName = "Don’t Know", ShortName = "" });
+			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm5.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Asia Pacific Area", ShortName = "APAC", GeoCode = "APAC" });
+			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm3.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Canada", ShortName = "CAN", GeoCode = "CAN" });
+			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm4.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Europe, Middle East and Africa", ShortName = "EMEA", GeoCode = "EMEA" });
+			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm12.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "France", ShortName = "FRA", GeoCode = "FRA" });
+			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm16.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Germany (Go Local)", ShortName = "GER", GeoCode = "GER" });
+			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm8.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "India", ShortName = "IND", GeoCode = "IND" });
+			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm7.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Japan", ShortName = "JPN", GeoCode = "JPN" });
+			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "North America", ShortName = "NorthAmerica" });  // Do not add Geo code to NAM or GCC,  as they use the same server level GEO code.
+			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm9.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "North America 2 (GCC)", ShortName = "NorthAmerica2", RequiresRegionalDiscovery = true, RegionalGlobalDiscoveryServer = new Uri("https://globaldisco.crm9.dynamics.com") });
+			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm6.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Oceania", ShortName = "Oceania", GeoCode = "OCE" });
+			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm14.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "South Africa", ShortName = "ZAF", GeoCode = "ZAF" });
+			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm2.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "South America", ShortName = "SouthAmerica", GeoCode = "LATAM" });
+			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm17.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Switzerland", ShortName = "Switzerland", GeoCode = "CHE" });
+			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm15.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "United Arab Emirates", ShortName = "UAE", GeoCode = "UAE" });
+			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm11.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "United Kingdom", ShortName = "GBR", GeoCode = "GBR" });
 
+			_OSDPServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = null, DisplayName = "Public", ShortName = "" });
 			_OSDPServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm5.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Asia Pacific Area", ShortName = "APAC", GeoCode = "APAC" });
 			_OSDPServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm3.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Canada", ShortName = "CAN", GeoCode = "CAN" });
 			_OSDPServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm.dynamics.cn/XRMServices/2011/Discovery.svc"), DisplayName = "China", ShortName = "CHN", GeoCode = "CHN", RequiresRegionalDiscovery = true, RegionalGlobalDiscoveryServer = new Uri("https://globaldisco.crm.dynamics.cn") });
@@ -86,6 +116,14 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl.Model
 			_OSDPServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm.microsoftdynamics.us/XRMServices/2011/Discovery.svc"), DisplayName = "US Gov High", ShortName = "USG", GeoCode = "USG", RequiresRegionalDiscovery = true, RegionalGlobalDiscoveryServer = new Uri("https://globaldisco.crm.microsoftdynamics.us") });
 
 #if DEBUG
+			TestServers.Add(new OnlineDiscoveryServer(internalEnvInfo.CrmLiveTieOSDP));
+			TestServers.Add(new OnlineDiscoveryServer(internalEnvInfo.CrmIntOSDP));
+			TestServers.Add(new OnlineDiscoveryServer(internalEnvInfo.CrmLiveTodayDebugOSDP));
+			TestServers.Add(new OnlineDiscoveryServer(internalEnvInfo.CrmLiveTodayDebugLIVE));
+			TestServers.Add(new OnlineDiscoveryServer(internalEnvInfo.Crm1BoxTest));
+			TestServers.Add(new OnlineDiscoveryServer(internalEnvInfo.CrmTIP));
+			TestServers.Add(new OnlineDiscoveryServer(internalEnvInfo.Crm2LiveTie));
+
 			_OSDPServers.Add(new OnlineDiscoveryServer(internalEnvInfo.CrmLiveTieOSDP));
 			_OSDPServers.Add(new OnlineDiscoveryServer(internalEnvInfo.CrmIntOSDP));
 			_OSDPServers.Add(new OnlineDiscoveryServer(internalEnvInfo.CrmLiveTodayDebugOSDP));
@@ -133,8 +171,8 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl.Model
 				if (_OSDPServers != null)
 					return _OSDPServers.FirstOrDefault(i => i.ShortName.Equals(shortName, StringComparison.CurrentCultureIgnoreCase));
 
-			if (_Servers != null)
-				return _Servers.FirstOrDefault(i => i.ShortName.Equals(shortName, StringComparison.CurrentCultureIgnoreCase));
+			if (_servers != null)
+				return _servers.FirstOrDefault(i => i.ShortName.Equals(shortName, StringComparison.CurrentCultureIgnoreCase));
 			return null;
 		}
 
@@ -161,8 +199,8 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl.Model
 					if (serverDisplayName.Equals("User Defined Org Detail"))
 						return null;
 
-					if (_Servers != null)
-						return _Servers.FirstOrDefault(i => i.DisplayName.Equals(serverDisplayName, StringComparison.CurrentCultureIgnoreCase)).ShortName;
+					if (_servers != null)
+						return _servers.FirstOrDefault(i => i.DisplayName.Equals(serverDisplayName, StringComparison.CurrentCultureIgnoreCase)).ShortName;
 				}
 			}
 			catch (Exception Ex)
@@ -202,12 +240,12 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl.Model
 					if (_OSDPServers != null)
 						_OSDPServers.Clear();
 
-					if (_Servers != null)
-						_Servers.Clear();
+					if (_servers != null)
+						_servers.Clear();
 				}
 
 				_OSDPServers = null;
-				_Servers = null;
+				_servers = null;
 
 				disposedValue = true;
 			}
@@ -225,7 +263,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl.Model
 	}
 
 
-	#region CrmOnlineDiscoServerListing for WPF Controls
+	#region OnlineDiscoServerListing for WPF Controls
 
 	/// <summary>
 	/// Describes a discovery server that can be used to determine what organizations a user is a member of.

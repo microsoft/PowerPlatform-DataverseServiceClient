@@ -1,3 +1,4 @@
+using LiveTestsConsole;
 using System;
 
 namespace LivePackageTestsConsole
@@ -7,7 +8,6 @@ namespace LivePackageTestsConsole
     /// </summary>
     public class Program
     {
-        public static bool SkipStop { get; set; } = false; 
         public static void Main(string[] args)
         {
             Console.WriteLine("Starting Tests");
@@ -37,6 +37,12 @@ namespace LivePackageTestsConsole
 
                     tests.ImportSolution();
                 }
+                else if (string.Compare(args[0], "StageSolution", StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    var tests = new SolutionTests();
+
+                    tests.StageSolution();
+                }
                 else if (string.Compare(args[0], "DeleteSolution", StringComparison.OrdinalIgnoreCase) == 0)
                 {
                     var tests = new SolutionTests();
@@ -61,9 +67,6 @@ namespace LivePackageTestsConsole
                 var tests = new BasicFlow();
                 tests.Run();
             }
-
-            if (!SkipStop)
-                Console.ReadKey();
         }
     }
 }
