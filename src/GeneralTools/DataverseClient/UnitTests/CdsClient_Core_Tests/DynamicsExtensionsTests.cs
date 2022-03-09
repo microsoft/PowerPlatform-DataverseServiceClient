@@ -1,4 +1,4 @@
-﻿using Microsoft.PowerPlatform.Dataverse.Client;
+using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.PowerPlatform.Dataverse.Client.Dynamics;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Xrm.Sdk;
@@ -14,6 +14,7 @@ using Xunit.Abstractions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using DataverseClient_Core_UnitTests;
+using Microsoft.PowerPlatform.Dataverse.Client.Extensions;
 
 namespace Client_Core_UnitTests
 {

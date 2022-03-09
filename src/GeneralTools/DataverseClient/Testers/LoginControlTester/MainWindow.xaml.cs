@@ -1,4 +1,4 @@
-﻿//===============================================================================
+//===============================================================================
 // MICROSOFT SAMPLE
 // Microsoft Dynamics CRM 2010
 // Project: Dynamics CRM Connect Control Login Control Tester
@@ -22,6 +22,7 @@ using Microsoft.PowerPlatform.Dataverse.Client;
 using System.Threading;
 using System.Windows.Threading;
 using System.Net;
+using Microsoft.PowerPlatform.Dataverse.Client.Extensions;
 
 namespace LoginControlTester
 {
@@ -112,6 +113,7 @@ namespace LoginControlTester
 				if (MessageBox.Show(LoginControlTester.Resources.Resources.CREDENTIALS_ALREADY_SAVED_IN_CONFIGURATION, LoginControlTester.Resources.Resources.AUTO_LOGIN, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
 				{
 					CrmLoginCtrl.IsEnabled = false;
+
 					// When running an auto login,  you need to wire and listen to the events from the connection manager.
 					// Run Auto User Login process, Wire events. 
 					_connectionManager.ServerConnectionStatusUpdate += new EventHandler<ServerConnectStatusEventArgs>(mgr_ServerConnectionStatusUpdate);

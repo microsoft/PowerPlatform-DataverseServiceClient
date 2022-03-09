@@ -60,10 +60,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
         /// Attemtps to solicit a WWW-Authenticate reply using an unauthenticated GET call to the given endpoint.
         /// Parses returned header for details
         /// </summary>
-        /// <param name="endpoint"></param>
+        /// <param name="endpoint">endpoint to challenge for authority and resource</param>
+        /// <param name="isOnPrem">if true, this is an OnPremsies server</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public async Task<AuthenticationDetails> ProbeForExpectedAuthentication(Uri endpoint)
+        public async Task<AuthenticationDetails> ProbeForExpectedAuthentication(Uri endpoint, bool isOnPrem = false)
         {
             _ = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
             var details = new AuthenticationDetails();
@@ -94,53 +95,62 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 
             if (response.Headers.Contains(AuthenticateHeader))
             {
-                var authenticateHeader = response.Headers.GetValues(AuthenticateHeader).FirstOrDefault();
-                authenticateHeader = authenticateHeader.Trim();
-
-                // This also checks for cases like "BearerXXXX authorization_uri=...." and "Bearer" and "Bearer "
-                if (!authenticateHeader.StartsWith(Bearer, StringComparison.OrdinalIgnoreCase)
-                    || authenticateHeader.Length < Bearer.Length + 2
-                    || !char.IsWhiteSpace(authenticateHeader[Bearer.Length]))
+                var authenticateHeaders = response.Headers.GetValues(AuthenticateHeader);
+                // need to support OnPrem returning multiple Authentication headers. 
+                foreach (var authenticateHeaderraw in authenticateHeaders)
                 {
-                    LogError($"Malformed 'Bearer' format: {authenticateHeader}");
-                    return details;
-                }
+                    if (details.Success)
+                        break;
 
-                authenticateHeader = authenticateHeader.Substring(Bearer.Length).Trim();
+                    string authenticateHeader = authenticateHeaderraw.Trim();
 
-                IDictionary<string, string> authenticateHeaderItems = null;
-                try
-                {
-                    authenticateHeaderItems =
-                        EncodingHelper.ParseKeyValueListStrict(authenticateHeader, ',', false, true);
-                }
-                catch (ArgumentException)
-                {
-                    LogError($"Malformed arguments in '{AuthenticateHeader}: {authenticateHeader}");
-                    return details;
-                }
-
-                if (authenticateHeaderItems != null)
-                {
-                    if (!authenticateHeaderItems.TryGetValue(AuthorityKey, out var auth))
+                    // This also checks for cases like "BearerXXXX authorization_uri=...." and "Bearer" and "Bearer "
+                    if (!authenticateHeader.StartsWith(Bearer, StringComparison.OrdinalIgnoreCase)
+                        || authenticateHeader.Length < Bearer.Length + 2
+                        || !char.IsWhiteSpace(authenticateHeader[Bearer.Length]))
                     {
-                        LogError($"Response header from {endpoint} is missing expected key/value for {AuthorityKey}");
+                        if (isOnPrem)
+                            continue;
+
+                        LogError($"Malformed 'Bearer' format: {authenticateHeader}");
                         return details;
                     }
-                    details.Authority = new Uri(
-                        auth.Replace("oauth2/authorize", "") // swap out the old oAuth pattern.
-                        .Replace("common", "organizations")); // swap common for organizations because MSAL reasons.
 
-                    if (!authenticateHeaderItems.TryGetValue(ResourceKey, out var res))
+                    authenticateHeader = authenticateHeader.Substring(Bearer.Length).Trim();
+
+                    IDictionary<string, string> authenticateHeaderItems = null;
+                    try
                     {
-                        LogError($"Response header from {endpoint} is missing expected key/value for {ResourceKey}");
+                        authenticateHeaderItems =
+                            EncodingHelper.ParseKeyValueListStrict(authenticateHeader, ',', false, true);
+                    }
+                    catch (ArgumentException)
+                    {
+                        LogError($"Malformed arguments in '{AuthenticateHeader}: {authenticateHeader}");
                         return details;
                     }
-                    details.Resource = new Uri(res);
-                    details.Success = true;
+
+                    if (authenticateHeaderItems != null)
+                    {
+                        if (!authenticateHeaderItems.TryGetValue(AuthorityKey, out var auth))
+                        {
+                            LogError($"Response header from {endpoint} is missing expected key/value for {AuthorityKey}");
+                            return details;
+                        }
+                        details.Authority = new Uri(
+                            auth.Replace("oauth2/authorize", "") // swap out the old oAuth pattern.
+                            .Replace("common", "organizations")); // swap common for organizations because MSAL reasons.
+
+                        if (!authenticateHeaderItems.TryGetValue(ResourceKey, out var res))
+                        {
+                            LogError($"Response header from {endpoint} is missing expected key/value for {ResourceKey}");
+                            return details;
+                        }
+                        details.Resource = new Uri(res);
+                        details.Success = true;
+                    }
                 }
             }
-
             return details;
         }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.Common;
@@ -10,6 +10,7 @@ using System.ServiceModel.Description;
 using Microsoft.PowerPlatform.Dataverse.Client.Model;
 using Microsoft.PowerPlatform.Dataverse.Client.Auth;
 using Microsoft.Extensions.Logging;
+using Microsoft.PowerPlatform.Dataverse.Client.InternalExtensions;
 
 namespace Microsoft.PowerPlatform.Dataverse.Client
 {
@@ -227,7 +228,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         private DataverseConnectionStringProcessor(string serviceUri, string userName, string password, string domain, string homeRealmUri, string authType, string requireNewInstance, string clientId, string redirectUri,
             string tokenCacheStorePath, string loginPrompt, string certStoreName, string certThumbprint, string skipDiscovery, string IntegratedSecurity, string clientSecret, ILogger logger)
         {
-            DataverseTraceLogger logEntry = new DataverseTraceLogger();
+            DataverseTraceLogger logEntry = new DataverseTraceLogger(logger);
             Uri _serviceuriName, _realmUri;
 
             bool tempbool = false;
@@ -288,7 +289,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
 
             //if the client Id was not passed, use Sample AppID
-            if (string.IsNullOrWhiteSpace(ClientId))
+            if (authenticationType != AuthenticationType.AD && string.IsNullOrWhiteSpace(ClientId))
             {
                 logEntry.Log($"Client ID not supplied, using SDK Sample Client ID for this connection", System.Diagnostics.TraceEventType.Warning);
                 ClientId = sampleClientId;// sample client ID
@@ -299,10 +300,16 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             if (!string.IsNullOrWhiteSpace(userName) && !string.IsNullOrWhiteSpace(password))
             {
                 ClientCredentials clientCredentials = new ClientCredentials();
-                clientCredentials.UserName.UserName = userName;
-                clientCredentials.UserName.Password = password;
+                if (AuthenticationType == AuthenticationType.AD && !string.IsNullOrWhiteSpace(domain))
+                {
+                    clientCredentials.Windows.ClientCredential = new NetworkCredential(userName, password, domain);
+                }
+                else
+                {
+                    clientCredentials.UserName.UserName = userName;
+                    clientCredentials.UserName.Password = password;
+                }
                 ClientCredentials = clientCredentials;
-
             }
 
             logEntry.Dispose();
@@ -344,84 +351,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         public static DataverseConnectionStringProcessor Parse(string connectionString, ILogger logger = null)
         {
             return new DataverseConnectionStringProcessor(connectionString.ToDictionary(), logger);
-        }
-
-    }
-
-    /// <summary>
-    /// Extension
-    /// </summary>
-    public static class Extension
-    {
-        /// <summary>
-        /// Enum extension
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="enumName"></param>
-        /// <returns>Enum Value</returns>
-        public static T ToEnum<T>(this string enumName)
-        {
-            return (T)((object)Enum.Parse(typeof(T), enumName));
-        }
-        /// <summary>
-        /// Converts a int to a Enum of the requested type (T)
-        /// </summary>
-        /// <typeparam name="T">Enum Type to translate too</typeparam>
-        /// <param name="enumValue">Int Value too translate.</param>
-        /// <returns>Enum of Type T</returns>
-        public static T ToEnum<T>(this int enumValue)
-        {
-            return enumValue.ToString().ToEnum<T>();
-        }
-        /// <summary>
-        /// Converts a ; separated string into a dictionary
-        /// </summary>
-        /// <param name="connectionString">String to parse</param>
-        /// <returns>Dictionary of properties from the connection string</returns>
-        public static IDictionary<string, string> ToDictionary(this string connectionString)
-        {
-            try
-            {
-                DbConnectionStringBuilder source = new DbConnectionStringBuilder
-                {
-                    ConnectionString = connectionString
-                };
-
-                Dictionary<string, string> dictionary = source.Cast<KeyValuePair<string, object>>().
-                    ToDictionary((KeyValuePair<string, object> pair) => pair.Key,
-                    (KeyValuePair<string, object> pair) => pair.Value != null ? pair.Value.ToString() : string.Empty);
-                return new Dictionary<string, string>(dictionary, StringComparer.OrdinalIgnoreCase);
-            }
-            catch
-            {
-                //ignore
-            }
-            return new Dictionary<string, string>();
-
-        }
-        /// <summary>
-        /// Extension to support formating a string
-        /// </summary>
-        /// <param name="format">Formatting pattern</param>
-        /// <param name="args">Argument collection</param>
-        /// <returns>Formated String</returns>
-        public static string FormatWith(this string format, params object[] args)
-        {
-            return format.FormatWith(CultureInfo.InvariantCulture, args);
-        }
-        /// <summary>
-        /// Extension to get the first item in a dictionary if the dictionary contains the key.
-        /// </summary>
-        /// <typeparam name="TKey">Type to return</typeparam>
-        /// <param name="dictionary">Dictionary to search</param>
-        /// <param name="keys">Collection of Keys to find.</param>
-        /// <returns></returns>
-        public static string FirstNotNullOrEmpty<TKey>(this IDictionary<TKey, string> dictionary, params TKey[] keys)
-        {
-            return (
-                from key in keys
-                where dictionary.ContainsKey(key) && !string.IsNullOrEmpty(dictionary[key])
-                select dictionary[key]).FirstOrDefault<string>();
         }
 
     }

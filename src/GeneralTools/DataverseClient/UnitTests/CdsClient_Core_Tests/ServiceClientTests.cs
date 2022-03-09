@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.PowerPlatform.Dataverse.Client.Auth;
+using Microsoft.PowerPlatform.Dataverse.Client.Extensions;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
@@ -132,10 +133,7 @@ namespace Client_Core_Tests
             fakHttpMethodHander.Setup(s => s.Send(It.Is<HttpRequestMessage>(f => f.Method.ToString().Equals("delete", StringComparison.OrdinalIgnoreCase)))).Returns(new HttpResponseMessage(System.Net.HttpStatusCode.OK));
             orgSvc.Setup(f => f.Execute(It.Is<DeleteRequest>(p => p.Target.LogicalName.Equals("account") && p.Target.Id.Equals(testSupport._DefaultId)))).Returns(new DeleteResponse());
 
-            bool rslt = cli.ExecuteEntityDeleteRequest("account", testSupport._DefaultId);
-            Assert.True(rslt);
-
-            rslt = cli.DeleteEntity("account", testSupport._DefaultId);
+            bool rslt = cli.DeleteEntity("account", testSupport._DefaultId);
             Assert.True(rslt);
         }
 
@@ -660,7 +658,7 @@ namespace Client_Core_Tests
         //}
 
         [Fact]
-        public void TestResponseHeaderBehavior()
+        public void TestResponseHeaderWebAPIBehavior()
         {
             Mock<IOrganizationService> orgSvc = null;
             Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
@@ -670,24 +668,50 @@ namespace Client_Core_Tests
 
             // Setup handlers to deal with both orgRequest and WebAPI request.
             int baseTestDOP = 10;
-            int defaultDOP = 5; 
             var httpResp = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
             httpResp.Headers.Add(Utilities.ResponseHeaders.RECOMMENDEDDEGREESOFPARALLELISM, baseTestDOP.ToString());
-            fakHttpMethodHander.Setup(s => s.Send(It.Is<HttpRequestMessage>(f => f.Method.ToString().Equals("delete", StringComparison.OrdinalIgnoreCase)))).Returns(httpResp);
             orgSvc.Setup(f => f.Execute(It.Is<DeleteRequest>(p => p.Target.LogicalName.Equals("account") && p.Target.Id.Equals(testSupport._DefaultId)))).Returns(new DeleteResponse());
+            fakHttpMethodHander.Setup(s => s.Send(It.Is<HttpRequestMessage>(f => f.Method.ToString().Equals("delete", StringComparison.OrdinalIgnoreCase)))).Returns(httpResp);
 
             // Tests/ 
-            cli.UseWebApi = false; 
-            bool rslt = cli.ExecuteEntityDeleteRequest("account", testSupport._DefaultId);
+            cli.UseWebApi = true;
+            bool rslt = cli.DeleteEntity("account", testSupport._DefaultId);
+            Assert.True(rslt);
+            Assert.Equal(baseTestDOP, cli.RecommendedDegreesOfParallelism);
+
+            cli.Delete("account", testSupport._DefaultId);
+            Assert.Equal(baseTestDOP, cli.RecommendedDegreesOfParallelism);
+        }
+
+        [Fact]
+        public void TestResponseHeaderBehavior()
+        {
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            ServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
+
+            cli.UseWebApi = false;
+            // Setup handlers to deal with both orgRequest and WebAPI request.
+            int defaultDOP = 5;
+            var httpResp = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+            httpResp.Headers.Add(Utilities.ResponseHeaders.RECOMMENDEDDEGREESOFPARALLELISM, defaultDOP.ToString());
+            orgSvc.Setup(f => f.Execute(It.Is<DeleteRequest>(p => p.Target.LogicalName.Equals("account") && p.Target.Id.Equals(testSupport._DefaultId)))).Returns(new DeleteResponse());
+            fakHttpMethodHander.Setup(s => s.Send(It.Is<HttpRequestMessage>(f => f.Method.ToString().Equals("delete", StringComparison.OrdinalIgnoreCase)))).Returns(httpResp);
+
+            // Tests/ 
+            cli.UseWebApi = false;
+
+            bool rslt = cli.DeleteEntity("account", testSupport._DefaultId);
             Assert.True(rslt);
             Assert.Equal(defaultDOP, cli.RecommendedDegreesOfParallelism);
 
-            cli.UseWebApi = true;
+            cli.UseWebApi = false;
             cli.Delete("account", testSupport._DefaultId);
-            Assert.Equal(baseTestDOP, cli.RecommendedDegreesOfParallelism);
-
-
+            Assert.Equal(defaultDOP, cli.RecommendedDegreesOfParallelism);
         }
+
 
         #region LiveConnectedTests
 
@@ -952,7 +976,7 @@ namespace Client_Core_Tests
             task1["subject"] = "task1";
             task1["description"] = "task1-description";
             ec.Entities.Add(task1);
-            primaryContact.RelatedEntities.Add(new Relationship("contact_tasks"), ec);
+            primaryContact.RelatedEntities.Add(new Relationship("Contact_Tasks"), ec);
 
             // Add the contact to an EntityCollection
             EntityCollection primaryContactCollection = new EntityCollection();

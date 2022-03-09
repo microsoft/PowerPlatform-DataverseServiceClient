@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Client;
 using Microsoft.PowerPlatform.Dataverse.Client.Auth.TokenCache;
+using Microsoft.PowerPlatform.Dataverse.Client.InternalExtensions;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
-using Microsoft.Xrm.Sdk.WebServiceClient;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -452,12 +452,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
         /// <param name="targetServiceUrl">URI to query</param>
         /// <param name="logger">Logger to write info too</param>
         /// <param name="clientFactory">HTTP Client factory to use for this request.</param>
+        /// <param name="isOnPrem">if true, login is for an onprem server</param>
         /// <returns></returns>
-        private static async Task<AuthenticationDetails> GetAuthorityFromTargetServiceAsync(IHttpClientFactory clientFactory, Uri targetServiceUrl, DataverseTraceLogger logger)
+        private static async Task<AuthenticationDetails> GetAuthorityFromTargetServiceAsync(IHttpClientFactory clientFactory, Uri targetServiceUrl, DataverseTraceLogger logger, bool isOnPrem = false)
         {
             var client = clientFactory.CreateClient("DataverseHttpClientFactory");
             var resolver = new AuthorityResolver(client, (t, msg) => logger.Log(msg, t));
-            return await resolver.ProbeForExpectedAuthentication(targetServiceUrl);
+            return await resolver.ProbeForExpectedAuthentication(targetServiceUrl, isOnPrem);
         }
 
         /// <summary>

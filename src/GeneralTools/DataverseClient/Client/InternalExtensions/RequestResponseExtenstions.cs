@@ -1,4 +1,4 @@
-﻿#region using
+#region using
 using Microsoft.Xrm.Sdk;
 using System;
 using System.Collections.Generic;
@@ -8,12 +8,12 @@ using System.Text;
 using System.Threading.Tasks;
 #endregion
 
-namespace Microsoft.PowerPlatform.Dataverse.Client.Utils
+namespace Microsoft.PowerPlatform.Dataverse.Client.InternalExtensions
 {
     /// <summary>
     /// Organization request/response extenstions
     /// </summary>
-    public static class RequestResponseExtenstions
+    internal static class RequestResponseExtenstions
     {
         /// <summary>
         /// Converts OrganizationRequest object to ExpandoObject

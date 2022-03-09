@@ -9,7 +9,6 @@
     <AssemblyName>LivePackageTestsConsole</AssemblyName>
     <RootNamespace>LivePackageTestsConsole</RootNamespace>
     <ProjectSpecificFx>true</ProjectSpecificFx>
-
   </PropertyGroup>
   <Import Project="..\..\..\..\Build.Common.core.props" />
 
@@ -18,6 +17,9 @@
       $(RepoRoot)\binSigned\$(Configuration)\packages
     </RestoreAdditionalProjectSources>
     <TargetDvClientPackageVersion Condition=" '$(TargetDvClientPackageVersion)' == '' ">0.5.9</TargetDvClientPackageVersion>
+
+    <!-- Ensure we don't clobber local machine's package cache with dev/alpha versions. -->
+    <RestorePackagesPath>$(MSBuildThisFileDirectory)..\.packages</RestorePackagesPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net462|AnyCPU'">
@@ -30,9 +32,16 @@
     <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="$(TargetDvClientPackageVersion)" />
     <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client.Dynamics" Version="$(TargetDvClientPackageVersion)" />
   </ItemGroup>
-  
+
   <ItemGroup>
-    <None Update="TestData\TestSolution_1_0_0_1.zip">
+    <Compile Include="..\LiveTestsConsole\Auth.cs" Link="Auth.cs" />
+    <Compile Include="..\LiveTestsConsole\BasicFlow.cs" Link="BasicFlow.cs" />
+    <Compile Include="..\LiveTestsConsole\SolutionTests.cs" Link="SolutionTests.cs" />
+    <Compile Include="..\LiveTestsConsole\TokenRefresh.cs" Link="TokenRefresh.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LiveTestsConsole\TestData\TestSolution_1_0_0_1.zip" Link="TestData\TestSolution_1_0_0_1.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

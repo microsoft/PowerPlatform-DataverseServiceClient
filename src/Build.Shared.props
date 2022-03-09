@@ -5,7 +5,8 @@
     <PackageVersion_AppInsights>2.9.1</PackageVersion_AppInsights>
     <PackageVersion_Adal>3.19.8</PackageVersion_Adal>
     <PackageVersion_MSAL>4.35.1</PackageVersion_MSAL>
-    <PackageVersion_CdsSdk>4.6.6061-weekly-2108.5</PackageVersion_CdsSdk>
+    <PackageVersion_CdsSdk>4.7.7698-v9.0-master.release</PackageVersion_CdsSdk>
+    <PackageVersion_CrmProxy>4.7.7698-v9.0-master.release</PackageVersion_CrmProxy>
     <PackageVersion_CDSServerNuget>4.6.6061-weekly-2108.5</PackageVersion_CDSServerNuget>
     <PackageVersion_CdsSdkProxy>4.7.6346-master</PackageVersion_CdsSdkProxy>
     <PackageVersion_Newtonsoft>11.0.2</PackageVersion_Newtonsoft>
@@ -36,6 +37,22 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <!-- 
+    Create a corse level define to identity .net framework vs .net core 
+
+    This is to align with https://github.com/dotnet/designs/blob/main/accepted/2020/or-greater-defines/or-greater-defines.md 
+    which pre-defines some preprocessor symbols for source files. 
+
+    Also this has to be defined in Directory.build.targets to ensure it is evaluated after evaluating all properties
+    in .csproj files.
+    -->
+    <NETFRAMEWORK Condition="$(TargetFramework.ToLower().StartsWith('net4'))">true</NETFRAMEWORK>
+    <NETFRAMEWORK Condition="!$(TargetFramework.ToLower().StartsWith('net4'))">false</NETFRAMEWORK>
+    <NETFRAMEWORK Condition="'$(NETFRAMEWORK)'==''">true</NETFRAMEWORK>
+  </PropertyGroup>
+
+
+  <PropertyGroup>
     <!-- this property must be re-defined in individual .csprojs or a .props file per component area -->
     <ComponentAreaName Condition="'$(ComponentAreaName)' == ''">FORGOT-To-Set-ComponentAreaName</ComponentAreaName>
   </PropertyGroup>
@@ -43,7 +60,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <!-- These variables define the object and binary roots, respectively. -->
-    <RepoRoot>$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine($(MSBuildThisFileDirectory), ".."))))</RepoRoot>
+    <RepoRoot Condition="'$(RepoRoot)' == ''">$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine($(MSBuildThisFileDirectory), ".."))))</RepoRoot>
     <OutputRootDir Condition=" '$(OutputRootDir)' == '' ">$(RepoRoot)\bin\$(Configuration)\$(ComponentAreaName)\$(TargetFramework)</OutputRootDir>
     <OutputRootDir>$(OutputRootDir.TrimEnd({'\\'}))</OutputRootDir>
     <!-- These variables are the ones that the standard MSBuild targets recognize. -->
@@ -63,6 +80,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
+    <NoWarn>$(NoWarn);CS8032</NoWarn>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -101,9 +119,5 @@
     <DebugType>full</DebugType>
     <DefineConstants>DEBUG;TRACE;CRMINTERNAL</DefineConstants>
     <Optimize>false</Optimize>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Enable_Telemetry)' == 'true' " >
-    <DefineConstants>$(DefineConstants);PROD_CUSTOMER_TELEMETRY</DefineConstants>
   </PropertyGroup>
 </Project>

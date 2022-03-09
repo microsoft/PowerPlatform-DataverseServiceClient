@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Xrm.Sdk" Version="$(PackageVersion_CdsSdk)" />
-    <PackageReference Include="Microsoft.Dynamics.Sdk.Messages.Internal" Version="$(PackageVersion_CdsSdkProxy)" />
+	<PackageReference Include="Microsoft.Crm.Sdk.Proxy" Version="$(PackageVersion_CrmProxy)" />
   </ItemGroup>
 
   <ItemGroup>

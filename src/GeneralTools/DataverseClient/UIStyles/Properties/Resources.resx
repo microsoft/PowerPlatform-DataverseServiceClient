@@ -119,6 +119,7 @@
   </resheader>
   <data name="Close" xml:space="preserve">
     <value>Close</value>
+    <comment>Close</comment>
   </data>
   <data name="Maximize" xml:space="preserve">
     <value>Maximize</value>

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -127,7 +127,8 @@
     <value>Connected - Login Experience. Just to indicate that at this point the parent decides the next course of Action.</value>
   </data>
   <data name="CREDENTIALS_ALREADY_SAVED_IN_CONFIGURATION" xml:space="preserve">
-    <value>Credentials already saved in configuration\nChoose Yes to Auto Login or No to Reset Credentials</value>
+    <value>Credentials already saved in configuration
+Choose Yes to Auto Login or No to Reset Credentials</value>
   </data>
   <data name="DISPLAY_NAME_ENTITY" xml:space="preserve">
     <value>- This is the display name of account entity in the Org. Means Parent is able to Query the Org.</value>

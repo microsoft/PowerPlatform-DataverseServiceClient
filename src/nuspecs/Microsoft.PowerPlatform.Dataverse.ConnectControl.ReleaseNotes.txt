@@ -1,0 +1,6 @@
+Notice:
+    This package is in a public preview release.
+    This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8
+
+++CURRENTRELEASEID++
+Initial release

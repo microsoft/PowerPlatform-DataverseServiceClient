@@ -1,4 +1,6 @@
+using FluentAssertions;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Xunit;
@@ -17,22 +19,27 @@ namespace LivePackageRunUnitTests
         [Fact]
         public void InvokeBasicTest()
         {
-            LivePackageTestsConsole.Program.SkipStop = true; 
             LivePackageTestsConsole.Program.Main(new string[] { "BasicFlow" });
         }
 
         [Fact]
         public void InvokeReadSolutionsTest()
         {
-            LivePackageTestsConsole.Program.SkipStop = true;
             LivePackageTestsConsole.Program.Main(new string[] { "listsolutions" });
+        }
+
+        [Fact]
+        public void InvokeStageSolutionTest()
+        {
+            LivePackageTestsConsole.Program.Main(new string[] { "stagesolution" });
+            //Action act = () => LivePackageTestsConsole.Program.Main(new string[] { "stagesolution" });
+            //act.Should() .ThrowExactly<KeyNotFoundException>("because the assembly Microsoft.Cds.Sdk.Proxy currently does not define StageSolutionRequest, StageSolutionResponse");
         }
 
 
         [Fact]
         public void InvokeCUDTestTest()
         {
-            LivePackageTestsConsole.Program.SkipStop = true;
             LivePackageTestsConsole.Program.Main(new string[] { "CUDTest" });
         }
 

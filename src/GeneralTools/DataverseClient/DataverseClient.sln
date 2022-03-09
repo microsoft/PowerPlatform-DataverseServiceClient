@@ -11,9 +11,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataverseClient_Core_UnitTe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.PowerPlatform.Dataverse.Client.Dynamics", "Extensions\DynamicsExtension\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.csproj", "{8CE32D7B-EA3D-4725-A270-9780D366EDB7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Dynamics.Sdk.Messages.Shell", "Extensions\Microsoft.Dynamics.Sdk.Messages\Microsoft.Dynamics.Sdk.Messages.Shell.csproj", "{503645DD-7711-40ED-8811-F06391F294AB}"
-EndProject
+#Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Dynamics.Sdk.Messages.Shell", "Extensions\Microsoft.Dynamics.Sdk.Messages\Microsoft.Dynamics.Sdk.Messages.Shell.csproj", "{503645DD-7711-40ED-8811-F06391F294AB}"
+#EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiveTestsConsole", "UnitTests\LiveTestsConsole\LiveTestsConsole.csproj", "{5A1A4FFF-78F5-48A2-9AB0-3E507E938465}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.PowerPlatform.Dataverse.ServiceClientConverter", "Extensions\Microsoft.PowerPlatform.Dataverse.ServiceClientConverter\Microsoft.PowerPlatform.Dataverse.ServiceClientConverter.csproj", "{752E5268-3D99-485D-A31E-FC40AE9C0867}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +43,10 @@ Global
 		{5A1A4FFF-78F5-48A2-9AB0-3E507E938465}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5A1A4FFF-78F5-48A2-9AB0-3E507E938465}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5A1A4FFF-78F5-48A2-9AB0-3E507E938465}.Release|Any CPU.Build.0 = Release|Any CPU
+		{752E5268-3D99-485D-A31E-FC40AE9C0867}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{752E5268-3D99-485D-A31E-FC40AE9C0867}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{752E5268-3D99-485D-A31E-FC40AE9C0867}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{752E5268-3D99-485D-A31E-FC40AE9C0867}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

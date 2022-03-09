@@ -36,7 +36,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Utils
                 var services = new ServiceCollection();
 
                 services.AddTransient<MSALHttpRetryHandlerHelper>();
-                services.AddOptions<AppSettingsConfiguration>();
+                services.AddOptions<ConfigurationOptions>();
                 services.AddHttpClient("DataverseHttpClientFactory")
                     .ConfigurePrimaryHttpMessageHandler(() =>
                     {
@@ -49,7 +49,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Utils
                     });
                 services.AddHttpClient("MSALClientFactory", (sp, client) =>
                    {
-                       client.Timeout = sp.GetService<IOptions<AppSettingsConfiguration>>().Value.MSALRequestTimeout;
+                       client.Timeout = sp.GetService<IOptions<ConfigurationOptions>>().Value.MSALRequestTimeout;
                    })
                     .AddHttpMessageHandler<MSALHttpRetryHandlerHelper>(); // Adding on board retry hander for MSAL.
                 _instance = services.BuildServiceProvider();

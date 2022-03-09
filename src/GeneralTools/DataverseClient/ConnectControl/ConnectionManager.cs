@@ -1,10 +1,10 @@
-﻿using Microsoft.Identity.Client;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.Identity.Client;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.PowerPlatform.Dataverse.Client.Model;
 using Microsoft.PowerPlatform.Dataverse.ConnectControl.Model;
 using Microsoft.PowerPlatform.Dataverse.ConnectControl.Properties;
 using Microsoft.PowerPlatform.Dataverse.ConnectControl.Utility;
+using Microsoft.PowerPlatform.Dataverse.ConnectControl.InternalExtensions;
 using Microsoft.Xrm.Sdk.Discovery;
 using System;
 using System.Collections.Generic;
@@ -141,11 +141,6 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		private string _cachedUserId = null;
 
 		/// <summary>
-		/// if true, Skip discovery is in focus
-		/// </summary>
-		private bool _isSkipDiscovery = false;
-
-		/// <summary>
 		/// if populated, contains the URL to try a direct connect too. 
 		/// </summary>
 		private string _directConnectUri = string.Empty;
@@ -187,11 +182,6 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		/// Collection of HomeRealms Loaded by Configuration 
 		/// </summary>
 		public ClaimsHomeRealmOptions HomeRealmServersList { get { if (_homeRealmServersList == null) _homeRealmServersList = new ClaimsHomeRealmOptions(); return _homeRealmServersList; } set { _homeRealmServersList = value; } }
-
-		/// <summary>
-		/// User Identifier as a login hint
-		/// </summary>
-		public UserIdentifier UserId { get; set; }
 
 		/// <summary>
 		/// ClientId for the client
@@ -573,9 +563,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 			if (!ValidateUserSpecifiedData()) return false;
 
 			// Check to see if its a direct connect. 
-			bool.TryParse(StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.UseDirectConnection), out _isSkipDiscovery);
-			if (_isSkipDiscovery)
-				_directConnectUri = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.DirectConnectionUri);
+			_directConnectUri = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.DirectConnectionUri);
 
 			// Value is not a bool.. check to see if there is a value. 
 			string sDeploymentType = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmDeploymentType);
@@ -808,8 +796,6 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 						}
 						else
 						{
-							if (UserId == null && _cachedUserId != null)
-								UserId = new UserIdentifier(_cachedUserId, UserIdentifierType.RequiredDisplayableId);
 							discoverOrganizationsResult = ServiceClient.DiscoverOnPremiseOrganizationsAsync(uCrmUrl, _userClientCred, ClientId, RedirectUri, _cachedAuthorityName, _promptBehavior, false, TokenCachePath).ConfigureAwait(false).GetAwaiter().GetResult();
 						}
 					}
@@ -920,7 +906,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 					// THIS IS FOR CONNECTING TO AN ON-LINE SERVER 
 					_bgWorker.ReportProgress(30, new ServerConnectStatusEventArgs(Messages.CRMCONNECT_LOGIN_PROCESS_CONNECT_TO_UII));
 
-					if (_isSkipDiscovery)
+					if (IsAdvancedCheckEnabled && !string.IsNullOrWhiteSpace(_directConnectUri))
 					{
 						string _baseWebApiUriFormat = @"{0}/api/data/v{1}/";
 						string _baseSoapOrgUriFormat = @"{0}/XRMServices/2011/Organization.svc";
@@ -1371,7 +1357,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
                         {
                             _tracer.Log(string.Format("Trying Discovery Server, ({1}) URI is = {0}", svr.DiscoveryServer.ToString(), svr.DisplayName), TraceEventType.Information);
                             _bgWorker.ReportProgress(25, new ServerConnectStatusEventArgs(string.Format(Messages.CRMCONNECT_LOGIN_PROCESS_GET_ORGS_LIVE, svr.DisplayName)));
-                            discoverResult = QueryOAuthDiscoveryServer(svr.DiscoveryServer, liveCreds, UserId, ClientId, RedirectUri, _promptBehavior, TokenCachePath);
+                            discoverResult = QueryOAuthDiscoveryServer(svr.DiscoveryServer, liveCreds, ClientId, RedirectUri, _promptBehavior, TokenCachePath);
                         }
                         else
                         {
@@ -1425,7 +1411,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 
 				try
 				{
-					discoverResult = QueryOAuthDiscoveryServer(globalDisoSvcUri, liveCreds, UserId, ClientId, RedirectUri, _promptBehavior, TokenCachePath, useGlobalDisco:true);
+					discoverResult = QueryOAuthDiscoveryServer(globalDisoSvcUri, liveCreds, ClientId, RedirectUri, _promptBehavior, TokenCachePath, useGlobalDisco:true);
 				}
 				catch (MessageSecurityException)
 				{
@@ -1467,7 +1453,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
                     {
                         if (IsOAuth == true)
                         {
-                            discoverResult = QueryOAuthDiscoveryServer(svr.DiscoveryServer, liveCreds, UserId, ClientId, RedirectUri, _promptBehavior, TokenCachePath);
+                            discoverResult = QueryOAuthDiscoveryServer(svr.DiscoveryServer, liveCreds, ClientId, RedirectUri, _promptBehavior, TokenCachePath);
                         }
                     }
                     catch (MessageSecurityException)
@@ -1493,14 +1479,13 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		/// </summary>
 		/// <param name="discoServer">Discovery Service Uri</param>
 		/// <param name="liveCreds">Credentials supplied for login</param>
-		/// <param name="user">User identifier</param>
 		/// <param name="clientId">Registered Client Id of application trying for OAuth</param>
 		/// <param name="redirectUri">Uri to redirect the application</param>
 		/// <param name="promptBehavior">Prompt behavior defining ADAL login popup</param>
 		/// <param name="tokenCachePath">Token cache path supplied by user for storing bearer tokens</param>
 		/// <param name="useGlobalDisco">if true, calls global discovery path</param>
 		/// <returns></returns>
-		private DiscoverOrganizationsResult QueryOAuthDiscoveryServer(Uri discoServer, ClientCredentials liveCreds, UserIdentifier user, string clientId, Uri redirectUri, Client.Auth.PromptBehavior promptBehavior, string tokenCachePath, bool useGlobalDisco = false)
+		private DiscoverOrganizationsResult QueryOAuthDiscoveryServer(Uri discoServer, ClientCredentials liveCreds, string clientId, Uri redirectUri, Client.Auth.PromptBehavior promptBehavior, string tokenCachePath, bool useGlobalDisco = false)
 		{
 			_tracer.Log($"{nameof(QueryOAuthDiscoveryServer)}", TraceEventType.Start);
 
@@ -1521,8 +1506,6 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 				}
 				else
 				{
-					if (user == null && _cachedUserId != null)
-						user = new UserIdentifier(_cachedUserId, UserIdentifierType.RequiredDisplayableId);
 					result = ServiceClient.DiscoverOnlineOrganizationsAsync(discoServer, liveCreds, clientId, redirectUri, false, _cachedAuthorityName, promptBehavior, tokenCacheStorePath:tokenCachePath).ConfigureAwait(false).GetAwaiter().GetResult();
 				}
 				return result;
@@ -1943,6 +1926,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 						SetServerConfigKey(config, Dynamics_ConfigFileServerKeys.AdvancedCheck, bool.FalseString, overrideDefaultSet: readLocalFirst);
 						SetServerConfigKey(config, Dynamics_ConfigFileServerKeys.Authority, overrideDefaultSet: readLocalFirst);
 						SetServerConfigKey(config, Dynamics_ConfigFileServerKeys.UserId, overrideDefaultSet: readLocalFirst);
+						SetServerConfigKey(config, Dynamics_ConfigFileServerKeys.DirectConnectionUri, overrideDefaultSet: readLocalFirst);
 
 						if (config.AppSettings.Settings[Dynamics_ConfigFileServerKeys.UseDefaultCreds.ToString()] != null)
 						{
@@ -2120,6 +2104,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 							config.AppSettings.Settings.Remove(Dynamics_ConfigFileServerKeys.AuthHomeRealm.ToString());
 							config.AppSettings.Settings.Remove(Dynamics_ConfigFileServerKeys.AskForOrg.ToString());
 							config.AppSettings.Settings.Remove(Dynamics_ConfigFileServerKeys.AdvancedCheck.ToString());
+							config.AppSettings.Settings.Remove(Dynamics_ConfigFileServerKeys.DirectConnectionUri.ToString());
 
 							// Create new data. 
 							config.AppSettings.Settings.Add(Dynamics_ConfigFileServerKeys.CrmDeploymentType.ToString(), StorageUtils.GetConfigKey<string>(configToSave, Dynamics_ConfigFileServerKeys.CrmDeploymentType));
@@ -2134,6 +2119,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 							config.AppSettings.Settings.Add(Dynamics_ConfigFileServerKeys.AskForOrg.ToString(), StorageUtils.GetConfigKey<string>(configToSave, Dynamics_ConfigFileServerKeys.AskForOrg));
 							config.AppSettings.Settings.Add(Dynamics_ConfigFileServerKeys.CrmDomain.ToString(), StorageUtils.GetConfigKey<string>(configToSave, Dynamics_ConfigFileServerKeys.CrmDomain));
 							config.AppSettings.Settings.Add(Dynamics_ConfigFileServerKeys.AdvancedCheck.ToString(), StorageUtils.GetConfigKey<string>(configToSave, Dynamics_ConfigFileServerKeys.AdvancedCheck));
+							config.AppSettings.Settings.Add(Dynamics_ConfigFileServerKeys.DirectConnectionUri.ToString(), StorageUtils.GetConfigKey<string>(configToSave, Dynamics_ConfigFileServerKeys.DirectConnectionUri));
 
 							if (ServiceClient != null && ServiceClient.ActiveAuthenticationType == AuthenticationType.OAuth)
 							{

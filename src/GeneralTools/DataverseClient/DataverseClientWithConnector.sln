@@ -11,8 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataverseClient_Core_UnitTe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.PowerPlatform.Dataverse.Client.Dynamics", "Extensions\DynamicsExtension\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.csproj", "{8CE32D7B-EA3D-4725-A270-9780D366EDB7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Dynamics.Sdk.Messages.Shell", "Extensions\Microsoft.Dynamics.Sdk.Messages\Microsoft.Dynamics.Sdk.Messages.Shell.csproj", "{503645DD-7711-40ED-8811-F06391F294AB}"
-EndProject
+#Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Dynamics.Sdk.Messages.Shell", "Extensions\Microsoft.Dynamics.Sdk.Messages\Microsoft.Dynamics.Sdk.Messages.Shell.csproj", "{503645DD-7711-40ED-8811-F06391F294AB}"
+#EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiveTestsConsole", "UnitTests\LiveTestsConsole\LiveTestsConsole.csproj", "{5A1A4FFF-78F5-48A2-9AB0-3E507E938465}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.PowerPlatform.Dataverse.ConnectControl", "ConnectControl\Microsoft.PowerPlatform.Dataverse.ConnectControl.csproj", "{294C017A-54A0-4582-A512-5B58B9220082}"

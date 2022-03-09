@@ -1,10 +1,14 @@
-﻿<Window x:Class="LoginControlTester.MainWindow"
+<Window x:Class="LoginControlTester.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="CRM Login Tester" MinWidth="803px" Height="564"
         xmlns:local="clr-namespace:LoginControlTester"
-    Icon="/Dataverse.ico"
-        xmlns:my="clr-namespace:Microsoft.PowerPlatform.Dataverse.ConnectControl;assembly=Microsoft.PowerPlatform.Dataverse.ConnectControl" Loaded="Window_Loaded" ResizeMode="CanResize" WindowStartupLocation="CenterScreen" WindowStyle="None" AllowDrop="True" AllowsTransparency="True" BorderThickness="1" BorderBrush="#173561" SizeToContent="Width">
+        Icon="/Dataverse.ico"
+        xmlns:my="clr-namespace:Microsoft.PowerPlatform.Dataverse.ConnectControl;assembly=Microsoft.PowerPlatform.Dataverse.ConnectControl" 
+        Loaded="Window_Loaded" ResizeMode="CanResize" WindowStartupLocation="CenterScreen" WindowStyle="None" AllowDrop="True" AllowsTransparency="True" 
+        BorderThickness="1" BorderBrush="#173561" SizeToContent="Width"
+        FocusManager.FocusedElement="{Binding ElementName=CrmLoginCtrl}"
+        >
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
