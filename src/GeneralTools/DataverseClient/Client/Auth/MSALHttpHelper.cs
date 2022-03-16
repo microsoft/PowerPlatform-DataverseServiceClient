@@ -27,7 +27,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
             HttpResponseMessage response = null;
             for (int i = 0; i < MaxRetryCount; i++)
             {
-                response = await base.SendAsync(request, cancellationToken);
+                response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
                 {
                     return response;

@@ -1963,7 +1963,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 }
                 else
                 {
-                    var json = await sResp.Content.ReadAsStringAsync();
+                    var json = await sResp.Content.ReadAsStringAsync().ConfigureAwait(false);
 
                     if (_knownTypesFactory.TryCreate($"{req.RequestName}Response", out var response, json))
                     {
