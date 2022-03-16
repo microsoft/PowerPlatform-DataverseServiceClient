@@ -183,7 +183,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
                             {
                                 ClientId = clientId,
                                 EnablePiiLogging = true,
-                                RedirectUri = redirectUri.ToString(),
+                                RedirectUri = redirectUri?.ToString(),
                                 LogLevel = LogLevel.Verbose,
                             })
                         .WithAuthority(Authority)
