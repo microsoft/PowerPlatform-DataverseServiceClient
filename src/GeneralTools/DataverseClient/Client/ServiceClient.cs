@@ -280,25 +280,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         }
 
         /// <summary>
-        /// Returns the current access token in Use to connect to Dataverse.
+        /// Returns the current access token in use to connect to Dataverse or an empty string if no access token has been requested.
         /// Note: this is only available when a token based authentication process is in use.
         /// </summary>
-        public string CurrentAccessToken
-        {
-            get
-            {
-                if (_connectionSvc != null && (
-                    _connectionSvc.AuthenticationTypeInUse == AuthenticationType.OAuth ||
-                    _connectionSvc.AuthenticationTypeInUse == AuthenticationType.Certificate ||
-                    _connectionSvc.AuthenticationTypeInUse == AuthenticationType.ExternalTokenManagement ||
-                    _connectionSvc.AuthenticationTypeInUse == AuthenticationType.ClientSecret))
-                {
-                    return _connectionSvc.RefreshClientTokenAsync().Result;
-                }
-                else
-                    return string.Empty;
-            }
-        }
+        public string CurrentAccessToken => _connectionSvc?.AuthContext?.AccessToken ?? string.Empty;
 
         /// <summary>
         /// Defaults to True.
