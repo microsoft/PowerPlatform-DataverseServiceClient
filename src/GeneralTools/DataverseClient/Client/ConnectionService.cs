@@ -1346,7 +1346,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 // Login to Live Failed.
                 logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Invalid Login Information : {0}", ex.Message),
                                TraceEventType.Error, ex);
-                throw ex;
+                throw;
 
             }
             catch (WebException ex)
@@ -1363,7 +1363,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Unable to connect to Dataverse: {0}", ex.Message), TraceEventType.Error, ex);
 
                 }
-                throw ex;
+                throw;
             }
             catch (InvalidOperationException ex)
             {
@@ -1371,7 +1371,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Unable to connect to Dataverse: {0}", ex.Message), TraceEventType.Error, ex);
                 else
                     logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Unable to connect to Dataverse: {0}", ex.InnerException.Message), TraceEventType.Error, ex);
-                throw ex;
+                throw;
             }
             catch (Exception ex)
             {
@@ -1379,7 +1379,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Unable to connect to Dataverse: {0}", ex.Message), TraceEventType.Error, ex);
                 else
                     logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Unable to connect to Dataverse: {0}", ex.InnerException.Message), TraceEventType.Error, ex);
-                throw ex;
+                throw;
             }
             finally
             {
