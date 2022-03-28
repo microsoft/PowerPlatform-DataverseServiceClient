@@ -8,6 +8,7 @@ using Microsoft.Xrm.Sdk.Discovery;
 using Microsoft.Xrm.Sdk.Metadata;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
@@ -25,45 +26,26 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
     /// </summary>
     internal class Utilities
     {
-        /// <summary>
-        /// Returns the file version of passed "executing Assembly"
-        /// </summary>
-        /// <param name="executingAssembly">The assembly whose version is required.</param>
-        /// <returns></returns>
-        public static Version GetFileVersion(Assembly executingAssembly)
+        private static readonly ConcurrentDictionary<Assembly, string> AssemblyFileVersions = new ConcurrentDictionary<Assembly, string>();
+
+        public static string GetXrmSdkAssemblyFileVersion()
         {
-            try
+            return GetAssemblyFileVersion(typeof(OrganizationDetail).Assembly);
+        }
+
+        public static string GetAssemblyFileVersion(Assembly assembly)
+        {
+            return AssemblyFileVersions.GetOrAdd(assembly, a =>
             {
-                if (executingAssembly != null)
+                try
                 {
-                    AssemblyName asmName = new AssemblyName(executingAssembly.FullName);
-                    Version fileVersion = asmName.Version;
-
-                    // try to get the build version
-                    string localPath = string.Empty;
-
-                    Uri fileUri = null;
-                    if (Uri.TryCreate(executingAssembly.CodeBase, UriKind.Absolute, out fileUri))
-                    {
-                        if (fileUri.IsFile)
-                            localPath = fileUri.LocalPath;
-
-                        if (!string.IsNullOrEmpty(localPath))
-                            if (System.IO.File.Exists(localPath))
-                            {
-                                FileVersionInfo fv = FileVersionInfo.GetVersionInfo(localPath);
-                                if (fv != null)
-                                {
-                                    fileVersion = new Version(fv.FileVersion);
-                                }
-                            }
-                    }
-                    return fileVersion;
+                    return a.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? FileVersionInfo.GetVersionInfo(a.Location).FileVersion;
                 }
-            }
-            catch { }
-
-            return null;
+                catch
+                {
+                    return "Unknown";
+                }
+            });
         }
 
         internal static DiscoveryServer GetDiscoveryServerByUri(Uri orgUri)

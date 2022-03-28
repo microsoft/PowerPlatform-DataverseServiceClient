@@ -82,7 +82,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
                 }
                 else
                 {
-                    string fileVersion = OrganizationServiceProxyAsync.GetXrmSdkAssemblyFileVersion();
+                    string fileVersion = Utilities.GetXrmSdkAssemblyFileVersion();
                     if (!string.IsNullOrEmpty(fileVersion))
                     {
                         OperationContext.Current.OutgoingMessageHeaders.Add(MessageHeader.CreateHeader(SdkHeaders.SdkClientVersion,

@@ -577,7 +577,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             {
                 if (string.IsNullOrEmpty(_sdkVersionProperty))
                 {
-                    _sdkVersionProperty = typeof(OrganizationDetail).Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version ?? FileVersionInfo.GetVersionInfo(typeof(OrganizationDetail).Assembly.Location).FileVersion;
+                    _sdkVersionProperty = Utilities.GetXrmSdkAssemblyFileVersion();
                 }
                 return _sdkVersionProperty;
             }

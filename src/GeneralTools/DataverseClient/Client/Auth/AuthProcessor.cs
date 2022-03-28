@@ -431,7 +431,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
             }
 
             UriBuilder versionTaggedUriBuilder = new UriBuilder(webUrlBuilder.Uri);
-            string version = FileVersionInfo.GetVersionInfo(typeof(Xrm.Sdk.Organization.OrganizationDetail).Assembly.Location).FileVersion;
+            string version = Utilities.GetXrmSdkAssemblyFileVersion();
             string versionQueryStringParameter = string.Format("SDKClientVersion={0}", version);
 
             if (string.IsNullOrEmpty(versionTaggedUriBuilder.Query))

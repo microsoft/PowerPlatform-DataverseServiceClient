@@ -39,8 +39,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 
         public string SdkClientVersion { get; set; }
 
-        private static string _xrmSdkAssemblyFileVersion;
-
         internal OrganizationServiceProxyAsync()
         {
         }
@@ -99,45 +97,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
             ClientExceptionHelper.ThrowIfNull(orgConfig, "orgConfig");
 
             orgConfig.EnableProxyTypes(assembly);
-        }
-
-        /// <summary>
-        /// Get's the file version of the Xrm Sdk assembly that is loaded in the current client domain.
-        /// For Sdk clients called via the OrganizationServiceProxy this is the version of the local Microsoft.Xrm.Sdk dll used by the Client App.
-        /// </summary>
-        /// <returns></returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2143:TransparentMethodsShouldNotDemandFxCopRule")]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2141:TransparentMethodsMustNotSatisfyLinkDemandsFxCopRule")]
-        [PermissionSet(SecurityAction.Demand, Unrestricted = true)]
-        internal static string GetXrmSdkAssemblyFileVersion()
-        {
-            if (string.IsNullOrEmpty(_xrmSdkAssemblyFileVersion))
-            {
-                string[] assembliesToCheck = new string[] { "Microsoft.Xrm.Sdk.dll" };
-                Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-
-                foreach (var assemblyToCheck in assembliesToCheck)
-                {
-                    foreach (Assembly assembly in assemblies)
-                    {
-                        if (assembly.ManifestModule.Name.Equals(assemblyToCheck, StringComparison.OrdinalIgnoreCase) &&
-                                !string.IsNullOrEmpty(assembly.Location) &&
-                                System.IO.File.Exists(assembly.Location))
-                        {
-                            _xrmSdkAssemblyFileVersion = FileVersionInfo.GetVersionInfo(assembly.Location).FileVersion;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // If the assembly is embedded as resource and loaded from memory, there is no physical file on disk to check for file version
-            if (string.IsNullOrEmpty(_xrmSdkAssemblyFileVersion))
-            {
-                _xrmSdkAssemblyFileVersion = "9.1.2.3";
-            }
-
-            return _xrmSdkAssemblyFileVersion;
         }
 
         #endregion Public Members
