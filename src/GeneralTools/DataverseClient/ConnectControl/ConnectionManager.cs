@@ -522,6 +522,19 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 				bServerGood = ValidateServerConnection(null);
 			e.Result = bServerGood;
 
+			if (!bServerGood)
+			{
+				// Clear settings to allow for a retry using non direct communication
+				StorageUtils.SetConfigKey(ServerConfigKeys, Dynamics_ConfigFileServerKeys.DirectConnectionUri, string.Empty);
+				StorageUtils.SetConfigKey(ServerConfigKeys, Dynamics_ConfigFileServerKeys.UseDirectConnection, false.ToString());
+			}
+			else
+			{
+				// Set URL that was connected too.
+				StorageUtils.SetConfigKey(ServerConfigKeys, Dynamics_ConfigFileServerKeys.DirectConnectionUri, ServiceClient.ConnectedOrgUriActual.ToString());
+				StorageUtils.SetConfigKey(ServerConfigKeys, Dynamics_ConfigFileServerKeys.UseDirectConnection, true.ToString());
+			}
+
 			if (_orgListView != null && _orgListView.OrgsList != null && _orgListView.OrgsList.Count > 1)
 				// Orgs found in the last run... Raise the MultiOrg Event.
 				_bgWorker.ReportProgress(100, new ServerConnectStatusEventArgs("User attention required", false, true));
@@ -1927,6 +1940,8 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 						SetServerConfigKey(config, Dynamics_ConfigFileServerKeys.Authority, overrideDefaultSet: readLocalFirst);
 						SetServerConfigKey(config, Dynamics_ConfigFileServerKeys.UserId, overrideDefaultSet: readLocalFirst);
 						SetServerConfigKey(config, Dynamics_ConfigFileServerKeys.DirectConnectionUri, overrideDefaultSet: readLocalFirst);
+						SetServerConfigKey(config, Dynamics_ConfigFileServerKeys.UseDirectConnection, overrideDefaultSet: readLocalFirst);
+
 
 						if (config.AppSettings.Settings[Dynamics_ConfigFileServerKeys.UseDefaultCreds.ToString()] != null)
 						{
@@ -2105,6 +2120,8 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 							config.AppSettings.Settings.Remove(Dynamics_ConfigFileServerKeys.AskForOrg.ToString());
 							config.AppSettings.Settings.Remove(Dynamics_ConfigFileServerKeys.AdvancedCheck.ToString());
 							config.AppSettings.Settings.Remove(Dynamics_ConfigFileServerKeys.DirectConnectionUri.ToString());
+							config.AppSettings.Settings.Remove(Dynamics_ConfigFileServerKeys.UseDirectConnection.ToString());
+
 
 							// Create new data. 
 							config.AppSettings.Settings.Add(Dynamics_ConfigFileServerKeys.CrmDeploymentType.ToString(), StorageUtils.GetConfigKey<string>(configToSave, Dynamics_ConfigFileServerKeys.CrmDeploymentType));
@@ -2120,6 +2137,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 							config.AppSettings.Settings.Add(Dynamics_ConfigFileServerKeys.CrmDomain.ToString(), StorageUtils.GetConfigKey<string>(configToSave, Dynamics_ConfigFileServerKeys.CrmDomain));
 							config.AppSettings.Settings.Add(Dynamics_ConfigFileServerKeys.AdvancedCheck.ToString(), StorageUtils.GetConfigKey<string>(configToSave, Dynamics_ConfigFileServerKeys.AdvancedCheck));
 							config.AppSettings.Settings.Add(Dynamics_ConfigFileServerKeys.DirectConnectionUri.ToString(), StorageUtils.GetConfigKey<string>(configToSave, Dynamics_ConfigFileServerKeys.DirectConnectionUri));
+							config.AppSettings.Settings.Add(Dynamics_ConfigFileServerKeys.UseDirectConnection.ToString(), StorageUtils.GetConfigKey<string>(configToSave, Dynamics_ConfigFileServerKeys.UseDirectConnection));
 
 							if (ServiceClient != null && ServiceClient.ActiveAuthenticationType == AuthenticationType.OAuth)
 							{

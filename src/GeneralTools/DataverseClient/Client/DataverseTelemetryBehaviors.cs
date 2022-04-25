@@ -56,7 +56,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     _userAgent = AppDomain.CurrentDomain.FriendlyName;
                 }
 
-                _userAgent = $"{_userAgent} (DataverseSvcClient:{Environs.FileVersion})";
+                _userAgent = $"{_userAgent} (DataverseSvcClient:{Environs.DvSvcClientFileVersion})";
 
                 if (_maxFaultSize == -1 && !string.IsNullOrEmpty(_configuration.Value.MaxFaultSizeOverride))
                 {
