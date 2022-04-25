@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Microsoft.PowerPlatform.Dataverse.Client
@@ -128,7 +128,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		public string ShortName { get; set; }
 
 		/// <summary>
-		/// Sets the restricted status of the instance. ( restricted means it is not in the global discovery servers ) 
+		/// Sets the restricted status of the instance. ( restricted means it is not in the global discovery servers )
 		/// </summary>
 		public bool RequiresRegionalDiscovery { get; set; }
 
@@ -138,7 +138,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		public Uri RegionalGlobalDiscoveryUri { get; set; }
 
 		/// <summary>
-		/// Geo Code 
+		/// Geo Code
 		/// </summary>
 		public string GeoCode { get; set; }
 
@@ -149,10 +149,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		{
 			// Defaulting to true for Restricted access
 			RequiresRegionalDiscovery = true;
-			// defaulting to null 
+			// defaulting to null
 			RegionalGlobalDiscoveryUri = null;
-			// Default to null. 
-			GeoCode = null; 
+			// Default to null.
+			GeoCode = null;
 		}
 	}
 
@@ -171,6 +171,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		private ServerInfo _discocrm1boxtestOSDP;
 		private ServerInfo _discocrmtipOSDP;
 		private ServerInfo _discocrm2LiveTieOSDP;
+		private ServerInfo _dvInternalTest;
 
 		#region Live Specific
 		/// <summary>
@@ -238,6 +239,29 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		#endregion Live Specific
 
 		#region OSDP Specific
+
+		/// <summary>
+		/// Dataverse internal debug replacement for TIE
+		/// </summary>
+		public ServerInfo DataverseInternalTest
+		{
+			get
+			{
+				if (_dvInternalTest == null)
+				{
+					_dvInternalTest = new ServerInfo()
+					{
+						DiscoveryServer = "https://disco.crm.crmtest.com/XRMServices/2011/Discovery.svc",
+						DisplayName = "Internal TEST",
+						ShortName = "TST",
+						GeoCode="TST"
+					};
+				}
+
+				return _dvInternalTest;
+			}
+		}
+
 		/// <summary>
 		/// Returns settings for CrmLiveTieOSDP
 		/// </summary>
@@ -301,7 +325,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		}
 
 		/// <summary>
-		/// this is the connect infor for the 1box config for EDOG env. 
+		/// this is the connect infor for the 1box config for EDOG env.
 		/// </summary>
 		public ServerInfo Crm1BoxTest
 		{

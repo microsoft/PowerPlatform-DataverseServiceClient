@@ -1963,7 +1963,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 }
                 else
                 {
-                    var json = await sResp.Content.ReadAsStringAsync();
+                    var json = await sResp.Content.ReadAsStringAsync().ConfigureAwait(false);
 
                     if (_knownTypesFactory.TryCreate($"{req.RequestName}Response", out var response, json))
                     {
@@ -2379,7 +2379,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         {
                             Agent = AppDomain.CurrentDomain.FriendlyName;
                         }
-                        Agent = $"{Agent} (DataverseSvcClient:{Environs.FileVersion})";
+                        Agent = $"{Agent} (DataverseSvcClient:{Environs.DvSvcClientFileVersion})";
 
 
                         if (!_httpRequest.Headers.Contains(Utilities.RequestHeaders.USER_AGENT_HTTP_HEADER))

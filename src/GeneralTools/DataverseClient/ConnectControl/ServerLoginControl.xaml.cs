@@ -457,9 +457,18 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 				StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.AuthHomeRealm, string.Empty);
 
 			if (cbAskforOrg.IsChecked.Value)
+			{
 				StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmOrg, string.Empty);
+				StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.UseDirectConnection, false.ToString());
+			}
 			else
+			{
 				StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmOrg, tbCrmOrg.Text);
+				if (!string.IsNullOrEmpty(StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.DirectConnectionUri)))
+				{
+					StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.UseDirectConnection, true.ToString());
+				}
+			}
 
 			StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.AdvancedCheck, cbAdvanced.IsChecked.Value.ToString());
 

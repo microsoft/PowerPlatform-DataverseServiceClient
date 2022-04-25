@@ -8,6 +8,12 @@ Notice:
     Note: that only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Accepted fixes requested by Git user 0xced
+Fixed Null ref bug for missing redirect URI (if it gets that far) https://github.com/microsoft/PowerPlatform-DataverseServiceClient/pull/246
+Fixed Missing ConfigureAwait's on some Async methods in auth chain. https://github.com/microsoft/PowerPlatform-DataverseServiceClient/pull/247
+Added Discovery Filter support for Korea and Norway GEO's
+
+0.6.1:
 Minor Bump to 0.6.x - *Should* be last bump prior to 1.0. 
 
 Added initial support for AD auth for OnPremise.  This will work for full framework only. 

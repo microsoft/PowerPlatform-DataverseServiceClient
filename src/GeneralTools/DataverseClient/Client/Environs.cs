@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+using Microsoft.Xrm.Sdk.Organization;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace Microsoft.PowerPlatform.Dataverse.Client
@@ -7,28 +8,43 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
     {
         private static object _initLock = new object();
 
-        public static string FileVersion { get; private set; }
+        /// <summary>
+        /// Version number of the XrmSDK 
+        /// </summary>
+        public static string XrmSdkFileVersion { get; private set; }
+
+        public static string DvSvcClientFileVersion { get; private set; }
 
         static Environs()
         {
-            if (string.IsNullOrEmpty(FileVersion))
+
+            if (string.IsNullOrEmpty(XrmSdkFileVersion))
+            {
+                lock(_initLock)
+                {
+                    if ( string.IsNullOrEmpty(XrmSdkFileVersion))
+                    {
+                        XrmSdkFileVersion = "Unknown";
+                        try
+                        {
+                            XrmSdkFileVersion = typeof(OrganizationDetail).Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version ?? FileVersionInfo.GetVersionInfo(typeof(OrganizationDetail).Assembly.Location).FileVersion;
+                        }
+                        catch { }
+                    }
+                }
+            }
+
+
+            if (string.IsNullOrEmpty(DvSvcClientFileVersion))
             {
                 lock (_initLock)
                 {
-                    if (string.IsNullOrEmpty(FileVersion))
+                    if (string.IsNullOrEmpty(DvSvcClientFileVersion))
                     {
-                        FileVersion = "Unknown";
+                        DvSvcClientFileVersion = "Unknown";
                         try
                         {
-                            string location = Assembly.GetExecutingAssembly().Location;
-                            if (!string.IsNullOrEmpty(location))
-                            {
-                                string version = FileVersionInfo.GetVersionInfo(location).FileVersion;
-                                if (!string.IsNullOrEmpty(version))
-                                {
-                                    FileVersion = version;
-                                }
-                            }
+                            DvSvcClientFileVersion = typeof(ServiceClient).Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version ?? FileVersionInfo.GetVersionInfo(typeof(ServiceClient).Assembly.Location).FileVersion;
                         }
                         catch
                         {

@@ -183,7 +183,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
                             {
                                 ClientId = clientId,
                                 EnablePiiLogging = true,
-                                RedirectUri = redirectUri.ToString(),
+                                RedirectUri = redirectUri?.ToString(),
                                 LogLevel = LogLevel.Verbose,
                             })
                         .WithAuthority(Authority)
@@ -196,7 +196,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
                         if (tokenCacheStorePath != null)
                         {
                             var f = new FileBackedTokenCache(new FileBackedTokenCacheHints(tokenCacheStorePath));
-                            await f.Initialize(pApp.UserTokenCache);
+                            await f.Initialize(pApp.UserTokenCache).ConfigureAwait(false);
                         }
                     }
 
@@ -241,7 +241,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
             }
             catch (MsalException ex)
             {
-                var errorHandledResult = await ProcessMsalExecptionAsync(serviceUrl, clientCredentials, userCert, clientId, redirectUri, promptBehavior, isOnPrem, authority, msalAuthClient, logSink, useDefaultCreds, msalEx: ex, memoryBackedTokenCache: memoryBackedTokenCache, tokenCacheStorePath: tokenCacheStorePath);
+                var errorHandledResult = await ProcessMsalExecptionAsync(serviceUrl, clientCredentials, userCert, clientId, redirectUri, promptBehavior, isOnPrem, authority, msalAuthClient, logSink, useDefaultCreds, msalEx: ex, memoryBackedTokenCache: memoryBackedTokenCache, tokenCacheStorePath: tokenCacheStorePath).ConfigureAwait(false);
                 if (errorHandledResult != null)
                     processResult = errorHandledResult;
             }
@@ -431,7 +431,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
             }
 
             UriBuilder versionTaggedUriBuilder = new UriBuilder(webUrlBuilder.Uri);
-            string version = FileVersionInfo.GetVersionInfo(typeof(Xrm.Sdk.Organization.OrganizationDetail).Assembly.Location).FileVersion;
+            string version = Environs.XrmSdkFileVersion;
             string versionQueryStringParameter = string.Format("SDKClientVersion={0}", version);
 
             if (string.IsNullOrEmpty(versionTaggedUriBuilder.Query))
@@ -458,7 +458,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
         {
             var client = clientFactory.CreateClient("DataverseHttpClientFactory");
             var resolver = new AuthorityResolver(client, (t, msg) => logger.Log(msg, t));
-            return await resolver.ProbeForExpectedAuthentication(targetServiceUrl, isOnPrem);
+            return await resolver.ProbeForExpectedAuthentication(targetServiceUrl, isOnPrem).ConfigureAwait(false);
         }
 
         /// <summary>

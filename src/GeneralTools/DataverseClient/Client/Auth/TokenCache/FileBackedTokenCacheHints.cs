@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Identity.Client.Extensions.Msal;
@@ -38,7 +38,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth.TokenCache
             {
                 hostName = Path.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
             }
-            string hostVersion = typeof(OrganizationDetail).Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version ?? FileVersionInfo.GetVersionInfo(typeof(OrganizationDetail).Assembly.Location).FileVersion;
+            string hostVersion = Environs.XrmSdkFileVersion;
             string companyName = typeof(OrganizationDetail).Assembly.GetCustomAttribute<AssemblyCompanyAttribute>().Company;
 
 

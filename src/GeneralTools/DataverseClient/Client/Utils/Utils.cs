@@ -25,46 +25,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
     /// </summary>
     internal class Utilities
     {
-        /// <summary>
-        /// Returns the file version of passed "executing Assembly"
-        /// </summary>
-        /// <param name="executingAssembly">The assembly whose version is required.</param>
-        /// <returns></returns>
-        public static Version GetFileVersion(Assembly executingAssembly)
-        {
-            try
-            {
-                if (executingAssembly != null)
-                {
-                    AssemblyName asmName = new AssemblyName(executingAssembly.FullName);
-                    Version fileVersion = asmName.Version;
-
-                    // try to get the build version
-                    string localPath = string.Empty;
-
-                    Uri fileUri = null;
-                    if (Uri.TryCreate(executingAssembly.CodeBase, UriKind.Absolute, out fileUri))
-                    {
-                        if (fileUri.IsFile)
-                            localPath = fileUri.LocalPath;
-
-                        if (!string.IsNullOrEmpty(localPath))
-                            if (System.IO.File.Exists(localPath))
-                            {
-                                FileVersionInfo fv = FileVersionInfo.GetVersionInfo(localPath);
-                                if (fv != null)
-                                {
-                                    fileVersion = new Version(fv.FileVersion);
-                                }
-                            }
-                    }
-                    return fileVersion;
-                }
-            }
-            catch { }
-
-            return null;
-        }
 
         internal static DiscoveryServer GetDiscoveryServerByUri(Uri orgUri)
         {
