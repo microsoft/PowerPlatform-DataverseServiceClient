@@ -577,7 +577,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             {
                 if (string.IsNullOrEmpty(_sdkVersionProperty))
                 {
-                    _sdkVersionProperty = typeof(OrganizationDetail).Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version ?? FileVersionInfo.GetVersionInfo(typeof(OrganizationDetail).Assembly.Location).FileVersion;
+                    _sdkVersionProperty = Environs.XrmSdkFileVersion;
                 }
                 return _sdkVersionProperty;
             }
@@ -1741,11 +1741,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     if (bypassPluginExecution && Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(_connectionSvc?.OrganizationVersion, Utilities.FeatureVersionMinimums.AllowBypassCustomPlugin))
                         req.Parameters.Add(Utilities.RequestHeaders.BYPASSCUSTOMPLUGINEXECUTION, true);
 
-                    _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Execute Command - {0}{1}: {3}RequestID={2}",
+                    //RequestId Logging line for telemetry 
+                    string requestIdLogSegement = _logEntry.GetFormatedRequestSessionIdString(requestTrackingId, SessionTrackingId);
+
+                    _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Execute Command - {0}{1}: {2}",
                         req.RequestName,
                         string.IsNullOrEmpty(errorStringCheck) ? "" : $" : {errorStringCheck} ",
-                        requestTrackingId.ToString(),
-                        SessionTrackingId.HasValue && SessionTrackingId.Value != Guid.Empty ? $"SessionID={SessionTrackingId.Value.ToString()} : " : ""
+                        requestIdLogSegement
                         ), TraceEventType.Verbose);
 
                     logDt.Restart();
@@ -1761,13 +1763,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         rsp = DataverseService.Execute(req);
 
                     logDt.Stop();
-                    _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Executed Command - {0}{2}: {5}RequestID={3} {4}: duration={1}",
+                    _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Executed Command - {0}{2}: {3} {4}: duration={1}",
                         req.RequestName,
                         logDt.Elapsed.ToString(),
                         string.IsNullOrEmpty(errorStringCheck) ? "" : $" : {errorStringCheck} ",
-                        requestTrackingId.ToString(),
-                        LockWait == TimeSpan.Zero ? string.Empty : string.Format(": LockWaitDuration={0} ", LockWait.ToString()),
-                        SessionTrackingId.HasValue && SessionTrackingId.Value != Guid.Empty ? $"SessionID={SessionTrackingId.Value.ToString()} : " : ""
+                        requestIdLogSegement,
+                        LockWait == TimeSpan.Zero ? string.Empty : string.Format(": LockWaitDuration={0} ", LockWait.ToString())
                         ), TraceEventType.Verbose);
                     resp = rsp;
                 }

@@ -11,6 +11,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -25,46 +26,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
     /// </summary>
     internal class Utilities
     {
-        /// <summary>
-        /// Returns the file version of passed "executing Assembly"
-        /// </summary>
-        /// <param name="executingAssembly">The assembly whose version is required.</param>
-        /// <returns></returns>
-        public static Version GetFileVersion(Assembly executingAssembly)
-        {
-            try
-            {
-                if (executingAssembly != null)
-                {
-                    AssemblyName asmName = new AssemblyName(executingAssembly.FullName);
-                    Version fileVersion = asmName.Version;
-
-                    // try to get the build version
-                    string localPath = string.Empty;
-
-                    Uri fileUri = null;
-                    if (Uri.TryCreate(executingAssembly.CodeBase, UriKind.Absolute, out fileUri))
-                    {
-                        if (fileUri.IsFile)
-                            localPath = fileUri.LocalPath;
-
-                        if (!string.IsNullOrEmpty(localPath))
-                            if (System.IO.File.Exists(localPath))
-                            {
-                                FileVersionInfo fv = FileVersionInfo.GetVersionInfo(localPath);
-                                if (fv != null)
-                                {
-                                    fileVersion = new Version(fv.FileVersion);
-                                }
-                            }
-                    }
-                    return fileVersion;
-                }
-            }
-            catch { }
-
-            return null;
-        }
 
         internal static DiscoveryServer GetDiscoveryServerByUri(Uri orgUri)
         {
@@ -610,19 +571,19 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             {
                                 if (attribDateTimeData.DateTimeBehavior == DateTimeBehavior.DateOnly)
                                 {
-                                    value = dateTimeValue.ToUniversalTime().ToString("yyyy-MM-dd");
+                                    value = dateTimeValue.ToUniversalTime().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
                                 }
                                 else
                                 {
                                     if (attribDateTimeData.DateTimeBehavior == DateTimeBehavior.TimeZoneIndependent)
                                     {
-                                        value = dateTimeValue.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fff");
+                                        value = dateTimeValue.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
                                     }
                                     else
                                     {
                                         if (attribDateTimeData.DateTimeBehavior == DateTimeBehavior.UserLocal)
                                         {
-                                            value = dateTimeValue.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+                                            value = dateTimeValue.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
                                         }
                                     }
                                 }
@@ -848,7 +809,24 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 }
                 else
                 {
-                    keycollection += $"{itm.Key}='{itm.Value}',";
+                    if (itm.Value is int iValue)
+                    {
+                        keycollection += $"{itm.Key}={iValue.ToString(CultureInfo.InvariantCulture)},";
+                    }
+                    else if (itm.Value is float fValue)
+                    {
+                        keycollection += $"{itm.Key}={fValue.ToString(CultureInfo.InvariantCulture)},";
+                    } 
+                    else if (itm.Value is OptionSetValue oValue)
+                    {
+                        keycollection += $"{itm.Key}={oValue.Value},";
+                    }
+                    else if (itm.Value is DateTime dtValue) // Note : Should work for 'datetime types' may not work for date only types.
+                    {
+                        keycollection += $"{itm.Key}={dtValue.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)},";
+                    }
+                    else
+                        keycollection += $"{itm.Key}='{itm.Value.ToString().Replace("'", "''")}',";
                 }
             }
             return keycollection.Remove(keycollection.Length - 1); // remove trailing ,

@@ -85,8 +85,10 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl.Model
 			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm16.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Germany (Go Local)", ShortName = "GER", GeoCode = "GER" });
 			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm8.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "India", ShortName = "IND", GeoCode = "IND" });
 			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm7.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Japan", ShortName = "JPN", GeoCode = "JPN" });
+			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm21.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Korea", ShortName = "KOR", GeoCode = "KOR" });
 			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "North America", ShortName = "NorthAmerica" });  // Do not add Geo code to NAM or GCC,  as they use the same server level GEO code.
 			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm9.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "North America 2 (GCC)", ShortName = "NorthAmerica2", RequiresRegionalDiscovery = true, RegionalGlobalDiscoveryServer = new Uri("https://globaldisco.crm9.dynamics.com") });
+			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm19.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Norway", ShortName = "NOR", GeoCode = "NOR" });
 			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm6.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Oceania", ShortName = "Oceania", GeoCode = "OCE" });
 			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm14.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "South Africa", ShortName = "ZAF", GeoCode = "ZAF" });
 			RegionalServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm2.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "South America", ShortName = "SouthAmerica", GeoCode = "LATAM" });
@@ -104,8 +106,10 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl.Model
 			_OSDPServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm.Microsoftdynamics.de/XRMServices/2011/Discovery.svc"), DisplayName = "Germany", ShortName = "DEU", RequiresRegionalDiscovery = true, GeoCode = "DEU" });
 			_OSDPServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm8.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "India", ShortName = "IND", GeoCode = "IND" });
 			_OSDPServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm7.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Japan", ShortName = "JPN", GeoCode = "JPN" });
+			_OSDPServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm21.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Korea", ShortName = "KOR", GeoCode = "KOR" });
 			_OSDPServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "North America", ShortName = "NorthAmerica" });  // Do not add Geo code to NAM or GCC,  as they use the same server level GEO code.
 			_OSDPServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm9.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "North America 2 (GCC)", ShortName = "NorthAmerica2", RequiresRegionalDiscovery = true, RegionalGlobalDiscoveryServer = new Uri("https://globaldisco.crm9.dynamics.com") });
+			_OSDPServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm19.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Norway", ShortName = "NOR", GeoCode = "NOR" });
 			_OSDPServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm6.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "Oceania", ShortName = "Oceania", GeoCode = "OCE" });
 			_OSDPServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm14.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "South Africa", ShortName = "ZAF", GeoCode = "ZAF" });
 			_OSDPServers.Add(new OnlineDiscoveryServer() { DiscoveryServer = new Uri("https://disco.crm2.dynamics.com/XRMServices/2011/Discovery.svc"), DisplayName = "South America", ShortName = "SouthAmerica", GeoCode = "LATAM" });
@@ -123,6 +127,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl.Model
 			TestServers.Add(new OnlineDiscoveryServer(internalEnvInfo.Crm1BoxTest));
 			TestServers.Add(new OnlineDiscoveryServer(internalEnvInfo.CrmTIP));
 			TestServers.Add(new OnlineDiscoveryServer(internalEnvInfo.Crm2LiveTie));
+			TestServers.Add(new OnlineDiscoveryServer(internalEnvInfo.DataverseInternalTest));
 
 			_OSDPServers.Add(new OnlineDiscoveryServer(internalEnvInfo.CrmLiveTieOSDP));
 			_OSDPServers.Add(new OnlineDiscoveryServer(internalEnvInfo.CrmIntOSDP));
@@ -131,6 +136,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl.Model
 			_OSDPServers.Add(new OnlineDiscoveryServer(internalEnvInfo.Crm1BoxTest));
 			_OSDPServers.Add(new OnlineDiscoveryServer(internalEnvInfo.CrmTIP));
 			_OSDPServers.Add(new OnlineDiscoveryServer(internalEnvInfo.Crm2LiveTie));
+			_OSDPServers.Add(new OnlineDiscoveryServer(internalEnvInfo.DataverseInternalTest));
 #endif
 		}
 

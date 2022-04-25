@@ -169,22 +169,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
         {
             if (string.IsNullOrEmpty(_xrmSdkAssemblyFileVersion))
             {
-                string[] assembliesToCheck = { "Microsoft.Xrm.Sdk.dll" };
-                Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-
-                foreach (string assemblyToCheck in assembliesToCheck)
-                {
-                    foreach (Assembly assembly in assemblies)
-                    {
-                        if (assembly.ManifestModule.Name.Equals(assemblyToCheck, StringComparison.OrdinalIgnoreCase) &&
-                                !string.IsNullOrEmpty(assembly.Location) &&
-                                System.IO.File.Exists(assembly.Location))
-                        {
-                            _xrmSdkAssemblyFileVersion = FileVersionInfo.GetVersionInfo(assembly.Location).FileVersion;
-                            break;
-                        }
-                    }
-                }
+                _xrmSdkAssemblyFileVersion = Environs.XrmSdkFileVersion; 
             }
 
             // If the assembly is embedded as resource and loaded from memory, there is no physical file on disk to check for file version

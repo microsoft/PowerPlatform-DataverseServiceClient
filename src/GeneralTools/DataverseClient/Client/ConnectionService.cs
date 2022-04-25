@@ -1822,10 +1822,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             bool? suppressDuplicateDetection = null;
             if (req.Parameters.ContainsKey(Utilities.RequestHeaders.SUPPRESSDUPLICATEDETECTION))
             {
-                if (req.Parameters[Utilities.RequestHeaders.SUPPRESSDUPLICATEDETECTION].GetType() == typeof(bool) &&
-                    (bool)req.Parameters[Utilities.RequestHeaders.SUPPRESSDUPLICATEDETECTION])
+                if (req.Parameters[Utilities.RequestHeaders.SUPPRESSDUPLICATEDETECTION].GetType() == typeof(bool))
                 {
-                    suppressDuplicateDetection = true;
+                    suppressDuplicateDetection = (bool)req.Parameters[Utilities.RequestHeaders.SUPPRESSDUPLICATEDETECTION];
                 }
             }
 
@@ -1911,7 +1910,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
             if (suppressDuplicateDetection.HasValue)
             {
-                headers.Add($"{Utilities.RequestHeaders.DATAVERSEHEADERPROPERTYPREFIX}{Utilities.RequestHeaders.SUPPRESSDUPLICATEDETECTION}", new List<string>() { "true" });
+                headers.Add($"{Utilities.RequestHeaders.DATAVERSEHEADERPROPERTYPREFIX}{Utilities.RequestHeaders.SUPPRESSDUPLICATEDETECTION}", new List<string>() { suppressDuplicateDetection.ToString() });
             }
 
             string addedQueryParams = "";
@@ -1963,7 +1962,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 }
                 else
                 {
-                    var json = await sResp.Content.ReadAsStringAsync();
+                    var json = await sResp.Content.ReadAsStringAsync().ConfigureAwait(false);
 
                     if (_knownTypesFactory.TryCreate($"{req.RequestName}Response", out var response, json))
                     {
@@ -2166,6 +2165,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
 
             HttpResponseMessage resp = null;
+
+            //RequestId Logging line for telemetry 
+            string requestIdLogSegement = logEntry.GetFormatedRequestSessionIdString(requestTrackingId, SessionTrackingId);
             do
             {
                 // Add authorization header. - Here to catch the situation where a token expires during retry.
@@ -2174,11 +2176,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
                 logDt.Restart(); // start clock.
 
-                logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Execute Command - {0}{1}: RequestID={2} {3}",
+                logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Execute Command - {0}{1}: {2}",
                         $"{method} {queryString}",
                         string.IsNullOrEmpty(errorStringCheck) ? "" : $" : {errorStringCheck} ",
-                        requestTrackingId.ToString(),
-                        SessionTrackingId.HasValue && SessionTrackingId.Value != Guid.Empty ? $"SessionID={SessionTrackingId.Value.ToString()} : " : ""
+                        requestIdLogSegement
                         ), TraceEventType.Verbose);
                 try
                 {
@@ -2225,7 +2226,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     else
                     {
                         retry = false;
-                        logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Failed to Execute Command - {3} {0} : {2}RequestID={1}", queryString, requestTrackingId.ToString(), SessionTrackingId.HasValue && SessionTrackingId.Value != Guid.Empty ? $"SessionID={SessionTrackingId.Value.ToString()} : " : "", method), TraceEventType.Verbose);
+                        logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Failed to Execute Command - {2} {0} : {1}", queryString, requestIdLogSegement, method), TraceEventType.Verbose);
                         logEntry.Log(string.Format(CultureInfo.InvariantCulture, "************ Exception - {2} : {0} |=> {1}", errorStringCheck, ex.Message, queryString), TraceEventType.Error, ex);
                         return null;
                     }
@@ -2379,7 +2380,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         {
                             Agent = AppDomain.CurrentDomain.FriendlyName;
                         }
-                        Agent = $"{Agent} (DataverseSvcClient:{Environs.FileVersion})";
+                        Agent = $"{Agent} (DataverseSvcClient:{Environs.DvSvcClientFileVersion})";
 
 
                         if (!_httpRequest.Headers.Contains(Utilities.RequestHeaders.USER_AGENT_HTTP_HEADER))

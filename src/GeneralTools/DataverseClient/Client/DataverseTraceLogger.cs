@@ -316,6 +316,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
         }
 
+        internal string GetFormatedRequestSessionIdString( Guid requestId, Guid? sessionId )
+        {
+            return string.Format("RequestID={0} {1}",
+                        requestId.ToString(),
+                        sessionId.HasValue && sessionId.Value != Guid.Empty ? $": SessionID={sessionId.Value.ToString()} : " : "");
+        }
+
         /// <summary>
         /// Logs data to memory.
         /// </summary>
