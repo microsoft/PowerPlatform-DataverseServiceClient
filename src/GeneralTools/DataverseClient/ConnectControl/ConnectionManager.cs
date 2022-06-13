@@ -1445,9 +1445,16 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 					foreach (var itm in discoverResult.OrganizationDetailCollection)
 					{
 						var orgObj = Utilities.DeterminDiscoveryDataFromOrgDetail(new Uri(itm.Endpoints[EndpointType.OrganizationService]), out isOnPrem, Geo: itm.Geo);
-						if (trimToDiscoveryUri != null && !trimToDiscoveryUri.Equals(orgObj.DiscoveryServerUri))
-							continue;
-						AddOrgToOrgList(itm, orgObj.DisplayName, orgObj.DiscoveryServerUri);
+						if (orgObj != null)
+						{
+							if (trimToDiscoveryUri != null && !trimToDiscoveryUri.Equals(orgObj.DiscoveryServerUri))
+								continue;
+							AddOrgToOrgList(itm, orgObj.DisplayName, orgObj.DiscoveryServerUri);
+						}
+						else
+						{
+							AddOrgToOrgList(itm, !string.IsNullOrEmpty(itm.Geo) ? itm.Geo : "Unknown", orgObj.DiscoveryServerUri);
+						}
 					}
 				}
 			}

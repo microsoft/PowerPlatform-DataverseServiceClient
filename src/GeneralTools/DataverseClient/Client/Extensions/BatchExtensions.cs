@@ -295,7 +295,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Extensions
                 // if request should bypass plugin exec.
                 if (bypassPluginExecution &&
                     Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(serviceClient.ConnectedOrgVersion, Utilities.FeatureVersionMinimums.AllowBypassCustomPlugin))
-                    req.Parameters.Add(Utilities.RequestHeaders.BYPASSCUSTOMPLUGINEXECUTION, true);
+                    req.Parameters[Utilities.RequestHeaders.BYPASSCUSTOMPLUGINEXECUTION] =  true;
 
                 if (serviceClient.IsBatchOperationsAvailable)
                 {

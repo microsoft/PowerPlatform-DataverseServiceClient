@@ -1,0 +1,9 @@
+Notice: 
+    Provides Conversion utilities to convert between CrmServiceClient and Dataverse ServiceClient.
+    General Documentation about DataverseServiceClient can be found here:
+        https://github.com/microsoft/PowerPlatform-DataverseServiceClient
+    General Documentation about CrmServiceClient can be found here:
+        https://docs.microsoft.com/en-us/dotnet/api/microsoft.xrm.tooling.connector.crmserviceclient?view=dynamics-xrmtooling-ce-9
+
+++CURRENTRELEASEID++
+    Provides Conversion utilities to convert between CrmServiceClient and Dataverse ServiceClient

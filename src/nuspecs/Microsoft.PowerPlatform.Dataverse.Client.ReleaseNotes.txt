@@ -1,13 +1,27 @@
 Notice:
-    This package is in a public preview release.
     This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8, .net core 3.1, 5.0 and 6.0
-    General Documentation is the same as CrmServiceClient and can be found here:
-        https://docs.microsoft.com/en-us/dotnet/api/microsoft.xrm.tooling.connector.crmserviceclient?view=dynamics-xrmtooling-ce-9
+    General Documentation can be found here:
+        https://docs.microsoft.com/en-us/dotnet/api/microsoft.powerplatform.dataverse.client?view=dataverse-sdk-latest
     Connection String Docs can be found here:
         https://docs.microsoft.com/en-us/powerapps/developer/common-data-service/xrm-tooling/use-connection-strings-xrm-tooling-connect
-    Note: that only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
+    Note: Only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Fixed a "Duplicate Key Error" issue created when manually adding some request parameters to an organization request, while also setting the appropriate property in the client 
+Fix formatting issue with RequestId and Session Id.
+Fix exponential back off issue for WebAPI based calls when retrying based on a throttled connection.
+Added implementation for Connection and Configuration constructor. 
+    - Allows for a instance of the service client to be created and configured without initialization the client.  The client can then be initialized later using the .Connect() method.
+    - This constructor accepts 3 parameters
+        - connectionOptions (ConnectionOptions) = Options necessary to create the connection.
+        - deferConnection (bool) defaulted to false = When set to true, will configure but not create the connection until .Connect() is called. 
+        - serviceClientConfiguration (ConfigurationOptions) defaulted to null = When populated, pre-configures the connection configuration. 
+    - If deferred connection is set to true, .Connect() must be called before the client is useable. 
+Added Connect() method for use with the deferred behavior of the Connection and Configuration Constructor.
+Activated support for adding additional headers to request when using the Configuration Constructor. 
+    Note: Dataverse will only allow specific headers to be used. Use of this capability requires foreknowledge of this capability and agreement with Power Platform Dataverse team.
+
+0.6.6:
 Accepted fixes requested by Git user 0xced -  thanks for your contrib's! 
 Fixed Null ref bug for missing redirect URI (if it gets that far) https://github.com/microsoft/PowerPlatform-DataverseServiceClient/pull/246
 Fixed Missing ConfigureAwait's on some Async methods in auth chain. https://github.com/microsoft/PowerPlatform-DataverseServiceClient/pull/247
@@ -48,7 +62,7 @@ Dependency changes:
 0.5.17:
  Accepted fix requested here: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/205
   fixing delete by alternate key request in client. 
- Fixed dependency issue for System.Security.Premisions  (git #203)  
+ Fixed dependency issue for System.Security.Permissions  (git #203)  
  Refactored AuthorityResolver to discover AAD authentication authorities to allow for direct access by other clients. 
 
 

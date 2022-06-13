@@ -9,10 +9,10 @@
     <projectUrl>https://github.com/microsoft/PowerPlatform-DataverseServiceClient</projectUrl>
     <icon>images\Dataverse.128x128.png</icon>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
-    <description>This package contains the preview of the .net core Dataverse ServiceClient. Used to connect to Microsoft Dataverse. This Package has been authored by the Microsoft Dataverse SDK team.</description>
-    <summary>CdsServiceClient and supporting libraries for use in building client applications to interact with the Dataverse</summary>
+    <description>This package contains the .net core Dataverse ServiceClient. Used to connect to Microsoft Dataverse. This Package has been authored by the Microsoft Dataverse SDK team.</description>
+    <summary>Dataverse ServiceClient and supporting libraries for use in building client applications to interact with the Dataverse</summary>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
-    <tags>Dynamics CommonDataService CDS PowerApps PowerPlatform CdsServiceClient Dataverse</tags>
+    <tags>Dynamics CommonDataService CDS PowerApps PowerPlatform ServiceClient Dataverse</tags>
     <dependencies>
       <group targetFramework=".NETFramework4.6.2">
         <dependency id="Microsoft.Extensions.DependencyInjection" version="3.1.8" exclude="Build,Analyzers" />

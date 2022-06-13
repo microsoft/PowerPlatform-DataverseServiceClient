@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.PowerPlatform.Dataverse.Client.Auth;
 using Microsoft.PowerPlatform.Dataverse.Client.Extensions;
+using Microsoft.PowerPlatform.Dataverse.Client.Model;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
@@ -18,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
+using System.Security;
 using Xunit;
 using Xunit.Abstractions;
 #endregion
@@ -787,6 +789,33 @@ namespace Client_Core_Tests
             client._connectionSvc.AuthContext.IdToken.Should().BeNull();
         }
 
+        [SkippableConnectionTest]
+        [Trait("Category", "Live Connect Required")]
+        public void ConnectUsingServiceIdentity_ClientSecret_Consetup()
+        {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
+            ConnectionOptions connectionOptions = new ConnectionOptions()
+            {
+                AuthenticationType = Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.ClientSecret,
+                ClientId = System.Environment.GetEnvironmentVariable("XUNITCONNTESTAPPID"),
+                ClientSecret = System.Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET"),
+                ServiceUri = new Uri(System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI")),
+                Logger = Ilogger
+            };
+
+
+            // Connection params.
+            var client = new ServiceClient(connectionOptions, deferConnection: true);
+            Assert.NotNull(client);
+            Assert.False(client.IsReady, "Client is showing True on Deferred Connection.");
+            Assert.True(client.Connect(), "Connection was not activated");
+            Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
+
+            // Validate connection
+            ValidateConnection(client);
+        }
+
         /// <summary>
         /// This Tests connection for UID/PW via connection string - direct connect.
         /// </summary>
@@ -891,6 +920,61 @@ namespace Client_Core_Tests
             // Check user after we validate connection again as it gets it from cached token
             client._connectionSvc.AuthContext.Account.Username.Should().BeEquivalentTo(Conn_UserName);
         }
+
+        /// <summary>
+        /// This Tests connection for UID/PW via connection string - direct connect.
+        /// </summary>
+        [SkippableConnectionTest]
+        [Trait("Category", "Live Connect Required")]
+        public void ConnectUsingUserIdentity_UIDPW_ConSetup()
+        {
+            string UrlProspect = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI"); 
+            if (UrlProspect.EndsWith("/") || UrlProspect.EndsWith("\\"))
+            {
+                UrlProspect = UrlProspect.Substring(0, UrlProspect.Length - 1);
+            }
+
+            Uri Conn_Url = new Uri(UrlProspect);
+            string Conn_UserName = System.Environment.GetEnvironmentVariable("XUNITCONNTESTUSERID");
+
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+            ConnectionOptions connectionOptions = new ConnectionOptions()
+            {
+                AuthenticationType = Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.OAuth,
+                ClientId = testSupport._SampleAppID.ToString(),
+                RedirectUri = testSupport._SampleAppRedirect,
+                ServiceUri = Conn_Url,
+                UserName = Conn_UserName,
+                Password = ServiceClient.MakeSecureString(System.Environment.GetEnvironmentVariable("XUNITCONNTESTPW")),
+                LoginPrompt = PromptBehavior.Never,
+                Logger = Ilogger
+            };
+
+
+            // Connection params.
+            var client = new ServiceClient(connectionOptions, deferConnection: true);
+            Assert.NotNull(client);
+            Assert.False(client.IsReady, "Client is showing True on Deferred Connection.");
+            Assert.True(client.Connect(), "Connection was not activated");
+            Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
+
+            // Validate connection
+            ValidateConnection(client);
+
+            // Check user before we validate connection
+            client._connectionSvc.AuthenticationTypeInUse.Should().BeEquivalentTo(Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.OAuth);
+            client._connectionSvc.AuthContext.Scopes.Should().BeEquivalentTo(new string[] { $"{Conn_Url}/user_impersonation" });
+            client._connectionSvc.AuthContext.Account.Should().NotBeNull();
+            client._connectionSvc.AuthContext.IdToken.Should().NotBeEmpty();
+            client._connectionSvc.AuthContext.Account.Username.Should().BeEquivalentTo(Conn_UserName);
+
+            // Validate connection
+            ValidateConnection(client);
+
+            // Check user after we validate connection again as it gets it from cached token
+            client._connectionSvc.AuthContext.Account.Username.Should().BeEquivalentTo(Conn_UserName);
+        }
+
         #region connectionValidationHelper
 
         private void ValidateConnection(ServiceClient client)

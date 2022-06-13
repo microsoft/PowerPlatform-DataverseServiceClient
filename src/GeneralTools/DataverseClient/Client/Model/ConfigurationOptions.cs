@@ -14,6 +14,28 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Model
     /// </summary>
     public class ConfigurationOptions
     {
+        /// <summary>
+        /// Updates the instance of Options with a previously created Options Object. 
+        /// </summary>
+        /// <param name="options">PreLoaded Options Array</param>
+        public void UpdateOptions(ConfigurationOptions options)
+        {
+            if (options != null)
+            {
+                EnableAffinityCookie = options.EnableAffinityCookie;
+                MaxBufferPoolSizeOveride = options.MaxBufferPoolSizeOveride;
+                MaxFaultSizeOverride = options.MaxFaultSizeOverride;
+                MaxReceivedMessageSizeOverride = options.MaxReceivedMessageSizeOverride;
+                MaxRetryCount = options.MaxRetryCount;
+                MSALEnabledLogPII = options.MSALEnabledLogPII;
+                MSALRequestTimeout = options.MSALRequestTimeout;
+                MSALRetryCount = options.MSALRetryCount;
+                RetryPauseTime = options.RetryPauseTime;
+                UseWebApi = options.UseWebApi;
+                UseWebApiLoginFlow = options.UseWebApiLoginFlow;
+            }
+        }
+
         #region Dataverse Interaction Settings
         private int _maxRetryCount = Utils.AppSettingsHelper.GetAppSetting("ApiOperationRetryCountOverride", 10);
 
@@ -139,7 +161,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Model
         /// <summary>
         /// Number of retries to Get a token from MSAL.
         /// </summary>
-        public int MsalRetryCount
+        public int MSALRetryCount
         {
             get => _msalRetryCount;
             set => _msalRetryCount = value;

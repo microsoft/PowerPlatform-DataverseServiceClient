@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29609.76
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32526.322
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.PowerPlatform.Dataverse.Client", "Client\Microsoft.PowerPlatform.Dataverse.Client.csproj", "{7303AAC5-BCEF-4BDB-B7D8-303490D506C6}"
 EndProject
@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataverseClient_Core_UnitTe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.PowerPlatform.Dataverse.Client.Dynamics", "Extensions\DynamicsExtension\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.csproj", "{8CE32D7B-EA3D-4725-A270-9780D366EDB7}"
 EndProject
-#Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Dynamics.Sdk.Messages.Shell", "Extensions\Microsoft.Dynamics.Sdk.Messages\Microsoft.Dynamics.Sdk.Messages.Shell.csproj", "{503645DD-7711-40ED-8811-F06391F294AB}"
-#EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiveTestsConsole", "UnitTests\LiveTestsConsole\LiveTestsConsole.csproj", "{5A1A4FFF-78F5-48A2-9AB0-3E507E938465}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.PowerPlatform.Dataverse.ConnectControl", "ConnectControl\Microsoft.PowerPlatform.Dataverse.ConnectControl.csproj", "{294C017A-54A0-4582-A512-5B58B9220082}"
@@ -25,6 +23,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.PowerPlatform.Dat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.PowerPlatform.Dataverse.WebResourceUtility", "WebResourceUtility\Microsoft.PowerPlatform.Dataverse.WebResourceUtility.csproj", "{FDFD6B7F-A925-40EE-98DC-2E06C1D1E3B6}"
 EndProject
+#Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.PowerPlatform.Dataverse.ServiceClientConverter", "Extensions\Microsoft.PowerPlatform.Dataverse.ServiceClientConverter\Microsoft.PowerPlatform.Dataverse.ServiceClientConverter.csproj", "{6F7522A6-3B98-40EE-B92B-5EA423E6F600}"
+#EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		CRMINTERNAL|Any CPU = CRMINTERNAL|Any CPU
@@ -71,18 +71,6 @@ Global
 		{8CE32D7B-EA3D-4725-A270-9780D366EDB7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8CE32D7B-EA3D-4725-A270-9780D366EDB7}.Release|x64.ActiveCfg = Release|Any CPU
 		{8CE32D7B-EA3D-4725-A270-9780D366EDB7}.Release|x64.Build.0 = Release|Any CPU
-		{503645DD-7711-40ED-8811-F06391F294AB}.CRMINTERNAL|Any CPU.ActiveCfg = Release|Any CPU
-		{503645DD-7711-40ED-8811-F06391F294AB}.CRMINTERNAL|Any CPU.Build.0 = Release|Any CPU
-		{503645DD-7711-40ED-8811-F06391F294AB}.CRMINTERNAL|x64.ActiveCfg = Release|Any CPU
-		{503645DD-7711-40ED-8811-F06391F294AB}.CRMINTERNAL|x64.Build.0 = Release|Any CPU
-		{503645DD-7711-40ED-8811-F06391F294AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{503645DD-7711-40ED-8811-F06391F294AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{503645DD-7711-40ED-8811-F06391F294AB}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{503645DD-7711-40ED-8811-F06391F294AB}.Debug|x64.Build.0 = Debug|Any CPU
-		{503645DD-7711-40ED-8811-F06391F294AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{503645DD-7711-40ED-8811-F06391F294AB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{503645DD-7711-40ED-8811-F06391F294AB}.Release|x64.ActiveCfg = Release|Any CPU
-		{503645DD-7711-40ED-8811-F06391F294AB}.Release|x64.Build.0 = Release|Any CPU
 		{5A1A4FFF-78F5-48A2-9AB0-3E507E938465}.CRMINTERNAL|Any CPU.ActiveCfg = Release|Any CPU
 		{5A1A4FFF-78F5-48A2-9AB0-3E507E938465}.CRMINTERNAL|Any CPU.Build.0 = Release|Any CPU
 		{5A1A4FFF-78F5-48A2-9AB0-3E507E938465}.CRMINTERNAL|x64.ActiveCfg = Release|Any CPU
@@ -143,6 +131,18 @@ Global
 		{FDFD6B7F-A925-40EE-98DC-2E06C1D1E3B6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FDFD6B7F-A925-40EE-98DC-2E06C1D1E3B6}.Release|x64.ActiveCfg = Release|x64
 		{FDFD6B7F-A925-40EE-98DC-2E06C1D1E3B6}.Release|x64.Build.0 = Release|x64
+		{6F7522A6-3B98-40EE-B92B-5EA423E6F600}.CRMINTERNAL|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F7522A6-3B98-40EE-B92B-5EA423E6F600}.CRMINTERNAL|Any CPU.Build.0 = Debug|Any CPU
+		{6F7522A6-3B98-40EE-B92B-5EA423E6F600}.CRMINTERNAL|x64.ActiveCfg = Debug|Any CPU
+		{6F7522A6-3B98-40EE-B92B-5EA423E6F600}.CRMINTERNAL|x64.Build.0 = Debug|Any CPU
+		{6F7522A6-3B98-40EE-B92B-5EA423E6F600}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F7522A6-3B98-40EE-B92B-5EA423E6F600}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F7522A6-3B98-40EE-B92B-5EA423E6F600}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6F7522A6-3B98-40EE-B92B-5EA423E6F600}.Debug|x64.Build.0 = Debug|Any CPU
+		{6F7522A6-3B98-40EE-B92B-5EA423E6F600}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F7522A6-3B98-40EE-B92B-5EA423E6F600}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F7522A6-3B98-40EE-B92B-5EA423E6F600}.Release|x64.ActiveCfg = Release|Any CPU
+		{6F7522A6-3B98-40EE-B92B-5EA423E6F600}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

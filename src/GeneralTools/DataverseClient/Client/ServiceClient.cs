@@ -117,6 +117,16 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// </summary>
         internal IOrganizationService _testOrgSvcInterface { get; set; }
 
+        /// <summary>
+        /// ConnectionsOptions object used with connection presetup and staging for connect. 
+        /// </summary>
+        private ConnectionOptions _setupConnectionOptions = null;
+
+        /// <summary>
+        /// Connections Options holder for connection call. 
+        /// </summary>
+        private ConnectionOptions _connectionOptions = null; 
+
         #endregion
 
         #region Properties
@@ -454,7 +464,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// Returns the access token from the attached function.
         /// This is set via the ServiceContructor that accepts a target url and a function to return an access token.
         /// </summary>
-        internal Func<string, Task<string>> GetAccessToken { get; set; }
+        internal Func<string, Task<string>> GetAccessToken { get; set; } = null;
+
+        /// <summary>
+        /// Returns any additional or custom headers that need to be added to the request to Dataverse. 
+        /// </summary>
+        internal Func<Task<Dictionary<string, string>>> GetCustomHeaders { get; set; } = null;
 
         /// <summary>
         /// Gets or Sets the current caller ID
@@ -626,7 +641,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         }
 
         /// <summary>
-        /// Server Hint for the number of concurrent threads that would provbide optimal processing. 
+        /// Server Hint for the number of concurrent threads that would provide optimal processing. 
         /// </summary>
         public int RecommendedDegreesOfParallelism => _connectionSvc.RecommendedDegreesOfParallelism;
 
@@ -664,6 +679,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             _batchManager = new BatchManager(_logEntry);
             _metadataUtlity = new MetadataUtility(this);
             _dynamicAppUtility = new DynamicEntityUtility(this, _metadataUtlity);
+            IsReady = true; 
         }
 
         /// <summary>
@@ -678,21 +694,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
             ConnectToService(dataverseConnectionString, logger);
         }
-
-        //REMOVED FROM BUILD FOR NOW
-        ///// <summary>
-        ///// Uses the Organization Web proxy Client provided by the user
-        ///// </summary>
-        ///// <param name="externalOrgWebProxyClient">User Provided Organization Web Proxy Client</param>
-        ///// <param name="logger">Logging provider <see cref="ILogger"/></param>
-        //internal ServiceClient(OrganizationWebProxyClient externalOrgWebProxyClient, ILogger logger = null)
-        //{
-        //    // Disabled for this build as we determine how to support server side Native Client
-
-        //    //CreateServiceConnection(null, AuthenticationType.OAuth, string.Empty, string.Empty, string.Empty, null, string.Empty,
-        //    //    MakeSecureString(string.Empty), string.Empty, string.Empty, string.Empty, false, false, null, string.Empty, null,
-        //    //    PromptBehavior.Auto, externalOrgWebProxyClient, externalLogger: logger);
-        //}
 
         /// <summary>
         /// Creates an instance of ServiceClient who's authentication is managed by the caller.
@@ -896,13 +897,65 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         }
 
         /// <summary>
-        /// Creating the ServiceClient Connection with a Set of ConnectionOptionsObject and a default configuration. 
+        /// Creating the ServiceClient Connection with a ConnectionOptions Object and ConfigurationOptions Object. This allows for deferred create of a Dataverse Service Client. 
         /// </summary>
-        /// <param name="connectionOptions"></param>
-        /// <param name="serviceClientConfiguration"></param>
-        public ServiceClient(ConnectionOptions connectionOptions, IConfigureOptions<ConfigurationOptions> serviceClientConfiguration)
+        /// <param name="connectionOptions">Describes how the Connection should be created.</param>
+        /// <param name="deferConnection">False by Default,  if True, stages the properties of the connection and returns.  You must call .Connect() to complete the connection. </param>
+        /// <param name="serviceClientConfiguration">Described Configuration Options for the connection.</param>
+        public ServiceClient(ConnectionOptions connectionOptions, bool deferConnection = false,  ConfigurationOptions serviceClientConfiguration = null)
         {
-            throw new NotImplementedException("PreWork for Builder Support");
+            // store the options and ready for connect call. 
+            _setupConnectionOptions = connectionOptions;
+
+            //_configuration
+            if ( serviceClientConfiguration != null )
+                _configuration.Value.UpdateOptions(serviceClientConfiguration);
+
+            
+            // External auth. 
+            if (connectionOptions.AccessTokenProviderFunctionAsync != null)
+            {
+                connectionOptions.AuthenticationType = AuthenticationType.ExternalTokenManagement;
+                GetAccessToken = connectionOptions.AccessTokenProviderFunctionAsync;
+            }
+
+            // Add custom header support. 
+            if ( connectionOptions.RequestAdditionalHeadersAsync != null )
+            {
+                GetCustomHeaders = connectionOptions.RequestAdditionalHeadersAsync;
+            }
+
+            if (deferConnection)
+            {
+                _connectionOptions = connectionOptions;
+                if (connectionOptions.Logger != null)
+                    connectionOptions.Logger.LogInformation("Connection creation has been deferred at user request"); 
+                return;     
+            }
+
+            // Form Connection string. 
+            string connectionString = ConnectionStringConstants.CreateConnectionStringFromConnectionOptions(connectionOptions);
+            ConnectToService(connectionString, connectionOptions.Logger);
+        }
+
+        /// <summary>
+        /// Connects the Dataverse Service Client instance when staged with the Deferd Connection constructor. 
+        /// </summary>
+        /// <returns></returns>
+        public bool Connect()
+        {
+            if (_connectionOptions != null && IsReady == false)
+            {
+                if (_connectionOptions.Logger != null)
+                    _connectionOptions.Logger.LogInformation("Initiating connection to Dataverse");
+
+                string connectionString = ConnectionStringConstants.CreateConnectionStringFromConnectionOptions(_connectionOptions);
+                ConnectToService(connectionString, _connectionOptions.Logger);
+                _connectionOptions = null;
+                return true;
+            }
+            else
+                return false; 
         }
 
         /// <summary>
@@ -1194,6 +1247,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             {
                 try
                 {
+                    if (GetCustomHeaders != null)
+                        _connectionSvc.RequestAdditionalHeadersAsync = GetCustomHeaders; 
                     // Assign the log entry host to the ConnectionService engine
                     ConnectionService tempConnectService = null;
                     _connectionSvc.InternetProtocalToUse = useSsl ? "https" : "http";
@@ -1487,6 +1542,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         public HttpResponseMessage ExecuteWebRequest(HttpMethod method, string queryString, string body, Dictionary<string, List<string>> customHeaders, string contentType = default, CancellationToken cancellationToken = default)
         {
             _logEntry.ResetLastError();  // Reset Last Error
+            ValidateConnectionLive();
             if (DataverseService == null)
             {
                 _logEntry.Log("Dataverse Service not initialized", TraceEventType.Error);
@@ -1533,6 +1589,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
         internal OrganizationResponse ExecuteOrganizationRequestImpl(OrganizationRequest req, string logMessageTag = "User Defined", bool useWebAPI = false, bool bypassPluginExecution = false)
         {
+            ValidateConnectionLive();
             if (req != null)
             {
                 useWebAPI = Utilities.IsRequestValidForTranslationToWebAPI(req);
@@ -1555,6 +1612,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
         private async Task<OrganizationResponse> ExecuteOrganizationRequestAsyncImpl(OrganizationRequest req, CancellationToken cancellationToken, string logMessageTag = "User Defined", bool useWebAPI = false, bool bypassPluginExecution = false)
         {
+            ValidateConnectionLive();
             cancellationToken.ThrowIfCancellationRequested();
             if (req != null)
             {
@@ -1587,6 +1645,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <returns>Result of create request or null.</returns>
         internal async Task<OrganizationResponse> Command_ExecuteAsync(OrganizationRequest req, string errorStringCheck, System.Threading.CancellationToken cancellationToken, bool bypassPluginExecution = false)
         {
+            ValidateConnectionLive();
             if (DataverseServiceAsync != null)
             {
                 // if created based on Async Client.
@@ -1610,6 +1669,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <returns>Result of create request or null.</returns>
         internal async Task<OrganizationResponse> Command_ExecuteAsyncImpl(OrganizationRequest req, string errorStringCheck, System.Threading.CancellationToken cancellationToken, bool bypassPluginExecution = false)
         {
+            ValidateConnectionLive();
             Guid requestTrackingId = Guid.NewGuid();
             OrganizationResponse resp = null;
             Stopwatch logDt = new Stopwatch();
@@ -1646,7 +1706,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
                     // if request should bypass plugin exec.
                     if (bypassPluginExecution && Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(_connectionSvc?.OrganizationVersion, Utilities.FeatureVersionMinimums.AllowBypassCustomPlugin))
-                        req.Parameters.Add(Utilities.RequestHeaders.BYPASSCUSTOMPLUGINEXECUTION, true);
+                        req.Parameters[Utilities.RequestHeaders.BYPASSCUSTOMPLUGINEXECUTION] = true;
 
                     _logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Execute Command - {0}{1}: {3}RequestID={2}",
                         req.RequestName,
@@ -1704,6 +1764,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <returns>Result of create request or null.</returns>
         internal OrganizationResponse Command_Execute(OrganizationRequest req, string errorStringCheck, bool bypassPluginExecution = false)
         {
+            ValidateConnectionLive();
             Guid requestTrackingId = Guid.NewGuid();
             OrganizationResponse resp = null;
             Stopwatch logDt = new Stopwatch();
@@ -1739,7 +1800,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
                     // if request should bypass plugin exec.
                     if (bypassPluginExecution && Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(_connectionSvc?.OrganizationVersion, Utilities.FeatureVersionMinimums.AllowBypassCustomPlugin))
-                        req.Parameters.Add(Utilities.RequestHeaders.BYPASSCUSTOMPLUGINEXECUTION, true);
+                        req.Parameters[Utilities.RequestHeaders.BYPASSCUSTOMPLUGINEXECUTION] = true;
 
                     //RequestId Logging line for telemetry 
                     string requestIdLogSegement = _logEntry.GetFormatedRequestSessionIdString(requestTrackingId, SessionTrackingId);
@@ -1880,6 +1941,28 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             return null;
         }
         
+        /// <summary>
+        /// Validates that a connection is live and connected. Throws an exception if the connection is not active. 
+        /// </summary>
+        /// <returns></returns>
+        internal void ValidateConnectionLive()
+        {
+            if (!this.IsReady)
+            {
+                if (this._connectionOptions != null)
+                {
+                    var failureExecpt = new DataverseConnectionException("Service Client is Staged for Connection but not Connected. You must call .Connect() on this client before using it.");
+                    _logEntry?.Log(failureExecpt);
+                    throw failureExecpt;
+                }
+                else
+                {
+                    var failureExecpt = new DataverseConnectionException("Service Client is not connected to Dataverse. Please recreate this Service Client.");
+                    _logEntry?.Log(failureExecpt);
+                    throw failureExecpt;
+                }
+            }
+        }
 
         #region IOrganzation Service Proxy - Proxy object
         /// <summary>

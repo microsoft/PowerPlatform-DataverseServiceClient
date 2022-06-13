@@ -15,8 +15,8 @@ EndProject
 #EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiveTestsConsole", "UnitTests\LiveTestsConsole\LiveTestsConsole.csproj", "{5A1A4FFF-78F5-48A2-9AB0-3E507E938465}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.PowerPlatform.Dataverse.ServiceClientConverter", "Extensions\Microsoft.PowerPlatform.Dataverse.ServiceClientConverter\Microsoft.PowerPlatform.Dataverse.ServiceClientConverter.csproj", "{752E5268-3D99-485D-A31E-FC40AE9C0867}"
-EndProject
+#Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.PowerPlatform.Dataverse.ServiceClientConverter", "Extensions\Microsoft.PowerPlatform.Dataverse.ServiceClientConverter\Microsoft.PowerPlatform.Dataverse.ServiceClientConverter.csproj", "{752E5268-3D99-485D-A31E-FC40AE9C0867}"
+#EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

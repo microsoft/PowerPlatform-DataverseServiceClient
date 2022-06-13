@@ -578,7 +578,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         internal Func<string, Task<string>> GetAccessTokenAsync { get; set; }
 
 
-        //TODO: COMPLETE EXPOSURE OF ADDITIONAL HEADER FEATURE
         /// <summary>
         /// Function to call to get the current headers for this request
         /// </summary>
@@ -2307,7 +2306,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             if (httpOperationException.Response.Headers.ContainsKey("Retry-After"))
                                 _retryPauseTimeRunning = TimeSpan.Parse(httpOperationException.Response.Headers["Retry-After"].FirstOrDefault());
                             else
-                                _retryPauseTimeRunning = retryPauseTime; // default timespan.
+                                _retryPauseTimeRunning = retryPauseTime.Add(TimeSpan.FromSeconds(Math.Pow(2, retryCount))); ; // default timespan with back off is response does not contain the tag..
                         }
                         else
                         {
@@ -3330,7 +3329,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         foreach (var itm in discoverResult.OrganizationDetailCollection)
                         {
                             var orgObj = Utilities.DeterminDiscoveryDataFromOrgDetail(new Uri(itm.Endpoints[EndpointType.OrganizationService]), out isOnPrem);
-                            AddOrgToOrgList(itm, orgObj.DisplayName, ref orgsList);
+                            if (orgObj != null)
+                            {
+                                AddOrgToOrgList(itm, orgObj.DisplayName, ref orgsList);
+                            }
+                            else
+                            {
+                                AddOrgToOrgList(itm, !string.IsNullOrEmpty(itm.Geo) ? itm.Geo : "Unknown", ref orgsList);
+                            }
                         }
                     }
                     return orgsList;
@@ -3390,9 +3396,16 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     foreach (var itm in discoverResult.OrganizationDetailCollection)
                     {
                         var orgObj = Utilities.DeterminDiscoveryDataFromOrgDetail(new Uri(itm.Endpoints[EndpointType.OrganizationService]), out isOnPrem);
-                        if (trimToDiscoveryUri != null && !trimToDiscoveryUri.Equals(orgObj.DiscoveryServerUri))
-                            continue;
-                        AddOrgToOrgList(itm, orgObj.DisplayName, ref orgsList);
+                        if (orgObj != null)
+                        {
+                            if (trimToDiscoveryUri != null && !trimToDiscoveryUri.Equals(orgObj.DiscoveryServerUri))
+                                continue;
+                            AddOrgToOrgList(itm, orgObj.DisplayName, ref orgsList);
+                        }
+                        else
+                        {
+                            AddOrgToOrgList(itm, !string.IsNullOrEmpty(itm.Geo) ? itm.Geo : "Unknown", ref orgsList);
+                        }
                     }
                 }
             }

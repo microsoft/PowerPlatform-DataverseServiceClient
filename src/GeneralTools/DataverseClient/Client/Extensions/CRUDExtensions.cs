@@ -58,7 +58,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Extensions
             createReq.Target = NewEnt;
             createReq.Parameters.Add("SuppressDuplicateDetection", !enabledDuplicateDetection);
             if (!string.IsNullOrWhiteSpace(applyToSolution))
-                createReq.Parameters.Add(Utilities.RequestHeaders.SOLUTIONUNIQUENAME, applyToSolution);
+                createReq.Parameters[Utilities.RequestHeaders.SOLUTIONUNIQUENAME] = applyToSolution;
 
             CreateResponse createResp = null;
 

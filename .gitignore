@@ -1,4 +1,5 @@
-﻿# CoreXT generated files
+# CoreXT generated files
+
 .corext/gen/
 build/environment/
 
@@ -6,8 +7,8 @@ build/environment/
 /.cake
 /version.txt
 /PSRunCmds*.ps1
-
 # Build output
+
 /bin/
 /binSigned/
 /obj/
@@ -51,6 +52,7 @@ TestResults
 
 #Skip Nuget Packages
 /src/**/packages/*
+/src/**/.packages/*
 
 # Build generated files in src
 /src/**/objd/**/*
@@ -88,6 +90,4 @@ src/Localize/Temp
 /src/GeneralTools/XrmSDK/TestXrmSDKConnection
 /src/GeneralTools/XrmSDK/StandardConsoleApp
 /src/GeneralTools/XrmSDK/CdsSdkShim
-
-# Skip generated nuget.config
-/nuget.config
+/build/cake/test/*

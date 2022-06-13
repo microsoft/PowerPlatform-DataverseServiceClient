@@ -1056,7 +1056,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
         }
 
-
         #region CookieHelpers
         /// <summary>
         /// Manage Pushing Cookies Forward in a switchable manner.

@@ -20,13 +20,13 @@
     <tags>Dynamics CommonDataService CDS PowerApps PowerPlatform Dataverse</tags>
     <dependencies>
       <group targetFramework=".NETFramework4.6.2">
-        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="0.5.10" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.0.0" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".NETFramework4.7.2">
-        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="0.5.10" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.0.0" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".NETFramework4.8">
-        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="0.5.10" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.0.0" exclude="Build,Analyzers" />
       </group>
     </dependencies>
   </metadata>

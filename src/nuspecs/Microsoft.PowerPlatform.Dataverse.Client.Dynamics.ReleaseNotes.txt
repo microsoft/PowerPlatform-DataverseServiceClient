@@ -1,9 +1,9 @@
 Notice: 
     This package is an extension to the Microsoft.PowerPlatform.Dataverse.Client Nuget package.
-    This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8, .net core 3.0 and 3.1 
+    This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8, .net 3.1, net 5, and .net 6.0
 
 ++CURRENTRELEASEID++
-    updated min dependency to DV ServiceClient 0.5.10
+    updated min dependency to DV ServiceClient 1.0.0
 
 0.5.10:
     Updated Newtonsoft.Json to v11.0.2 to match server.
