@@ -51,7 +51,7 @@ While we are monitoring the community forums,  you are encouraged to open issue 
 </b>
 
 ## Samples / Docs
-**If you are transitioning from Microsoft.XrmTooling.CrmServiceClient to Microsoft.PowerPlatform.Dataverse.Client.ServiceClient Please start here: (Transition apps to Dataverse ServiceClient)[https://docs.microsoft.com/en-us/power-apps/developer/data-platform/sdk-client-transition].**
+**If you are transitioning from Microsoft.XrmTooling.CrmServiceClient to Microsoft.PowerPlatform.Dataverse.Client.ServiceClient Please start here: [Transition apps to Dataverse ServiceClient](https://docs.microsoft.com/en-us/power-apps/developer/data-platform/sdk-client-transition).**
 
 Samples and such will be continually updated overtime on the PowerApps Samples GitHub Site. Dataverse ServiceClient Samples can be found here:[Samples](https://github.com/microsoft/PowerApps-Samples/tree/master/cds/orgsvc)
 
