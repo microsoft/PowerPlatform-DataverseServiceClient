@@ -14,7 +14,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 {
     internal class MSALHttpRetryHandlerHelper : DelegatingHandler
     {
-        private readonly int MaxRetryCount = ClientServiceProviders.Instance.GetService<IOptions<ConfigurationOptions>>().Value.MsalRetryCount;
+        private readonly int MaxRetryCount = ClientServiceProviders.Instance.GetService<IOptions<ConfigurationOptions>>().Value.MSALRetryCount;
 
         /// <summary>
         /// Handel Failure and retry

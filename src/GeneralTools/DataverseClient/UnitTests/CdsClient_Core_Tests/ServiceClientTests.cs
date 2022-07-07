@@ -816,6 +816,50 @@ namespace Client_Core_Tests
             ValidateConnection(client);
         }
 
+        [SkippableConnectionTest]
+        [Trait("Category", "Live Connect Required")]
+        public void ConnectUsingServiceIdentity_ClientSecret_ExternalAuth_CtorV1()
+        {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+            var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
+
+            // Connection params.
+            var client = new ServiceClient(new Uri(Conn_Url), testSupport.GetS2SAccessTokenForRequest , true, Ilogger);
+            Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
+
+            // Validate connection
+            ValidateConnection(client , usingExternalAuth:true);
+        }
+
+        [SkippableConnectionTest]
+        [Trait("Category", "Live Connect Required")]
+        public void ConnectUsingServiceIdentity_ClientSecret_ExternalAuth_Consetup()
+        {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
+            ConnectionOptions connectionOptions = new ConnectionOptions()
+            {
+                AccessTokenProviderFunctionAsync = testSupport.GetS2SAccessTokenForRequest,
+                ServiceUri = new Uri(System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI")),
+                Logger = Ilogger
+            };
+
+            // Connection params.
+            var client = new ServiceClient(connectionOptions, deferConnection: true);
+            Assert.NotNull(client);
+            Assert.False(client.IsReady, "Client is showing True on Deferred Connection.");
+            Assert.True(client.Connect(), "Connection was not activated");
+            Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
+
+            // Validate connection
+            ValidateConnection(client , usingExternalAuth:true);
+
+            // test clone
+            var clientClone = client.Clone();
+            ValidateConnection(clientClone, usingExternalAuth: true);
+        }
+
+
         /// <summary>
         /// This Tests connection for UID/PW via connection string - direct connect.
         /// </summary>
@@ -977,9 +1021,10 @@ namespace Client_Core_Tests
 
         #region connectionValidationHelper
 
-        private void ValidateConnection(ServiceClient client)
+        private void ValidateConnection(ServiceClient client , bool usingExternalAuth = false)
         {
-            client._connectionSvc.AuthContext.Should().NotBeNull();
+            if (!usingExternalAuth)
+                client._connectionSvc.AuthContext.Should().NotBeNull();
 
             // Validate it
             var rslt = client.Execute(new WhoAmIRequest());

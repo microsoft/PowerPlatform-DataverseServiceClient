@@ -1,15 +1,19 @@
 <Project>
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
   <!-- msbuild properties shared for dotnetCore and .NET classic projects: -->
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-    <PackageVersion_AppInsights>2.9.1</PackageVersion_AppInsights>
+    <PackageVersion_AppInsights>2.10.0</PackageVersion_AppInsights>
     <PackageVersion_Adal>3.19.8</PackageVersion_Adal>
     <PackageVersion_MSAL>4.35.1</PackageVersion_MSAL>
     <PackageVersion_CdsSdk>4.7.9489-v9.0-master</PackageVersion_CdsSdk>
     <PackageVersion_CrmProxy>4.7.9409-v9.0-master</PackageVersion_CrmProxy>
     <PackageVersion_CDSServerNuget>4.6.6061-weekly-2108.5</PackageVersion_CDSServerNuget>
     <PackageVersion_CdsSdkProxy>4.7.6346-master</PackageVersion_CdsSdkProxy>
-    <PackageVersion_Newtonsoft>11.0.2</PackageVersion_Newtonsoft>
+    <PackageVersion_Newtonsoft>13.0.1</PackageVersion_Newtonsoft>
     <PackageVersion_RestClientRuntime>2.3.20</PackageVersion_RestClientRuntime>
     <PackageVersion_XrmSdk>9.0.2.42</PackageVersion_XrmSdk>
     <PackageVersion_Dep_OutlookXrmSdk>9.0.2.34</PackageVersion_Dep_OutlookXrmSdk>
@@ -19,9 +23,11 @@
     <PackageVersion_Microsoft_Extensions>3.1.8</PackageVersion_Microsoft_Extensions>
     
     <!-- Test: -->
+    <PackageVersion_MicrosoftNETTestSdk>17.2.0</PackageVersion_MicrosoftNETTestSdk>
+    <PackageVersion_MSTest>2.2.10</PackageVersion_MSTest>
     <PackageVersion_Moq>4.16.0</PackageVersion_Moq>
     <PackageVersion_XUnit>2.4.1</PackageVersion_XUnit>
-    <PackageVersion_XUnitRunner>2.4.3</PackageVersion_XUnitRunner>
+    <PackageVersion_XUnitRunnerVS>2.4.5</PackageVersion_XUnitRunnerVS>
     <PackageVersion_FluentAssertions>5.10.3</PackageVersion_FluentAssertions>
 
     <!-- Assembly attributes are set by cake build. We need to disable autogeneration by msbuild -->

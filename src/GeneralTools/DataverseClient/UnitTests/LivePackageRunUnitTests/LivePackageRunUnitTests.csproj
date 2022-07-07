@@ -14,9 +14,9 @@
   <Import Project="..\..\..\..\Build.Common.core.props" />
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(PackageVersion_MicrosoftNETTestSdk)" />
     <PackageReference Include="xunit" Version="$(PackageVersion_XUnit)" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="$(PackageVersion_XUnit)" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="$(PackageVersion_XUnitRunnerVS)" />
     <PackageReference Include="coverlet.collector" Version="1.2.0" />
   </ItemGroup>
 

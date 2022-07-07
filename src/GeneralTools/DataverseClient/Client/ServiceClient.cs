@@ -390,7 +390,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         return _connectionSvc.CurrentUser;
                     else
                     {
-                        WhoAmIResponse resp = _connectionSvc.GetWhoAmIDetails(this).ConfigureAwait(false).GetAwaiter().GetResult();
+                        WhoAmIResponse resp = Task.Run(async () => await _connectionSvc.GetWhoAmIDetails(this).ConfigureAwait(false)).Result;
                         _connectionSvc.CurrentUser = resp;
                         return resp;
                     }
@@ -1056,6 +1056,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                                                     MakeSecureString(password), domainname, string.Empty, string.Empty, useSsl, parsedConnStr.UseUniqueConnectionInstance, null, instanceUrl: parsedConnStr.SkipDiscovery ? parsedConnStr.ServiceUri : null, externalLogger: logger);
 
                     break;
+                case AuthenticationType.ExternalTokenManagement:
+                    CreateServiceConnection(null, parsedConnStr.AuthenticationType, string.Empty, string.Empty, string.Empty, null,
+                                                    string.Empty, null, string.Empty, string.Empty, string.Empty, true, parsedConnStr.UseUniqueConnectionInstance, null,
+                                                    string.Empty, null, PromptBehavior.Never, null, string.Empty, StoreName.My, null, parsedConnStr.ServiceUri, externalLogger: logger);
+                    break;
             }
         }
 
@@ -1369,6 +1374,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 {
                     // Get Current Access Token.
                     // This will get the current access token
+                    if (logger == null) logger = _logEntry._logger; 
                     proxy.HeaderToken = this.CurrentAccessToken;
                     var SvcClient = new ServiceClient(proxy, true, _connectionSvc.AuthenticationTypeInUse, _connectionSvc?.OrganizationVersion, logger: logger);
                     SvcClient._connectionSvc.SetClonedProperties(this);

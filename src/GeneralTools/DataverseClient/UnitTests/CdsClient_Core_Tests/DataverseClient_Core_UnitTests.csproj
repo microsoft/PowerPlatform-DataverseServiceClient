@@ -11,14 +11,14 @@
   <Import Project="..\..\..\..\Build.Common.core.props" />
 
   <ItemGroup>
-    <PackageReference Include="FluentAssertions" Version="5.10.3" />
+    <PackageReference Include="FluentAssertions" Version="$(PackageVersion_FluentAssertions)" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.8" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.8" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.8" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(PackageVersion_MicrosoftNETTestSdk)" />
     <PackageReference Include="Moq" Version="$(PackageVersion_Moq)" />
     <PackageReference Include="xunit" Version="$(PackageVersion_XUnit)" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="$(PackageVersion_XUnit)" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="$(PackageVersion_XUnitRunnerVS)" />
     <PackageReference Include="coverlet.collector" Version="1.0.1" />
   </ItemGroup>
 

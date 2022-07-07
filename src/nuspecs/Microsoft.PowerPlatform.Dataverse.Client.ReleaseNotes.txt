@@ -7,6 +7,12 @@ Notice:
     Note: Only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Fixed an issue with External Authentication and Connection and configuration constructor where external auth was not being respected correctly.
+Fixed a bug on clone where Ilogger was not being propagated to the cloned connection correctly
+Removed a call to WhoAmI during login flow as process of talking to Dataverse to verify the connection is delt with during get environment information call. 
+Updated Newtonsoft dependencies to 13.0.1 per https://github.com/advisories/GHSA-5crp-9r3c-p9vr
+
+1.0.1:
 Fixed a "Duplicate Key Error" issue created when manually adding some request parameters to an organization request, while also setting the appropriate property in the client 
 Fix formatting issue with RequestId and Session Id.
 Fix exponential back off issue for WebAPI based calls when retrying based on a throttled connection.

@@ -264,11 +264,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// This is a temp method to support the staged transition to the webAPI and will be removed or reintegrated with the overall pipeline at some point in the future.
         /// </summary>
         /// <param name="req"></param>
+        /// <param name="inLoginFlow"></param>
         /// <returns></returns>
-        internal static bool IsRequestValidForTranslationToWebAPI(OrganizationRequest req)
+        internal static bool IsRequestValidForTranslationToWebAPI(OrganizationRequest req, bool inLoginFlow = false)
         {
             bool useWebApi = ClientServiceProviders.Instance.GetService<IOptions<ConfigurationOptions>>().Value.UseWebApi;
-            bool useWebApiForLogin = ClientServiceProviders.Instance.GetService<IOptions<ConfigurationOptions>>().Value.UseWebApiLoginFlow;
+            bool useWebApiForLogin = false;
+            if (inLoginFlow)
+                useWebApiForLogin = ClientServiceProviders.Instance.GetService<IOptions<ConfigurationOptions>>().Value.UseWebApiLoginFlow;
+
             switch (req.RequestName.ToLowerInvariant())
             {
                 case "create":

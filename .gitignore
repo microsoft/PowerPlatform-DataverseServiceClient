@@ -25,6 +25,7 @@ buildd.err
 buildd.log
 buildd.prf
 buildd.wrn
+*.binlog
 data/
 objd/
 public/lock

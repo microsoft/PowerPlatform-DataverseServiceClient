@@ -1320,20 +1320,20 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         return null;
                 }
 
-                // Do a WHO AM I request to make sure the connection is good.
-                if (!UseExternalConnection)
-                {
-                    Guid guIntialTrackingID = Guid.NewGuid();
-                    logEntry.Log(string.Format("Beginning Validation of Dataverse Connection. RequestID: {0}", guIntialTrackingID.ToString()));
-                    dtQueryTimer.Restart();
-                    user = await GetWhoAmIDetails(dvService, guIntialTrackingID).ConfigureAwait(false);
-                    dtQueryTimer.Stop();
-                    logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Validation of Dataverse Connection Complete, total duration: {0}", dtQueryTimer.Elapsed.ToString()));
-                }
-                else
-                {
-                    logEntry.Log("External Dataverse Connection Provided, Skipping Validation");
-                }
+                //// Do a WHO AM I request to make sure the connection is good.
+                //if (!UseExternalConnection)
+                //{
+                //    Guid guIntialTrackingID = Guid.NewGuid();
+                //    logEntry.Log(string.Format("Beginning Validation of Dataverse Connection. RequestID: {0}", guIntialTrackingID.ToString()));
+                //    dtQueryTimer.Restart();
+                //    user = await GetWhoAmIDetails(dvService, guIntialTrackingID).ConfigureAwait(false);
+                //    dtQueryTimer.Stop();
+                //    logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Validation of Dataverse Connection Complete, total duration: {0}", dtQueryTimer.Elapsed.ToString()));
+                //}
+                //else
+                //{
+                //    logEntry.Log("External Dataverse Connection Provided, Skipping Validation");
+                //}
 
                 return (IOrganizationService)dvService;
 
@@ -1528,11 +1528,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
                     var request = new RetrieveCurrentOrganizationRequest() { AccessType = 0, RequestId = trackingID };
                     RetrieveCurrentOrganizationResponse resp;
-                    logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Execute Command - RetrieveCurrentOrganizationRequest : RequestId={0}", dtQueryTimer.Elapsed.ToString()));
+                    logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Execute Command - RetrieveCurrentOrganizationRequest : RequestId={0}", trackingID));
                     if (_configuration.Value.UseWebApiLoginFlow)
                     {
                         OrganizationResponse orgResp = await Command_WebAPIProcess_ExecuteAsync(
-                            request, null, false, null, Guid.Empty, false, _configuration.Value.MaxRetryCount, _configuration.Value.RetryPauseTime, new CancellationToken(), uriOfInstance).ConfigureAwait(false);
+                            request, null, false, null, Guid.Empty, false, _configuration.Value.MaxRetryCount, _configuration.Value.RetryPauseTime, new CancellationToken(), uriOfInstance, true).ConfigureAwait(false);
                         try
                         {
                             resp = (RetrieveCurrentOrganizationResponse)orgResp;
@@ -1643,7 +1643,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     if (_configuration.Value.UseWebApiLoginFlow)
                     {
                         resp = (WhoAmIResponse)(await Command_WebAPIProcess_ExecuteAsync(
-                            req, null, false, null, Guid.Empty, false, _configuration.Value.MaxRetryCount, _configuration.Value.RetryPauseTime, new CancellationToken()).ConfigureAwait(false));
+                            req, null, false, null, Guid.Empty, false, _configuration.Value.MaxRetryCount, _configuration.Value.RetryPauseTime, new CancellationToken(), inLoginFlow:true).ConfigureAwait(false));
                     }
                     else
                     {
@@ -1738,11 +1738,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         #region WebAPI Interface Utilities
 
         internal async Task<OrganizationResponse> Command_WebAPIProcess_ExecuteAsync(OrganizationRequest req, string logMessageTag, bool bypassPluginExecution,
-            MetadataUtility metadataUtlity, Guid callerId, bool disableConnectionLocking, int maxRetryCount, TimeSpan retryPauseTime, CancellationToken cancellationToken, Uri uriOfInstance = null)
+            MetadataUtility metadataUtlity, Guid callerId, bool disableConnectionLocking, int maxRetryCount, TimeSpan retryPauseTime, CancellationToken cancellationToken, Uri uriOfInstance = null, bool inLoginFlow = false)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (!Utilities.IsRequestValidForTranslationToWebAPI(req)) // THIS WILL GET REMOVED AT SOME POINT, TEMP FOR TRANSTION  //TODO:REMOVE ON COMPELTE
+            if (!Utilities.IsRequestValidForTranslationToWebAPI(req , inLoginFlow)) // THIS WILL GET REMOVED AT SOME POINT, TEMP FOR TRANSTION  //TODO:REMOVE ON COMPELTE
             {
                 logEntry.Log("Execute Organization Request failed, WebAPI is only supported for limited type of messages at this time.", TraceEventType.Error);
                 return null;
@@ -1927,7 +1927,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             {
                 postUri = $"{postUri}?{addedQueryParams}";
             }
-
             // Execute request
             var sResp = await Command_WebExecuteAsync(postUri, bodyOfRequest, methodToExecute, headers, "application/json", logMessageTag, callerId, disableConnectionLocking, maxRetryCount, retryPauseTime, uriOfInstance, cancellationToken: cancellationToken).ConfigureAwait(false);
             if (sResp != null && sResp.IsSuccessStatusCode)
@@ -1962,7 +1961,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 else
                 {
                     var json = await sResp.Content.ReadAsStringAsync().ConfigureAwait(false);
-
                     if (_knownTypesFactory.TryCreate($"{req.RequestName}Response", out var response, json))
                     {
                         OrganizationResponse resp = (OrganizationResponse)response;

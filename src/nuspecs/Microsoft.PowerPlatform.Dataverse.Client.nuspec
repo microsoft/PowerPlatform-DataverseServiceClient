@@ -22,7 +22,7 @@
         <dependency id="Microsoft.Identity.Client" version="4.35.1" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.18.9" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.20" exclude="Build,Analyzers" />
-        <dependency id="Newtonsoft.Json" version="11.0.2" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
         <dependency id="System.Text.Json" version="6.0.2" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".NETFramework4.7.2">
@@ -33,7 +33,7 @@
         <dependency id="Microsoft.Identity.Client" version="4.35.1" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.18.9" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.20" exclude="Build,Analyzers" />
-        <dependency id="Newtonsoft.Json" version="11.0.2" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
         <dependency id="System.Text.Json" version="6.0.2" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".NETFramework4.8">
@@ -44,7 +44,7 @@
         <dependency id="Microsoft.Identity.Client" version="4.35.1" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.18.9" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.20" exclude="Build,Analyzers" />
-        <dependency id="Newtonsoft.Json" version="11.0.2" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
         <dependency id="System.Text.Json" version="6.0.2" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".NETCoreApp3.1">
@@ -71,7 +71,7 @@
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.18.9" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.20" exclude="Build,Analyzers" />
         <dependency id="Microsoft.VisualBasic" version="10.3.0" exclude="Build,Analyzers" />
-        <dependency id="Newtonsoft.Json" version="11.0.2" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
         <dependency id="System.Configuration.ConfigurationManager" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Runtime.Caching" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Security.Cryptography.Algorithms" version="4.3.1" exclude="Build,Analyzers" />
