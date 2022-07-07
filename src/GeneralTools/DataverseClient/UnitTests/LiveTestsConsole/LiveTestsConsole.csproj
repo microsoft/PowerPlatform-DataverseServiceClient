@@ -11,7 +11,7 @@
   <Import Project="..\..\..\..\Build.Common.core.props" />
 
   <ItemGroup>
-    <PackageReference Include="FluentAssertions" Version="5.10.3" />
+    <PackageReference Include="FluentAssertions" Version="$(PackageVersion_FluentAssertions)" />
   </ItemGroup>
   
   <ItemGroup>

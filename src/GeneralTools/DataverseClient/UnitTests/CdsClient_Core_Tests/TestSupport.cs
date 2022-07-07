@@ -1,5 +1,6 @@
-﻿using Microsoft.Crm.Sdk.Messages;
+using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Extensions.Logging;
+using Microsoft.Identity.Client;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
@@ -14,6 +15,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Xunit;
 
 namespace Client_Core_UnitTests
 {
@@ -27,6 +29,13 @@ namespace Client_Core_UnitTests
         public Guid _SampleAppID = Guid.Parse("51f81489-12ee-4a9e-aaae-a2591f45987d");
         public Uri _SampleAppRedirect = new Uri("app://58145B91-0C36-4500-8554-080854F2AC97");
         #endregion
+
+        private readonly string TenantId = System.Environment.GetEnvironmentVariable("XUNITCONNTESTTENANT");
+        private readonly string S2SAppId = System.Environment.GetEnvironmentVariable("XUNITCONNTESTAPPID");
+        private readonly string S2SAppSecret = System.Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET");
+        private readonly List<string> Scopes = new List<string>();
+        private IConfidentialClientApplication cApp = null;
+
 
         public ILogger logger { get; set; }
 
@@ -196,6 +205,40 @@ namespace Client_Core_UnitTests
             orgSvc.Setup(f => f.Execute(It.IsAny<RetrieveEntityRequest>())).Returns(retrieveEntityResponse);
             orgSvc.Setup(f => f.Execute(It.IsAny<RetrieveAllEntitiesRequest>())).Returns(retrieveAllEntitiesResponse);
 
+        }
+
+        #endregion
+
+        #region ExternalAuthHandler
+        
+        public async Task<string> GetS2SAccessTokenForRequest(string targetUrl)
+        {
+            if (cApp == null)
+            {
+                Assert.NotNull(TenantId);
+                Assert.NotNull(S2SAppId);
+                Assert.NotNull(S2SAppSecret);
+
+                // This is purposed for Client Secret only... 
+                cApp = ConfidentialClientApplicationBuilder.CreateWithApplicationOptions(
+                        new ConfidentialClientApplicationOptions()
+                        {
+                            ClientId = S2SAppId
+                        })
+                        .WithTenantId(TenantId)
+                        .WithClientSecret(S2SAppSecret)
+                        .Build();
+            }
+
+            // Set up scope.
+            Uri baseUri = new Uri(targetUrl);
+            Scopes.Clear();
+            Scopes.Add($"{baseUri.Scheme}://{baseUri.DnsSafeHost}/.default");
+
+            // Get token. 
+            var authResult = await cApp.AcquireTokenForClient(Scopes).ExecuteAsync().ConfigureAwait(false);
+
+            return authResult.AccessToken;
         }
 
         #endregion

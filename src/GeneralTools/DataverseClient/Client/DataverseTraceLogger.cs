@@ -24,7 +24,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         // Internal connection of exceptions since last clear.
         private List<Exception> _ActiveExceptionsList;
 
-        private ILogger _logger;
+        internal ILogger _logger;
 
         #region Properties
         /// <summary>
@@ -318,9 +318,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
         internal string GetFormatedRequestSessionIdString( Guid requestId, Guid? sessionId )
         {
-            return string.Format("RequestID={0} {1}",
+            return string.Format("RequestID={0}{1}",
                         requestId.ToString(),
-                        sessionId.HasValue && sessionId.Value != Guid.Empty ? $": SessionID={sessionId.Value.ToString()} : " : "");
+                        sessionId.HasValue && sessionId.Value != Guid.Empty ? $" : SessionID={sessionId.Value.ToString()} : " : "");
         }
 
         /// <summary>

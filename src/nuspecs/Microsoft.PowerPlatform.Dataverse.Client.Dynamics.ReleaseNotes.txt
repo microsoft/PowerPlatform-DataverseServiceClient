@@ -3,6 +3,9 @@ Notice:
     This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8, .net 3.1, net 5, and .net 6.0
 
 ++CURRENTRELEASEID++
+    No updates
+
+1.0.1:
     updated min dependency to DV ServiceClient 1.0.0
 
 0.5.10:
