@@ -1742,7 +1742,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (!Utilities.IsRequestValidForTranslationToWebAPI(req , inLoginFlow)) // THIS WILL GET REMOVED AT SOME POINT, TEMP FOR TRANSTION  //TODO:REMOVE ON COMPELTE
+            if (!Utilities.IsRequestValidForTranslationToWebAPI(req , inLoginFlow))
             {
                 logEntry.Log("Execute Organization Request failed, WebAPI is only supported for limited type of messages at this time.", TraceEventType.Error);
                 return null;
@@ -1750,15 +1750,16 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
             HttpMethod methodToExecute = Utilities.RequestNameToHttpVerb(req.RequestName);
             Entity cReq = null;
-            if (req.Parameters.ContainsKey("Target") && req.Parameters["Target"] is Entity ent) // this should cover things that have targets.
+            if (req.Parameters.ContainsKey("Target") && req.Parameters["Target"] is Entity ent) 
             {
                 cReq = ent;
             }
-            else if (req.Parameters.ContainsKey("Target") && req.Parameters["Target"] is EntityReference entRef) // this should cover things that have targets.
+            else if (req.Parameters.ContainsKey("Target") && req.Parameters["Target"] is EntityReference entRef)
             {
                 cReq = entRef.KeyAttributes.Any()
                     ? new Entity(entRef.LogicalName, entRef.KeyAttributes)
                     : new Entity(entRef.LogicalName, entRef.Id);
+                cReq.RowVersion = entRef.RowVersion; 
             }
 
             EntityMetadata entityMetadata = null;
@@ -1861,7 +1862,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 }
                 else
                 {
-                    DataverseOperationException opEx = new DataverseOperationException("Request Failed, RowVersion is missing and is required when ConcurrencyBehavior is set to a value other then Default.");
+                    DataverseOperationException opEx = new DataverseOperationException("Request Failed, RowVersion is missing and is required when ConcurrencyBehavior is set to a value other than Default.");
                     logEntry.Log(opEx);
                     return null;
                 }
@@ -2145,9 +2146,16 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         foreach (var hrdProp in addedHeaders)
                         {
                             // General handling from here on out.
-                            if (!customHeaders.ContainsKey(hrdProp.Key))
+                            if (customHeaders.Keys.Contains(hrdProp.Key))
                             {
-                                customHeaders[hrdProp.Key] = new List<string>() { hrdProp.Value };
+                                if (customHeaders[hrdProp.Key] == null)
+                                    customHeaders[hrdProp.Key] = new List<string>();
+
+                                customHeaders[hrdProp.Key].Add(hrdProp.Value);
+                            }
+                            else
+                            {
+                                customHeaders.Add(hrdProp.Key, new List<string>() { hrdProp.Value });
                             }
                         }
                         addedHeaders.Clear();
@@ -2359,29 +2367,23 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     _httpRequest.RequestUri = new System.Uri(uri);
 
                     // Set Headers
+                    // Add User Agent and request id to send.
+                    string Agent = "Unknown";
+                    if (AppDomain.CurrentDomain != null)
+                    {
+                        Agent = AppDomain.CurrentDomain.FriendlyName;
+                    }
+                    Agent = $"{Agent} (DataverseSvcClient:{Environs.DvSvcClientFileVersion})";
+
+                    if (!_httpRequest.Headers.Contains(Utilities.RequestHeaders.USER_AGENT_HTTP_HEADER))
+                        _httpRequest.Headers.TryAddWithoutValidation(Utilities.RequestHeaders.USER_AGENT_HTTP_HEADER, string.IsNullOrEmpty(Agent) ? "" : Agent);
+
                     if (customHeaders != null)
                     {
                         foreach (var _header in customHeaders)
                         {
-                            if (_httpRequest.Headers.Count() > 0)
-                                if (_httpRequest.Headers.Contains(_header.Key))
-                                {
-                                    _httpRequest.Headers.Remove(_header.Key);
-                                }
                             _httpRequest.Headers.TryAddWithoutValidation(_header.Key, _header.Value);
                         }
-
-                        // Add User Agent and request id to send.
-                        string Agent = "Unknown";
-                        if (AppDomain.CurrentDomain != null)
-                        {
-                            Agent = AppDomain.CurrentDomain.FriendlyName;
-                        }
-                        Agent = $"{Agent} (DataverseSvcClient:{Environs.DvSvcClientFileVersion})";
-
-
-                        if (!_httpRequest.Headers.Contains(Utilities.RequestHeaders.USER_AGENT_HTTP_HEADER))
-                            _httpRequest.Headers.TryAddWithoutValidation(Utilities.RequestHeaders.USER_AGENT_HTTP_HEADER, string.IsNullOrEmpty(Agent) ? "" : Agent);
 
                         if (!_httpRequest.Headers.Contains(Utilities.RequestHeaders.X_MS_CLIENT_REQUEST_ID))
                             _httpRequest.Headers.TryAddWithoutValidation(Utilities.RequestHeaders.X_MS_CLIENT_REQUEST_ID, RequestId.ToString());

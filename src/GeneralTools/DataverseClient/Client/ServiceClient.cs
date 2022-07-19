@@ -391,6 +391,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     else
                     {
                         WhoAmIResponse resp = Task.Run(async () => await _connectionSvc.GetWhoAmIDetails(this).ConfigureAwait(false)).Result;
+                        //WhoAmIResponse resp = _connectionSvc.GetWhoAmIDetails(this).Result;
                         _connectionSvc.CurrentUser = resp;
                         return resp;
                     }

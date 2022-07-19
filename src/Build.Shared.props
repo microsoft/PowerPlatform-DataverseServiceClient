@@ -15,7 +15,7 @@
     <PackageVersion_CdsSdkProxy>4.7.6346-master</PackageVersion_CdsSdkProxy>
     <PackageVersion_Newtonsoft>13.0.1</PackageVersion_Newtonsoft>
     <PackageVersion_RestClientRuntime>2.3.20</PackageVersion_RestClientRuntime>
-    <PackageVersion_XrmSdk>9.0.2.42</PackageVersion_XrmSdk>
+    <PackageVersion_XrmSdk>9.0.2.45</PackageVersion_XrmSdk>
     <PackageVersion_Dep_OutlookXrmSdk>9.0.2.34</PackageVersion_Dep_OutlookXrmSdk>
     <PackageVersion_BatchedTelemetry>2.0.19</PackageVersion_BatchedTelemetry>
     <PackageVersion_DataverseClient>0.4.20</PackageVersion_DataverseClient>
