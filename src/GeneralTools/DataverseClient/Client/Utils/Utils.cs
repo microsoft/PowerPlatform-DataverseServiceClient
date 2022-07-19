@@ -562,7 +562,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             {
                                 mselectValueString += $"{opt.Value},";
                             }
-                            value = mselectValueString.Remove(mselectValueString.Length - 1);
+                            if (!string.IsNullOrEmpty(mselectValueString) && mselectValueString.Last().Equals(','))
+                                value = mselectValueString.Remove(mselectValueString.Length - 1);
+                            else
+                                value = null;
                         }
                         else if (value is OptionSetValue optionSetValue)
                         {
@@ -1209,6 +1212,25 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 }
             }
             return cookieCollection;
+        }
+        #endregion
+
+        #region HTTPHeaderCleanupSupport
+        /// <summary>
+        /// Fix for issue in .net core which is not using proper separators for User-Agent and Server Headers
+        /// </summary>
+        /// <param name="headerCollection">Collection to clean up values for</param>
+        /// <returns></returns>
+        internal static void CleanUpHeaderKeys(WebHeaderCollection headerCollection)
+        {
+            if (headerCollection.AllKeys.Contains(RequestHeaders.USER_AGENT_HTTP_HEADER))
+            {
+                string UserAgentValue = headerCollection[RequestHeaders.USER_AGENT_HTTP_HEADER];
+                if (UserAgentValue.Contains(","))
+                {
+                    headerCollection[RequestHeaders.USER_AGENT_HTTP_HEADER] = UserAgentValue.Replace(",", " ");
+                }
+            }
         }
         #endregion
 

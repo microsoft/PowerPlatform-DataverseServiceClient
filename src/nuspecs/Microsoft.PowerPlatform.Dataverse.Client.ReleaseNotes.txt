@@ -7,6 +7,11 @@ Notice:
     Note: Only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Fixed an issue with Custom User Agent headers incorrectly causing a format error when .net core is used. Proper User-Agent format must be used to send requests including the user agent. 
+Fixed an issue with an Empty OptionSetValue collection causing an ArgumentOutOfRangeException. Empty OptionSetValue collections will now be mapped to Null. Fixes https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/292 Thanks for your report! 
+Fixed an issue where EntityReference based operations do not propagate RowVersion when using WebAPI protocol.  Fixes https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/296 
+
+1.0.4: 
 Fixed an issue with External Authentication and Connection and configuration constructor where external auth was not being respected correctly.
 Fixed a bug on clone where Ilogger was not being propagated to the cloned connection correctly
 Removed a call to WhoAmI during login flow as process of talking to Dataverse to verify the connection is delt with during get environment information call. 
