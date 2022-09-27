@@ -53,7 +53,7 @@ While we are monitoring the community forums,  you are encouraged to open issue 
 ## Samples / Docs
 **If you are transitioning from Microsoft.XrmTooling.CrmServiceClient to Microsoft.PowerPlatform.Dataverse.Client.ServiceClient Please start here: [Transition apps to Dataverse ServiceClient](https://docs.microsoft.com/en-us/power-apps/developer/data-platform/sdk-client-transition).**
 
-Samples and such will be continually updated overtime on the PowerApps Samples GitHub Site. Dataverse ServiceClient Samples can be found here:[Samples](https://github.com/microsoft/PowerApps-Samples/tree/master/cds/orgsvc)
+Samples and such will be continually updated overtime on the PowerApps Samples GitHub Site. Dataverse ServiceClient Samples can be found here: [Samples](https://github.com/microsoft/PowerApps-Samples/tree/master/dataverse/orgsvc)
 
 For connections strings, docs on supported patterns are here: [Connection String Docs](https://docs.microsoft.com/en-us/powerapps/developer/common-data-service/xrm-tooling/use-connection-strings-xrm-tooling-connect). This link will be updated as Dataverse Specific connection string documentation comes online.
 
