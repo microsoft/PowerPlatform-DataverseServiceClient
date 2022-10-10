@@ -632,8 +632,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         }
 
         /// <summary>
-        /// Use Web API instead of org service where possible.
-        /// WARNING. THEASE ARE TEMPORARY SETTINGS AND WILL BE REMOVED IN THE FUTURE
+        /// Use Dataverse Web API instead of Dataverse Object Model service where possible - Defaults to False.
         /// </summary>
         public bool UseWebApi
         {
@@ -1590,6 +1589,20 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         {
             return ExecuteOrganizationRequestImpl(req, logMessageTag, useWebAPI, false);
         }
+
+        /// <summary>
+        /// Executes a Dataverse Organization Request (In Async mode) and returns the organization response object. Also adds metrics for logging support.
+        /// </summary>
+        /// <param name="req">Organization Request  to run</param>
+        /// <param name="logMessageTag">Message identifying what this request in logging.</param>
+        /// <param name="useWebAPI">When True, uses the webAPI to execute the organization Request.  This works for only Create at this time.</param>
+        /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
+        /// <returns>Result of request or null.</returns>
+        public async Task<OrganizationResponse> ExecuteOrganizationRequestAsync(OrganizationRequest req, string logMessageTag = "User Defined", bool useWebAPI = false , CancellationToken cancellationToken = default)
+        {
+            return await ExecuteOrganizationRequestAsyncImpl(req, cancellationToken, logMessageTag, useWebAPI, false);
+        }
+
         #endregion
 
         #region Internal
@@ -1650,7 +1663,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
         /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
         /// <returns>Result of create request or null.</returns>
-        internal async Task<OrganizationResponse> Command_ExecuteAsync(OrganizationRequest req, string errorStringCheck, System.Threading.CancellationToken cancellationToken, bool bypassPluginExecution = false)
+        internal async Task<OrganizationResponse> Command_ExecuteAsync(OrganizationRequest req, string errorStringCheck, CancellationToken cancellationToken, bool bypassPluginExecution = false)
         {
             ValidateConnectionLive();
             if (DataverseServiceAsync != null)

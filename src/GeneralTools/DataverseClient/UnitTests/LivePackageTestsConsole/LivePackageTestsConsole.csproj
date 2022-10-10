@@ -31,6 +31,7 @@
     <PackageReference Include="FluentAssertions" Version="$(PackageVersion_FluentAssertions)" />
     <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="$(TargetDvClientPackageVersion)" />
     <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client.Dynamics" Version="$(TargetDvClientPackageVersion)" />
+    <PackageReference Include="System.Private.Uri" Version="4.3.*" />
   </ItemGroup>
 
   <ItemGroup>

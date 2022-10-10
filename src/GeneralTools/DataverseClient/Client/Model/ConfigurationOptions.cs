@@ -60,7 +60,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Model
             set => _retryPauseTime = value;
         }
 
-        private bool _useWebApi = Utils.AppSettingsHelper.GetAppSetting<bool>("UseWebApi", true);
+        private bool _useWebApi = Utils.AppSettingsHelper.GetAppSetting<bool>("UseWebApi", false);
 
         /// <summary>
         /// Use Web API instead of org service
