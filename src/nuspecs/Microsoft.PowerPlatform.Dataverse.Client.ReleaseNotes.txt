@@ -7,6 +7,11 @@ Notice:
     Note: Only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Added Async version of ExecuteOrganizationRequest to allow for requests to be made bounded with a custom logging message.
+Update Default settings for "UseWebAPI" in preparation for future work. 
+    Note: for Create or Update operations that make extensive use of related entities you may need to reconfigure UseWebAPI to "true". 
+
+1.0.9:
 Fixed an issue with Custom User Agent headers incorrectly causing a format error when .net core is used. Proper User-Agent format must be used to send requests including the user agent. 
 Fixed an issue with an Empty OptionSetValue collection causing an ArgumentOutOfRangeException. Empty OptionSetValue collections will now be mapped to Null. Fixes https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/292 Thanks for your report! 
 Fixed an issue where EntityReference based operations do not propagate RowVersion when using WebAPI protocol.  Fixes https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/296 

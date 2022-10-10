@@ -62,13 +62,19 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// Guid Type - Converts from a Guid Type
 		/// </summary>
 		UniqueIdentifier,
-		/// <summary>
-		/// User Specified type... will be appended directly. This type must be one of the valid Dataverse types
-		/// </summary>
-		Raw
-
-
-	}
+        /// <summary>
+        /// Use image columns to display a single image per row in the application
+        /// </summary>
+        Image,
+        /// <summary>
+        /// The File column is used for storing binary data
+        /// </summary>
+        File,
+        /// <summary>
+        /// User Specified type... will be appended directly. This type must be one of the valid Dataverse types
+        /// </summary>
+        Raw
+    }
 
 	/// <summary>
 	/// Contains a variable definition. 
