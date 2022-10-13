@@ -254,6 +254,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             bool _IntegratedSecurity = false;
             if (!string.IsNullOrEmpty(IntegratedSecurity))
                 bool.TryParse(IntegratedSecurity, out _IntegratedSecurity);
+            UseCurrentUser = _IntegratedSecurity;
 
             bool useUniqueConnection = true;  // Set default to true to follow the old behavior.
             if (!string.IsNullOrEmpty(requireNewInstance))
