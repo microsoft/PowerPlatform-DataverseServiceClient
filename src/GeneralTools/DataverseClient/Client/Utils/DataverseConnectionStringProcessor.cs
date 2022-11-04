@@ -254,6 +254,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             bool _IntegratedSecurity = false;
             if (!string.IsNullOrEmpty(IntegratedSecurity))
                 bool.TryParse(IntegratedSecurity, out _IntegratedSecurity);
+            UseCurrentUser = _IntegratedSecurity;
 
             bool useUniqueConnection = true;  // Set default to true to follow the old behavior.
             if (!string.IsNullOrEmpty(requireNewInstance))
@@ -289,7 +290,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
 
             //if the client Id was not passed, use Sample AppID
-            if (authenticationType != AuthenticationType.AD && string.IsNullOrWhiteSpace(ClientId))
+            if ((authenticationType != AuthenticationType.AD || authenticationType != AuthenticationType.ExternalTokenManagement) 
+                && string.IsNullOrWhiteSpace(ClientId))
             {
                 logEntry.Log($"Client ID not supplied, using SDK Sample Client ID for this connection", System.Diagnostics.TraceEventType.Warning);
                 ClientId = sampleClientId;// sample client ID

@@ -393,7 +393,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 FormatExceptionMessage(
                 OrgFault.Source != null ? OrgFault.Source.ToString().Trim() : "Not Provided",
                 OrgFault.TargetSite != null ? OrgFault.TargetSite.Name.ToString() : "Not Provided",
-                OrgFault.Detail != null ? string.Format(CultureInfo.InvariantCulture, "Message: {0}\nErrorCode: {1}{4}\nTrace: {2}{3}", OrgFault.Detail.Message, OrgFault.Detail.ErrorCode, OrgFault.Detail.TraceText, string.IsNullOrEmpty(ErrorDetail) ? "" : $"\n{ErrorDetail}", OrgFault.Detail.ActivityId == null ? "" : $"\nActivityId: {OrgFault.Detail.ActivityId}") :
+                OrgFault.Detail != null ? string.Format(CultureInfo.InvariantCulture, "Message: {0}\nErrorCode: {1}{4}\nTrace: {2}{3}", OrgFault.Detail.Message, OrgFault.Detail.ErrorCode, OrgFault.Detail.TraceText, string.IsNullOrEmpty(ErrorDetail) ? "" : $"\n{ErrorDetail}", OrgFault.Detail.ActivityId != Guid.Empty ? "" : $"\nActivityId: {OrgFault.Detail.ActivityId}") :
                 string.IsNullOrEmpty(OrgFault.Message) ? "Not Provided" : OrgFault.Message.ToString().Trim(),
                 string.IsNullOrEmpty(OrgFault.HelpLink) ? "Not Provided" : OrgFault.HelpLink.ToString().Trim(),
                 string.IsNullOrEmpty(OrgFault.StackTrace) ? "Not Provided" : OrgFault.StackTrace.ToString().Trim()
@@ -420,7 +420,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     OrganizationServiceFault oFault = (OrganizationServiceFault)objException;
                     string ErrorDetail = GenerateOrgErrorDetailsInfo(oFault.ErrorDetails);
                     FormatOrgFaultMessage(
-                            string.Format(CultureInfo.InvariantCulture, "Message: {0}\nErrorCode: {1}{4}\nTrace: {2}{3}", oFault.Message, oFault.ErrorCode, oFault.TraceText, string.IsNullOrEmpty(ErrorDetail) ? "" : $"\n{ErrorDetail}", oFault.ActivityId == null ? "" : $"\nActivityId: {oFault.ActivityId}"),
+                            string.Format(CultureInfo.InvariantCulture, "Message: {0}\nErrorCode: {1}{4}\nTrace: {2}{3}", oFault.Message, oFault.ErrorCode, oFault.TraceText, string.IsNullOrEmpty(ErrorDetail) ? "" : $"\n{ErrorDetail}", oFault.ActivityId != Guid.Empty ? "" : $"\nActivityId: {oFault.ActivityId}"),
                             oFault.Timestamp.ToString(),
                             oFault.ErrorCode.ToString(),
                             string.IsNullOrEmpty(oFault.HelpLink) ? "Not Provided" : oFault.HelpLink.ToString().Trim(),
