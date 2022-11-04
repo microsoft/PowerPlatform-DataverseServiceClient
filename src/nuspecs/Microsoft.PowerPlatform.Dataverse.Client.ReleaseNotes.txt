@@ -7,6 +7,17 @@ Notice:
     Note: Only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Fix by Git user matkov accepted for crash during create when an invalid timespan is passed from a configuration file to the ServiceClient Constructor. See https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/326 for details.
+Fix by GIT user 0xced accepted for bug in Integrated user security setting,  Code will now properly honor integrated security when attempting to authenticate. See https://github.com/microsoft/PowerPlatform-DataverseServiceClient/pull/324 for details. 
+Fixed a number of places where Async Calls did not have a .ConfigureAwait specification. Thanks to user 0xced for prompting this fix. 
+Fixed a misleading warning message "Client ID not supplied, using SDK Sample Client ID for this connection" that would be incorrectly shown when ExternalAuthentication type was used. Fixes https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/314, Thanks for your report! 
+Fixed a possible thread contention issue when managing connection context across multiple concurrent threads in the same client.  Git issue: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/304 Thanks for your report ! 
+Fixed a memory leak when caused by a logger not being cleaned up when a the creation of the ServiceClient fails. Git issue: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/322
+Fixed issue where calling the IOrganizationService* interfaces after the client has been disposed would throw a NullReferenceException. Taking this action will now throw an ObjectDisposedException
+Removed a set of exception catch and rethrows to preserve the full callstack to caller. Thanks to Git user 0xceed for prompting ( and sticking with getting us to ) this fix. See: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/pull/248 for details.
+
+
+1.0.23
 Added Async version of ExecuteOrganizationRequest to allow for requests to be made bounded with a custom logging message.
 Update Default settings for "UseWebAPI" in preparation for future work. 
     Note: for Create or Update operations that make extensive use of related entities you may need to reconfigure UseWebAPI to "true". 

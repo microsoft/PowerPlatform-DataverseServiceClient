@@ -76,6 +76,27 @@ namespace Client_Core_Tests
         }
 
         [Fact]
+        public void TestThrowDisposedOperationCheck()
+        {
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            ServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
+            Assert.Throws<ObjectDisposedException>(() =>
+            {
+                cli.Dispose();
+                _ = (WhoAmIResponse)cli.Execute(new WhoAmIRequest());
+            });
+
+            Assert.ThrowsAsync<ObjectDisposedException>(async () =>
+            {
+                cli.Dispose();
+                _ = (WhoAmIResponse) await cli.ExecuteAsync(new WhoAmIRequest());
+            });
+        }
+
+        [Fact]
         public void ExecuteMessageTests()
         {
             Mock<IOrganizationService> orgSvc = null;

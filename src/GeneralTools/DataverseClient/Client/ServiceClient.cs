@@ -1285,6 +1285,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 }
                 catch (Exception ex)
                 {
+                    if (_logEntry != null)
+                        _logEntry.Dispose(); 
+
                     throw new DataverseConnectionException("Failed to connect to Dataverse", ex);
                 }
             }
@@ -1600,7 +1603,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <returns>Result of request or null.</returns>
         public async Task<OrganizationResponse> ExecuteOrganizationRequestAsync(OrganizationRequest req, string logMessageTag = "User Defined", bool useWebAPI = false , CancellationToken cancellationToken = default)
         {
-            return await ExecuteOrganizationRequestAsyncImpl(req, cancellationToken, logMessageTag, useWebAPI, false);
+            return await ExecuteOrganizationRequestAsyncImpl(req, cancellationToken, logMessageTag, useWebAPI, false).ConfigureAwait(false);
         }
 
         #endregion
@@ -1967,17 +1970,23 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <returns></returns>
         internal void ValidateConnectionLive()
         {
+            if (isDisposed)
+            {
+                // This client has been disposed and no property of it can be trusted.  Thrown Exception should bubble to caller.
+                throw new ObjectDisposedException("This instance of the ServiceClient has been disposed and cannot be used. You must create a new ServiceClient instance.");
+            }
+
             if (!this.IsReady)
             {
                 if (this._connectionOptions != null)
                 {
-                    var failureExecpt = new DataverseConnectionException("Service Client is Staged for Connection but not Connected. You must call .Connect() on this client before using it.");
+                    var failureExecpt = new DataverseConnectionException("ServiceClient is Staged for Connection but not Connected. You must call .Connect() on this client before using it.");
                     _logEntry?.Log(failureExecpt);
                     throw failureExecpt;
                 }
                 else
                 {
-                    var failureExecpt = new DataverseConnectionException("Service Client is not connected to Dataverse. Please recreate this Service Client.");
+                    var failureExecpt = new DataverseConnectionException("ServiceClient is not connected to Dataverse. Please recreate this ServiceClient.");
                     _logEntry?.Log(failureExecpt);
                     throw failureExecpt;
                 }
@@ -2414,11 +2423,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         #endregion
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
+        private bool isDisposed = false; // To detect redundant calls
 
         private void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!isDisposed)
             {
                 if (disposing)
                 {
@@ -2443,9 +2452,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     }
 
                     _connectionSvc = null;
+                    IsReady = false;
 
                 }
-                disposedValue = true;
+                isDisposed = true;
             }
         }
 

@@ -402,7 +402,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
                 if (publicAppClient != null)
                 {
                     var accList = await publicAppClient.GetAccountsAsync().ConfigureAwait(false);
-                    if (accList != null && accList.Count() > 0)
+                    if (accList != null && accList.Any())
                     {
                         return accList.FirstOrDefault<IAccount>(w => w.Username.Equals(loginHint, StringComparison.OrdinalIgnoreCase));
                     }

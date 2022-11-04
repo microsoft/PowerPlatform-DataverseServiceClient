@@ -21,6 +21,7 @@ using Microsoft.Xrm.Sdk.WebServiceClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -611,7 +612,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <summary>
         /// Cookies that are being passed though clients, when cookies are used
         /// </summary>
-        internal Dictionary<string, string> CurrentCookieCollection { get; set; } = null;
+        internal ConcurrentDictionary<string, string> CurrentCookieCollection { get; set; } = null;
 
         /// <summary>
         /// Server Hint for the number of concurrent threads that would provide optimal processing. 
@@ -697,7 +698,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             Uri instanceToConnectToo = null)
         {
             if (authType != AuthenticationType.AD)
-                throw new ArgumentOutOfRangeException("authType", "Invalid Authentication type");
+                throw new ArgumentOutOfRangeException(nameof(authType), "Invalid Authentication type");
 
             if (logSink == null)
             {
@@ -762,7 +763,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             )
         {
             if (authType != AuthenticationType.OAuth && authType != AuthenticationType.ClientSecret)
-                throw new ArgumentOutOfRangeException("authType", "This constructor only supports the OAuth or Client Secret Auth types");
+                throw new ArgumentOutOfRangeException(nameof(authType), "This constructor only supports the OAuth or Client Secret Auth types");
 
             if (logSink == null)
             {
@@ -828,7 +829,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             string tokenCacheStorePath = null)
         {
             if (authType != AuthenticationType.Certificate && authType != AuthenticationType.ExternalTokenManagement)
-                throw new ArgumentOutOfRangeException("authType", "This constructor only supports the Certificate Auth type");
+                throw new ArgumentOutOfRangeException(nameof(authType), "This constructor only supports the Certificate Auth type");
 
             if (logSink == null)
             {
@@ -1345,7 +1346,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 // Login to Live Failed.
                 logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Invalid Login Information : {0}", ex.Message),
                                TraceEventType.Error, ex);
-                throw ex;
+                throw;
 
             }
             catch (WebException ex)
@@ -1362,7 +1363,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Unable to connect to Dataverse: {0}", ex.Message), TraceEventType.Error, ex);
 
                 }
-                throw ex;
+                throw;
             }
             catch (InvalidOperationException ex)
             {
@@ -1370,7 +1371,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Unable to connect to Dataverse: {0}", ex.Message), TraceEventType.Error, ex);
                 else
                     logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Unable to connect to Dataverse: {0}", ex.InnerException.Message), TraceEventType.Error, ex);
-                throw ex;
+                throw;
             }
             catch (Exception ex)
             {
@@ -1378,7 +1379,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Unable to connect to Dataverse: {0}", ex.Message), TraceEventType.Error, ex);
                 else
                     logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Unable to connect to Dataverse: {0}", ex.InnerException.Message), TraceEventType.Error, ex);
-                throw ex;
+                throw;
             }
             finally
             {
@@ -1679,7 +1680,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         internal void SetClonedProperties(ServiceClient sourceClient)
         {
             if (sourceClient is null)
-                throw new ArgumentNullException("sourceClient");
+                throw new ArgumentNullException(nameof(sourceClient));
 
             if (sourceClient._connectionSvc is null)
                 throw new NullReferenceException("Source Connection Service is Failed, Cannot create a clone.");
@@ -2097,7 +2098,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 if (CallerAADObjectId.HasValue)
                 {
                     // Value in Caller object ID.
-                    if (CallerAADObjectId.Value != null && CallerAADObjectId.Value != Guid.Empty)
+                    if (CallerAADObjectId.Value != Guid.Empty)
                     {
                         customHeaders.Add(Utilities.RequestHeaders.AAD_CALLER_OBJECT_ID_HTTP_HEADER, new List<string>() { CallerAADObjectId.ToString() });
                     }
@@ -2727,7 +2728,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 }
 
                 if (discoveryServiceUri == null)
-                    throw new ArgumentNullException("discoveryServiceUri", "Discovery service uri cannot be null.");
+                    throw new ArgumentNullException(nameof(discoveryServiceUri), "Discovery service uri cannot be null.");
 
                 // if the discovery URL does not contain api/discovery , base it and use it in the commercial format base.
                 // Check needs to be in 2 places as there are 2 different ways Auth can occur.
@@ -2790,7 +2791,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
 
             if (discoveryServiceUri == null)
-                throw new ArgumentNullException("discoveryServiceUri", "Discovery service uri cannot be null.");
+                throw new ArgumentNullException(nameof(discoveryServiceUri), "Discovery service uri cannot be null.");
 
             Stopwatch dtStartQuery = new Stopwatch();
             dtStartQuery.Start();

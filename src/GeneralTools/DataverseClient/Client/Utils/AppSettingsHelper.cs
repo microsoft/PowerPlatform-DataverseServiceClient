@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -106,7 +106,17 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Utils
 						return defaultValue;
 				}
 			}
-			finally
+            catch (Exception ex)
+            {
+                if (logSink == null) // building on first use to optimize 
+                {
+                    logSink = new DataverseTraceLogger();
+                    isLogEntryCreatedLocaly = true;
+                }
+                logSink.Log($"Failed to read {key} from AppSettings, failed with message: {ex.Message}.  Using default value", System.Diagnostics.TraceEventType.Warning);
+                return defaultValue;
+            }
+            finally
 			{
 				if (isLogEntryCreatedLocaly)
 					logSink.Dispose();

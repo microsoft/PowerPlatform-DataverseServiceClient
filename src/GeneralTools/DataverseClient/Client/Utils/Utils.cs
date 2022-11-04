@@ -8,6 +8,7 @@ using Microsoft.Xrm.Sdk.Discovery;
 using Microsoft.Xrm.Sdk.Metadata;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
@@ -1070,7 +1071,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="strHeader">Header string to start with</param>
         /// <param name="cookieCollection">Collection of cookies currently in the system</param>
         /// <returns></returns>
-        internal static Dictionary<string, string> GetAllCookiesFromHeader(string strHeader, Dictionary<string, string> cookieCollection)
+        internal static ConcurrentDictionary<string, string> GetAllCookiesFromHeader(string strHeader, ConcurrentDictionary<string, string> cookieCollection)
         {
             ArrayList al = ConvertCookieHeaderToArrayList(strHeader);
             return ConvertCookieArraysToCookieDictionary(al, cookieCollection);
@@ -1082,7 +1083,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="strHeaderList">Header string to start with</param>
         /// <param name="cookieCollection"> collection of cookies currently in the system</param>
         /// <returns></returns>
-        internal static Dictionary<string, string> GetAllCookiesFromHeader(string[] strHeaderList, Dictionary<string, string> cookieCollection)
+        internal static ConcurrentDictionary<string, string> GetAllCookiesFromHeader(string[] strHeaderList, ConcurrentDictionary<string, string> cookieCollection)
         {
             if (strHeaderList != null)
             {
@@ -1094,7 +1095,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
         }
 
-        internal static string GetCookiesFromCollectionAsString(Dictionary<string, string> cookieCollection)
+        internal static string GetCookiesFromCollectionAsString(ConcurrentDictionary<string, string> cookieCollection)
         {
             if (cookieCollection == null || cookieCollection.Count == 0)
                 return string.Empty;
@@ -1110,7 +1111,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             return cookieString;
         }
 
-        internal static List<string> GetCookiesFromCollectionAsArray(Dictionary<string, string> cookieCollection)
+        internal static List<string> GetCookiesFromCollectionAsArray(ConcurrentDictionary<string, string> cookieCollection)
         {
             if (cookieCollection == null || cookieCollection.Count == 0)
                 return null;
@@ -1182,10 +1183,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="al"></param>
         /// <param name="cookieCollection"> Cookie collection to populate or update</param>
         /// <returns></returns>
-        private static Dictionary<string, string> ConvertCookieArraysToCookieDictionary(ArrayList al, Dictionary<string, string> cookieCollection)
+        private static ConcurrentDictionary<string, string> ConvertCookieArraysToCookieDictionary(ArrayList al, ConcurrentDictionary<string, string> cookieCollection)
         {
             if (cookieCollection == null)
-                cookieCollection = new Dictionary<string, string>();
+                cookieCollection = new ConcurrentDictionary<string, string>();
 
             int alcount = al.Count;
             string strEachCook;
@@ -1208,7 +1209,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     if (cookieCollection.ContainsKey(firstName))
                         cookieCollection[firstName] = allValue;
                     else
-                        cookieCollection.Add(firstName, allValue);
+                        cookieCollection.TryAdd(firstName, allValue);
                 }
             }
             return cookieCollection;

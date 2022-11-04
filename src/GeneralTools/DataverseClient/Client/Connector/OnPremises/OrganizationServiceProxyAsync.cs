@@ -194,7 +194,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 
         protected internal virtual async Task<Guid> CreateAsyncCore(Entity entity)
         {
-            return await ExecuteOperation<Guid>(async () => { await ServiceChannel.Channel.CreateAsync(entity).ConfigureAwait(false); });
+            return await ExecuteOperation<Guid>(async () => { await ServiceChannel.Channel.CreateAsync(entity).ConfigureAwait(false); }).ConfigureAwait(false);
         }
 
         protected internal virtual Entity RetrieveCore(string entityName, Guid id, ColumnSet columnSet)
@@ -263,7 +263,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 
         protected internal virtual async Task<Entity> RetrieveAsyncCore(string entityName, Guid id, ColumnSet columnSet)
         {
-            return await ExecuteOperation<Entity>(async () => { await ServiceChannel.Channel.RetrieveAsync(entityName, id, columnSet).ConfigureAwait(false); });
+            return await ExecuteOperation<Entity>(async () => { await ServiceChannel.Channel.RetrieveAsync(entityName, id, columnSet).ConfigureAwait(false); }).ConfigureAwait(false);
         }
 
         protected internal virtual void UpdateCore(Entity entity)
@@ -333,7 +333,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 
         protected internal virtual async Task UpdateAsyncCore(Entity entity)
         {
-            _ = await ExecuteOperation<bool?>(async () => { await ServiceChannel.Channel.UpdateAsync(entity).ConfigureAwait(false); });
+            _ = await ExecuteOperation<bool?>(async () => { await ServiceChannel.Channel.UpdateAsync(entity).ConfigureAwait(false); }).ConfigureAwait(false);
         }
 
         protected internal virtual void DeleteCore(string entityName, Guid id)
@@ -403,7 +403,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 
         protected internal virtual async Task DeleteAsyncCore(string entityName, Guid id)
         {
-            _ = await ExecuteOperation<bool?>(async () => { await ServiceChannel.Channel.DeleteAsync(entityName, id).ConfigureAwait(false); });
+            _ = await ExecuteOperation<bool?>(async () => { await ServiceChannel.Channel.DeleteAsync(entityName, id).ConfigureAwait(false); }).ConfigureAwait(false);
         }
 
         protected internal virtual OrganizationResponse ExecuteCore(OrganizationRequest request)
@@ -472,7 +472,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 
         protected internal virtual async Task<OrganizationResponse> ExecuteAsyncCore(OrganizationRequest request)
         {
-            return await ExecuteOperation<OrganizationResponse>(async () => { await ServiceChannel.Channel.ExecuteAsync(request).ConfigureAwait(false); });
+            return await ExecuteOperation<OrganizationResponse>(async () => { await ServiceChannel.Channel.ExecuteAsync(request).ConfigureAwait(false); }).ConfigureAwait(false);
         }
 
         protected internal virtual void AssociateCore(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities)
@@ -542,7 +542,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 
         protected internal virtual async Task AssociateAsyncCore(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities)
         {
-            await ExecuteOperation<OrganizationResponse>(async () => { await ServiceChannel.Channel.AssociateAsync(entityName, entityId, relationship, relatedEntities).ConfigureAwait(false); });
+            await ExecuteOperation<OrganizationResponse>(async () => { await ServiceChannel.Channel.AssociateAsync(entityName, entityId, relationship, relatedEntities).ConfigureAwait(false); }).ConfigureAwait(false);
         }
 
         protected internal virtual void DisassociateCore(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities)
@@ -612,7 +612,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 
         protected internal virtual async Task DisassociateAsyncCore(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities)
         {
-            await ExecuteOperation<OrganizationResponse>(async () => { await ServiceChannel.Channel.DisassociateAsync(entityName, entityId, relationship, relatedEntities).ConfigureAwait(false); });
+            await ExecuteOperation<OrganizationResponse>(async () => { await ServiceChannel.Channel.DisassociateAsync(entityName, entityId, relationship, relatedEntities).ConfigureAwait(false); }).ConfigureAwait(false);
         }
 
         protected internal virtual EntityCollection RetrieveMultipleCore(QueryBase query)
@@ -681,7 +681,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 
         protected internal virtual async Task<EntityCollection> RetrieveMultipleAsyncCore(QueryBase query)
         {
-            return await ExecuteOperation<EntityCollection>(async () => { await ServiceChannel.Channel.RetrieveMultipleAsync(query).ConfigureAwait(false); });
+            return await ExecuteOperation<EntityCollection>(async () => { await ServiceChannel.Channel.RetrieveMultipleAsync(query).ConfigureAwait(false); }).ConfigureAwait(false);
         }
 
         protected async internal Task<T> ExecuteOperation<T>(Func<Task> asyncAction)
@@ -759,7 +759,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 
         public async Task<Guid> CreateAsync(Entity entity)
         {
-            return await CreateAsyncCore(entity);
+            return await CreateAsyncCore(entity).ConfigureAwait(false);
         }
 
         public Entity Retrieve(string entityName, Guid id, ColumnSet columnSet)
@@ -768,7 +768,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
         }
         public async Task<Entity> RetrieveAsync(string entityName, Guid id, ColumnSet columnSet)
         {
-            return await RetrieveAsyncCore(entityName, id, columnSet);
+            return await RetrieveAsyncCore(entityName, id, columnSet).ConfigureAwait(false);
         }
 
         public void Update(Entity entity)
@@ -777,7 +777,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
         }
         public async Task UpdateAsync(Entity entity)
         {
-            await UpdateAsyncCore(entity);
+            await UpdateAsyncCore(entity).ConfigureAwait(false);
         }
 
         public void Delete(string entityName, Guid id)
@@ -787,7 +787,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 
         public async Task DeleteAsync(string entityName, Guid id)
         {
-            await DeleteAsyncCore(entityName, id);
+            await DeleteAsyncCore(entityName, id).ConfigureAwait(false);
         }
 
 
@@ -798,7 +798,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 
         public async Task<OrganizationResponse> ExecuteAsync(OrganizationRequest request)
         {
-            return await ExecuteAsyncCore(request);
+            return await ExecuteAsyncCore(request).ConfigureAwait(false);
         }
 
         public void Associate(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities)
@@ -808,7 +808,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 
         public async Task AssociateAsync(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities)
         {
-            await AssociateAsyncCore(entityName, entityId, relationship, relatedEntities);
+            await AssociateAsyncCore(entityName, entityId, relationship, relatedEntities).ConfigureAwait(false);
         }
 
         public void Disassociate(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities)
@@ -818,7 +818,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 
         public async Task DisassociateAsync(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities)
         {
-            await DisassociateAsyncCore(entityName, entityId, relationship, relatedEntities);
+            await DisassociateAsyncCore(entityName, entityId, relationship, relatedEntities).ConfigureAwait(false);
         }
 
         public EntityCollection RetrieveMultiple(QueryBase query)
@@ -828,7 +828,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 
         public async Task<EntityCollection> RetrieveMultipleAsync(QueryBase query)
         {
-            return await RetrieveMultipleAsyncCore(query);
+            return await RetrieveMultipleAsyncCore(query).ConfigureAwait(false);
         }
 
         #endregion
