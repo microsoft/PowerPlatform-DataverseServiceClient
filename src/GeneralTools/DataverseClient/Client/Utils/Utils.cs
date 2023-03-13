@@ -3,9 +3,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.PowerPlatform.Dataverse.Client.Model;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
+using Microsoft.Rest;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Discovery;
 using Microsoft.Xrm.Sdk.Metadata;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -834,7 +836,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         keycollection += $"{itm.Key}={dtValue.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)},";
                     }
                     else
-                        keycollection += $"{itm.Key}='{itm.Value.ToString().Replace("'", "''")}',";
+                        keycollection += $"{itm.Key}='{itm.Value?.ToString().Replace("'", "''")}',";
                 }
             }
             return keycollection.Remove(keycollection.Length - 1); // remove trailing ,
@@ -1234,6 +1236,39 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
         }
         #endregion
+
+        /// <summary>
+        /// Identity a given Child Exception on the exception stack 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        internal static T SeekExceptionOnStack<T>(Exception e) where T : Exception
+        {
+            if ( e != null )
+            {
+                bool moreInnerRecords = true;
+                Exception exHold = e; 
+                while (moreInnerRecords)
+                {
+                    if (exHold is T)
+                    {
+                        return exHold as T;
+                    }
+                    else
+                    {
+                        if (exHold.InnerException != null)
+                        {
+                            moreInnerRecords = true;
+                            exHold = e.InnerException;
+                        }
+                        else
+                            moreInnerRecords = false; 
+                    }
+                }
+            }
+            return null;
+        }
 
     }
 }

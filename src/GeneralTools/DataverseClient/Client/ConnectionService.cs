@@ -90,6 +90,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         private WhoAmIResponse user;                        // Dataverse user entity that is the service.
         private string _hostname;                           // Host name of the Dataverse server
         private string _port;                               // Port the WebService is on
+        private OrganizationDetail _OrgDetail;               // if provided by the calling system, bypasses all discovery server lookup processed.
+        private bool _orgReadingDetails = false;
         private string _organization;                       // Org that is being inquired on..
         private AuthenticationType _eAuthType;             // Default setting for Auth Cred;
 
@@ -99,9 +101,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         private ClientCredentials _UserClientCred;           // Describes the user client credential when accessing claims or SPLA based services.
         [NonSerializedAttribute]
         private string _InternetProtocalToUse = "http";      // Which Internet protocol to use to connect.
-
-        private OrganizationDetail _OrgDetail;               // if provided by the calling system, bypasses all discovery server lookup processed.
-                                                             //private OrganizationDetail _ActualOrgDetailUsed;     // Org Detail that was used by the Auth system when it created the proxy.
 
         /// <summary>
         /// This is the actual Dataverse OrgURI used to connect, which could be influenced by the host name given during the connect process.
@@ -132,10 +131,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// </summary>
         private readonly TimeSpan _tokenOffSetTimeSpan = TimeSpan.FromMinutes(2);
 
-        /// <summary>
-        /// if Set to true then the connection is for one use and should be cleand out of cache when completed.
-        /// </summary>
-        private bool unqueInstance = false;
+        ///// <summary>
+        ///// if Set to true then the connection is for one use and should be cleand out of cache when completed.
+        ///// </summary>
+        //private bool unqueInstance = false;
 
         /// <summary>
         /// Client or App Id to use.
@@ -355,6 +354,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         }
 
         /// <summary>
+        /// When set to true, indicates that the organization details have allready been read. 
+        /// </summary>
+        internal bool OrgDetailsRead = false;
+
+        /// <summary>
         /// Logging provider for DataverseConnectionServiceobject.
         /// </summary>
         private DataverseTraceLogger logEntry { get; set; }
@@ -391,7 +395,29 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <summary>
         /// returns the connected organization detail object.
         /// </summary>
-        internal OrganizationDetail ConnectedOrganizationDetail { get { return _OrgDetail; } }
+        internal OrganizationDetail ConnectedOrganizationDetail
+        {
+            get
+            {
+                if (_OrgDetail == null || !OrgDetailsRead)
+                {
+                    lock (lockObject)
+                    {
+                        _orgReadingDetails = true; 
+                        IOrganizationService svc = null;
+                        if (WebClient != null || OnPremClient != null)
+                        {
+                            if (WebClient != null) svc = WebClient; else svc = OnPremClient;
+                            RefreshInstanceDetails(svc, _targetInstanceUriToConnectTo).ConfigureAwait(false).GetAwaiter().GetResult();
+                        }
+                        _orgReadingDetails = false;
+                        OrgDetailsRead = true;
+                    }
+                }
+                return _OrgDetail;
+            }
+            set { _OrgDetail = value; }
+        }
 
         /// <summary>
         ///
@@ -452,8 +478,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// </summary>
         internal string CustomerOrganization
         {
-            get { return _organization; }
-            set { _organization = value; }
+            get
+            {
+                if (_orgReadingDetails)
+                    return null;
+                else
+                    return ConnectedOrganizationDetail.UniqueName;
+            }
         }
 
         /// <summary>
@@ -503,12 +534,30 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <summary>
         /// Returns the friendly name of the connected org.
         /// </summary>
-        internal string ConnectedOrgFriendlyName { get; private set; }
+        internal string ConnectedOrgFriendlyName
+        {
+            get
+            {
+                if (_orgReadingDetails)
+                    return null;
+                else
+                    return ConnectedOrganizationDetail.FriendlyName; 
+            }
+        }
 
         /// <summary>
         /// Returns the endpoint collection for the connected org.
         /// </summary>
-        internal EndpointCollection ConnectedOrgPublishedEndpoints { get; set; }
+        internal EndpointCollection ConnectedOrgPublishedEndpoints
+        {
+            get
+            {
+                if (_orgReadingDetails)
+                    return null;
+                else
+                    return ConnectedOrganizationDetail.Endpoints;
+            }
+        }
 
         /// <summary>
         /// Version Number of the organization, if null Discovery service process was not run or the value returned was unreadable.
@@ -522,9 +571,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         {
             get
             {
-                if (_OrganizationId == Guid.Empty && _OrgDetail != null)
+                if (_OrganizationId == Guid.Empty && ConnectedOrganizationDetail != null)
                 {
-                    _OrganizationId = _OrgDetail.OrganizationId;
+                    _OrganizationId = ConnectedOrganizationDetail.OrganizationId;
                 }
                 return _OrganizationId;
             }
@@ -541,9 +590,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         {
             get
             {
-                if (_TenantId == Guid.Empty && _OrgDetail != null)
+                if (_TenantId == Guid.Empty && ConnectedOrganizationDetail != null)
                 {
-                    Guid.TryParse(_OrgDetail.TenantId, out _TenantId);
+                    Guid.TryParse(ConnectedOrganizationDetail.TenantId, out _TenantId);
                 }
                 return _TenantId;
             }
@@ -560,9 +609,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         {
             get
             {
-                if (string.IsNullOrEmpty(_EnvironmentId) && _OrgDetail != null)
+                if (string.IsNullOrEmpty(_EnvironmentId) && ConnectedOrganizationDetail != null)
                 {
-                    _EnvironmentId = _OrgDetail.EnvironmentId;
+                    _EnvironmentId = ConnectedOrganizationDetail.EnvironmentId;
                 }
                 return _EnvironmentId;
             }
@@ -634,8 +683,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             WebApiHttpClient = mockClient;
             logEntry = new DataverseTraceLogger(logger);
             isLogEntryCreatedLocaly = true;
-            ConnectedOrgPublishedEndpoints = new EndpointCollection();
-            ConnectedOrgPublishedEndpoints.Add(EndpointType.OrganizationDataService, baseConnectUrl);
+
+            _OrgDetail = new OrganizationDetail();
+            _OrgDetail.Endpoints.Add(EndpointType.OrganizationDataService, baseConnectUrl);
+
+            ConnectedOrganizationDetail = _OrgDetail; 
             RefreshInstanceDetails(testIOrganziationSvc, null).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
@@ -710,6 +762,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 logEntry = logSink;
                 isLogEntryCreatedLocaly = false;
             }
+
+            // Override WebAPI for Login flow. 
+            _configuration.Value.UseWebApiLoginFlow = false;
 
             UseExternalConnection = false;
             _eAuthType = authType;
@@ -878,7 +933,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             // This is to deal with 2 instances of the ConnectionService being created in the Same Running Instance that would need to connect to different Dataverse servers.
             if (useUniqueCacheName)
             {
-                unqueInstance = true; // this instance is unique.
+                //unqueInstance = true; // this instance is unique.
                 _authority = string.Empty;
                 _userId = null;
                 Guid guID = Guid.NewGuid();
@@ -966,7 +1021,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 try
                 {
                     // Removed call to WHoAMI as it is amused when picking up cache that the reauth logic will be exercised by the first call to the server.
-                    ConnectionObject.ResetDisposedState(); // resetting disposed state as this object was pulled from cache.
                     if (ConnectionObject._svcWebClientProxy != null)
                         return (IOrganizationService)ConnectionObject._svcWebClientProxy;
                     else
@@ -1158,7 +1212,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                                     }
                                 }
                                 else
+                                {
                                     orgDetail = _OrgDetail; // Assign to passed in value.
+                                    OrgDetailsRead = true;
+                                }
 
                                 // Try to connect to Dataverse here.
                                 dvService = await ConnectAndInitServiceAsync(orgDetail, true, uUserHomeRealm).ConfigureAwait(false);
@@ -1257,6 +1314,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                                         logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Found {0} Org(s)", orgList.OrgsList.Count), TraceEventType.Information);
                                         if (orgList.OrgsList.Count == 1)
                                         {
+                                            _OrgDetail = orgList.OrgsList.First().OrgDetail;
+                                            OrgDetailsRead = true;
                                             dvService = await ConnectAndInitServiceAsync(orgList.OrgsList.First().OrgDetail, false, null).ConfigureAwait(false);
                                             if (dvService != null)
                                             {
@@ -1279,6 +1338,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                                                 if (orgDetail != null && !string.IsNullOrEmpty(orgDetail.OrgDetail.UniqueName))
                                                 {
                                                     // Found it ..
+                                                    _OrgDetail = orgDetail.OrgDetail;
+                                                    OrgDetailsRead = true; 
                                                     logEntry.Log(string.Format(CultureInfo.InvariantCulture, "found User Org = {0} in results", _organization), TraceEventType.Information);
                                                     dvService = await ConnectAndInitServiceAsync(orgDetail.OrgDetail, false, null).ConfigureAwait(false);
                                                     if (dvService != null)
@@ -1485,17 +1546,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             
             if (dvService != null)
             {
-                await RefreshInstanceDetails(dvService, _targetInstanceUriToConnectTo).ConfigureAwait(false);
-                if (_OrgDetail != null)
-                {
-                    logEntry.Log(string.Format(CultureInfo.InvariantCulture,
-                        "Connected to User Organization ({0} version: {1})", _OrgDetail.UniqueName, (_OrgDetail.OrganizationVersion ?? "Unknown").ToString()));
-                }
-                else
-                {
-                    logEntry.Log("Organization Details Unavailable due to SkipOrgDetails flag set to True, to populate organization details on login, do not set SkipOrgDetails or set it to false.");
-                }
-
+                OrganizationVersion = Version.Parse("9.0"); 
+                //await GetServerVersion(dvService, _targetInstanceUriToConnectTo).ConfigureAwait(false);
+                //await RefreshInstanceDetails(dvService, _targetInstanceUriToConnectTo).ConfigureAwait(false);
                 // Format the URL for WebAPI service.
                 if (OrganizationVersion != null && OrganizationVersion.Major >= 8)
                 {
@@ -1508,6 +1561,85 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             return dvService;
         }
 
+        /// <summary>
+        /// Get Organization version Information for Setup.
+        /// </summary>
+        /// <param name="dvService"></param>
+        /// <param name="uriOfInstance"></param>
+        /// <returns></returns>
+        /// <exception cref="DataverseConnectionException"></exception>
+        private async Task GetServerVersion(IOrganizationService dvService, Uri uriOfInstance)
+        {
+            if (dvService != null)
+            {
+                try
+                {
+                    Guid trackingID = Guid.NewGuid();
+                    logEntry.Log(string.Format("Querying Organization Version. Request ID: {0}", trackingID));
+                    Stopwatch dtQueryTimer = new Stopwatch();
+                    dtQueryTimer.Restart();
+
+                    RetrieveVersionResponse getVersionResp = null;
+                    var request = new RetrieveVersionRequest() { RequestId = trackingID };
+                    logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Execute Command - RetrieveVersionRequest : RequestId={0}", trackingID));
+                    if (_configuration.Value.UseWebApiLoginFlow)
+                    {
+                        OrganizationResponse orgResp = await Command_WebAPIProcess_ExecuteAsync(
+                            request, null, false, null, Guid.Empty, false, _configuration.Value.MaxRetryCount, _configuration.Value.RetryPauseTime, new CancellationToken(), uriOfInstance, true).ConfigureAwait(false);
+                        try
+                        {
+                            getVersionResp = (RetrieveVersionResponse)orgResp;
+                        }
+                        catch (Exception ex)
+                        {
+                            dtQueryTimer.Stop();
+                            logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Failed to Executed Command - RetrieveVersionRequest : RequestId={1} : total duration: {0}", dtQueryTimer.Elapsed.ToString(), trackingID.ToString()), TraceEventType.Error);
+                            logEntry.Log("************ Exception - Failed to lookup current organization version", TraceEventType.Error, ex);
+                            throw new DataverseOperationException($"Failure to convert OrganziationResponse to requested type - request was {request.RequestName}", ex);
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            getVersionResp = (RetrieveVersionResponse)dvService.Execute(request);
+                        }
+                        catch (Exception ex)
+                        {
+                            dtQueryTimer.Stop();
+                            logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Failed to Executed Command - RetrieveVersionRequest : RequestId={1} : total duration: {0}", dtQueryTimer.Elapsed.ToString(), trackingID.ToString()), TraceEventType.Error);
+                            logEntry.Log("************ Exception - Failed to lookup current organization version", TraceEventType.Error, ex);
+                            throw new DataverseOperationException("Exception - Failed to lookup current organization version", ex);
+                        }
+                    }
+                    dtQueryTimer.Stop();
+                    logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Executed Command - RetrieveVersionRequest : RequestId={1} : total duration: {0}", dtQueryTimer.Elapsed.ToString(), trackingID.ToString()));
+
+                    if (getVersionResp != null)
+                    {
+                        OrganizationVersion = new Version("0.0.0.0");
+                        try
+                        {
+                            if (Version.TryParse(getVersionResp.Version, out Version outVer))
+                            {
+                                OrganizationVersion = outVer;
+                            }
+                        }
+                        catch { };
+                    }
+                    logEntry.Log("Completed Parsing Organization Instance Version", TraceEventType.Verbose);
+                }
+                catch (Exception ex)
+                {
+                    logEntry.Log("************ Exception - Fault While initializing client - RetrieveVersionRequest", TraceEventType.Error, ex);
+                    HttpOperationException opEx = Utilities.SeekExceptionOnStack<HttpOperationException>(ex);
+                    if (opEx != null)
+                        throw DataverseConnectionException.GenerateClientConnectionException(opEx);
+                    else
+                        throw new DataverseConnectionException("Exception - Fault While initializing client - RetrieveVersionRequest", ex);
+                }
+            }
+        }
 
         /// <summary>
         /// Refresh the organization instance details.
@@ -1564,7 +1696,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     // Left in information mode intentionally
                     logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Executed Command - RetrieveCurrentOrganizationRequest : RequestId={1} : total duration: {0}", dtQueryTimer.Elapsed.ToString(), trackingID.ToString()));
 
-                    if (resp.Detail != null)
+                    if (resp?.Detail != null)
                     {
                         _OrgDetail = new OrganizationDetail();
                         //Add Endpoints.
@@ -1594,10 +1726,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         _OrgDetail.UniqueName = resp.Detail.UniqueName;
                         _OrgDetail.UrlName = resp.Detail.UrlName;
                     }
-
                     _organization = _OrgDetail.UniqueName;
-                    ConnectedOrgFriendlyName = _OrgDetail.FriendlyName;
-                    ConnectedOrgPublishedEndpoints = _OrgDetail.Endpoints;
 
                     // try to create a version number from the org.
                     OrganizationVersion = new Version("0.0.0.0");
@@ -1609,12 +1738,22 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         }
                     }
                     catch { };
+
+                    if (_OrgDetail != null)
+                    {
+                        logEntry.Log(string.Format(CultureInfo.InvariantCulture,
+                            "Read Organization Information ({0} version: {1})", _OrgDetail.UniqueName, (_OrgDetail.OrganizationVersion ?? "Unknown").ToString()));
+                    }
                     logEntry.Log("Completed Parsing Organization Instance Details", TraceEventType.Verbose);
                 }
                 catch (Exception ex)
                 {
                     logEntry.Log("************ Exception - Fault While initializing client - RefreshInstanceDetails", TraceEventType.Error, ex);
-                    throw new DataverseConnectionException("Exception - Fault While initializing client - RefreshInstanceDetails", ex);
+                    HttpOperationException opEx = Utilities.SeekExceptionOnStack<HttpOperationException>(ex);
+                    if ( opEx != null )
+                        throw DataverseConnectionException.GenerateClientConnectionException(opEx);
+                    else
+                        throw new DataverseConnectionException("Exception - Fault While initializing client - RefreshInstanceDetails", ex);
                 }
             }
         }
@@ -1691,17 +1830,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             {
                 System.Diagnostics.Trace.WriteLine($"Cloning {sourceClient._connectionSvc._ServiceCACHEName} to create {_ServiceCACHEName}");
 
+                OrgDetailsRead = sourceClient._connectionSvc.OrgDetailsRead;
+                debugingCloneStateFilter++;
                 user = sourceClient.SystemUser;
+                debugingCloneStateFilter++;
+                ConnectedOrganizationDetail = sourceClient.OrganizationDetail;
                 debugingCloneStateFilter++;
                 OrganizationVersion = sourceClient._connectionSvc.OrganizationVersion;
                 debugingCloneStateFilter++;
-                ConnectedOrgPublishedEndpoints = sourceClient.ConnectedOrgPublishedEndpoints;
-                debugingCloneStateFilter++;
-                ConnectedOrgFriendlyName = sourceClient.ConnectedOrgFriendlyName;
-                debugingCloneStateFilter++;
                 OrganizationId = sourceClient.ConnectedOrgId;
-                debugingCloneStateFilter++;
-                CustomerOrganization = sourceClient.ConnectedOrgUniqueName;
                 debugingCloneStateFilter++;
                 _ActualDataverseOrgUri = sourceClient.ConnectedOrgUriActual;
                 debugingCloneStateFilter++;
@@ -1732,7 +1869,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException($"Failed constructing cloned connection. debugstate={debugingCloneStateFilter}", ex);
+                throw new DataverseOperationException($"Failed constructing cloned connection. debugstate={debugingCloneStateFilter}", ex);
             }
         }
 
@@ -2022,10 +2159,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
 
             // Default Odata 4.0 headers.
-            Dictionary<string, string> defaultODataHeaders = new Dictionary<string, string>();
-            defaultODataHeaders.Add("Accept", "application/json");
-            defaultODataHeaders.Add("OData-MaxVersion", "4.0");
-            defaultODataHeaders.Add("OData-Version", "4.0");
+            Dictionary<string, string> defaultODataHeaders = new Dictionary<string, string>
+            {
+                { "Accept", "application/json" },
+                { "OData-MaxVersion", "4.0" },
+                { "OData-Version", "4.0" }
+            };
             //defaultODataHeaders.Add("If-None-Match", "");
 
             // Supported Version Check.
@@ -2226,6 +2365,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             logEntry.LogRetry(retryCount, null, _retryPauseTimeRunning, true, isThrottled: isThrottled, webUriMessageReq: $"{method} {queryString}");
                             logEntry.LogException(null, ex, errorStringCheck, webUriMessageReq: $"{method} {queryString}");
                             logEntry.LogFailure(null, requestTrackingId, SessionTrackingId, disableConnectionLocking, TimeSpan.Zero, logDt, ex, errorStringCheck, true, webUriMessageReq: $"{method} {queryString}");
+                            throw;
                         }
                         resp = null;
                     }
@@ -2234,7 +2374,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         retry = false;
                         logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Failed to Execute Command - {2} {0} : {1}", queryString, requestIdLogSegement, method), TraceEventType.Verbose);
                         logEntry.Log(string.Format(CultureInfo.InvariantCulture, "************ Exception - {2} : {0} |=> {1}", errorStringCheck, ex.Message, queryString), TraceEventType.Error, ex);
-                        return null;
+                        throw;
                     }
                 }
                 finally
@@ -2278,6 +2418,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
             if (ex is HttpOperationException httpOperationException)
             {
+                if (httpOperationException.Response.StatusCode == HttpStatusCode.Unauthorized)
+                    return false;
+
                 JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
                 var errorCode = contentBody["error"]["code"].ToString();
                 var errorMessage = DataverseTraceLogger.GetFirstLineFromString(contentBody["error"]["message"].ToString()).Trim();
@@ -2961,8 +3104,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
             // Set the Org into system config
             _organization = orgdata.UniqueName;
-            ConnectedOrgFriendlyName = orgdata.FriendlyName;
-            ConnectedOrgPublishedEndpoints = orgdata.Endpoints;
+            ConnectedOrganizationDetail = orgdata; 
 
             var logDt = new Stopwatch();
             logDt.Start();
@@ -3515,6 +3657,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		internal async Task<string> RefreshClientTokenAsync()
         {
             string clientToken = string.Empty;
+            
+            if (disposedValue) { return clientToken; } // abort processing if disposed or dispose is occurring. 
+            
             if (_authenticationResultContainer != null && !string.IsNullOrEmpty(_resource) && !string.IsNullOrEmpty(_clientId))
             {
                 if (_authenticationResultContainer.ExpiresOn.ToUniversalTime() < DateTime.UtcNow.AddMinutes(1))
@@ -3571,14 +3716,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         }
 
         #region IDisposable Support
-        /// <summary>
-        /// Reset disposed state to handle this object being pulled from cache.
-        /// </summary>
-        private void ResetDisposedState()
-        {
-            // reset the disposed state to deal with the object being pulled from cache.
-            disposedValue = false;
-        }
+        ///// <summary>
+        ///// Reset disposed state to handle this object being pulled from cache.
+        ///// </summary>
+        //private void ResetDisposedState()
+        //{
+        //    // reset the disposed state to deal with the object being pulled from cache.
+        //    disposedValue = false;
+        //}
         private bool disposedValue = false; // To detect redundant calls
 
         void Dispose(bool disposing)
@@ -3587,26 +3732,23 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             {
                 if (disposing)
                 {
+                    disposedValue = true;
                     if (isLogEntryCreatedLocaly)
                     {
-                        if (logEntry != null)
-                            logEntry.Dispose();
+                        logEntry?.Dispose();
                     }
 
-                    //TODO: REMOVE ONCE MEM TEST COMPELTES CLEAN.
-                    //if (_authenticationContext != null && _authenticationContext.TokenCache != null)
-                    //{
-                    //	if (_authenticationContext.TokenCache is CdsServiceClientTokenCache)
-                    //	{
-                    //		((CdsServiceClientTokenCache)_authenticationContext.TokenCache).Dispose();
-                    //	}
-                    //}
-
-                    if (unqueInstance)
+                    if (CurrentCookieCollection != null)
                     {
-                        // Clean the connect out of memory.
-                        _clientMemoryCache.Remove(_ServiceCACHEName);
+                        CurrentCookieCollection.Clear();
+                        CurrentCookieCollection = null; 
                     }
+
+                    //if (unqueInstance)
+                    //{
+                    // Clean the connect out of memory.
+                    _clientMemoryCache.Remove(_ServiceCACHEName);
+                    //}
 
                     try
                     {
@@ -3625,12 +3767,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                                     _svcWebClientProxy.Endpoint.EndpointBehaviors.Remove(typeof(DataverseTelemetryBehaviors));
                                 }
                             }
+                            _svcWebClientProxy.Dispose();
+                            _svcWebClientProxy = null; 
                         }
                     }
-                    catch { }; // Failed to dispose.. no way to notifiy this right now.. let it go .
+                    catch { }; // Failed to dispose.. no way to notify this right now.. let it go .
                 }
-
-                disposedValue = true;
             }
         }
 
@@ -3638,6 +3780,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         public void Dispose()
         {
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
         #endregion
         #endregion

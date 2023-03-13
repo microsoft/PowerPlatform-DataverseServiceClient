@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.PowerPlatform.Dataverse.Client.Model;
 using System;
 using Microsoft.PowerPlatform.Dataverse.Client.Auth;
@@ -43,7 +43,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Utils
                         var hander = new HttpClientHandler
                         {
                             UseCookies = false,
-                            //SslProtocols = System.Security.Authentication.SslProtocols.Tls12
+                            AutomaticDecompression = System.Net.DecompressionMethods.Deflate | System.Net.DecompressionMethods.GZip
                         };
                         return hander;
                     });
@@ -51,6 +51,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Utils
                    {
                        client.Timeout = sp.GetService<IOptions<ConfigurationOptions>>().Value.MSALRequestTimeout;
                    })
+                    .ConfigurePrimaryHttpMessageHandler(() =>
+                    {
+                        var hander = new HttpClientHandler
+                        {
+                            AutomaticDecompression = System.Net.DecompressionMethods.Deflate | System.Net.DecompressionMethods.GZip
+                        };
+                        return hander;
+                    })
                     .AddHttpMessageHandler<MSALHttpRetryHandlerHelper>(); // Adding on board retry hander for MSAL.
                 _instance = services.BuildServiceProvider();
             }

@@ -41,7 +41,7 @@ namespace Client_Core_Tests.Auth
 
             _msgHandler.ResponseHeader = responseHeader;
             _msgHandler.ResponseStatus = expectedStatus;
-            var details = await resolver.ProbeForExpectedAuthentication(endpoint);
+            var details = await resolver.ProbeForExpectedAuthentication(endpoint).ConfigureAwait(false);
 
             details.Success.Should().Be(success);
             if (success)
@@ -67,7 +67,7 @@ namespace Client_Core_Tests.Auth
             });
 
             _msgHandler.ErrorOnSend = true;
-            var details = await resolver.ProbeForExpectedAuthentication(endpoint);
+            var details = await resolver.ProbeForExpectedAuthentication(endpoint).ConfigureAwait(false);
             details.Success.Should().BeFalse();
             log.Count.Should().BeGreaterOrEqualTo(1);
         }

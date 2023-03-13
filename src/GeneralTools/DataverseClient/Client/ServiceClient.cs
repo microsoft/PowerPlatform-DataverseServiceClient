@@ -1286,9 +1286,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 catch (Exception ex)
                 {
                     if (_logEntry != null)
-                        _logEntry.Dispose(); 
+                        _logEntry.Dispose();
 
-                    throw new DataverseConnectionException("Failed to connect to Dataverse", ex);
+                    if (ex is AggregateException)
+                        throw new DataverseConnectionException(ex.Message, ex);
+                    else
+                        throw new DataverseConnectionException("Failed to connect to Dataverse", ex);
                 }
             }
         }
@@ -2287,18 +2290,30 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="entity">entity to create</param>
         /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
         /// <returns>Returns the newly created record</returns>
-        public Task<Entity> CreateAndReturnAsync(Entity entity, CancellationToken cancellationToken)
+        public async Task<Entity> CreateAndReturnAsync(Entity entity, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            CreateResponse resp = (CreateResponse)await ExecuteOrganizationRequestAsyncImpl(
+            new CreateRequest()
+            {
+                Target = entity
+            }
+            , cancellationToken
+            , "Create To Dataverse via IOrganizationService"
+            , useWebAPI: true).ConfigureAwait(false);
+            
+            if (resp == null) throw LastException;
+
+            // Get the Response and query the entity with all fields. 
+            return await RetrieveAsync(entity.LogicalName, resp.id, new ColumnSet(true)).ConfigureAwait(false); 
         }
         /// <summary>
         /// Create an entity and process any related entities
         /// </summary>
         /// <param name="entity">entity to create</param>
         /// <returns>Returns the newly created record</returns>
-        public Task<Entity> CreateAndReturnAsync(Entity entity)
+        public async Task<Entity> CreateAndReturnAsync(Entity entity)
         {
-            throw new NotImplementedException();
+            return await CreateAndReturnAsync(entity, CancellationToken.None).ConfigureAwait(false);    
         }
 
         /// <summary>
@@ -2442,12 +2457,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
                     if (_connectionSvc != null)
                     {
-                        try
-                        {
-                            if (_connectionSvc.WebClient != null)
-                                _connectionSvc.WebClient.Dispose();
-                        }
-                        catch { }
                         _connectionSvc.Dispose();
                     }
 
@@ -2466,6 +2475,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         public void Dispose()
         {
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
         #endregion
     }

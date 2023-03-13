@@ -1,15 +1,14 @@
 using System;
-using System.Diagnostics;
 using System.Reflection;
 using System.Security.Permissions;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Description;
+using System.Threading.Tasks;
 using Microsoft.Xrm.Sdk.Client;
 
 namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.CodeQuality.Analyzers", "CA1063: Implement IDisposable correctly", Justification = "FxCop Bankruptcy")]
     internal abstract class WebProxyClientAsync<TService> : ClientBase<TService>, IDisposable
         where TService : class
     {
@@ -83,6 +82,33 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
             }
         }
 
+#if NETCOREAPP
+        protected async internal Task<T> ExecuteOperation<T>(Func<Task<T>> asyncAction)
+        {
+            if (asyncAction == null)
+            {
+                throw new ArgumentNullException(nameof(asyncAction));
+            }
+
+            using (CreateNewInitializer())
+            {
+                return await asyncAction().ConfigureAwait(continueOnCapturedContext: true);
+            }
+        }
+#else
+        protected internal Task<T> ExecuteOperation<T>(Func<Task<T>> asyncAction)
+        {
+            if (asyncAction == null)
+            {
+                throw new ArgumentNullException(nameof(asyncAction));
+            }
+
+            using (CreateNewInitializer())
+            {
+                return asyncAction();
+            }
+        }
+#endif
         protected static ServiceEndpoint CreateServiceEndpoint(Uri serviceUrl, bool useStrongTypes, TimeSpan timeout,
             Assembly strongTypeAssembly)
         {
@@ -162,9 +188,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
         ///     by the Client App.
         /// </summary>
         /// <returns></returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2143:TransparentMethodsShouldNotDemandFxCopRule")]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2141:TransparentMethodsMustNotSatisfyLinkDemandsFxCopRule")]
-        [PermissionSet(SecurityAction.Demand, Unrestricted = true)]
         internal string GetXrmSdkAssemblyFileVersion()
         {
             if (string.IsNullOrEmpty(_xrmSdkAssemblyFileVersion))
@@ -181,7 +204,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
             return _xrmSdkAssemblyFileVersion;
         }
 
-        #region IDisposable implementation
+#region IDisposable implementation
 
         public void Dispose()
         {
@@ -189,19 +212,19 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
             GC.SuppressFinalize(this);
         }
 
-        #region Protected Methods
+#region Protected Methods
 
         protected virtual void Dispose(bool disposing)
         {
         }
 
-        #endregion
+#endregion
 
         ~WebProxyClientAsync()
         {
             Dispose(false);
         }
 
-        #endregion
+#endregion
     }
 }

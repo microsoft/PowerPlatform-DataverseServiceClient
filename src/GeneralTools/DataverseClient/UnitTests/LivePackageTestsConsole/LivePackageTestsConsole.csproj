@@ -16,7 +16,8 @@
     <RestoreAdditionalProjectSources>
       $(RepoRoot)\binSigned\$(Configuration)\packages
     </RestoreAdditionalProjectSources>
-    <TargetDvClientPackageVersion Condition=" '$(TargetDvClientPackageVersion)' == '' ">0.5.9</TargetDvClientPackageVersion>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <TargetDvClientPackageVersion Condition=" '$(TargetDvClientPackageVersion)' == '' ">1.0.26</TargetDvClientPackageVersion>
 
     <!-- Ensure we don't clobber local machine's package cache with dev/alpha versions. -->
     <RestorePackagesPath>$(MSBuildThisFileDirectory)..\.packages</RestorePackagesPath>
@@ -29,6 +30,7 @@
 
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="$(PackageVersion_FluentAssertions)" />
+    <PackageReference Include="System.Drawing.Common" Version="5.0.3" /> <!-- explict add to deal with CVE-2021-24112; needed since below DVSC PkgRef regresses to 5.0.0 otherwise  --> 
     <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="$(TargetDvClientPackageVersion)" />
     <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client.Dynamics" Version="$(TargetDvClientPackageVersion)" />
     <PackageReference Include="System.Private.Uri" Version="4.3.*" />

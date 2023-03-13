@@ -7,6 +7,21 @@ Notice:
     Note: Only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Added .net 6.0 Target for the Client.
+Added implementation for CreateAndReturnAsync variations.
+Updated  Default Login flow to use WebAPI to allow for detecting Admin Mode on server during login.
+    A Environment in Admin mode will now throw DataverseConnectionException an error with the text "One or more errors occurred. (User does not have required privileges (or role membership) to access the org when it is in Admin Only mode.)"
+Updated Improved error reporting of standard HTTP status codes
+Updated ServiceClient Bootstrap to improve startup time.
+Fix (Speculative) for Memory Leak in Retrieve Multiple
+Fix for issue with cross thread calls and dispose were External authentication is used.     
+Fix for inappropriate retry operations. Unauthorized errors are no longer retried during WebAPI calls
+Fix to enabled GZip Compression for WebAPI requests.
+Dependency changes:
+    System.Text.Json moved to 6.0.7 min dependency (transient dependency is vulnerable to CVE-2022-34716).
+    System.ServiceModel.Http moved to 4.10.0 due min dependency (transient dependency is vulnerable to CVE-2021-24112).
+
+1.0.26:
 Fix by Git user matkov accepted for crash during create when an invalid timespan is passed from a configuration file to the ServiceClient Constructor. See https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/326 for details.
 Fix by GIT user 0xced accepted for bug in Integrated user security setting,  Code will now properly honor integrated security when attempting to authenticate. See https://github.com/microsoft/PowerPlatform-DataverseServiceClient/pull/324 for details. 
 Fixed a number of places where Async Calls did not have a .ConfigureAwait specification. Thanks to user 0xced for prompting this fix. 
@@ -17,7 +32,7 @@ Fixed issue where calling the IOrganizationService* interfaces after the client 
 Removed a set of exception catch and rethrows to preserve the full callstack to caller. Thanks to Git user 0xceed for prompting ( and sticking with getting us to ) this fix. See: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/pull/248 for details.
 
 
-1.0.23
+1.0.23:
 Added Async version of ExecuteOrganizationRequest to allow for requests to be made bounded with a custom logging message.
 Update Default settings for "UseWebAPI" in preparation for future work. 
     Note: for Create or Update operations that make extensive use of related entities you may need to reconfigure UseWebAPI to "true". 

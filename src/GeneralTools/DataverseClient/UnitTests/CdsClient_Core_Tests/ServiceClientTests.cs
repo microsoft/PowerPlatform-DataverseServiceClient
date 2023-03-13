@@ -92,7 +92,7 @@ namespace Client_Core_Tests
             Assert.ThrowsAsync<ObjectDisposedException>(async () =>
             {
                 cli.Dispose();
-                _ = (WhoAmIResponse) await cli.ExecuteAsync(new WhoAmIRequest());
+                _ = (WhoAmIResponse) await cli.ExecuteAsync(new WhoAmIRequest()).ConfigureAwait(false);
             });
         }
 

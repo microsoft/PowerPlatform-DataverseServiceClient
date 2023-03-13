@@ -3,7 +3,7 @@
   <PropertyGroup>
     <ProjectSpecificFx>true</ProjectSpecificFx>
     <!-- only test with one of the Classic and Core frameworks each -->
-    <TargetFrameworks>net462;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net462;net6.0</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
     <ComponentAreaName>DataverseClient-Tests</ComponentAreaName>
     <IsPackable>false</IsPackable>
