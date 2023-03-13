@@ -4,6 +4,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
     using System.Diagnostics.CodeAnalysis;
     using System.Net;
     using System.Reflection;
+    using System.ServiceModel;
     using System.ServiceModel.Description;
     using System.Threading.Tasks;
     using Microsoft.PowerPlatform.Dataverse.Client;
@@ -62,7 +63,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
         public Task AssociateAsync(string entityName, Guid entityId, Relationship relationship,
             EntityReferenceCollection relatedEntities)
         {
-            return AssociateAsyncCore(entityName, entityId, relationship, relatedEntities);
+            AssociateAsyncCore(entityName, entityId, relationship, relatedEntities);
+            return Task.CompletedTask;
         }
 
         public Guid Create(Entity entity)
@@ -73,6 +75,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
         public Task<Guid> CreateAsync(Entity entity)
         {
             return CreateAsyncCore(entity);
+
         }
 
         public void Delete(string entityName, Guid id)
@@ -82,7 +85,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
 
         public Task DeleteAsync(string entityName, Guid id)
         {
-            return DeleteAsyncCore(entityName, id);
+            DeleteAsyncCore(entityName, id);
+            return Task.CompletedTask;
         }
 
         public void Disassociate(string entityName, Guid entityId, Relationship relationship,
@@ -94,7 +98,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
         public Task DisassociateAsync(string entityName, Guid entityId, Relationship relationship,
             EntityReferenceCollection relatedEntities)
         {
-            return DisassociateAsyncCore(entityName, entityId, relationship, relatedEntities);
+            DisassociateAsyncCore(entityName, entityId, relationship, relatedEntities);
+            return Task.CompletedTask;
         }
 
         public OrganizationResponse Execute(OrganizationRequest request)
@@ -134,7 +139,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
 
         public Task UpdateAsync(Entity entity)
         {
-            return UpdateAsyncCore(entity);
+            UpdateAsyncCore(entity);
+            return Task.CompletedTask;
         }
 
         #endregion
@@ -148,7 +154,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
 
         protected Task<Guid> CreateAsyncCore(Entity entity)
         {
-            return ExecuteAction(() => Channel.CreateAsync(entity));
+            return ExecuteOperation(() => Channel.CreateAsync(entity));
         }
 
         protected internal virtual Entity RetrieveCore(string entityName, Guid id, ColumnSet columnSet)
@@ -158,7 +164,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
 
         protected internal virtual Task<Entity> RetrieveAsyncCore(string entityName, Guid id, ColumnSet columnSet)
         {
-            return ExecuteAction(() => Channel.RetrieveAsync(entityName, id, columnSet));
+            return ExecuteOperation(() => Channel.RetrieveAsync(entityName, id, columnSet));
         }
 
         protected internal virtual void UpdateCore(Entity entity)
@@ -168,7 +174,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
 
         protected internal virtual Task UpdateAsyncCore(Entity entity)
         {
-            return ExecuteAction(() => Channel.UpdateAsync(entity));
+            return ExecuteOperation(() => {Channel.UpdateAsync(entity); return (Task<Task>)Task.CompletedTask;});
         }
 
         protected internal virtual void DeleteCore(string entityName, Guid id)
@@ -178,7 +184,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
 
         protected internal virtual Task DeleteAsyncCore(string entityName, Guid id)
         {
-            return ExecuteAction(() => Channel.DeleteAsync(entityName, id));
+            return ExecuteOperation(() => { Channel.DeleteAsync(entityName, id); return (Task<Task>)Task.CompletedTask; });
         }
 
         protected internal virtual OrganizationResponse ExecuteCore(OrganizationRequest request)
@@ -188,7 +194,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
 
         protected internal virtual Task<OrganizationResponse> ExecuteAsyncCore(OrganizationRequest request)
         {
-            return ExecuteAction(() => Channel.ExecuteAsync(request));
+            return ExecuteOperation(() => Channel.ExecuteAsync(request));
         }
 
         protected internal virtual void AssociateCore(string entityName, Guid entityId, Relationship relationship,
@@ -200,7 +206,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
         protected internal virtual Task AssociateAsyncCore(string entityName, Guid entityId, Relationship relationship,
             EntityReferenceCollection relatedEntities)
         {
-            return ExecuteAction(() => Channel.AssociateAsync(entityName, entityId, relationship, relatedEntities));
+            return ExecuteOperation(() => { Channel.AssociateAsync(entityName, entityId, relationship, relatedEntities); return (Task<Task>)Task.CompletedTask; });
         }
 
         protected internal virtual void DisassociateCore(string entityName, Guid entityId, Relationship relationship,
@@ -212,7 +218,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
         protected internal virtual Task DisassociateAsyncCore(string entityName, Guid entityId, Relationship relationship,
             EntityReferenceCollection relatedEntities)
         {
-            return ExecuteAction(() => Channel.DisassociateAsync(entityName, entityId, relationship, relatedEntities));
+            return ExecuteOperation(() => { Channel.DisassociateAsync(entityName, entityId, relationship, relatedEntities); return (Task<Task>)Task.CompletedTask; });
         }
 
         protected internal virtual EntityCollection RetrieveMultipleCore(QueryBase query)
@@ -222,7 +228,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
 
         protected internal virtual Task<EntityCollection> RetrieveMultipleAsyncCore(QueryBase query)
         {
-            return ExecuteAction(() => Channel.RetrieveMultipleAsync(query));
+            return ExecuteOperation(() => Channel.RetrieveMultipleAsync(query));
         }
 
         #endregion Protected Members

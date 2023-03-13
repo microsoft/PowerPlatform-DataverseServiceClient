@@ -71,7 +71,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Model
             set => _useWebApi = value;
         }
 
-        private bool _useWebApiLoginFlow = Utils.AppSettingsHelper.GetAppSetting<bool>("UseWebApiLoginFlow", false);
+        private bool _useWebApiLoginFlow = Utils.AppSettingsHelper.GetAppSetting<bool>("UseWebApiLoginFlow", true);
         /// <summary>
         /// Use Web API instead of org service for logging into and getting boot up data.
         /// </summary>

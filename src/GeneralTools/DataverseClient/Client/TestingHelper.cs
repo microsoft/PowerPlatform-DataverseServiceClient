@@ -251,10 +251,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 				{
 					_dvInternalTest = new ServerInfo()
 					{
-						DiscoveryServer = "https://disco.crm.crmtest.com/XRMServices/2011/Discovery.svc",
+						DiscoveryServer = "https://disco.crm.crmtest.dynamics.com/XRMServices/2011/Discovery.svc",
 						DisplayName = "Internal TEST",
 						ShortName = "TST",
-						GeoCode="TST"
+						RequiresRegionalDiscovery = true,
+						RegionalGlobalDiscoveryUri = new Uri("https://globaldisco.crmtest.dynamics.com"),
+						GeoCode = "TST"
 					};
 				}
 

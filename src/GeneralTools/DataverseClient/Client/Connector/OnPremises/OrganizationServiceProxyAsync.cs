@@ -106,9 +106,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
         /// For Sdk clients called via the OrganizationServiceProxy this is the version of the local Microsoft.Xrm.Sdk dll used by the Client App.
         /// </summary>
         /// <returns></returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2143:TransparentMethodsShouldNotDemandFxCopRule")]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2141:TransparentMethodsMustNotSatisfyLinkDemandsFxCopRule")]
-        [PermissionSet(SecurityAction.Demand, Unrestricted = true)]
         internal static string GetXrmSdkAssemblyFileVersion()
         {
             if (string.IsNullOrEmpty(_xrmSdkAssemblyFileVersion))

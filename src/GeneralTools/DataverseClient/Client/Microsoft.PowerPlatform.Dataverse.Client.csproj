@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <RootNamespace>Microsoft.PowerPlatform.Dataverse.Client</RootNamespace>
@@ -11,6 +11,7 @@
   <PropertyGroup>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <DocumentationFile>$(OutDir)\Microsoft.PowerPlatform.Dataverse.Client.xml</DocumentationFile>
+    <AnalysisLevel>6.0</AnalysisLevel>
   </PropertyGroup>
 
 
@@ -38,12 +39,12 @@
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.7.0" />
     <PackageReference Include="System.Security.Permissions" Version="5.0.0" />
-    <PackageReference Include="System.ServiceModel.Http" Version="4.8.1" />
-    <PackageReference Include="System.Text.Json" Version="6.0.2" />
+    <PackageReference Include="System.ServiceModel.Http" Version="4.10.0" />
+    <PackageReference Include="System.Text.Json" Version="6.0.7" />
     <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="2.18.9" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="$(PackageVersion_Microsoft_Extensions)" />
     <PackageReference Include="System.Drawing.Common" Version="5.0.3" /> <!-- explict add to deal with CVE-2021-24112  --> 
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="4.7.1" /> <!-- explict add to deal with CVE-2022-34716  --> 
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="6.0.1" /> <!-- explict add to deal with CVE-2022-34716  --> 
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net462' or '$(TargetFramework)' == 'net472' or '$(TargetFramework)' == 'net48'">

@@ -213,4 +213,7 @@
   <data name="CRMCONNECT_SERVER_CONNECT_GOOD" xml:space="preserve">
     <value>Connection to Microsoft Dataverse Complete</value>
   </data>
+  <data name="SERVER_LOGINCONTROL_LOCALIZEDCONTROLTYPE" xml:space="preserve">
+    <value>Dataverse Login Control</value>
+  </data>
 </root>

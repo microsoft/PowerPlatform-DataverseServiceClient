@@ -169,8 +169,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     // check and or alter the exception is its and HTTPOperationExecption.
                     if (exception is HttpOperationException httpOperationException)
                     {
-                        JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
-                        Utils.DataverseOperationException webApiExcept = new Utils.DataverseOperationException(string.IsNullOrEmpty(contentBody["error"]["message"]?.ToString()) ? "Not Provided" : GetFirstLineFromString(contentBody["error"]["message"]?.ToString()).Trim(), httpOperationException);
+                        string errorMessage = "Not Provided";
+                        if (!string.IsNullOrWhiteSpace(httpOperationException.Response.Content))
+                        {
+                            JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
+                            errorMessage = string.IsNullOrEmpty(contentBody["error"]["message"]?.ToString()) ? "Not Provided" : GetFirstLineFromString(contentBody["error"]["message"]?.ToString()).Trim();
+                        }
+
+                        Utils.DataverseOperationException webApiExcept = new Utils.DataverseOperationException(errorMessage, httpOperationException);
                         LastException = webApiExcept;
                     }
                     else
@@ -249,9 +255,19 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
             else if (ex is HttpOperationException httpOperationException)
             {
-                JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
+                string errorMessage;
+                if (!string.IsNullOrWhiteSpace(httpOperationException.Response.Content))
+                {
+                    JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
+                    errorMessage = DataverseTraceLogger.GetFirstLineFromString(contentBody["error"]["message"].ToString()).Trim();
+                }
+                else
+                {
+                    errorMessage = httpOperationException.Response.StatusCode.ToString();
+                }
+
                 DataverseOperationException ex01 = DataverseOperationException.GenerateClientOperationException(httpOperationException);
-                Log(string.Format(CultureInfo.InvariantCulture, "************ {3} - {2} : {0} |=> {1}", errorStringCheck, DataverseTraceLogger.GetFirstLineFromString(contentBody["error"]["message"].ToString()).Trim(), webUriMessageReq, ex.GetType().Name), TraceEventType.Error, ex01);
+                Log(string.Format(CultureInfo.InvariantCulture, "************ {3} - {2} : {0} |=> {1}", errorStringCheck, errorMessage, webUriMessageReq, ex.GetType().Name), TraceEventType.Error, ex01);
             }
             else
             {
@@ -294,8 +310,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 DataverseOperationException ex01 = DataverseOperationException.GenerateClientOperationException(httpOperationException);
                 try
                 {
-                    JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
-                    errorMessage = DataverseTraceLogger.GetFirstLineFromString(contentBody["error"]["message"].ToString()).Trim();
+                    if (!string.IsNullOrWhiteSpace(httpOperationException.Response.Content))
+                    {
+                        JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
+                        errorMessage = DataverseTraceLogger.GetFirstLineFromString(contentBody["error"]["message"].ToString()).Trim();
+                    }
+                    else
+                    {
+                        errorMessage = httpOperationException.Response.StatusCode.ToString();
+                    }
                 }
                 catch (Exception)
                 {

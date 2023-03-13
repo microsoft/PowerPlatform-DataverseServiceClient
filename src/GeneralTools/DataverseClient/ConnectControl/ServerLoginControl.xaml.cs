@@ -21,6 +21,8 @@ using System.Globalization;
 using System.Configuration;
 using Microsoft.PowerPlatform.Dataverse.Client.Model;
 using System.Media;
+using System.Windows.Automation.Peers;
+
 #endregion
 
 namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
@@ -1341,13 +1343,48 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 
 		private void cbUseSSL_Click(object sender, RoutedEventArgs e)
 		{
-			//if ((ddlAuthSource.SelectedIndex == 1 && cbUseSSL.IsChecked == true) || (ddlAuthSource.SelectedIndex == 2 && cbUseSSL.IsChecked == true))
-			//{
-			//	cbAskforOrg.IsChecked = false;
-			//	cbAskforOrg.Visibility = Visibility.Visible;
-			//}
-			//else
-			//	cbAskforOrg.Visibility = Visibility.Visible;
-		}
-	}
+            //if ((ddlAuthSource.SelectedIndex == 1 && cbUseSSL.IsChecked == true) || (ddlAuthSource.SelectedIndex == 2 && cbUseSSL.IsChecked == true))
+            //{
+            //	cbAskforOrg.IsChecked = false;
+            //	cbAskforOrg.Visibility = Visibility.Visible;
+            //}
+            //else
+            //	cbAskforOrg.Visibility = Visibility.Visible;
+        }
+
+        /// <summary>
+        /// Creates Automation Peer for accessibility needs of custom controls.
+        /// </summary>
+        /// <returns>AutomationPeer</returns>
+        protected override AutomationPeer OnCreateAutomationPeer()
+        {
+            return new ServerLoginControlAutomationPeer(this);
+        }
+    }
+
+
+    /// <summary>
+    /// Creates localizedcontroltype for ServerLoginControl
+    /// Refer https://learn.microsoft.com/en-us/accessibility-tools-docs/items/wpf/customcontrol_localizedcontroltype
+    /// </summary>
+    public class ServerLoginControlAutomationPeer : UserControlAutomationPeer
+    {
+        /// <summary>
+        /// default constructor
+        /// </summary>
+        /// <param name="owner"></param>
+        public ServerLoginControlAutomationPeer(ServerLoginControl owner) :
+            base(owner)
+        {
+        }
+
+        /// <summary>
+        /// localizedcontroltype for ServerLoginControl
+        /// </summary>
+        /// <returns>localized controltype for ServerLoginControl</returns>
+        protected override string GetLocalizedControlTypeCore()
+        {
+            return uiMessages.SERVER_LOGINCONTROL_LOCALIZEDCONTROLTYPE;
+        }
+    }
 }

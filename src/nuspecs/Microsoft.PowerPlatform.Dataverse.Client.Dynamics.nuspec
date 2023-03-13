@@ -26,6 +26,9 @@
       <group targetFramework=".NETCoreApp3.1">
         <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.0.0" exclude="Build,Analyzers" />
       </group>
+      <group targetFramework="NET6.0">
+        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.0.0" exclude="Build,Analyzers" />
+      </group>
     </dependencies>
     <frameworkAssemblies>
       <frameworkAssembly assemblyName="System.IO" targetFramework=".NETFramework4.7.2, .NETFramework4.8" />
@@ -44,6 +47,8 @@
   <files>
     <file src="{signedBinDir}\{configuration}\DataverseClient\netcoreapp3.1\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.dll" target="lib\netcoreapp3.1\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.dll" />
     <file src="{signedBinDir}\{configuration}\DataverseClient\netcoreapp3.1\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.xml" target="lib\netcoreapp3.1\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.xml" />
+    <file src="{signedBinDir}\{configuration}\DataverseClient\net6.0\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.dll" target="lib\net6.0\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.dll" />
+    <file src="{signedBinDir}\{configuration}\DataverseClient\net6.0\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.xml" target="lib\net6.0\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.xml" />
     <file src="{signedBinDir}\{configuration}\DataverseClient\net472\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.dll" target="lib\net472\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.dll" />
     <file src="{signedBinDir}\{configuration}\DataverseClient\net472\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.xml" target="lib\net472\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.xml" />
     <file src="{signedBinDir}\{configuration}\DataverseClient\net462\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.dll" target="lib\net462\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.dll" />

@@ -1,4 +1,4 @@
-﻿using Microsoft.Rest;
+using Microsoft.Rest;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -56,8 +56,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Utils
             JToken ErrorBlock = null;
             try
             {
-                JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
-                ErrorBlock = contentBody["error"];
+                if (!string.IsNullOrWhiteSpace(httpOperationException.Response.Content))
+                {
+                    JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
+                    ErrorBlock = contentBody["error"];
+                }
             }
             catch { }
 

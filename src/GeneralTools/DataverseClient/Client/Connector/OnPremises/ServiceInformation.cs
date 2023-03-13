@@ -15,7 +15,6 @@ using Microsoft.Xrm.Sdk.Common;
 
 namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 {
-	[SecurityPermission(SecurityAction.Demand, Unrestricted = true)]
 	[SecuritySafeCritical]
 	internal sealed partial class ServiceConfiguration<TService>
 	{

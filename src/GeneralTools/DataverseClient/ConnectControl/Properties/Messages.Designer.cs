@@ -338,5 +338,14 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl.Properties {
                 return ResourceManager.GetString("CRMCONNECT_SERVER_CONNECT_GOOD", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dataverse Login Control.
+        /// </summary>
+        internal static string SERVER_LOGINCONTROL_LOCALIZEDCONTROLTYPE {
+            get {
+                return ResourceManager.GetString("SERVER_LOGINCONTROL_LOCALIZEDCONTROLTYPE", resourceCulture);
+            }
+        }
     }
 }
