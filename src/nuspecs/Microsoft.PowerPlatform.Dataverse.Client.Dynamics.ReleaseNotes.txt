@@ -1,8 +1,11 @@
 Notice: 
     This package is an extension to the Microsoft.PowerPlatform.Dataverse.Client Nuget package.
-    This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8, .net 3.1, net 5, and .net 6.0
+    This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8, and .net 6.0
 
 ++CURRENTRELEASEID++
+removed support for .net 3.1 and .net 5.0. 
+
+1.0.39:
     No updates
 
 1.0.1:

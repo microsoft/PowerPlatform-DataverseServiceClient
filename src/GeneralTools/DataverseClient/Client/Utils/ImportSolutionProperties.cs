@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -39,6 +39,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// Internal use only
         /// </summary>
         public static string ISTEMPLATEMODE = "IsTemplateMode";
+        /// <summary>
+        /// When set to true, causes ImportSolution process to use the Stage and Upgrade Process. 
+        /// </summary>
+        public static string USESTAGEANDUPGRADEMODE = "StageAndUpgradeSolution";
 
     }
 }

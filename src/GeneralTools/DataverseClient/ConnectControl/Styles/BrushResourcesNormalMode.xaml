@@ -4,6 +4,6 @@
 	<SolidColorBrush x:Key="ConnectControlCheckBoxForegroundBrush" Color="#262626"/>
 	<SolidColorBrush x:Key="ConnectControlBackgroundBrush" Color="White"/>
 	<SolidColorBrush x:Key="ConnectControlErrorForegroundColor" Color="#c85305"/>
-	<SolidColorBrush x:Key="ConnectControlOnSelectedListViewBackgroundBrush" Color="#D6F2FE"/>
+	<SolidColorBrush x:Key="ConnectControlOnSelectedListViewBackgroundBrush" Color="{x:Static SystemColors.HighlightColor}"/>
 	<SolidColorBrush x:Key="ConnectControlSortOrderBrush" Color="#000000"/>
 </ResourceDictionary>

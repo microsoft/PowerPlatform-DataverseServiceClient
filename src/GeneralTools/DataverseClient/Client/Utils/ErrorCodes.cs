@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,5 +25,21 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// Number of concurrent requests exceeded the limit of {0}.
         /// </summary>
         public const int ThrottlingConcurrencyLimitExceededError = unchecked((int)0x80072326); // -2147015898
+
+        /// <summary>
+        /// Dataverse ServiceClient is not Initialized 
+        /// </summary>
+        public const int DataverseServiceClientNotIntialized = unchecked((int)0x8004426C); // -2147204500
+
+        /// <summary>
+        /// Solution Path and or File Stream is Null
+        /// </summary>
+        public const int SolutionFilePathNull = unchecked((int)0x800443FC); // - 2147204100;
+
+        /// <summary>
+        /// Operation is not valid onprem.
+        /// </summary>
+        public const int OperationInvalidOnPrem = unchecked((int)0x80044262); // -2147204510; 
+
     }
 }

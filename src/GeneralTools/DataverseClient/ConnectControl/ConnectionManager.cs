@@ -387,7 +387,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 		/// <param name="configKeys"></param>
 		public void SetConfigKeyInformation(Dictionary<Dynamics_ConfigFileServerKeys, object> configKeys)
 		{
-			_tracer.Log(string.Format("SetConfigKeyInfo, Key Count = {0}", configKeys.Count), TraceEventType.Information);
+			_tracer.Log($"{nameof(SetConfigKeyInformation)}, Setting {nameof(ServerConfigKeys)} with key Count = {configKeys?.Count}", TraceEventType.Information);
 			ServerConfigKeys = configKeys;
 		}
 

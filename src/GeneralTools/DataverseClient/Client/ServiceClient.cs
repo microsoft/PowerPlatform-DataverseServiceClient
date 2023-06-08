@@ -303,7 +303,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     _connectionSvc.AuthenticationTypeInUse == AuthenticationType.ExternalTokenManagement ||
                     _connectionSvc.AuthenticationTypeInUse == AuthenticationType.ClientSecret))
                 {
-                    return _connectionSvc.RefreshClientTokenAsync().Result;
+                    return _connectionSvc.RefreshClientTokenAsync().ConfigureAwait(false).GetAwaiter().GetResult();
                 }
                 else
                     return string.Empty;
@@ -390,8 +390,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         return _connectionSvc.CurrentUser;
                     else
                     {
-                        WhoAmIResponse resp = Task.Run(async () => await _connectionSvc.GetWhoAmIDetails(this).ConfigureAwait(false)).Result;
-                        //WhoAmIResponse resp = _connectionSvc.GetWhoAmIDetails(this).Result;
+                        WhoAmIResponse resp = Task.Run(async () => await _connectionSvc.GetWhoAmIDetails(this).ConfigureAwait(false)).ConfigureAwait(false).GetAwaiter().GetResult();
                         _connectionSvc.CurrentUser = resp;
                         return resp;
                     }
@@ -1189,8 +1188,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             // if using an user provided connection,.
             if (externalOrgWebProxyClient != null)
             {
-                _connectionSvc = new ConnectionService(externalOrgWebProxyClient, requestedAuthType, _logEntry);
-                _connectionSvc.IsAClone = isCloned;
+                _connectionSvc = new ConnectionService(externalOrgWebProxyClient, requestedAuthType, _logEntry, isClone: isCloned);
                 if (isCloned && incomingOrgVersion != null)
                 {
                     _connectionSvc.OrganizationVersion = incomingOrgVersion;
@@ -1206,7 +1204,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             useUniqueInstance,
                             orgDetail, clientId,
                             redirectUri, certificateThumbPrint,
-                            certificateStoreName, certificate, hostName, port, false, logSink: _logEntry, tokenCacheStorePath: tokenCacheStorePath);
+                            certificateStoreName, 
+                            certificate, 
+                            hostName, 
+                            port, 
+                            false, 
+                            logSink: _logEntry, 
+                            tokenCacheStorePath: tokenCacheStorePath);
 
                     if (GetAccessToken != null)
                         _connectionSvc.GetAccessTokenAsync = GetAccessToken;
@@ -1275,7 +1279,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         // Min supported version for batch operations.
                         if (_connectionSvc?.OrganizationVersion != null &&
                             Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(_connectionSvc?.OrganizationVersion, Utilities.FeatureVersionMinimums.BatchOperations))
-                            _batchManager = new BatchManager(_logEntry);
+                            _batchManager = new BatchManager(_logEntry, IsClonedConnection:isCloned);
                         else
                             _logEntry.Log("Batch System disabled, Dataverse Server does not support this message call", TraceEventType.Information);
 
@@ -1350,63 +1354,73 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             if (_connectionSvc.AuthenticationTypeInUse == AuthenticationType.AD)
                 throw new DataverseOperationException("On-Premises Connections are not supported for clone operations at this time.", new NotImplementedException("OnPrem Auth Flow are not implemented for clone operations"));
 
-            OrganizationWebProxyClientAsync proxy = null;
-            if (_connectionSvc.ConnectOrgUriActual != null)
+            _connectionSvc._isCloning = true; // set cloning behavior flag.
+            _configuration.Value.UseWebApiLoginFlow = false; // override default settings for clone ops.  
+
+            try
             {
-                if (strongTypeAsm == null)
-                    proxy = new OrganizationWebProxyClientAsync(_connectionSvc.ConnectOrgUriActual, true);
-                else
-                    proxy = new OrganizationWebProxyClientAsync(_connectionSvc.ConnectOrgUriActual, strongTypeAsm);
-            }
-            else
-            {
-                var orgWebClient = _connectionSvc.WebClient;
-                if (orgWebClient != null)
+                OrganizationWebProxyClientAsync proxy = null;
+                if (_connectionSvc.ConnectOrgUriActual != null)
                 {
                     if (strongTypeAsm == null)
-                        proxy = new OrganizationWebProxyClientAsync(orgWebClient.Endpoint.Address.Uri, true);
+                        proxy = new OrganizationWebProxyClientAsync(_connectionSvc.ConnectOrgUriActual, true);
                     else
-                        proxy = new OrganizationWebProxyClientAsync(orgWebClient.Endpoint.Address.Uri, strongTypeAsm);
+                        proxy = new OrganizationWebProxyClientAsync(_connectionSvc.ConnectOrgUriActual, strongTypeAsm);
                 }
                 else
                 {
-                    _logEntry.Log("Connection cannot be cloned.  There is currently no OAuth based connection active.");
+                    var orgWebClient = _connectionSvc.WebClient;
+                    if (orgWebClient != null)
+                    {
+                        if (strongTypeAsm == null)
+                            proxy = new OrganizationWebProxyClientAsync(orgWebClient.Endpoint.Address.Uri, true);
+                        else
+                            proxy = new OrganizationWebProxyClientAsync(orgWebClient.Endpoint.Address.Uri, strongTypeAsm);
+                    }
+                    else
+                    {
+                        _logEntry.Log("Connection cannot be cloned.  There is currently no OAuth based connection active.");
+                        return null;
+                    }
+                }
+                if (proxy != null)
+                {
+                    try
+                    {
+                        // Get Current Access Token.
+                        // This will get the current access token
+                        if (logger == null) logger = _logEntry._logger;
+                        proxy.HeaderToken = this.CurrentAccessToken;
+                        var SvcClient = new ServiceClient(proxy, true, _connectionSvc.AuthenticationTypeInUse, _connectionSvc?.OrganizationVersion, logger: logger);
+                        SvcClient._connectionSvc.SetClonedProperties(this);
+                        SvcClient.CallerAADObjectId = CallerAADObjectId;
+                        SvcClient.CallerId = CallerId;
+                        SvcClient.MaxRetryCount = _configuration.Value.MaxRetryCount;
+                        SvcClient.RetryPauseTime = _configuration.Value.RetryPauseTime;
+                        SvcClient.GetAccessToken = GetAccessToken;
+
+                        return SvcClient;
+                    }
+                    catch (DataverseConnectionException)
+                    {
+                        // rethrow the Connection exception coming from the initial call.
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logEntry.Log(ex);
+                        throw new DataverseConnectionException("Failed to Clone Connection", ex);
+                    }
+                }
+                else
+                {
+                    _logEntry.Log("Connection cannot be cloned.  There is currently no OAuth based connection active or it is mis-configured in the ServiceClient.");
                     return null;
                 }
-            }
-            if (proxy != null)
+            }finally
             {
-                try
-                {
-                    // Get Current Access Token.
-                    // This will get the current access token
-                    if (logger == null) logger = _logEntry._logger; 
-                    proxy.HeaderToken = this.CurrentAccessToken;
-                    var SvcClient = new ServiceClient(proxy, true, _connectionSvc.AuthenticationTypeInUse, _connectionSvc?.OrganizationVersion, logger: logger);
-                    SvcClient._connectionSvc.SetClonedProperties(this);
-                    SvcClient.CallerAADObjectId = CallerAADObjectId;
-                    SvcClient.CallerId = CallerId;
-                    SvcClient.MaxRetryCount = _configuration.Value.MaxRetryCount;
-                    SvcClient.RetryPauseTime = _configuration.Value.RetryPauseTime;
-                    SvcClient.GetAccessToken = GetAccessToken;
-
-                    return SvcClient;
-                }
-                catch (DataverseConnectionException)
-                {
-                    // rethrow the Connection exception coming from the initial call.
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    _logEntry.Log(ex);
-                    throw new DataverseConnectionException("Failed to Clone Connection", ex);
-                }
-            }
-            else
-            {
-                _logEntry.Log("Connection cannot be cloned.  There is currently no OAuth based connection active or it is mis-configured in the ServiceClient.");
-                return null;
+                _connectionSvc._isCloning = false; // set cloning behavior flag.
+                _configuration.Value.UseWebApiLoginFlow = false; // override default settings for clone ops.  
             }
         }
 
@@ -1504,6 +1518,23 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             return await ConnectionService.DiscoverGlobalOrganizationsAsync(discoveryServiceUri, tokenProviderFunction, externalLogger: logger, tokenCacheStorePath: tokenCacheStorePath).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Discovers Organizations Using the global discovery service and an external source for access tokens
+        /// </summary>
+        /// <param name="discoveryServiceUri">Global discovery base URI to use to connect too,  if null will utilize the commercial Global Discovery Server.</param>
+        /// <param name="tokenProviderFunction">Function that will provide access token to the discovery call.</param>
+        /// <param name="tokenCacheStorePath">(optional) path to log store</param>
+        /// <param name="logger">Logging provider <see cref="ILogger"/></param>
+        /// <param name="cancellationToken">Cancellation token for the request</param>
+        /// <returns></returns>
+        public static async Task<OrganizationDetailCollection> DiscoverOnlineOrganizationsAsync(Func<string, Task<string>> tokenProviderFunction, Uri discoveryServiceUri = null, string tokenCacheStorePath = null, ILogger logger = null, CancellationToken cancellationToken = default)
+        {
+            if (discoveryServiceUri == null)
+                discoveryServiceUri = new Uri(ConnectionService.GlobalDiscoveryAllInstancesUri); // use commercial GD
+
+            return await ConnectionService.DiscoverGlobalOrganizationsAsync(discoveryServiceUri, tokenProviderFunction, externalLogger: logger, tokenCacheStorePath: tokenCacheStorePath, cancellationToken: cancellationToken).ConfigureAwait(false);
+        }
+
         #endregion
 
         #endregion
@@ -1577,7 +1608,60 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     queryString = baseQueryString;
             }
 
-            var result = _connectionSvc.Command_WebExecuteAsync(queryString, body, method, customHeaders, contentType, string.Empty, CallerId, _disableConnectionLocking, MaxRetryCount, RetryPauseTime, cancellationToken: cancellationToken).Result;
+            var result = _connectionSvc.Command_WebExecuteAsync(queryString, body, method, customHeaders, contentType, string.Empty, CallerId, _disableConnectionLocking, MaxRetryCount, RetryPauseTime, cancellationToken: cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
+            if (result == null)
+                throw LastException;
+            else
+                return result;
+        }
+
+        /// <summary>
+        /// Executes a web request against Xrm WebAPI Async.
+        /// </summary>
+        /// <param name="queryString">Here you would pass the path and query parameters that you wish to pass onto the WebAPI.
+        /// The format used here is as follows:
+        ///   {APIURI}/api/data/v{instance version}/querystring.
+        /// For example,
+        ///     if you wanted to get data back from an account,  you would pass the following:
+        ///         accounts(id)
+        ///         which creates:  get - https://myinstance.crm.dynamics.com/api/data/v9.0/accounts(id)
+        ///     if you were creating an account, you would pass the following:
+        ///         accounts
+        ///         which creates:  post - https://myinstance.crm.dynamics.com/api/data/v9.0/accounts - body contains the data.
+        ///         </param>
+        /// <param name="method">Method to use for the request</param>
+        /// <param name="body">Content your passing to the request</param>
+        /// <param name="customHeaders">Headers in addition to the default headers added by for Executing a web request</param>
+        /// <param name="contentType">Content Type attach to the request.  this defaults to application/json if not set.</param>
+        /// <param name="cancellationToken">Cancellation token for the request</param>
+        /// <returns></returns>
+        public async Task<HttpResponseMessage> ExecuteWebRequestAsync(HttpMethod method, string queryString, string body, Dictionary<string, List<string>> customHeaders, string contentType = default, CancellationToken cancellationToken = default)
+        {
+            _logEntry.ResetLastError();  // Reset Last Error
+            ValidateConnectionLive();
+            if (DataverseService == null)
+            {
+                _logEntry.Log("Dataverse Service not initialized", TraceEventType.Error);
+                return null;
+            }
+
+            if (string.IsNullOrEmpty(queryString) && string.IsNullOrEmpty(body))
+            {
+                _logEntry.Log("Execute Web Request failed, queryString and body cannot be null", TraceEventType.Error);
+                return null;
+            }
+
+            if (Uri.TryCreate(queryString, UriKind.Absolute, out var urlPath))
+            {
+                // Was able to create a URL here... Need to make sure that we strip out everything up to the last segment.
+                string baseQueryString = urlPath.Segments.Last();
+                if (!string.IsNullOrEmpty(urlPath.Query))
+                    queryString = baseQueryString + urlPath.Query;
+                else
+                    queryString = baseQueryString;
+            }
+
+            var result = await _connectionSvc.Command_WebExecuteAsync(queryString, body, method, customHeaders, contentType, string.Empty, CallerId, _disableConnectionLocking, MaxRetryCount, RetryPauseTime, cancellationToken: cancellationToken).ConfigureAwait(false);
             if (result == null)
                 throw LastException;
             else
@@ -1626,7 +1710,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 else
                 {
                     // use Web API.
-                    return _connectionSvc.Command_WebAPIProcess_ExecuteAsync(req, logMessageTag, bypassPluginExecution, _metadataUtlity, CallerId, _disableConnectionLocking, MaxRetryCount, RetryPauseTime, new CancellationToken()).Result;
+                    return _connectionSvc.Command_WebAPIProcess_ExecuteAsync(req, logMessageTag, bypassPluginExecution, _metadataUtlity, CallerId, _disableConnectionLocking, MaxRetryCount, RetryPauseTime, new CancellationToken()).ConfigureAwait(false).GetAwaiter().GetResult();
                 }
             }
             else
@@ -1742,6 +1826,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         ), TraceEventType.Verbose);
 
                     logDt.Restart();
+                    _= await _connectionSvc.RefreshClientTokenAsync().ConfigureAwait(false);
                     rsp = await DataverseServiceAsync.ExecuteAsync(req).ConfigureAwait(false);
 
                     logDt.Stop();
@@ -1838,6 +1923,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         ), TraceEventType.Verbose);
 
                     logDt.Restart();
+                    _connectionSvc.RefreshClientTokenAsync().Wait(); // Refresh the token if needed.. 
                     if (!_disableConnectionLocking) // Allow Developer to override Cross Thread Safeties
                         lock (_lockObject)
                         {

@@ -1,4 +1,5 @@
-﻿using System;
+using Microsoft.Crm.Sdk.Messages;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,6 +18,11 @@ namespace Client_Core_UnitTests
             {
                 Skip = "Ignored test as connection info is not present";
             }
+        }
+
+        public SkippableConnectionTestAttribute(bool skip , string skipMessage)
+        {
+            Skip = skipMessage;
         }
     }
 }

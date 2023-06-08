@@ -1,4 +1,4 @@
-﻿//===================================================================================
+//===================================================================================
 // Microsoft – subject to the terms of the Microsoft EULA and other agreements
 // Microsoft.PowerPlatform.Dataverse.WebResourceUtility
 // copyright 2003-2012 Microsoft Corp.
@@ -48,9 +48,10 @@ namespace Microsoft.PowerPlatform.Dataverse.WebResourceUtility
 		/// <summary/>
 		public override void ResetLastError()
 		{
-			LastError.Remove(0, LastError.Length);
-			LastException = null;
-		}
+            if (base.LastError.Length > 0)
+                base.LastError = base.LastError.Remove(0, LastError.Length - 1);
+            LastException = null;
+        }
 
 		/// <summary>
 		/// Log a Message 
