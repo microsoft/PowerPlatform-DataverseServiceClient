@@ -1,5 +1,5 @@
 Notice:
-    This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8, .net core 3.1, 5.0 and 6.0
+    This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8, and 6.0
     General Documentation can be found here:
         https://docs.microsoft.com/en-us/dotnet/api/microsoft.powerplatform.dataverse.client?view=dataverse-sdk-latest
     Connection String Docs can be found here:
@@ -7,6 +7,25 @@ Notice:
     Note: Only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+REMOVED .net 3.1 and .net 5 support as they are out of support frameworks. 
+Added new DiscoverOnlineOrganizationsAsync which supports CancellationToken
+Added new RetrieveSolutionImportResultAsync for retrieving solution import result from Dataverse
+Added StageSolution API to Deployment Extensions. 
+Added Support for "StageSolution" as source for import solution.  to use it, you must first stage the solution, then call importsolution passing the staged solution id.
+Added GetAsyncOperationStatus API to Deployment Extensions. This provides a simple way to get the status of an async operation. 
+Added async version of ExecuteWebRequest. Git: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/354
+Updated telemetry behavior to remove some unnecessary log noise when cloning connections. 
+Updated auth flow to reduce access token acquire frequency. Git: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/377  
+Updated min version of DV required for SessionID Support.
+Updated Async via sync calls to support more current patterns. Git: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/372
+Fix for cleaning up Last Error reported by Git: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/359
+Fix for Object Null exception that occurs when using .Clone under request load in a multi threaded use case. Git issue: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/362
+Dependency changes:
+    System.ServiceModel.Security moved to 4.10.2 due min dependency (transient dependency is vulnerable to CVE-2022-34716).
+    System.ServiceModel.Http moved to 4.10.2 due min dependency (transient dependency is vulnerable to CVE-2022-34716).
+
+
+1.0.39:
 Added .net 6.0 Target for the Client.
 Added implementation for CreateAndReturnAsync variations.
 Updated  Default Login flow to use WebAPI to allow for detecting Admin Mode on server during login.

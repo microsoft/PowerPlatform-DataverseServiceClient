@@ -13,12 +13,15 @@ using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
+using Microsoft.Xrm.Sdk.Query;
 using Moq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Security;
 using Xunit;
 using Xunit.Abstractions;
@@ -92,7 +95,7 @@ namespace Client_Core_Tests
             Assert.ThrowsAsync<ObjectDisposedException>(async () =>
             {
                 cli.Dispose();
-                _ = (WhoAmIResponse) await cli.ExecuteAsync(new WhoAmIRequest()).ConfigureAwait(false);
+                _ = (WhoAmIResponse)await cli.ExecuteAsync(new WhoAmIRequest()).ConfigureAwait(false);
             });
         }
 
@@ -246,7 +249,7 @@ namespace Client_Core_Tests
                 System.Threading.CancellationToken tok = new System.Threading.CancellationToken(true);
                 respId = cli.CreateAsync(acctEntity, tok).GetAwaiter().GetResult();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Assert.IsType<OperationCanceledException>(ex);
             }
@@ -740,6 +743,34 @@ namespace Client_Core_Tests
 
         [SkippableConnectionTest]
         [Trait("Category", "Live Connect Required")]
+        public void RetrieveSolutionImportResultAsyncTest()
+        {
+            // Import
+            var client = CreateServiceClient();
+            if (!Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(client._connectionSvc?.OrganizationVersion, Utilities.FeatureVersionMinimums.AllowRetrieveSolutionImportResult))
+            {
+                // Not supported on this version of Dataverse
+                client._logEntry.Log($"RetrieveSolutionImportResultAsync request is calling RetrieveSolutionImportResult API. This request requires Dataverse version {Utilities.FeatureVersionMinimums.AllowRetrieveSolutionImportResult.ToString()} or above. The current Dataverse version is {client._connectionSvc?.OrganizationVersion}. This request cannot be made", TraceEventType.Warning);
+                return;
+            }
+
+            client.ImportSolution(Path.Combine("TestData", "TestSolution_1_0_0_1.zip"), out var importId);
+
+            // Wait a little bit because solution might not be immediately available
+            System.Threading.Thread.Sleep(30000);
+
+            // Response doesn't include formatted results 
+            var resWithoutFormatted = client.RetrieveSolutionImportResultAsync(importId);
+            resWithoutFormatted.Should().NotBeNull();
+
+            // Response include formatted results
+            var resWithFormatted = client.RetrieveSolutionImportResultAsync(importId, true);
+            resWithFormatted.Should().NotBeNull();
+            resWithFormatted.FormattedResults.Should().NotBeEmpty();
+        }
+
+        [SkippableConnectionTest]
+        [Trait("Category", "Live Connect Required")]
         public void ConnectUsingServiceIdentity_ClientSecret_CtorV1()
         {
             System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
@@ -792,7 +823,7 @@ namespace Client_Core_Tests
                 client = new ServiceClient(connStr, Ilogger);
                 Assert.True(client.IsReady, "Failed to Create Connection via Connection string");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Assert.Null(ex);
             }
@@ -845,11 +876,11 @@ namespace Client_Core_Tests
             var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
 
             // Connection params.
-            var client = new ServiceClient(new Uri(Conn_Url), testSupport.GetS2SAccessTokenForRequest , true, Ilogger);
+            var client = new ServiceClient(new Uri(Conn_Url), testSupport.GetS2SAccessTokenForRequest, true, Ilogger);
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
 
             // Validate connection
-            ValidateConnection(client , usingExternalAuth:true);
+            ValidateConnection(client, usingExternalAuth: true);
         }
 
         [SkippableConnectionTest]
@@ -873,7 +904,7 @@ namespace Client_Core_Tests
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
 
             // Validate connection
-            ValidateConnection(client , usingExternalAuth:true);
+            ValidateConnection(client, usingExternalAuth: true);
 
             // test clone
             var clientClone = client.Clone();
@@ -993,7 +1024,7 @@ namespace Client_Core_Tests
         [Trait("Category", "Live Connect Required")]
         public void ConnectUsingUserIdentity_UIDPW_ConSetup()
         {
-            string UrlProspect = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI"); 
+            string UrlProspect = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
             if (UrlProspect.EndsWith("/") || UrlProspect.EndsWith("\\"))
             {
                 UrlProspect = UrlProspect.Substring(0, UrlProspect.Length - 1);
@@ -1042,7 +1073,7 @@ namespace Client_Core_Tests
 
         #region connectionValidationHelper
 
-        private void ValidateConnection(ServiceClient client , bool usingExternalAuth = false)
+        private void ValidateConnection(ServiceClient client, bool usingExternalAuth = false)
         {
             if (!usingExternalAuth)
                 client._connectionSvc.AuthContext.Should().NotBeNull();
@@ -1197,13 +1228,14 @@ namespace Client_Core_Tests
 
                 // Import
                 var client = CreateServiceClient();
-                client.ImportSolution(Path.Combine("TestData", "TestSolution_1_0_0_1.zip"), out var importId);
+                client.ImportSolution(Path.Combine("TestMaterial", "TestSolution_1_0_0_1.zip"), out var importId);
 
                 // List solutions and find the one that was imported
-                // Wait a little bit because solution might not be immediately available
-                System.Threading.Thread.Sleep(30000);
+                client.ForceServerMetadataCacheConsistency = true;
                 var listRequest = new RetrieveOrganizationInfoRequest();
                 var listResponse = client.Execute(listRequest) as RetrieveOrganizationInfoResponse;
+                client.ForceServerMetadataCacheConsistency = false;
+
                 listResponse.Should().NotBeNull();
                 listResponse.organizationInfo.Should().NotBeNull();
                 listResponse.organizationInfo.Solutions.Should().NotBeEmpty();
@@ -1219,6 +1251,371 @@ namespace Client_Core_Tests
             finally
             {
                 System.Configuration.ConfigurationManager.AppSettings["UseWebApi"] = null;
+            }
+        }
+
+        [SkippableConnectionTest]
+        [Trait("Category", "Live Connect Required")]
+        public void ImportListDelete_Solution_TestAsync()
+        {
+            try
+            {
+                Stopwatch _HoldTime = new Stopwatch();
+                Stopwatch _RunTime = new Stopwatch();
+                // Import
+                var client = CreateServiceClient();
+                var asyncTrackingId = client.ImportSolutionAsync(Path.Combine("TestMaterial", "PowerPlatformIPManagement_1_0_0_6_managed.zip"), out var importId);
+                Assert.NotEqual(asyncTrackingId, Guid.Empty);
+
+                // Wait for Operation to complete
+                WaitForAsyncOperationToComplete(_HoldTime, _RunTime, client, asyncTrackingId);
+
+                System.Threading.Thread.Sleep(10000);
+                // List solutions and find the one that was imported
+                client.ForceServerMetadataCacheConsistency = true;
+                var listRequest = new RetrieveOrganizationInfoRequest();
+                var listResponse = client.Execute(listRequest) as RetrieveOrganizationInfoResponse;
+                client.ForceServerMetadataCacheConsistency = false;
+                listResponse.Should().NotBeNull();
+                listResponse.organizationInfo.Should().NotBeNull();
+                listResponse.organizationInfo.Solutions.Should().NotBeEmpty();
+
+                var solution = listResponse.organizationInfo.Solutions.Find(s => string.Compare(s.SolutionUniqueName, "PowerPlatformIPManagement", StringComparison.OrdinalIgnoreCase) == 0);
+                solution.Should().NotBeNull();
+
+                // Delete it
+                var deleteRequest = new DeleteRequest() { Target = new EntityReference("solution", solution.Id) };
+                var deleteResponse = client.Execute(deleteRequest) as DeleteResponse;
+                deleteResponse.Should().NotBeNull();
+                Ilogger.LogInformation($"Hold Time: {_HoldTime.Elapsed}.  Run Time:{_RunTime.Elapsed}");
+            }
+            finally
+            {
+            }
+        }
+
+        [SkippableConnectionTest(true, "Test Does not work underload")]
+        [Trait("Category", "Live Connect Required")]
+        public void ImportAndUpgradePromote_Delete_Solution_TestAsync()
+        {
+            try
+            {
+                Stopwatch _HoldTime = new Stopwatch();
+                Stopwatch _RunTime = new Stopwatch();
+
+                // Import
+                var client = CreateServiceClient();
+
+                Ilogger.LogInformation("SETTING UP INTIAL SOLUTION TO UPGRADE");
+                var asyncTrackingId = client.ImportSolutionAsync(Path.Combine("TestMaterial", "PowerPlatformIPManagement_1_0_0_6_managed.zip"), out var importId);
+                Assert.NotEqual(asyncTrackingId, Guid.Empty);
+
+                // Wait for Operation to complete
+                WaitForAsyncOperationToComplete(_HoldTime, _RunTime, client, asyncTrackingId);
+
+                Ilogger.LogInformation("SET UP INTIAL SOLUTION TO UPGRADE COMPLETE");
+
+                _RunTime.Start();
+                asyncTrackingId = client.ImportSolutionAsync(Path.Combine("TestMaterial", "PowerPlatformIPManagement_1_0_1_0_managed.zip"), out importId, importAsHoldingSolution: true);
+                Assert.NotEqual(asyncTrackingId, Guid.Empty);
+
+                // Wait for Operation to complete
+                WaitForAsyncOperationToComplete(_HoldTime, _RunTime, client, asyncTrackingId);
+
+                System.Threading.Thread.Sleep(10000);
+
+                var listRequest = new RetrieveOrganizationInfoRequest();
+                client.ForceServerMetadataCacheConsistency = true;
+                var listResponse = client.Execute(listRequest) as RetrieveOrganizationInfoResponse;
+                client.ForceServerMetadataCacheConsistency = false;
+                listResponse.Should().NotBeNull();
+                listResponse.organizationInfo.Should().NotBeNull();
+                listResponse.organizationInfo.Solutions.Should().NotBeEmpty();
+                var solution = listResponse.organizationInfo.Solutions.Find(s => string.Compare(s.SolutionUniqueName, "PowerPlatformIPManagement", StringComparison.OrdinalIgnoreCase) == 0);
+                solution.Should().NotBeNull();
+
+                System.Threading.Thread.Sleep(10000);
+                _RunTime.Start();
+                asyncTrackingId = client.DeleteAndPromoteSolutionAsync("PowerPlatformIPManagement");
+                Assert.NotEqual(asyncTrackingId, Guid.Empty);
+                _RunTime.Stop();
+
+                // Wait for Operation to complete
+                WaitForAsyncOperationToComplete(_HoldTime, _RunTime, client, asyncTrackingId);
+                listRequest = new RetrieveOrganizationInfoRequest();
+                client.ForceServerMetadataCacheConsistency = true;
+                listResponse = client.Execute(listRequest) as RetrieveOrganizationInfoResponse;
+                client.ForceServerMetadataCacheConsistency = false;
+                listResponse.Should().NotBeNull();
+                listResponse.organizationInfo.Should().NotBeNull();
+                listResponse.organizationInfo.Solutions.Should().NotBeEmpty();
+                solution = listResponse.organizationInfo.Solutions.Find(s => string.Compare(s.SolutionUniqueName, "PowerPlatformIPManagement", StringComparison.OrdinalIgnoreCase) == 0);
+                solution.Should().NotBeNull();
+
+                System.Threading.Thread.Sleep(10000);
+                // Delete it - CLEAN IT UP 
+                var deleteRequest = new DeleteRequest() { Target = new EntityReference("solution", solution.Id) };
+                var deleteResponse = client.Execute(deleteRequest) as DeleteResponse;
+                deleteResponse.Should().NotBeNull();
+
+                Ilogger.LogInformation($"Hold Time: {_HoldTime.Elapsed}.  Run Time:{_RunTime.Elapsed}");
+            }
+            finally
+            {
+            }
+        }
+
+        [SkippableConnectionTest(true, "Test Does not work underload")]
+        [Trait("Category", "Live Connect Required")]
+        public void ImportAndStageAndUpgrade_Solution_TestAsync()
+        {
+            try
+            {
+                Stopwatch _HoldTime = new Stopwatch();
+                Stopwatch _RunTime = new Stopwatch();
+                // Import
+                var client = CreateServiceClient();
+
+                var asyncTrackingId = client.ImportSolutionAsync(Path.Combine("TestMaterial", "PowerPlatformIPManagement_1_0_0_6_managed.zip"), out var importId);
+                Assert.NotEqual(asyncTrackingId, Guid.Empty);
+
+                // Wait for Operation to complete
+                WaitForAsyncOperationToComplete(_HoldTime, _RunTime, client, asyncTrackingId);
+                // List solutions and find the one that was imported
+                System.Threading.Thread.Sleep(10000);
+
+                _RunTime.Start();
+                client.ForceServerMetadataCacheConsistency = true;
+                Dictionary<string, object> solutionPrams = new Dictionary<string, object>();
+                solutionPrams.Add(ImportSolutionProperties.USESTAGEANDUPGRADEMODE, true);
+                asyncTrackingId = client.ImportSolutionAsync(Path.Combine("TestMaterial", "PowerPlatformIPManagement_1_0_1_0_managed.zip"), out importId, extraParameters: solutionPrams);
+                client.ForceServerMetadataCacheConsistency = false;
+
+                Assert.NotEqual(asyncTrackingId, Guid.Empty);
+
+                // Wait for Operation to complete
+                WaitForAsyncOperationToComplete(_HoldTime, _RunTime, client, asyncTrackingId);
+                _RunTime.Stop();
+
+                System.Threading.Thread.Sleep(10000);
+                DeleteSolutionFromSystem(client, "PowerPlatformIPManagement");
+
+                Ilogger.LogInformation($"Hold Time: {_HoldTime.Elapsed}.  Run Time:{_RunTime.Elapsed}");
+            }
+            finally
+            {
+            }
+        }
+
+        [SkippableConnectionTest(true, "Test Does not work underload")]
+        [Trait("Category", "Live Connect Required")]
+        public void ImportAndStageAndUpgrade_Solution_TestSync()
+        {
+            try
+            {
+                Stopwatch _RunTime = new Stopwatch();
+                // Import
+                var client = CreateServiceClient();
+
+                var ImportJobId = client.ImportSolution(Path.Combine("TestMaterial", "PowerPlatformIPManagement_1_0_0_6_managed.zip"), out var importId);
+
+                _RunTime.Start();
+                // List solutions and find the one that was imported
+                client.ForceServerMetadataCacheConsistency = true;
+                Dictionary<string, object> solutionPrams = new Dictionary<string, object>();
+                solutionPrams.Add(ImportSolutionProperties.USESTAGEANDUPGRADEMODE, true);
+                ImportJobId = client.ImportSolution(Path.Combine("TestMaterial", "PowerPlatformIPManagement_1_0_1_0_managed.zip"), out importId, extraParameters: solutionPrams);
+                client.ForceServerMetadataCacheConsistency = false;
+                _RunTime.Stop();
+
+                DeleteSolutionFromSystem(client, "PowerPlatformIPManagement");
+
+                Assert.NotEqual(ImportJobId, Guid.Empty);
+
+                Ilogger.LogInformation($"Run Time:{_RunTime.Elapsed}");
+            }
+            finally
+            {
+            }
+        }
+
+        [SkippableConnectionTest]
+        [Trait("Category", "Live Connect Required")]
+        public void StageSolution_File_TestSync()
+        {
+            Stopwatch _RunTime = new Stopwatch();
+            // Import
+            var client = CreateServiceClient();
+            var StageSolutionResults = client.StageSolution(Path.Combine("TestMaterial", "PowerPlatformIPManagement_1_0_0_6_managed.zip")).ConfigureAwait(false).GetAwaiter().GetResult();
+            Assert.NotNull(StageSolutionResults);
+            Assert.NotEqual(StageSolutionResults.StageSolutionUploadId, Guid.Empty);
+
+            // Clean up stages import
+            client.Delete("stagesolutionupload", StageSolutionResults.StageSolutionUploadId);
+        }
+
+        //[SkippableConnectionTest]
+        [Fact(Skip = "Broken API")]
+        // [Trait("Category", "Live Connect Required")]
+        public void StageSolution_File_Import_TestSync()
+        {
+            Stopwatch _RunTime = new Stopwatch();
+            // Import
+            var client = CreateServiceClient();
+
+            // clean up existing solution if present
+            DeleteSolutionFromSystem(client, "PowerPlatformIPManagement");
+
+            var StageSolutionResults = client.StageSolution(Path.Combine("TestMaterial", "PowerPlatformIPManagement_1_0_0_6_managed.zip")).ConfigureAwait(false).GetAwaiter().GetResult();
+            Assert.NotNull(StageSolutionResults);
+            if (!ValidateSolutionStageResults(StageSolutionResults))
+            {
+                throw new OperationCanceledException("StageSolution Failed due to Validation Error");
+            }
+            Assert.NotEqual(StageSolutionResults.StageSolutionUploadId, Guid.Empty);
+
+            // Import Staged Solution Sync. 
+            Guid returnedImportId = client.ImportSolution(StageSolutionResults.StageSolutionUploadId, out Guid guImportId);
+            Assert.Null(client.LastException);
+            Assert.NotEqual(returnedImportId, Guid.Empty);
+
+            // Clean up Solution: 
+            DeleteSolutionFromSystem(client, "PowerPlatformIPManagement");
+        }
+
+        [SkippableConnectionTest]
+        [Trait("Category", "Live Connect Required")]
+        public void StageSolution_File_Import_TestAsync()
+        {
+            try
+            {
+                Stopwatch _HoldTime = new Stopwatch();
+                Stopwatch _RunTime = new Stopwatch();
+                // Import
+                var client = CreateServiceClient();
+
+                // clean up existing solution if present
+                DeleteSolutionFromSystem(client, "PowerPlatformIPManagement");
+
+                _RunTime.Start();
+                var StageSolutionResults = client.StageSolution(Path.Combine("TestMaterial", "PowerPlatformIPManagement_1_0_0_6_managed.zip")).ConfigureAwait(false).GetAwaiter().GetResult();
+                Assert.NotNull(StageSolutionResults);
+                if (!ValidateSolutionStageResults(StageSolutionResults))
+                {
+                    throw new OperationCanceledException("StageSolution Failed due to Validation Error");
+                }
+                Assert.NotEqual(StageSolutionResults.StageSolutionUploadId, Guid.Empty);
+
+                var asyncTrackingId = client.ImportSolutionAsync(StageSolutionResults.StageSolutionUploadId, out var importId);
+                Assert.Null(client.LastException);
+                Assert.NotEqual(asyncTrackingId, Guid.Empty);
+
+                // Wait for Operation to complete
+                WaitForAsyncOperationToComplete(_HoldTime, _RunTime, client, asyncTrackingId);
+
+                // Clean up Solution: 
+                DeleteSolutionFromSystem(client, "PowerPlatformIPManagement");
+                Ilogger.LogInformation($"Hold Time: {_HoldTime.Elapsed}.  Run Time:{_RunTime.Elapsed}");
+            }
+            finally
+            {
+            }
+        }
+
+        [SkippableConnectionTest(true, "Test Does not work underload")]
+        [Trait("Category", "Live Connect Required")]
+        public void StageSolution_File_StageAndUpgrade_TestAsync()
+        {
+            try
+            {
+                Stopwatch _HoldTime = new Stopwatch();
+                Stopwatch _RunTime = new Stopwatch();
+                // Import
+                var client = CreateServiceClient();
+
+                // clean up existing solution if present
+                var guTrackingId = client.ImportSolution(Path.Combine("TestMaterial", "PowerPlatformIPManagement_1_0_0_6_managed.zip"), out var importId);
+
+
+                _RunTime.Start();
+                var StageSolutionResults = client.StageSolution(Path.Combine("TestMaterial", "PowerPlatformIPManagement_1_0_1_0_managed.zip")).ConfigureAwait(false).GetAwaiter().GetResult();
+                Assert.NotNull(StageSolutionResults);
+                if (!ValidateSolutionStageResults(StageSolutionResults))
+                {
+                    throw new OperationCanceledException("StageSolution Failed due to Validation Error");
+                }
+                Assert.NotEqual(StageSolutionResults.StageSolutionUploadId, Guid.Empty);
+
+
+                Dictionary<string, object> solutionPrams = new Dictionary<string, object>();
+                solutionPrams.Add(ImportSolutionProperties.USESTAGEANDUPGRADEMODE, true);
+                var asyncTrackingId = client.ImportSolutionAsync(StageSolutionResults.StageSolutionUploadId, out importId, extraParameters: solutionPrams);
+                Assert.Null(client.LastException);
+                Assert.NotEqual(asyncTrackingId, Guid.Empty);
+
+                // Wait for Operation to complete
+                WaitForAsyncOperationToComplete(_HoldTime, _RunTime, client, asyncTrackingId);
+
+                // Clean up Solution: 
+                DeleteSolutionFromSystem(client, "PowerPlatformIPManagement");
+                Ilogger.LogInformation($"Hold Time: {_HoldTime.Elapsed}.  Run Time:{_RunTime.Elapsed}");
+            }
+            finally
+            {
+            }
+        }
+
+        [SkippableConnectionTest(true, "Test Does not work underload")]
+        [Trait("Category", "Live Connect Required")]
+        public void StageSolution_File_DeleteAndPromote_TestAsync()
+        {
+            try
+            {
+                Stopwatch _HoldTime = new Stopwatch();
+                Stopwatch _RunTime = new Stopwatch();
+                // Import
+                var client = CreateServiceClient();
+
+                client.ForceServerMetadataCacheConsistency = true;
+                // clean up existing solution if present
+                var guTrackingId = client.ImportSolution(Path.Combine("TestMaterial", "PowerPlatformIPManagement_1_0_0_6_managed.zip"), out var importId);
+                System.Threading.Thread.Sleep(10000);
+
+                _RunTime.Start();
+                var StageSolutionResults = client.StageSolution(Path.Combine("TestMaterial", "PowerPlatformIPManagement_1_0_1_0_managed.zip")).ConfigureAwait(false).GetAwaiter().GetResult();
+                Assert.NotNull(StageSolutionResults);
+                if (!ValidateSolutionStageResults(StageSolutionResults))
+                {
+                    throw new OperationCanceledException("StageSolution Failed due to Validation Error");
+                }
+                Assert.NotEqual(StageSolutionResults.StageSolutionUploadId, Guid.Empty);
+                System.Threading.Thread.Sleep(10000);
+
+
+                Dictionary<string, object> solutionPrams = new Dictionary<string, object>();
+                //solutionPrams.Add(ImportSolutionProperties.USESTAGEANDUPGRADEMODE, true); // Cannot use stage Mode + staged solutionid for delete and promote. 
+                var asyncTrackingId = client.ImportSolutionAsync(StageSolutionResults.StageSolutionUploadId, out importId, importAsHoldingSolution: true, extraParameters: solutionPrams);
+                Assert.Null(client.LastException);
+                Assert.NotEqual(asyncTrackingId, Guid.Empty);
+
+                // Wait for Operation to complete
+                WaitForAsyncOperationToComplete(_HoldTime, _RunTime, client, asyncTrackingId);
+
+                System.Threading.Thread.Sleep(10000);
+
+                _RunTime.Start();
+                asyncTrackingId = client.DeleteAndPromoteSolutionAsync("PowerPlatformIPManagement");
+                Assert.NotEqual(asyncTrackingId, Guid.Empty);
+                // Wait for Operation to complete
+                WaitForAsyncOperationToComplete(_HoldTime, _RunTime, client, asyncTrackingId);
+
+                System.Threading.Thread.Sleep(10000);
+                // Clean up Solution: 
+                DeleteSolutionFromSystem(client, "PowerPlatformIPManagement");
+                Ilogger.LogInformation($"Hold Time: {_HoldTime.Elapsed}.  Run Time:{_RunTime.Elapsed}");
+            }
+            finally
+            {
             }
         }
 
@@ -1257,6 +1654,99 @@ namespace Client_Core_Tests
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
 
             return client;
+        }
+
+
+        private void WaitForAsyncOperationToComplete(Stopwatch _HoldTime, Stopwatch _RunTime, ServiceClient client, Guid? asyncTrackingId)
+        {
+            if (asyncTrackingId != null && asyncTrackingId != Guid.Empty)
+            {
+                // poll for status 
+                var resp = client.GetAsyncOperationStatus(asyncTrackingId.Value).GetAwaiter().GetResult();
+                if (resp != null && resp.State != AsyncStatusResponse.AsyncStatusResponse_statecode.FailedParse)
+                {
+                    while (resp.State != AsyncStatusResponse.AsyncStatusResponse_statecode.Completed)
+                    {
+                        // Wait a little bit because solution might not be immediately available
+                        Ilogger.LogInformation($"Operation progress: {resp.State} - {resp.StatusCode_Localized}");
+                        if (resp.State != AsyncStatusResponse.AsyncStatusResponse_statecode.Suspended && resp.State != AsyncStatusResponse.AsyncStatusResponse_statecode.Ready)
+                        {
+                            _HoldTime.Stop();
+                            _RunTime.Start();
+                        }
+                        else
+                        {
+                            _HoldTime.Start();
+                            _RunTime.Stop();
+                        }
+                        System.Threading.Thread.Sleep(5000);
+                        resp = client.GetAsyncOperationStatus(asyncTrackingId.Value).GetAwaiter().GetResult();
+                    }
+                }
+                Ilogger.LogInformation($"Operation Completed: {resp.State} - {resp.StatusCode_Localized}");
+                _HoldTime.Stop();
+                _RunTime.Stop();
+
+                if (resp.StatusCode == AsyncStatusResponse.AsyncStatusResponse_statuscode.Failed)
+                {
+                    Ilogger.LogError(resp.Message);
+                    throw new OperationCanceledException("Operation failed");
+                }
+
+            }
+        }
+
+        private void DeleteSolutionFromSystem(ServiceClient client, string solutionUnqiueName)
+        {
+            client.ForceServerMetadataCacheConsistency = true;
+            var listRequest = new RetrieveOrganizationInfoRequest();
+            var listResponse = client.Execute(listRequest) as RetrieveOrganizationInfoResponse;
+            listResponse.Should().NotBeNull();
+            listResponse.organizationInfo.Should().NotBeNull();
+            listResponse.organizationInfo.Solutions.Should().NotBeEmpty();
+
+            var solution = listResponse.organizationInfo.Solutions.Find(s => string.Compare(s.SolutionUniqueName, solutionUnqiueName, StringComparison.OrdinalIgnoreCase) == 0);
+            if (solution != null)
+            {
+                // Delete it
+                var deleteRequest = new DeleteRequest() { Target = new EntityReference("solution", solution.Id) };
+                var deleteResponse = client.Execute(deleteRequest) as DeleteResponse;
+                deleteResponse.Should().NotBeNull();
+            }
+            client.ForceServerMetadataCacheConsistency = false;
+        }
+
+
+        private bool ValidateSolutionStageResults(StageSolutionResults StageSolutionResults)
+        {
+            if (StageSolutionResults.SolutionValidationResults != null
+                && StageSolutionResults.SolutionValidationResults.Any())
+            {
+                // Found validation errors. Emit them and throw. 
+                foreach (var itm in StageSolutionResults.SolutionValidationResults)
+                {
+                    string msg = $"ErrorCode={itm.ErrorCode} | Msg={itm.Message} | AddInfo={itm.AdditionalInfo}";
+
+                    switch (itm.SolutionValidationResultType)
+                    {
+                        case SolutionValidationResultType.Info:
+                            Ilogger.LogInformation(msg);
+                            break;
+                        case SolutionValidationResultType.Warning:
+                            Ilogger.LogWarning(msg);
+                            break;
+                        case SolutionValidationResultType.Error:
+                            Ilogger.LogError(msg);
+                            break;
+                        default:
+                            Ilogger.LogInformation(msg);
+                            break;
+                    }
+                }
+                if (StageSolutionResults.SolutionValidationResults.Where(w => w.SolutionValidationResultType.Equals(SolutionValidationResultType.Error)).Any())
+                    return false;
+            }
+            return true;
         }
 
         #endregion

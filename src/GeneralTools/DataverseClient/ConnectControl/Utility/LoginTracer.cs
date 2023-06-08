@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Web.Services.Protocols;
@@ -57,8 +57,9 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl.Utility
 
 		public override void ResetLastError()
 		{
-			base.LastError.Remove(0, LastError.Length);
-			LastException = null;
+            if (base.LastError.Length > 0)
+                base.LastError = base.LastError.Remove(0, LastError.Length - 1);
+            LastException = null;
 		}
 
 

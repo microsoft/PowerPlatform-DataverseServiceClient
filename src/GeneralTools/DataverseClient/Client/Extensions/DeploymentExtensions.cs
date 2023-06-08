@@ -1,4 +1,5 @@
 using Microsoft.Crm.Sdk.Messages;
+using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Query;
@@ -8,6 +9,9 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Xml;
 
 namespace Microsoft.PowerPlatform.Dataverse.Client.Extensions
 {
@@ -391,9 +395,93 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Extensions
         /// <returns>Returns the Async Job ID.  To find the status of the job, query the AsyncOperation Entity using GetEntityDataByID using the returned value of this method</returns>
         public static Guid ImportSolutionAsync(this ServiceClient serviceClient, string solutionPath, out Guid importId, bool activatePlugIns = true, bool overwriteUnManagedCustomizations = false, bool skipDependancyOnProductUpdateCheckOnInstall = false, bool importAsHoldingSolution = false, bool isInternalUpgrade = false, Dictionary<string, object> extraParameters = null)
         {
-            return serviceClient.ImportSolutionToImpl(solutionPath, out importId, activatePlugIns, overwriteUnManagedCustomizations, skipDependancyOnProductUpdateCheckOnInstall, importAsHoldingSolution, isInternalUpgrade, true, extraParameters);
+            return serviceClient.ImportSolutionToImpl(solutionPath, Guid.Empty, out importId, activatePlugIns, overwriteUnManagedCustomizations, skipDependancyOnProductUpdateCheckOnInstall, importAsHoldingSolution, isInternalUpgrade, true, extraParameters);
         }
 
+        /// <summary>
+        /// Import Solution Async used Execute Async pattern to run a solution import.
+        /// </summary>
+        /// <param name="activatePlugIns">Activate Plugin's and workflows on the Solution </param>
+        /// <param name="importId"><para>This will populate with the Import ID even if the request failed.
+        /// You can use this ID to request status on the import via a request to the ImportJob entity.</para></param>
+        /// <param name="StageSolutionUploadId">Staged Solution Upload Id, created from Stage Solution.</param>
+        /// <param name="overwriteUnManagedCustomizations">Forces an overwrite of unmanaged customizations of the managed solution you are installing, defaults to false</param>
+        /// <param name="skipDependancyOnProductUpdateCheckOnInstall">Skips dependency against dependencies flagged as product update, defaults to false</param>
+        /// <param name="importAsHoldingSolution">Applies only on Dataverse organizations version 7.2 or higher.  This imports the Dataverse solution as a holding solution utilizing the “As Holding” capability of ImportSolution </param>
+        /// <param name="isInternalUpgrade">Internal Microsoft use only</param>
+        /// <param name="extraParameters">Extra parameters</param>
+        /// <param name="serviceClient">ServiceClient</param>
+        /// <returns>Returns the Async Job ID.  To find the status of the job, query the AsyncOperation Entity using GetEntityDataByID using the returned value of this method</returns>
+
+        public static Guid ImportSolutionAsync(this ServiceClient serviceClient, Guid StageSolutionUploadId, out Guid importId, bool activatePlugIns = true, bool overwriteUnManagedCustomizations = false, bool skipDependancyOnProductUpdateCheckOnInstall = false, bool importAsHoldingSolution = false, bool isInternalUpgrade = false, Dictionary<string, object> extraParameters = null)
+        {
+            return serviceClient.ImportSolutionToImpl(string.Empty, StageSolutionUploadId, out importId, activatePlugIns, overwriteUnManagedCustomizations, skipDependancyOnProductUpdateCheckOnInstall, importAsHoldingSolution, isInternalUpgrade, true, extraParameters);
+        }
+
+        /// <summary>
+        /// Stages a solution for Import. <see href="https://learn.microsoft.com/power-platform/alm/solution-async#staging-a-solution"/>
+        /// A solution path or stream containing a solution is required to use this. 
+        /// </summary>
+        /// <param name="serviceClient"></param>
+        /// <param name="solutionPath">Path to the solution</param>
+        /// <param name="solutionStream">memory stream containing the solution file to be staged.</param>
+        /// <returns>StageSolutionResults, <see cref="StageSolutionResults"/></returns>
+        public static async Task<StageSolutionResults> StageSolution(this ServiceClient serviceClient, string solutionPath, MemoryStream solutionStream = null)
+        {
+            if (serviceClient.DataverseService == null)
+            {
+                var Error = new DataverseOperationException("Dataverse Service not initialized", ErrorCodes.DataverseServiceClientNotIntialized, string.Empty, null);
+                serviceClient._logEntry.Log(Error);
+                throw Error;
+            }
+
+            if (solutionStream == null && string.IsNullOrWhiteSpace(solutionPath))
+            {
+                var Error = new DataverseOperationException("SolutionPath or Solution File Stream is required", ErrorCodes.SolutionFilePathNull, string.Empty, null);
+                serviceClient._logEntry.Log(Error);
+                throw Error;
+            }
+
+            // determine if the system is connected to OnPrem
+            if (serviceClient._connectionSvc.ConnectedOrganizationDetail != null && string.IsNullOrEmpty(serviceClient._connectionSvc.ConnectedOrganizationDetail.Geo))
+            {
+                var Error = new DataverseOperationException("StageSolution is not valid for OnPremise deployments", ErrorCodes.OperationInvalidOnPrem, string.Empty, null);
+                serviceClient._logEntry.Log(Error);
+                throw Error;
+            }
+
+            bool streamLocalyCreated = false;
+            try
+            {
+                if (solutionStream == null && File.Exists(solutionPath))
+                {
+                    solutionStream = new MemoryStream(File.ReadAllBytes(solutionPath));
+                    streamLocalyCreated = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                var Error = new DataverseOperationException("Read Solution Failed", ex);
+                serviceClient._logEntry.Log(Error);
+                throw Error;
+
+            }
+
+            //SolutionParameters
+            StageSolutionRequest stageSolutionRequest = new StageSolutionRequest()
+            {
+                CustomizationFile = solutionStream.ToArray()
+            };
+            if (streamLocalyCreated)
+            {
+                solutionStream.Close();
+                solutionStream.Dispose();
+            }
+
+            // submit request. 
+            var solutionStageResp = (StageSolutionResponse)await serviceClient.ExecuteAsync(stageSolutionRequest).ConfigureAwait(false);
+            return solutionStageResp.StageSolutionResults;
+        }
 
         /// <summary>
         /// <para>
@@ -413,7 +501,28 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Extensions
         /// <param name="extraParameters">Extra parameters</param>
         public static Guid ImportSolution(this ServiceClient serviceClient, string solutionPath, out Guid importId, bool activatePlugIns = true, bool overwriteUnManagedCustomizations = false, bool skipDependancyOnProductUpdateCheckOnInstall = false, bool importAsHoldingSolution = false, bool isInternalUpgrade = false, Dictionary<string, object> extraParameters = null)
         {
-            return serviceClient.ImportSolutionToImpl(solutionPath, out importId, activatePlugIns, overwriteUnManagedCustomizations, skipDependancyOnProductUpdateCheckOnInstall, importAsHoldingSolution, isInternalUpgrade, false, extraParameters);
+            return serviceClient.ImportSolutionToImpl(solutionPath, Guid.Empty, out importId, activatePlugIns, overwriteUnManagedCustomizations, skipDependancyOnProductUpdateCheckOnInstall, importAsHoldingSolution, isInternalUpgrade, false, extraParameters);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Imports a Dataverse solution to the Dataverse Server currently connected.
+        /// <para>*** Note: this is a blocking call and will take time to Import to Dataverse ***</para>
+        /// </para>
+        /// </summary>
+        /// <param name="StageSolutionUploadId">Staged Solution Upload Id, created from Stage Solution.</param>
+        /// <param name="activatePlugIns">Activate Plugin's and workflows on the Solution </param>
+        /// <param name="importId"><para>This will populate with the Import ID even if the request failed.
+        /// You can use this ID to request status on the import via a request to the ImportJob entity.</para></param>
+        /// <param name="overwriteUnManagedCustomizations">Forces an overwrite of unmanaged customizations of the managed solution you are installing, defaults to false</param>
+        /// <param name="skipDependancyOnProductUpdateCheckOnInstall">Skips dependency against dependencies flagged as product update, defaults to false</param>
+        /// <param name="importAsHoldingSolution">Applies only on Dataverse organizations version 7.2 or higher.  This imports the Dataverse solution as a holding solution utilizing the “As Holding” capability of ImportSolution </param>
+        /// <param name="isInternalUpgrade">Internal Microsoft use only</param>
+        /// <param name="serviceClient">ServiceClient</param>
+        /// <param name="extraParameters">Extra parameters</param>
+        public static Guid ImportSolution(this ServiceClient serviceClient, Guid StageSolutionUploadId, out Guid importId, bool activatePlugIns = true, bool overwriteUnManagedCustomizations = false, bool skipDependancyOnProductUpdateCheckOnInstall = false, bool importAsHoldingSolution = false, bool isInternalUpgrade = false, Dictionary<string, object> extraParameters = null)
+        {
+            return serviceClient.ImportSolutionToImpl(string.Empty, StageSolutionUploadId, out importId, activatePlugIns, overwriteUnManagedCustomizations, skipDependancyOnProductUpdateCheckOnInstall, importAsHoldingSolution, isInternalUpgrade, false, extraParameters);
         }
 
         /// <summary>
@@ -583,6 +692,154 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Extensions
             catch { }
             return ImportStatus.NotImported;
             //return false;
+        }
+
+        /// <summary>
+        /// Retrieve solution import result from Dataverse
+        /// </summary>
+        /// <param name="serviceClient">ServiceClient</param>
+        /// <param name="importJobId">Import job Id</param>
+        /// <param name="includeFormattedResults">Check if the result need to be formatted</param>
+        /// <returns>Solution import result. </returns>
+        public static SolutionOperationResult RetrieveSolutionImportResultAsync(this ServiceClient serviceClient, Guid importJobId, bool includeFormattedResults = false)
+        {
+            var res = new SolutionOperationResult();
+
+            if (!Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(serviceClient._connectionSvc?.OrganizationVersion, Utilities.FeatureVersionMinimums.AllowRetrieveSolutionImportResult))
+            {
+                // Not supported on this version of Dataverse
+                serviceClient._logEntry.Log($"RetrieveSolutionImportResultAsync request is calling RetrieveSolutionImportResult API. This request requires Dataverse version {Utilities.FeatureVersionMinimums.AllowRetrieveSolutionImportResult.ToString()} or above. The current Dataverse version is {serviceClient._connectionSvc?.OrganizationVersion}. This request cannot be made", TraceEventType.Warning);
+                return null;
+            }
+
+            if (!includeFormattedResults)
+            {
+                // Retrieve import job from Dataverse, doesn't include formatted results
+                var columnSet = new ColumnSet();
+                columnSet.AddColumns(new string[] { "importjobid", "data" });
+                var query = new QueryByAttribute();
+                query.ColumnSet = columnSet;
+                query.EntityName = "importjob";
+                query.AddAttributeValue("importjobid", importJobId);
+                var importJobs = serviceClient.RetrieveMultipleAsync(query);
+
+                // If the importJobId is wrong, would return a entity collection with 0 record
+                if (importJobs.Result.Entities.Count == 0)
+                {
+                    serviceClient._logEntry.Log($"The solution import Job with id {importJobId} is not found.", TraceEventType.Error);
+                    return null;
+                }
+
+                var importJob = importJobs.Result.Entities[0];
+
+                // Initialize result data member
+                res.Type = SolutionOperationType.Import;
+                res.ErrorMessages = new List<string>();
+                res.WarningMessages = new List<string>();
+                res.ActionLink = new ActionLink();
+
+                // Parse the Xml file
+                XmlDocument doc = XmlUtil.CreateXmlDocument((string)importJob["data"]);
+                var root = doc.DocumentElement;
+                if (root.Attributes != null && root.Attributes["succeeded"] != null)
+                {
+                    res.Status = root.Attributes["succeeded"].Value == "failure" ? SolutionOperationStatus.Failed : SolutionOperationStatus.Passed;
+                }
+
+                if (res.Status == SolutionOperationStatus.Failed)
+                {
+                    // Add error message
+                    if (root.Attributes != null && root.Attributes["status"] != null)
+                    {
+                        res.ErrorMessages.Add(root.Attributes["status"].Value);
+                    }
+                }
+                else
+                {
+                    // Add warning message
+                    using (var warningNodes = doc.SelectNodes("//*[@result='warning']"))
+                    {
+                        if (warningNodes != null && warningNodes.Count > 0)
+                        {
+                            foreach (XmlNode node in warningNodes)
+                            {
+                                if (node.Attributes != null && node.Attributes["errortext"] != null)
+                                {
+                                    res.WarningMessages.Add(node.Attributes["errortext"].Value);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Add action link
+                var actionlinkNode = doc.SelectSingleNode("/importexportxml/actionlink");
+                if (actionlinkNode != null && actionlinkNode.Attributes != null)
+                {
+                    var label = actionlinkNode.Attributes["label"];
+                    var target = actionlinkNode.Attributes["target"];
+
+                    if (label != null)
+                    {
+                        res.ActionLink.Label = label.Value;
+                    }
+
+                    if (target != null)
+                    {
+                        res.ActionLink.Target = target.Value;
+                    }
+                }
+            }
+            else
+            {
+                // Retrieve import job from Dataverse by RetrieveSolutionImportResult API include formatted results
+                var req = new OrganizationRequest("RetrieveSolutionImportResult");
+                req.Parameters.Add(new KeyValuePair<string, object>("ImportJobId", importJobId));
+                var importJob = serviceClient.Command_Execute(req, "Executing Request for RetrieveSolutionImportResult");
+                if (importJob.Results.Contains("SolutionOperationResult"))
+                {
+                    res = (SolutionOperationResult)importJob.Results["SolutionOperationResult"];
+                }
+            }
+            return res;
+        }
+
+        /// <summary>
+        /// Requests status on an Async Operation. 
+        /// </summary>
+        /// <param name="serviceClient"></param>
+        /// <param name="asyncOperationId"></param>
+        /// <returns></returns>
+        public static async Task<AsyncStatusResponse> GetAsyncOperationStatus(this ServiceClient serviceClient, Guid asyncOperationId)
+        {
+            var AsyncQuery = new QueryExpression("asyncoperation")
+            {
+                TopCount = 1
+            };
+            // Add columns necessary for a client to know if the system is acting. 
+            AsyncQuery.ColumnSet.AddColumns(
+                "asyncoperationid",
+                "name",
+                "operationtype",
+                "breadcrumbid",
+                "friendlymessage",
+                "message",
+                "statecode",
+                "statuscode",
+                "correlationid",
+                "correlationupdatedtime"
+            );
+            AsyncQuery.Criteria.AddCondition("asyncoperationid", ConditionOperator.Equal, asyncOperationId);
+
+            try
+            {
+                var asyncOpResult = await serviceClient.RetrieveMultipleAsync(AsyncQuery).ConfigureAwait(false);
+                return new AsyncStatusResponse(asyncOpResult);
+            }
+            catch (Exception ex)
+            {
+                throw new DataverseOperationException("Failed to Get AsyncOperation Status", ex);
+            }
         }
 
         #region SupportClasses
@@ -792,9 +1049,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Extensions
         /// <param name="isInternalUpgrade">Internal Microsoft use only</param>
         /// <param name="useAsync">Requires the use of an Async Job to do the import. </param>
         /// <param name="serviceClient">ServiceClient</param>
+        /// <param name="stageSolutionUploadId">Upload ID for Solution that has been staged</param>
         /// <param name="extraParameters">Extra parameters</param>
         /// <returns>Returns the Import Solution Job ID.  To find the status of the job, query the ImportJob Entity using GetEntityDataByID using the returned value of this method</returns>
-        internal static Guid ImportSolutionToImpl(this ServiceClient serviceClient, string solutionPath, out Guid importId, bool activatePlugIns, bool overwriteUnManagedCustomizations, bool skipDependancyOnProductUpdateCheckOnInstall, bool importAsHoldingSolution, bool isInternalUpgrade, bool useAsync, Dictionary<string, object> extraParameters)
+        internal static Guid ImportSolutionToImpl(this ServiceClient serviceClient, string solutionPath, Guid stageSolutionUploadId, out Guid importId, bool activatePlugIns, bool overwriteUnManagedCustomizations, bool skipDependancyOnProductUpdateCheckOnInstall, bool importAsHoldingSolution, bool isInternalUpgrade, bool useAsync, Dictionary<string, object> extraParameters)
         {
             serviceClient._logEntry.ResetLastError();  // Reset Last Error
             importId = Guid.Empty;
@@ -804,7 +1062,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Extensions
                 return Guid.Empty;
             }
 
-            if (string.IsNullOrWhiteSpace(solutionPath))
+            if (stageSolutionUploadId == Guid.Empty && string.IsNullOrWhiteSpace(solutionPath))
             {
                 serviceClient._logEntry.Log("************ Exception on ImportSolutionToImpl, SolutionPath is required", TraceEventType.Error);
                 return Guid.Empty;
@@ -821,6 +1079,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Extensions
             bool? convertToManaged = null;
             bool? isTemplateModeImport = null;
             string templateSuffix = null;
+            bool? useStageSolutionProcess = null;
 
             if (extraParameters != null)
             {
@@ -830,6 +1089,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Extensions
                 convertToManaged = extraParameters.ContainsKey(ImportSolutionProperties.CONVERTTOMANAGED) ? extraParameters[ImportSolutionProperties.CONVERTTOMANAGED] as bool? : null;
                 isTemplateModeImport = extraParameters.ContainsKey(ImportSolutionProperties.ISTEMPLATEMODE) ? extraParameters[ImportSolutionProperties.ISTEMPLATEMODE] as bool? : null;
                 templateSuffix = extraParameters.ContainsKey(ImportSolutionProperties.TEMPLATESUFFIX) ? extraParameters[ImportSolutionProperties.TEMPLATESUFFIX].ToString() : string.Empty;
+                useStageSolutionProcess = extraParameters.ContainsKey(ImportSolutionProperties.USESTAGEANDUPGRADEMODE) ? extraParameters[ImportSolutionProperties.USESTAGEANDUPGRADEMODE] as bool? : null;
 
                 // Pick up the data from the request,  if the request has the AsyncRibbonProcessing flag, pick up the value of it.
                 asyncRibbonProcessing = extraParameters.ContainsKey(ImportSolutionProperties.ASYNCRIBBONPROCESSING) ? extraParameters[ImportSolutionProperties.ASYNCRIBBONPROCESSING] as bool? : null;
@@ -848,7 +1108,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Extensions
                         if (!Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(serviceClient._connectionSvc?.OrganizationVersion, Utilities.FeatureVersionMinimums.AllowAsyncRibbonProcessing))
                         {
                             // Not supported on this version of Dataverse
-                            serviceClient._logEntry.Log($"ImportSolution request contains {ImportSolutionProperties.ASYNCRIBBONPROCESSING} property.  This request Dataverse version {Utilities.FeatureVersionMinimums.AllowAsyncRibbonProcessing.ToString()} or above. Current Dataverse version is {serviceClient._connectionSvc?.OrganizationVersion}. This property will be removed", TraceEventType.Warning);
+                            serviceClient._logEntry.Log($"ImportSolution request contains {ImportSolutionProperties.ASYNCRIBBONPROCESSING} property. This request requires Dataverse version {Utilities.FeatureVersionMinimums.AllowAsyncRibbonProcessing.ToString()} or above. Current Dataverse version is {serviceClient._connectionSvc?.OrganizationVersion}. This property will be removed", TraceEventType.Warning);
                             asyncRibbonProcessing = null;
                         }
                     }
@@ -866,7 +1126,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Extensions
                         if (!Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(serviceClient._connectionSvc?.OrganizationVersion, Utilities.FeatureVersionMinimums.AllowComponetInfoProcessing))
                         {
                             // Not supported on this version of Dataverse
-                            serviceClient._logEntry.Log($"ImportSolution request contains {ImportSolutionProperties.COMPONENTPARAMETERSPARAM} property. This request Dataverse version {Utilities.FeatureVersionMinimums.AllowComponetInfoProcessing.ToString()} or above. Current Dataverse version is {serviceClient._connectionSvc?.OrganizationVersion}. This property will be removed", TraceEventType.Warning);
+                            serviceClient._logEntry.Log($"ImportSolution request contains {ImportSolutionProperties.COMPONENTPARAMETERSPARAM} property. This request requires Dataverse version {Utilities.FeatureVersionMinimums.AllowComponetInfoProcessing.ToString()} or above. Current Dataverse version is {serviceClient._connectionSvc?.OrganizationVersion}. This property will be removed", TraceEventType.Warning);
                             componetsToProcess = null;
                         }
                     }
@@ -884,29 +1144,57 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Extensions
                         if (!Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(serviceClient._connectionSvc?.OrganizationVersion, Utilities.FeatureVersionMinimums.AllowTemplateSolutionImport))
                         {
                             // Not supported on this version of Dataverse
-                            serviceClient._logEntry.Log($"ImportSolution request contains {ImportSolutionProperties.ISTEMPLATEMODE} property. This request Dataverse version {Utilities.FeatureVersionMinimums.AllowTemplateSolutionImport.ToString()} or above. Current Dataverse version is {serviceClient._connectionSvc?.OrganizationVersion}. This property will be removed", TraceEventType.Warning);
+                            serviceClient._logEntry.Log($"ImportSolution request contains {ImportSolutionProperties.ISTEMPLATEMODE} property. This request requires Dataverse version {Utilities.FeatureVersionMinimums.AllowTemplateSolutionImport.ToString()} or above. Current Dataverse version is {serviceClient._connectionSvc?.OrganizationVersion}. This property will be removed", TraceEventType.Warning);
                             isTemplateModeImport = null;
                         }
                     }
                 }
-            }
 
+                if (useStageSolutionProcess != null)
+                {
+                    if (isConnectedToOnPrem)
+                    {
+                        serviceClient._logEntry.Log($"StageAndUpgrade Mode is not valid for OnPremise deployments. Normal Solution Upgrade behavior will be utilized", TraceEventType.Warning);
+                        useStageSolutionProcess = null;
+                    }
+                    else
+                    {
+                        if (!Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(serviceClient._connectionSvc?.OrganizationVersion, Utilities.FeatureVersionMinimums.AllowStageAndUpgrade))
+                        {
+                            // Not supported on this version of Dataverse
+                            serviceClient._logEntry.Log($"StageAndUpgrade Mode requires Dataverse version {Utilities.FeatureVersionMinimums.AllowStageAndUpgrade.ToString()} or above. Current Dataverse version is {serviceClient._connectionSvc?.OrganizationVersion}. Normal Solution Upgrade behavior will be utilized", TraceEventType.Warning);
+                            useStageSolutionProcess = null;
+                        }
+                    }
+                }
+            }
             string solutionNameForLogging = string.IsNullOrWhiteSpace(solutionName) ? string.Empty : string.Concat(solutionName, " - ");
 
             // try to load the file from the file system
-            if (File.Exists(solutionPath))
+            if ((!string.IsNullOrEmpty(solutionPath) && File.Exists(solutionPath))
+                || stageSolutionUploadId != Guid.Empty)
             {
                 try
                 {
                     importId = Guid.NewGuid();
-                    byte[] fileData = File.ReadAllBytes(solutionPath);
                     ImportSolutionRequest SolutionImportRequest = new ImportSolutionRequest()
                     {
-                        CustomizationFile = fileData,
                         PublishWorkflows = activatePlugIns,
                         ImportJobId = importId,
-                        OverwriteUnmanagedCustomizations = overwriteUnManagedCustomizations
+                        OverwriteUnmanagedCustomizations = overwriteUnManagedCustomizations,
                     };
+
+                    if (stageSolutionUploadId != Guid.Empty)
+                    {
+                        SolutionImportRequest.SolutionParameters = new SolutionParameters()
+                        {
+                            StageSolutionUploadId = stageSolutionUploadId,
+                        };
+                    }
+                    else
+                    {
+                        SolutionImportRequest.CustomizationFile = File.ReadAllBytes(solutionPath);
+                    }
 
                     //If the desiredLayerOrder is null don't add it to the request. This ensures backward compatibility. It makes old packages work on old builds
                     if (desiredLayerOrder != null)
@@ -975,7 +1263,30 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Extensions
                         Guid requestTrackingId = Guid.NewGuid();
                         SolutionImportRequest.RequestId = requestTrackingId;
 
-                        if (!isConnectedToOnPrem && Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(serviceClient.ConnectedOrgVersion, Utilities.FeatureVersionMinimums.AllowImportSolutionAsyncV2))
+                        if (!isConnectedToOnPrem && useStageSolutionProcess.HasValue && useStageSolutionProcess.Value)
+                        {
+                            StageAndUpgradeAsyncRequest stgAndUpgradeReq = new StageAndUpgradeAsyncRequest
+                            {
+                                Parameters = SolutionImportRequest.Parameters
+                            };
+
+                            // remove unsupported parameter from importsolutionasync request.
+                            if (stgAndUpgradeReq.Parameters.ContainsKey("ImportJobId"))
+                                stgAndUpgradeReq.Parameters.Remove("ImportJobId");
+
+                            serviceClient._logEntry.Log(string.Format(CultureInfo.InvariantCulture, "{1}Created Async StageAndUpgradeAsyncRequest : RequestID={0} ", requestTrackingId.ToString(), solutionNameForLogging), TraceEventType.Verbose);
+                            StageAndUpgradeAsyncResponse asyncResp = (StageAndUpgradeAsyncResponse)serviceClient.Command_Execute(stgAndUpgradeReq, solutionNameForLogging + "Executing Request for StageAndUpgradeAsyncRequest : ");
+                            if (asyncResp == null)
+                                return Guid.Empty;
+                            else
+                            {
+                                _ = Guid.TryParse(asyncResp.ImportJobKey, out Guid parsedImportKey);
+                                importId = parsedImportKey;
+                                return asyncResp.AsyncOperationId;
+                            }
+
+                        }
+                        else if (!isConnectedToOnPrem && Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(serviceClient.ConnectedOrgVersion, Utilities.FeatureVersionMinimums.AllowImportSolutionAsyncV2))
                         {
                             // map import request to Async Model
                             ImportSolutionAsyncRequest asynImportRequest = new ImportSolutionAsyncRequest()
@@ -1003,7 +1314,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Extensions
                             if (asyncResp == null)
                                 return Guid.Empty;
                             else
+                            {
+                                _ = Guid.TryParse(asyncResp.ImportJobKey, out Guid parsedImportKey);
+                                importId = parsedImportKey;
+
                                 return asyncResp.AsyncOperationId;
+                            }
                         }
                         else
                         {
@@ -1020,11 +1336,27 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Extensions
                     }
                     else
                     {
-                        ImportSolutionResponse resp = (ImportSolutionResponse)serviceClient.Command_Execute(SolutionImportRequest, solutionNameForLogging + "Executing ImportSolutionRequest for ImportSolution");
-                        if (resp == null)
-                            return Guid.Empty;
+                        if (useStageSolutionProcess.HasValue && useStageSolutionProcess.Value)
+                        {
+                            StageAndUpgradeRequest stageAndUpgrade = new StageAndUpgradeRequest();
+                            stageAndUpgrade.Parameters = SolutionImportRequest.Parameters;
+
+                            StageAndUpgradeResponse resp = (StageAndUpgradeResponse)serviceClient.Command_Execute(stageAndUpgrade, solutionNameForLogging + "Executing StageAndUpgradeRequest for ImportSolutionTo");
+                            if (resp == null)
+                                return Guid.Empty;
+                            else
+                            {
+                                return importId;
+                            }
+                        }
                         else
-                            return importId;
+                        {
+                            ImportSolutionResponse resp = (ImportSolutionResponse)serviceClient.Command_Execute(SolutionImportRequest, solutionNameForLogging + "Executing ImportSolutionRequest for ImportSolution");
+                            if (resp == null)
+                                return Guid.Empty;
+                            else
+                                return importId;
+                        }
                     }
                 }
                 #region Exception handlers for files
@@ -1071,7 +1403,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Extensions
                 return Guid.Empty;
             }
         }
-
         #endregion
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,6 +6,7 @@ using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using System.Globalization;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
 
 namespace Microsoft.PowerPlatform.Dataverse.Client
 {
@@ -34,22 +35,24 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 		/// </summary>
 		private DataverseTraceLogger logger = null;
 
-		#endregion
+        #endregion
 
-		/// <summary>
-		/// Base Constructor..
-		/// </summary>
-		/// <param name="MaxBatches">Max number of concurrent batches possible</param>
-		/// <param name="MaxRequestPerBatch">Max number of requests per Batch</param>
-		/// <param name="traceLogger">TraceLogger</param>
-		public BatchManager(DataverseTraceLogger traceLogger, int MaxBatches = 50000, int MaxRequestPerBatch = 5000)
+        /// <summary>
+        /// Base Constructor..
+        /// </summary>
+        /// <param name="MaxBatches">Max number of concurrent batches possible</param>
+        /// <param name="MaxRequestPerBatch">Max number of requests per Batch</param>
+        /// <param name="IsClonedConnection">Indicates if the connection is being cloned</param>
+        /// <param name="traceLogger">TraceLogger</param>
+        public BatchManager(DataverseTraceLogger traceLogger, int MaxBatches = 50000, int MaxRequestPerBatch = 5000, bool IsClonedConnection = false)
 		{
 			logger = traceLogger;
 			// Do a Version Check here? 
 			MaxNumberOfBatches = MaxBatches;
 			MaxNumberOfRequestsInABatch = MaxRequestPerBatch;
 			RequestBatches = new Dictionary<Guid, RequestBatch>();
-			logger.Log(string.Format(CultureInfo.InvariantCulture, "New Batch Manager Created, Max #of Batches:{0}, Max #of RequestsPerBatch:{1}", MaxBatches, MaxRequestPerBatch), System.Diagnostics.TraceEventType.Verbose);
+			if (!IsClonedConnection)
+				logger.Log(string.Format(CultureInfo.InvariantCulture, "New Batch Manager Created, Max #of Batches:{0}, Max #of RequestsPerBatch:{1}", MaxBatches, MaxRequestPerBatch), TraceEventType.Verbose);
 		}
 
 		/// <summary>

@@ -4,7 +4,7 @@
     <ProjectSpecificFx>true</ProjectSpecificFx>
     <!-- only test with one of the Classic and Core frameworks each -->
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
-    <TargetFrameworks>net462;net472;net48;netcoreapp3.1;net6.0</TargetFrameworks>
+    <TargetFrameworks>net462;net472;net48;net6.0</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
     <ComponentAreaName>DataverseClient-Tests-Package</ComponentAreaName>
     <IsPackable>false</IsPackable>

@@ -1026,7 +1026,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             /// <summary>
             /// MinVersion that supports Session ID Telemetry Tracking.
             /// </summary>
-            internal static Version SessionTrackingSupported = new Version("9.0.2.0");
+            internal static Version SessionTrackingSupported = new Version("9.0.0.0");
 
             /// <summary>
             /// MinVersion that supports Forcing Cache Sync.
@@ -1062,6 +1062,16 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             /// Minimum version support for ImportSolutionAsync API.
             /// </summary>
             internal static Version AllowImportSolutionAsyncV2 = new Version("9.2.21013.00131");
+
+            /// <summary>
+            /// Minimum version support for StageAndUpgrade API.
+            /// </summary>
+            internal static Version AllowStageAndUpgrade = new Version("9.2.21013.00131");
+			
+            /// <summary>
+            /// Minimum version support for RetrieveSolutionImportResult API.
+            /// </summary>
+            internal static Version AllowRetrieveSolutionImportResult = new Version("9.2.23034.30");
 
 
         }
