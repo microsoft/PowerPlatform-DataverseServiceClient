@@ -139,7 +139,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <summary>
         /// Client or App Id to use.
         /// </summary>
-        private string _clientId;
+        internal string _clientId;
 
         /// <summary>
         /// uri specifying the redirection uri post OAuth auth
@@ -149,7 +149,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <summary>
         /// Resource to connect to
         /// </summary>
-        private string _resource;
+        internal string _resource;
 
         /// <summary>
         /// cached authority reading from credential manager
@@ -1570,7 +1570,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             
             if (dvService != null)
             {
-                OrganizationVersion = Version.Parse("9.0"); 
+                OrganizationVersion = Version.Parse("9.0.0.0"); 
                 //await GetServerVersion(dvService, _targetInstanceUriToConnectTo).ConfigureAwait(false);
                 //await RefreshInstanceDetails(dvService, _targetInstanceUriToConnectTo).ConfigureAwait(false);
                 // Format the URL for WebAPI service.

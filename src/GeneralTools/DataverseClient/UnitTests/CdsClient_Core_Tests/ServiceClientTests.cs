@@ -743,9 +743,8 @@ namespace Client_Core_Tests
 
         [SkippableConnectionTest]
         [Trait("Category", "Live Connect Required")]
-        public void RetrieveSolutionImportResultAsyncTest()
+        public void RetrieveSolutionImportResultAsyncTestWithSyncImport()
         {
-            // Import
             var client = CreateServiceClient();
             if (!Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(client._connectionSvc?.OrganizationVersion, Utilities.FeatureVersionMinimums.AllowRetrieveSolutionImportResult))
             {
@@ -754,10 +753,8 @@ namespace Client_Core_Tests
                 return;
             }
 
+            // import solution without async
             client.ImportSolution(Path.Combine("TestData", "TestSolution_1_0_0_1.zip"), out var importId);
-
-            // Wait a little bit because solution might not be immediately available
-            System.Threading.Thread.Sleep(30000);
 
             // Response doesn't include formatted results 
             var resWithoutFormatted = client.RetrieveSolutionImportResultAsync(importId);
@@ -765,6 +762,33 @@ namespace Client_Core_Tests
 
             // Response include formatted results
             var resWithFormatted = client.RetrieveSolutionImportResultAsync(importId, true);
+            resWithFormatted.Should().NotBeNull();
+            resWithFormatted.FormattedResults.Should().NotBeEmpty();
+        }
+
+        [SkippableConnectionTest]
+        [Trait("Category", "Live Connect Required")]
+        public void RetrieveSolutionImportResultAsyncTestWithAsyncImport()
+        {
+            var client = CreateServiceClient();
+            if (!Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(client._connectionSvc?.OrganizationVersion, Utilities.FeatureVersionMinimums.AllowRetrieveSolutionImportResult))
+            {
+                // Not supported on this version of Dataverse
+                client._logEntry.Log($"RetrieveSolutionImportResultAsync request is calling RetrieveSolutionImportResult API. This request requires Dataverse version {Utilities.FeatureVersionMinimums.AllowRetrieveSolutionImportResult.ToString()} or above. The current Dataverse version is {client._connectionSvc?.OrganizationVersion}. This request cannot be made", TraceEventType.Warning);
+                return;
+            }
+            // import solution with async
+            client.ImportSolutionAsync(Path.Combine("TestData", "TestSolution_1_0_0_1.zip"), out var asyncImportId);
+
+            // Wait a little bit because solution might not be immediately available
+            System.Threading.Thread.Sleep(30000);
+
+            // Response doesn't include formatted results 
+            var resWithoutFormatted = client.RetrieveSolutionImportResultAsync(asyncImportId);
+            resWithoutFormatted.Should().NotBeNull();
+
+            // Response include formatted results
+            var resWithFormatted = client.RetrieveSolutionImportResultAsync(asyncImportId, true);
             resWithFormatted.Should().NotBeNull();
             resWithFormatted.FormattedResults.Should().NotBeEmpty();
         }

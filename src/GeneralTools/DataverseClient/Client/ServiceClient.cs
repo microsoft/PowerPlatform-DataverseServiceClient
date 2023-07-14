@@ -300,10 +300,19 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 if (_connectionSvc != null && (
                     _connectionSvc.AuthenticationTypeInUse == AuthenticationType.OAuth ||
                     _connectionSvc.AuthenticationTypeInUse == AuthenticationType.Certificate ||
-                    _connectionSvc.AuthenticationTypeInUse == AuthenticationType.ExternalTokenManagement ||
                     _connectionSvc.AuthenticationTypeInUse == AuthenticationType.ClientSecret))
                 {
-                    return _connectionSvc.RefreshClientTokenAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+                    if (_connectionSvc._authenticationResultContainer != null && !string.IsNullOrEmpty(_connectionSvc._resource) && !string.IsNullOrEmpty(_connectionSvc._clientId))
+                    {
+                        if (_connectionSvc._authenticationResultContainer.ExpiresOn.ToUniversalTime() < DateTime.UtcNow.AddMinutes(1))
+                        {
+                            // Force a refresh if the token is about to expire
+                            return _connectionSvc.RefreshClientTokenAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+                        }
+                        return _connectionSvc._authenticationResultContainer.AccessToken;
+                    }
+                    // if not configured, return empty string
+                    return string.Empty; 
                 }
                 else
                     return string.Empty;
@@ -512,7 +521,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     if (_connectionSvc?.OrganizationVersion != null)
                     {
                         _connectionSvc.CallerAADObjectId = null; // Null value as this is not supported for this version.
-                        _logEntry.Log($"Setting CallerAADObject ID not supported in version {_connectionSvc?.OrganizationVersion}");
+                        _logEntry.Log($"Setting CallerAADObject ID not supported in version {_connectionSvc?.OrganizationVersion}. Dataverse version {Utilities.FeatureVersionMinimums.AADCallerIDSupported} or higher is required.", TraceEventType.Warning);
                     }
                 }
             }
@@ -544,7 +553,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     if (_connectionSvc?.OrganizationVersion != null)
                     {
                         _connectionSvc.SessionTrackingId = null; // Null value as this is not supported for this version.
-                        _logEntry.Log($"Setting SessionTrackingId ID not supported in version {_connectionSvc?.OrganizationVersion}");
+                        _logEntry.Log($"Setting SessionTrackingId ID not supported in version {_connectionSvc?.OrganizationVersion}. Dataverse version {Utilities.FeatureVersionMinimums.SessionTrackingSupported} or greater is required.", TraceEventType.Warning);
                     }
                 }
             }
@@ -576,7 +585,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     if (_connectionSvc?.OrganizationVersion != null)
                     {
                         _connectionSvc.ForceServerCacheConsistency = false; // Null value as this is not supported for this version.
-                        _logEntry.Log($"Setting ForceServerMetadataCacheConsistency not supported in version {_connectionSvc?.OrganizationVersion}");
+                        _logEntry.Log($"Setting ForceServerMetadataCacheConsistency not supported in version {_connectionSvc?.OrganizationVersion}. Dataverse version {Utilities.FeatureVersionMinimums.ForceConsistencySupported} or higher is required." , TraceEventType.Warning);
                     }
                 }
             }
