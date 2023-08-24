@@ -5,32 +5,6 @@
 
   <!-- msbuild properties shared for dotnetCore and .NET classic projects: -->
   <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-    <PackageVersion_Adal>3.19.8</PackageVersion_Adal>
-    <PackageVersion_MSAL>4.35.1</PackageVersion_MSAL>
-    <PackageVersion_CdsSdk>4.9.3165-v9.0-weekly-2304.2</PackageVersion_CdsSdk>
-    <PackageVersion_CrmProxy>4.9.3165-v9.0-weekly-2304.2</PackageVersion_CrmProxy>
-    <PackageVersion_CDSServerNuget>4.6.6061-weekly-2108.5</PackageVersion_CDSServerNuget>
-    <PackageVersion_Newtonsoft>13.0.1</PackageVersion_Newtonsoft>
-    <PackageVersion_RestClientRuntime>2.3.24</PackageVersion_RestClientRuntime>
-    <PackageVersion_XrmSdk>9.0.2.48</PackageVersion_XrmSdk>
-    <PackageVersion_Dep_OutlookXrmSdk>9.0.2.34</PackageVersion_Dep_OutlookXrmSdk>
-    <PackageVersion_BatchedTelemetry>3.0.8</PackageVersion_BatchedTelemetry>
-    <PackageVersion_DataverseClient>0.4.20</PackageVersion_DataverseClient>
-    <PackageVersion_CoverletCollector>3.1.0</PackageVersion_CoverletCollector>
-    <PackageVersion_Microsoft_Extensions>3.1.8</PackageVersion_Microsoft_Extensions>
-    <PackageVersion_SystemRuntime>6.0.0</PackageVersion_SystemRuntime>
-    <PackageVersion_SystemTextJsonVersion>7.0.3</PackageVersion_SystemTextJsonVersion>
-    <PackageVersion_SystemTextEncodingsWebVersion>7.0.0</PackageVersion_SystemTextEncodingsWebVersion>
-    
-    <!-- Test: -->
-    <PackageVersion_MicrosoftNETTestSdk>17.5.0</PackageVersion_MicrosoftNETTestSdk>
-    <PackageVersion_MSTest>2.2.10</PackageVersion_MSTest>
-    <PackageVersion_Moq>4.16.0</PackageVersion_Moq>
-    <PackageVersion_XUnit>2.4.2</PackageVersion_XUnit>
-    <PackageVersion_XUnitRunnerVS>2.4.5</PackageVersion_XUnitRunnerVS>
-    <PackageVersion_FluentAssertions>5.10.3</PackageVersion_FluentAssertions>
-
     <!-- Assembly attributes are set by cake build. We need to disable autogeneration by msbuild -->
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>

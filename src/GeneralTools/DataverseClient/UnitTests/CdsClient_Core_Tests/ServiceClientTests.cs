@@ -29,16 +29,17 @@ using Xunit.Abstractions;
 
 namespace Client_Core_Tests
 {
-    public partial class ClientTests
+    [Collection("NonParallelCollection")]
+    public class ServiceClientTests
     {
         #region SharedVars
 
         TestSupport testSupport = new TestSupport();
         ITestOutputHelper outputListner;
-        ILogger<ClientTests> Ilogger = null;
+        ILogger<ServiceClientTests> Ilogger = null;
         #endregion
 
-        public ClientTests(ITestOutputHelper output)
+        public ServiceClientTests(ITestOutputHelper output)
         {
             outputListner = output;
             //TraceControlSettings.TraceLevel = System.Diagnostics.SourceLevels.Verbose;
@@ -60,7 +61,7 @@ namespace Client_Core_Tests
                     })
                     .AddConfiguration(config.GetSection("Logging"))
                     .AddProvider(new TraceConsoleLoggingProvider(output)));
-            Ilogger = loggerFactory.CreateLogger<ClientTests>();
+            Ilogger = loggerFactory.CreateLogger<ServiceClientTests>();
             testSupport.logger = Ilogger;
         }
 
@@ -122,7 +123,7 @@ namespace Client_Core_Tests
                         options.IncludeScopes = true;
                         options.TimestampFormat = "hh:mm:ss ";
                     }));
-            ILogger<ClientTests> Ilogger = loggerFactory.CreateLogger<ClientTests>();
+            ILogger<ServiceClientTests> Ilogger = loggerFactory.CreateLogger<ServiceClientTests>();
 
             DataverseTraceLogger logger = new DataverseTraceLogger(Ilogger);
             logger.EnabledInMemoryLogCapture = true;
@@ -1113,7 +1114,7 @@ namespace Client_Core_Tests
                 options.TimestampFormat = "hh:mm:ss ";
             }));
 
-            ILogger<ClientTests> locallogger = loggerFactory.CreateLogger<ClientTests>();
+            ILogger<ServiceClientTests> locallogger = loggerFactory.CreateLogger<ServiceClientTests>();
             locallogger.BeginScope("Beginning CloneLogger");
             // Clone it. - Validate use
             using (var client2 = client.Clone(locallogger))

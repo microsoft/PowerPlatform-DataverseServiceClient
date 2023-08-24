@@ -1270,7 +1270,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         if (exHold.InnerException != null)
                         {
                             moreInnerRecords = true;
-                            exHold = e.InnerException;
+                            exHold = exHold.InnerException;
                         }
                         else
                             moreInnerRecords = false; 
