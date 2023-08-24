@@ -20,7 +20,7 @@ namespace Client_Core_UnitTests
             }
         }
 
-        public SkippableConnectionTestAttribute(bool skip , string skipMessage)
+        public SkippableConnectionTestAttribute(bool skip, string skipMessage)
         {
             Skip = skipMessage;
         }

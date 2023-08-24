@@ -10,7 +10,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <DotNetClassicTargetFrameworks>net462;net472;net48;</DotNetClassicTargetFrameworks>
     <Features>IOperation</Features>
   </PropertyGroup>
 

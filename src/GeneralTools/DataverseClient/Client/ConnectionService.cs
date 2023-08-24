@@ -1749,6 +1749,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         _OrgDetail.State = ostate;
                         _OrgDetail.UniqueName = resp.Detail.UniqueName;
                         _OrgDetail.UrlName = resp.Detail.UrlName;
+                        _OrgDetail.DatacenterId = resp.Detail.DatacenterId;
                     }
                     _organization = _OrgDetail.UniqueName;
 

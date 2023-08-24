@@ -7,6 +7,11 @@ Notice:
     Note: Only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Updated Core SDK Libs
+Fixed issue with DataCenter ID not populating in Organization Detail object returned by the client.
+Fixed a hang problem when parsing multi layered exceptions 
+
+1.1.12:
 Refactored CurrentAccessToken property to avoid async call. 
 Fix for min version of default client, pre-connection so it is recognized by features that require 9.0 or greater.
 Fix for notification of unsupported features when not 'breaking' to alert as 'warnings' in log vs information. 
