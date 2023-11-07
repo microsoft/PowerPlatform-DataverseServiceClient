@@ -1,20 +1,8 @@
 <Project>
-  <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-
   <!-- msbuild properties shared for dotnetCore and .NET classic projects: -->
   <PropertyGroup>
     <!-- Assembly attributes are set by cake build. We need to disable autogeneration by msbuild -->
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
-    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
-    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
-    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
+    <DisableAssemblyAttributesSetViaCakeSetVersion>true</DisableAssemblyAttributesSetViaCakeSetVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -50,11 +38,6 @@
     <OutDir>$(OutDir.TrimEnd("\\"))\</OutDir>
     <!-- Ensures OutputPath always matches OutDir -->
     <OutputPath>$(OutDir)</OutputPath>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(SignAssembly)' == 'true'">
-    <AssemblyOriginatorKeyFile>$(RepoRoot)\build\crmkey\35MSSharedLib1024.snk</AssemblyOriginatorKeyFile>
-    <DelaySign>true</DelaySign>
   </PropertyGroup>
 
   <PropertyGroup>

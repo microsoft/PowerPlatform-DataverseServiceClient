@@ -32,7 +32,7 @@
     </member>
     <member name="P:Microsoft.PowerPlatform.Dataverse.Client.Auth.AuthenticationDetails.Success">
       <summary>
-            True if probing returned a WWW-Authenticate header.</summary>
+        <see langword="true" /> if probing returned a WWW-Authenticate header.</summary>
     </member>
     <member name="T:Microsoft.PowerPlatform.Dataverse.Client.Auth.AuthorityResolver">
       <summary>
@@ -55,9 +55,7 @@
     </member>
     <member name="T:Microsoft.PowerPlatform.Dataverse.Client.Auth.PromptBehavior">
       <summary>
-            ORGINAL CODE FROM https://github.com/AzureAD/azure-activedirectory-library-for-dotnet/blob/68d7dea3643e075be85abbca1ab88ba614465541/src/Microsoft.IdentityModel.Clients.ActiveDirectory/Features/NonWinCommon/PromptBehavior.cs
-            PORTED TO THIS LIB TO ACT AS A BRIDGE BETWEEN ADAL.NET AND MSAL. 
-            Indicates whether AcquireToken should automatically prompt only if necessary or whether
+            AcquireToken should automatically prompt only if necessary or whether
             it should prompt regardless of whether there is a cached token.</summary>
     </member>
     <member name="F:Microsoft.PowerPlatform.Dataverse.Client.Auth.PromptBehavior.Always">
@@ -258,68 +256,34 @@
       <param name="connectionOptions" />
       <returns />
     </member>
-    <member name="T:Microsoft.PowerPlatform.Dataverse.Client.DynamicsFileLogTraceListener">
-      <summary>
-            Extension to the FileLogTraceListner class.</summary>
-    </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.DynamicsFileLogTraceListener.#ctor">
-      <summary>
-            The class constructor.</summary>
-    </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.DynamicsFileLogTraceListener.#ctor(System.String)">
-      <summary>
-            The class constructor.</summary>
-      <param name="name">Source Path</param>
-    </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.DynamicsFileLogTraceListener.FormatMessage(System.String)">
-      <summary>
-            Format the message with additional information</summary>
-      <param name="message">Message to be logged</param>
-      <returns>Formatted message</returns>
-    </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.DynamicsFileLogTraceListener.GetSupportedAttributes">
-      <summary>
-            Adding MaxFileCount to the suported attribute list</summary>
-      <returns />
-    </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.DynamicsFileLogTraceListener.IsWritePermitted(System.String)">
-      <summary>
-            Checks if the CustomLocation Path has write permission</summary>
-      <param name="Location">Custom Location Path</param>
-      <returns>boolean</returns>
-    </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.DynamicsFileLogTraceListener.TraceEvent(System.Diagnostics.TraceEventCache,System.String,System.Diagnostics.TraceEventType,System.Int32,System.String)">
-      <summary>
-            Trace event is Overriden to check the Log file Access.</summary>
-      <param name="eventCache">TraceEventCache</param>
-      <param name="source">Source</param>
-      <param name="eventType">TraceEventType</param>
-      <param name="id">Id</param>
-      <param name="message">message string</param>
-    </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.DynamicsFileLogTraceListener.TraceEvent(System.Diagnostics.TraceEventCache,System.String,System.Diagnostics.TraceEventType,System.Int32,System.String,System.Object[])">
-      <summary>
-            Trace event is Overriden to check the Log file Access.</summary>
-      <param name="eventCache">TraceEventCache</param>
-      <param name="source">Source</param>
-      <param name="eventType">TraceEventType</param>
-      <param name="id">Id</param>
-      <param name="format">Format Options</param>
-      <param name="args">Array of message objects</param>
-    </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.DynamicsFileLogTraceListener.TraceEventCustom(System.Diagnostics.TraceEventCache,System.String,System.Diagnostics.TraceEventType,System.Int32,System.String)">
-      <summary>
-            Trace event. Allows overriden behavior in inheriting classes</summary>
-      <param name="eventCache" />
-      <param name="source" />
-      <param name="eventType" />
-      <param name="id" />
-      <param name="message" />
-    </member>
-    <member name="P:Microsoft.PowerPlatform.Dataverse.Client.DynamicsFileLogTraceListener.MaxFileCount">
-      <summary>
-            Number of files to keep while rolling.</summary>
-    </member>
+    <member name="T:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse" />
+    <member name="P:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.AsyncOperationId" />
+    <member name="P:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.CorrlationId" />
+    <member name="P:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.FriendlyMessage" />
+    <member name="P:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.Message" />
+    <member name="P:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.OperationName" />
+    <member name="P:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.OperationType" />
+    <member name="P:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.RetrievedEntity" />
+    <member name="P:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.State" />
+    <member name="P:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.State_Localized" />
+    <member name="P:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.StatusCode" />
+    <member name="P:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.StatusCode_Localized" />
+    <member name="T:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.AsyncStatusResponse_statecode" />
+    <member name="F:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.AsyncStatusResponse_statecode.Completed" />
+    <member name="F:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.AsyncStatusResponse_statecode.FailedParse" />
+    <member name="F:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.AsyncStatusResponse_statecode.Locked" />
+    <member name="F:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.AsyncStatusResponse_statecode.Ready" />
+    <member name="F:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.AsyncStatusResponse_statecode.Suspended" />
+    <member name="T:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.AsyncStatusResponse_statuscode" />
+    <member name="F:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.AsyncStatusResponse_statuscode.Canceled" />
+    <member name="F:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.AsyncStatusResponse_statuscode.Canceling" />
+    <member name="F:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.AsyncStatusResponse_statuscode.Failed" />
+    <member name="F:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.AsyncStatusResponse_statuscode.FailedParse" />
+    <member name="F:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.AsyncStatusResponse_statuscode.InProgress" />
+    <member name="F:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.AsyncStatusResponse_statuscode.Pausing" />
+    <member name="F:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.AsyncStatusResponse_statuscode.Succeeded" />
+    <member name="F:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.AsyncStatusResponse_statuscode.Waiting" />
+    <member name="F:Microsoft.PowerPlatform.Dataverse.Client.Extensions.AsyncStatusResponse.AsyncStatusResponse_statuscode.WaitingForResources" />
     <member name="T:Microsoft.PowerPlatform.Dataverse.Client.Extensions.BatchExtensions">
       <summary>
             Dataverse Service Client extensions for batch operations.</summary>
@@ -327,10 +291,10 @@
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.BatchExtensions.CreateBatchOperationRequest(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Boolean,System.Boolean)">
       <summary>
             Create a Batch Request for executing batch operations.  This returns an ID that will be used to identify a request as a batch request vs a "normal" request.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="batchName">Name of the Batch</param>
       <param name="returnResults">Should Results be returned</param>
       <param name="continueOnError">Should the process continue on an error.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.BatchExtensions.ExecuteBatch(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.Guid)">
@@ -338,7 +302,8 @@
             Begins running the Batch command.</summary>
       <param name="serviceClient">ServiceClient</param>
       <param name="batchId">ID of the batch to run</param>
-      <returns>true if the batch begins, false if not.</returns>
+      <returns>
+        <see langword="true" /> if the batch begins, false if not.</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.BatchExtensions.GetBatchById(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.Guid)">
       <summary>
@@ -350,16 +315,16 @@
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.BatchExtensions.GetBatchOperationIdRequestByName(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String)">
       <summary>
             Returns the batch id for a given batch name.</summary>
-      <param name="batchName">Name of Batch</param>
       <param name="serviceClient">ServiceClient</param>
+      <param name="batchName">Name of Batch</param>
       <returns />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.BatchExtensions.GetBatchRequestAtPosition(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.Guid,System.Int32)">
       <summary>
             Returns the organization request at a give position</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="batchId">ID of the batch</param>
       <param name="position">Position</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.BatchExtensions.ReleaseBatchInfoById(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.Guid)">
@@ -386,30 +351,32 @@
             Closes the Activity type specified.
             The Activity Entity type supports fax , letter , and phonecall
             <para>*Note: This will default to using English names for Status. if you need to use Non-English, you should populate the names for completed for the status and state.</para></summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="activityEntityType">Type of Activity you would like to close.. Supports fax, letter, phonecall</param>
       <param name="activityId">ID of the Activity you want to close</param>
       <param name="stateCode">State Code configured on the activity</param>
       <param name="statusCode">Status code on the activity</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
-      <returns>true if success false if not.</returns>
+      <returns>
+        <see langword="true" /> if success false if not.</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.CRUDExtentions.CreateAnnotation(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Guid,System.Collections.Generic.Dictionary{System.String,Microsoft.PowerPlatform.Dataverse.Client.DataverseDataTypeWrapper},System.Guid,System.Boolean)">
       <summary>
             This creates a annotation [note] entry, related to a an existing entity
             <para>Required Properties in the fieldList</para><para>notetext (string) = Text of the note,</para><para>subject (string) = this is the title of the note</para></summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="targetEntityTypeName">Target Entity TypeID</param>
       <param name="targetEntityId">Target Entity ID</param>
       <param name="fieldList">Fields to populate</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.CRUDExtentions.CreateEntityAssociation(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Guid,System.String,System.Guid,System.String,System.Guid,System.Boolean)">
       <summary>
             Associates one Entity to another where an M2M Relationship Exists.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="entityName1">Entity on one side of the relationship</param>
       <param name="entity1Id">The Id of the record on the first side of the relationship</param>
       <param name="entityName2">Entity on the second side of the relationship</param>
@@ -417,63 +384,63 @@
       <param name="relationshipName">Relationship name between the 2 entities</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>true on success, false on fail</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.CRUDExtentions.CreateMultiEntityAssociation(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Guid,System.String,System.Collections.Generic.List{System.Guid},System.String,System.Guid,System.Boolean,System.Boolean)">
       <summary>
             Associates multiple entities of the same time to a single entity</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="targetEntity">Entity that things will be related too.</param>
       <param name="targetEntity1Id">ID of entity that things will be related too</param>
       <param name="sourceEntityName">Entity that you are relating from</param>
       <param name="sourceEntitieIds">ID's of the entities you are relating from</param>
       <param name="relationshipName">Name of the relationship between the target and the source entities.</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
-      <param name="isReflexiveRelationship">Optional: if set to true, indicates that this is a N:N using a reflexive relationship</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
+      <param name="isReflexiveRelationship">Optional: if set to true, indicates that this is a N:N using a reflexive relationship</param>
       <returns>true on success, false on fail</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.CRUDExtentions.CreateNewActivityEntry(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.String,System.Guid,System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,Microsoft.PowerPlatform.Dataverse.Client.DataverseDataTypeWrapper},System.Guid,System.Boolean)">
       <summary>
             Creates a new activity against the target entity type</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="activityEntityTypeName">Type of Activity you would like to create</param>
       <param name="regardingEntityTypeName">Entity type of the Entity you want to associate with.</param>
+      <param name="regardingId">ID of the Entity to associate the Activity too</param>
       <param name="subject">Subject Line of the Activity</param>
       <param name="description">Description Text of the Activity</param>
-      <param name="regardingId">ID of the Entity to associate the Activity too</param>
       <param name="creatingUserId">User ID that Created the Activity *Calling user must have necessary permissions to assign to another user</param>
       <param name="fieldList">Additional fields to add as part of the activity creation</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>Guid of Activity ID or Guid.empty</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.CRUDExtentions.CreateNewRecord(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Collections.Generic.Dictionary{System.String,Microsoft.PowerPlatform.Dataverse.Client.DataverseDataTypeWrapper},System.String,System.Boolean,System.Guid,System.Boolean)">
       <summary>
             Uses the dynamic entity patter to create a new entity</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="entityName">Name of Entity To create</param>
       <param name="valueArray">Initial Values</param>
       <param name="applyToSolution">Optional: Applies the update with a solution by Unique name</param>
       <param name="enabledDuplicateDetection">Optional: if true, enabled Dataverse onboard duplicate detection</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>Guid on Success, Guid.Empty on fail</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.CRUDExtentions.DeleteEntity(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Guid,System.Guid,System.Boolean)">
       <summary>
             Deletes an entity from the Dataverse</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="entityType">entity type name</param>
       <param name="entityId">entity id</param>
       <param name="batchId">Optional : Batch ID  to attach this request too.</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>true on success, false on failure</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.CRUDExtentions.DeleteEntityAssociation(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Guid,System.String,System.Guid,System.String,System.Guid,System.Boolean)">
       <summary>
             Removes the Association between 2 entity items where an M2M Relationship Exists.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="entityName1">Entity on one side of the relationship</param>
       <param name="entity1Id">The Id of the record on the first side of the relationship</param>
       <param name="entityName2">Entity on the second side of the relationship</param>
@@ -481,12 +448,12 @@
       <param name="relationshipName">Relationship name between the 2 entities</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>true on success, false on fail</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.CRUDExtentions.UpdateEntity(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.String,System.Guid,System.Collections.Generic.Dictionary{System.String,Microsoft.PowerPlatform.Dataverse.Client.DataverseDataTypeWrapper},System.String,System.Boolean,System.Guid,System.Boolean)">
       <summary>
             Generic update entity</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="entityName">String version of the entity name</param>
       <param name="keyFieldName">Key fieldname of the entity</param>
       <param name="id">Guid ID of the entity to update</param>
@@ -495,31 +462,30 @@
       <param name="enabledDuplicateDetection">Optional: if true, enabled Dataverse onboard duplicate detection</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>true on success, false on fail</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.CRUDExtentions.UpdateStateAndStatusForEntity(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Guid,System.Int32,System.Int32,System.Guid,System.Boolean)">
       <summary>
             Updates the State and Status of the Entity passed in.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="entName">Name of the entity</param>
       <param name="id">Guid ID of the entity you are updating</param>
       <param name="stateCode">Int version of the new state</param>
       <param name="statusCode">Int Version of the new status</param>
       <param name="batchId">Optional : Batch ID  to attach this request too.</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>true on success.</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.CRUDExtentions.UpdateStateAndStatusForEntity(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Guid,System.String,System.String,System.Guid,System.Boolean)">
       <summary>
             Updates the State and Status of the Entity passed in.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="entName">Name of the entity</param>
       <param name="id">Guid ID of the entity you are updating</param>
       <param name="stateCode">String version of the new state</param>
       <param name="statusCode">String Version of the new status</param>
       <param name="batchId">Optional : Batch ID  to attach this request too.</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>true on success.</returns>
     </member>
     <member name="T:Microsoft.PowerPlatform.Dataverse.Client.Extensions.DataverseFilterConditionItem">
@@ -562,18 +528,33 @@
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.DeploymentExtensions.DeleteAndPromoteSolutionAsync(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String)">
       <summary>
             Executes a Delete and Propmote Request against Dataverse using the Async Pattern.</summary>
-      <param name="uniqueName">Unique Name of solution to be upgraded</param>
       <param name="serviceClient">ServiceClient</param>
+      <param name="uniqueName">Unique Name of solution to be upgraded</param>
       <returns>Returns the Async Job ID.  To find the status of the job, query the AsyncOperation Entity using GetEntityDataByID using the returned value of this method</returns>
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.DeploymentExtensions.GetAsyncOperationStatus(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.Guid)">
+      <param name="serviceClient" />
+      <param name="asyncOperationId" />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.DeploymentExtensions.ImportDataMap(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Boolean,System.Boolean)">
       <summary>
             Used to upload a data map to the Dataverse</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="dataMapXml">XML of the datamap in string form</param>
       <param name="replaceIds">True to have Dataverse replace ID's on inbound data, False to have inbound data retain its ID's</param>
       <param name="dataMapXmlIsFilePath">if true, dataMapXml is expected to be a File name and path to load.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>Returns ID of the datamap or Guid.Empty</returns>
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.DeploymentExtensions.ImportSolution(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.Guid,System.Guid@,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Collections.Generic.Dictionary{System.String,System.Object})">
+      <param name="serviceClient" />
+      <param name="StageSolutionUploadId" />
+      <param name="importId" />
+      <param name="activatePlugIns" />
+      <param name="overwriteUnManagedCustomizations" />
+      <param name="skipDependancyOnProductUpdateCheckOnInstall" />
+      <param name="importAsHoldingSolution" />
+      <param name="isInternalUpgrade" />
+      <param name="extraParameters" />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.DeploymentExtensions.ImportSolution(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Guid@,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Collections.Generic.Dictionary{System.String,System.Object})">
       <summary>
@@ -581,34 +562,45 @@
             Imports a Dataverse solution to the Dataverse Server currently connected.
             <para> Note: this is a blocking call and will take time to Import to Dataverse</para></para>
       </summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="solutionPath">Path to the Solution File</param>
-      <param name="activatePlugIns">Activate Plugin's and workflows on the Solution</param>
       <param name="importId">
         <para>This will populate with the Import ID even if the request failed.
             You can use this ID to request status on the import via a request to the ImportJob entity.</para>
       </param>
+      <param name="activatePlugIns">Activate Plugin's and workflows on the Solution</param>
       <param name="overwriteUnManagedCustomizations">Forces an overwrite of unmanaged customizations of the managed solution you are installing, defaults to false</param>
       <param name="skipDependancyOnProductUpdateCheckOnInstall">Skips dependency against dependencies flagged as product update, defaults to false</param>
       <param name="importAsHoldingSolution">Applies only on Dataverse organizations version 7.2 or higher.  This imports the Dataverse solution as a holding solution utilizing the “As Holding” capability of ImportSolution</param>
       <param name="isInternalUpgrade">Internal Microsoft use only</param>
-      <param name="serviceClient">ServiceClient</param>
       <param name="extraParameters">Extra parameters</param>
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.DeploymentExtensions.ImportSolutionAsync(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.Guid,System.Guid@,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Collections.Generic.Dictionary{System.String,System.Object})">
+      <param name="serviceClient" />
+      <param name="StageSolutionUploadId" />
+      <param name="importId" />
+      <param name="activatePlugIns" />
+      <param name="overwriteUnManagedCustomizations" />
+      <param name="skipDependancyOnProductUpdateCheckOnInstall" />
+      <param name="importAsHoldingSolution" />
+      <param name="isInternalUpgrade" />
+      <param name="extraParameters" />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.DeploymentExtensions.ImportSolutionAsync(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Guid@,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Collections.Generic.Dictionary{System.String,System.Object})">
       <summary>
             Import Solution Async used Execute Async pattern to run a solution import.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="solutionPath">Path to the Solution File</param>
-      <param name="activatePlugIns">Activate Plugin's and workflows on the Solution</param>
       <param name="importId">
         <para>This will populate with the Import ID even if the request failed.
             You can use this ID to request status on the import via a request to the ImportJob entity.</para>
       </param>
+      <param name="activatePlugIns">Activate Plugin's and workflows on the Solution</param>
       <param name="overwriteUnManagedCustomizations">Forces an overwrite of unmanaged customizations of the managed solution you are installing, defaults to false</param>
       <param name="skipDependancyOnProductUpdateCheckOnInstall">Skips dependency against dependencies flagged as product update, defaults to false</param>
       <param name="importAsHoldingSolution">Applies only on Dataverse organizations version 7.2 or higher.  This imports the Dataverse solution as a holding solution utilizing the “As Holding” capability of ImportSolution</param>
       <param name="isInternalUpgrade">Internal Microsoft use only</param>
       <param name="extraParameters">Extra parameters</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>Returns the Async Job ID.  To find the status of the job, query the AsyncOperation Entity using GetEntityDataByID using the returned value of this method</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.DeploymentExtensions.InstallSampleData(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient)">
@@ -624,15 +616,26 @@
       <summary>
             Determines if the Dataverse sample data has been installed</summary>
       <param name="serviceClient">ServiceClient</param>
-      <returns>True if the sample data is installed, False if not.</returns>
+      <returns>
+        <see langword="true" /> if the sample data is installed, False if not.</returns>
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.DeploymentExtensions.RetrieveSolutionImportResultAsync(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.Guid,System.Boolean)">
+      <param name="serviceClient" />
+      <param name="importJobId" />
+      <param name="includeFormattedResults" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.DeploymentExtensions.StageSolution(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.IO.MemoryStream)">
+      <param name="serviceClient" />
+      <param name="solutionPath" />
+      <param name="solutionStream" />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.DeploymentExtensions.SubmitImportRequest(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,Microsoft.PowerPlatform.Dataverse.Client.Extensions.DeploymentExtensions.ImportRequest,System.DateTime)">
       <summary>
             Starts an Import request for CDS.
             <para>Supports a single file per Import request.</para></summary>
-      <param name="delayUntil">Delays the import jobs till specified time - Use DateTime.MinValue to Run immediately</param>
-      <param name="importRequest">Import Data Request</param>
       <param name="serviceClient">ServiceClient</param>
+      <param name="importRequest">Import Data Request</param>
+      <param name="delayUntil">Delays the import jobs till specified time - Use DateTime.MinValue to Run immediately</param>
       <returns>Guid of the Import Request, or Guid.Empty.  If Guid.Empty then request failed.</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.DeploymentExtensions.UninstallSampleData(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient)">
@@ -679,7 +682,7 @@
     </member>
     <member name="P:Microsoft.PowerPlatform.Dataverse.Client.Extensions.DeploymentExtensions.ImportFileItem.IsRecordOwnerATeam">
       <summary>
-            Set true if the Record Owner is a Team</summary>
+            Set <see langword="true" /> if the Record Owner is a Team</summary>
     </member>
     <member name="P:Microsoft.PowerPlatform.Dataverse.Client.Extensions.DeploymentExtensions.ImportFileItem.RecordOwner">
       <summary>
@@ -829,6 +832,7 @@
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.GeneralExtensions.AddEntityToQueue(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.Guid,System.String,System.String,System.Guid,System.Boolean,System.Guid,System.Boolean)">
       <summary>
             This will route a Entity to a public queue,</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="entityId">ID of the Entity to route</param>
       <param name="entityName">Name of the Entity that the Id describes</param>
       <param name="queueName">Name of the Queue to Route Too</param>
@@ -836,28 +840,27 @@
       <param name="setWorkingByUser">if true Set the worked by when doing the assign</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>true on success</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.GeneralExtensions.AssignEntityToUser(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.Guid,System.String,System.Guid,System.Guid,System.Boolean)">
       <summary>
             Assign an Entity to the specified user ID</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="userId">User ID to assign too</param>
       <param name="entityName">Target entity Name</param>
       <param name="entityId">Target entity id</param>
       <param name="batchId">Batch ID of to use, Optional</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.GeneralExtensions.ExecuteWorkflowOnEntity(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Guid,System.Guid,System.Boolean)">
       <summary>
             Executes a named workflow on an object.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="workflowName">name of the workflow to run</param>
       <param name="id">ID to exec against</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>Async Op ID of the WF or Guid.Empty</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.GeneralExtensions.GetMyUserId(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient)">
@@ -869,11 +872,11 @@
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.GeneralExtensions.SendSingleEmail(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.Guid,System.String,System.Guid,System.Boolean)">
       <summary>
             this will send an Email to the</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="emailid">ID of the Email activity</param>
       <param name="token">Tracking Token or Null</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns />
     </member>
     <member name="T:Microsoft.PowerPlatform.Dataverse.Client.Extensions.LogicalSearchOperator">
@@ -911,104 +914,104 @@
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.MetadataExtensions.CreateOrUpdatePickListElement(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.String,System.Collections.Generic.List{Microsoft.Xrm.Sdk.LocalizedLabel},System.Int32,System.Boolean)">
       <summary>
             Adds an option to a pick list on an entity.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="targetEntity">Entity Name to Target</param>
       <param name="attribName">Attribute Name on the Entity</param>
       <param name="locLabelList">List of Localized Labels</param>
       <param name="valueData">integer Value</param>
       <param name="publishOnComplete">Publishes the Update to the Live system.. note this is a time consuming process.. if you are doing a batch up updates, call PublishEntity Separately when you are finished.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>true on success, on fail check last error.</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.MetadataExtensions.GetAllAttributesForEntity(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String)">
       <summary>
             Returns all attributes on a entity</summary>
-      <param name="entityLogicalname">returns all attributes on a entity</param>
       <param name="serviceClient">ServiceClient</param>
+      <param name="entityLogicalname">returns all attributes on a entity</param>
       <returns />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.MetadataExtensions.GetAllEntityMetadata(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.Boolean,Microsoft.Xrm.Sdk.Metadata.EntityFilters)">
       <summary>
             Returns a list of entities with basic data from Dataverse</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="onlyPublished">defaults to true, will only return published information</param>
       <param name="filter">EntityFilter to apply to this request, note that filters other then Default will consume more time.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.MetadataExtensions.GetEntityAttributeMetadataForAttribute(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.String)">
       <summary>
             Gets metadata for a specific entity's attribute.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="entityLogicalname">Name of the entity</param>
       <param name="attribName">Attribute Name</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.MetadataExtensions.GetEntityDisplayName(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Int32)">
       <summary>
             Gets an Entity Name by Logical name or Type code.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="entityName">logical name of the entity</param>
       <param name="entityTypeCode">Type code for the entity</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>Localized name for the entity in the current users language</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.MetadataExtensions.GetEntityDisplayNamePlural(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Int32)">
       <summary>
             Gets an Entity Name by Logical name or Type code.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="entityName">logical name of the entity</param>
       <param name="entityTypeCode">Type code for the entity</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>Localized plural name for the entity in the current users language</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.MetadataExtensions.GetEntityFormIdListByType(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,Microsoft.PowerPlatform.Dataverse.Client.Extensions.FormTypeId)">
       <summary>
             Returns the Form Entity References for a given form type.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="entityLogicalname">logical name of the entity you are querying for form data.</param>
       <param name="formTypeId">Form Type you want</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>List of Entity References for the form type requested.</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.MetadataExtensions.GetEntityMetadata(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,Microsoft.Xrm.Sdk.Metadata.EntityFilters)">
       <summary>
             Returns the Metadata for an entity from Dataverse, defaults to basic data only.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="entityLogicalname">Logical name of the entity</param>
       <param name="queryFilter">filter to apply to the query, defaults to default entity data.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.MetadataExtensions.GetEntityName(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.Int32)">
       <summary>
             Returns the Entity name for the given Type code</summary>
-      <param name="entityTypeCode" />
       <param name="serviceClient">ServiceClient</param>
+      <param name="entityTypeCode" />
       <returns />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.MetadataExtensions.GetEntityTypeCode(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String)">
       <summary>
             Gets the typecode of an entity by name.</summary>
-      <param name="entityName">name of the entity to get the type code on</param>
       <param name="serviceClient">ServiceClient</param>
+      <param name="entityName">name of the entity to get the type code on</param>
       <returns />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.MetadataExtensions.GetGlobalOptionSetMetadata(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String)">
       <summary>
             Gets a global option set from Dataverse.</summary>
-      <param name="globalOptionSetName">Name of the Option Set To get</param>
       <param name="serviceClient">ServiceClient</param>
+      <param name="globalOptionSetName">Name of the Option Set To get</param>
       <returns>OptionSetMetadata or null</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.MetadataExtensions.GetPickListElementFromMetadataEntity(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.String)">
       <summary>
             Gets a PickList, Status List or StateList from the metadata of an attribute</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="targetEntity">text name of the entity to query</param>
       <param name="attribName">name of the attribute to query</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.MetadataExtensions.PublishEntity(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String)">
       <summary>
             Publishes an entity to the production system,
             used in conjunction with the Metadata services.</summary>
-      <param name="entityName">Name of the entity to publish</param>
       <param name="serviceClient">ServiceClient</param>
+      <param name="entityName">Name of the entity to publish</param>
       <returns>True on success</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.MetadataExtensions.ResetLocalMetadataCache(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String)">
@@ -1078,6 +1081,7 @@
       <summary>
             Returns all Activities Related to a given Entity ID.
             Only Account, Contact and Opportunity entities are supported.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="searchEntity">Type of Entity to search against</param>
       <param name="entityId">ID of the entity to search against.</param>
       <param name="fieldList">List of Field to return for the entity , null indicates all fields.</param>
@@ -1090,13 +1094,13 @@
       <param name="outPageCookie">outbound place holder cookie</param>
       <param name="isMoreRecords">is there more records or not</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>Array of Activities</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.QueryExtensions.GetActivitiesBy(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Guid,System.Collections.Generic.List{System.String},Microsoft.PowerPlatform.Dataverse.Client.Extensions.LogicalSearchOperator,System.Collections.Generic.List{Microsoft.PowerPlatform.Dataverse.Client.Extensions.DataverseSearchFilter},System.Collections.Generic.Dictionary{System.String,Microsoft.PowerPlatform.Dataverse.Client.Extensions.LogicalSortOrder},System.Int32,System.Int32,System.String,System.String@,System.Boolean@,System.Guid)">
       <summary>
             Returns all Activities Related to a given Entity ID.
             Only Account, Contact and Opportunity entities are supported.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="searchEntity">Type of Entity to search against</param>
       <param name="entityId">ID of the entity to search against.</param>
       <param name="fieldList">List of Field to return for the entity , null indicates all fields.</param>
@@ -1109,79 +1113,79 @@
       <param name="outPageCookie">outbound place holder cookie</param>
       <param name="isMoreRecords">is there more records or not</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>Array of Activities</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.QueryExtensions.GetDataByKeyFromResultsSet``1(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.Collections.Generic.Dictionary{System.String,System.Object},System.String)">
       <summary>
             This function gets data from a Dictionary object, where "string" identifies the field name, and Object contains the data,
             this method then attempts to cast the result to the Type requested, if it cannot be cast an empty object is returned.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="results">Results from the query</param>
       <param name="key">key name you want</param>
-      <param name="serviceClient">ServiceClient</param>
       <typeparam name="T">Type if object to return</typeparam>
       <returns>object</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.QueryExtensions.GetEntityDataByFetchSearch(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Guid,System.Boolean)">
       <summary>
             Searches for data based on a FetchXML query</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="fetchXml">Fetch XML query data.</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>results or null</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.QueryExtensions.GetEntityDataByFetchSearch(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Int32,System.Int32,System.String,System.String@,System.Boolean@,System.Guid,System.Boolean)">
       <summary>
             Searches for data based on a FetchXML query</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="fetchXml">Fetch XML query data.</param>
       <param name="pageCount">Number records per Page</param>
       <param name="pageNumber">Current Page number</param>
       <param name="pageCookie">inbound place holder cookie</param>
       <param name="outPageCookie">outbound place holder cookie</param>
       <param name="isMoreRecords">is there more records or not</param>
-      <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
-      <param name="serviceClient">ServiceClient</param>
+      <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
       <returns>results or null</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.QueryExtensions.GetEntityDataByFetchSearchEC(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Guid,System.Boolean)">
       <summary>
             Searches for data based on a FetchXML query</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="fetchXml">Fetch XML query data.</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>results as an entity collection or null</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.QueryExtensions.GetEntityDataByFetchSearchEC(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Int32,System.Int32,System.String,System.String@,System.Boolean@,System.Guid,System.Boolean)">
       <summary>
             Searches for data based on a FetchXML query</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="fetchXml">Fetch XML query data.</param>
       <param name="pageCount">Number records per Page</param>
       <param name="pageNumber">Current Page number</param>
       <param name="pageCookie">inbound place holder cookie</param>
       <param name="outPageCookie">outbound place holder cookie</param>
+      <param name="isMoreRecords">is there more records or not</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="isMoreRecords">is there more records or not</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>results as an Entity Collection or null</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.QueryExtensions.GetEntityDataById(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Guid,System.Collections.Generic.List{System.String},System.Guid,System.Boolean)">
       <summary>
             Gets a List of variables from the account based on the list of field specified in the Fields List</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="searchEntity">The entity to be searched.</param>
       <param name="entityId">ID of Entity to query</param>
+      <param name="fieldList">Populated Array of Key value pairs with the Results of the Search</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="fieldList">Populated Array of Key value pairs with the Results of the Search</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.QueryExtensions.GetEntityDataByLinkedSearch(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.String,System.String,System.String,Microsoft.PowerPlatform.Dataverse.Client.Extensions.LogicalSearchOperator,System.Collections.Generic.List{System.String},System.Guid,System.Boolean)">
       <summary>
             Queries an Object via a M to M Link</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="returnEntityName">Name of the entity you want return data from</param>
       <param name="primarySearchParameters">Search Prams for the Return Entity</param>
       <param name="linkedEntityName">Name of the entity you are linking too</param>
@@ -1190,15 +1194,15 @@
       <param name="m2MEntityName">Dataverse Name of the Relationship</param>
       <param name="returnEntityPrimaryId">Key field on the Entity you want to return data from</param>
       <param name="searchOperator">Search Operator to apply</param>
+      <param name="fieldList">List of Fields from the Returned Entity you want</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="fieldList">List of Fields from the Returned Entity you want</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.QueryExtensions.GetEntityDataByLinkedSearch(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Collections.Generic.List{Microsoft.PowerPlatform.Dataverse.Client.Extensions.DataverseSearchFilter},System.String,System.Collections.Generic.List{Microsoft.PowerPlatform.Dataverse.Client.Extensions.DataverseSearchFilter},System.String,System.String,System.String,Microsoft.PowerPlatform.Dataverse.Client.Extensions.LogicalSearchOperator,System.Collections.Generic.List{System.String},System.Guid,System.Boolean,System.Boolean)">
       <summary>
             Queries an Object via a M to M Link</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="returnEntityName">Name of the entity you want return data from</param>
       <param name="primarySearchParameters">Search Prams for the Return Entity</param>
       <param name="linkedEntityName">Name of the entity you are linking too</param>
@@ -1207,36 +1211,36 @@
       <param name="m2MEntityName">Dataverse Name of the Relationship</param>
       <param name="returnEntityPrimaryId">Key field on the Entity you want to return data from</param>
       <param name="searchOperator">Search Operator to apply</param>
-      <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="fieldList">List of Fields from the Returned Entity you want</param>
-      <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
+      <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="isReflexiveRelationship">If the relationship is defined as Entity:Entity or Account N:N Account, this parameter should be set to true</param>
-      <param name="serviceClient">ServiceClient</param>
+      <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
       <returns />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.QueryExtensions.GetEntityDataByRollup(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Guid,System.String,System.Collections.Generic.List{System.String},Microsoft.PowerPlatform.Dataverse.Client.Extensions.LogicalSearchOperator,System.Collections.Generic.Dictionary{System.String,System.String},System.Collections.Generic.Dictionary{System.String,Microsoft.PowerPlatform.Dataverse.Client.Extensions.LogicalSortOrder},System.Guid)">
       <summary>
             Returns all Activities Related to a given Entity ID.
             Only Account, Contact and Opportunity entities are supported.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="searchEntity">Type of Entity to search against</param>
       <param name="entityId">ID of the entity to search against.</param>
+      <param name="rollupfromEntity">Entity to Rollup from</param>
       <param name="fieldList">List of Field to return for the entity , null indicates all fields.</param>
       <param name="searchOperator" />
       <param name="searchParameters">Filters responses based on search prams.</param>
       <param name="sortParameters">Sort Order</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
-      <param name="rollupfromEntity">Entity to Rollup from</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>Array of Activities</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.QueryExtensions.GetEntityDataByRollup(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Guid,System.String,System.Collections.Generic.List{System.String},Microsoft.PowerPlatform.Dataverse.Client.Extensions.LogicalSearchOperator,System.Collections.Generic.List{Microsoft.PowerPlatform.Dataverse.Client.Extensions.DataverseSearchFilter},System.Collections.Generic.Dictionary{System.String,Microsoft.PowerPlatform.Dataverse.Client.Extensions.LogicalSortOrder},System.Int32,System.Int32,System.String,System.String@,System.Boolean@,System.Guid,System.Boolean)">
       <summary>
             Returns all Activities Related to a given Entity ID.
             Only Account, Contact and Opportunity entities are supported.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="searchEntity">Type of Entity to search against</param>
       <param name="entityId">ID of the entity to search against.</param>
-      <param name="fieldList">List of Field to return for the entity , null indicates all fields.</param>
       <param name="rollupfromEntity">Entity to Rollup from</param>
+      <param name="fieldList">List of Field to return for the entity , null indicates all fields.</param>
       <param name="searchOperator">Search Operator to user</param>
       <param name="searchParameters">Dataverse Filter list to apply</param>
       <param name="sortParameters">Sort by</param>
@@ -1247,49 +1251,48 @@
       <param name="isMoreRecords">is there more records or not</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.QueryExtensions.GetEntityDataBySearchParams(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Collections.Generic.Dictionary{System.String,System.String},Microsoft.PowerPlatform.Dataverse.Client.Extensions.LogicalSearchOperator,System.Collections.Generic.List{System.String},System.Guid,System.Boolean)">
       <summary>
             Gets a list of accounts based on the search parameters.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="entityName">Dataverse Entity Type Name to search</param>
       <param name="searchParameters">Array of Search Parameters</param>
-      <param name="fieldList">List of fields to retrieve, Null indicates all Fields</param>
       <param name="searchOperator">Logical Search Operator</param>
-      <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
+      <param name="fieldList">List of fields to retrieve, Null indicates all Fields</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
-      <param name="serviceClient">ServiceClient</param>
+      <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
       <returns>List of matching Entity Types.</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.QueryExtensions.GetEntityDataBySearchParams(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Collections.Generic.List{Microsoft.PowerPlatform.Dataverse.Client.Extensions.DataverseSearchFilter},Microsoft.PowerPlatform.Dataverse.Client.Extensions.LogicalSearchOperator,System.Collections.Generic.List{System.String},System.Collections.Generic.Dictionary{System.String,Microsoft.PowerPlatform.Dataverse.Client.Extensions.LogicalSortOrder},System.Int32,System.Int32,System.String,System.String@,System.Boolean@,System.Guid,System.Boolean)">
       <summary>
             Searches for data from an entity based on the search parameters.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="entityName">Name of the entity to search</param>
       <param name="searchParameters">Array of Search Parameters</param>
-      <param name="fieldList">List of fields to retrieve, Null indicates all Fields</param>
       <param name="searchOperator">Logical Search Operator</param>
+      <param name="fieldList">List of fields to retrieve, Null indicates all Fields</param>
+      <param name="sortParameters">Sort order</param>
       <param name="pageCount">Number records per Page</param>
       <param name="pageNumber">Current Page number</param>
       <param name="pageCookie">inbound place holder cookie</param>
       <param name="outPageCookie">outbound place holder cookie</param>
       <param name="isMoreRecords">is there more records or not</param>
-      <param name="sortParameters">Sort order</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>List of matching Entity Types.</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Extensions.QueryExtensions.GetEntityDataBySearchParams(Microsoft.PowerPlatform.Dataverse.Client.ServiceClient,System.String,System.Collections.Generic.List{Microsoft.PowerPlatform.Dataverse.Client.Extensions.DataverseSearchFilter},Microsoft.PowerPlatform.Dataverse.Client.Extensions.LogicalSearchOperator,System.Collections.Generic.List{System.String},System.Guid,System.Boolean)">
       <summary>
             Gets a list of accounts based on the search parameters.</summary>
+      <param name="serviceClient">ServiceClient</param>
       <param name="entityName">Dataverse Entity Type Name to search</param>
       <param name="searchParameters">Array of Search Parameters</param>
-      <param name="fieldList">List of fields to retrieve, Null indicates all Fields</param>
       <param name="searchOperator">Logical Search Operator</param>
+      <param name="fieldList">List of fields to retrieve, Null indicates all Fields</param>
       <param name="batchId">Optional: if set to a valid GUID, generated by the Create Batch Request Method, will assigned the request to the batch for later execution, on fail, runs the request immediately</param>
       <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
-      <param name="serviceClient">ServiceClient</param>
       <returns>List of matching Entity Types.</returns>
     </member>
     <member name="T:Microsoft.PowerPlatform.Dataverse.Client.ImportSolutionProperties">
@@ -1324,14 +1327,14 @@
       <summary>
             Internal use only</summary>
     </member>
+    <member name="F:Microsoft.PowerPlatform.Dataverse.Client.ImportSolutionProperties.USESTAGEANDUPGRADEMODE" />
     <member name="T:Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync">
       <summary>
-            Interface containing extension methods provided by the DataverseServiceClient for the IOrganizationService Interface.
-            These extensions will only operate from within the client and are not supported server side.</summary>
+            Interface containing asynchronous extension methods implemented by the Dataverse ServiceClient class according to the IOrganizationService interface.</summary>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync.AssociateAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Relationship,Microsoft.Xrm.Sdk.EntityReferenceCollection)">
       <summary>
-            Associate an entity with a set of entities</summary>
+            Associate an entity with a set of entities.</summary>
       <param name="entityName" />
       <param name="entityId" />
       <param name="relationship" />
@@ -1339,19 +1342,19 @@
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync.CreateAsync(Microsoft.Xrm.Sdk.Entity)">
       <summary>
-            Create an entity and process any related entities</summary>
+            Create an entity and process any related entities.</summary>
       <param name="entity">entity to create</param>
-      <returns>The ID of the created record</returns>
+      <returns>The ID of the created record.</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync.DeleteAsync(System.String,System.Guid)">
       <summary>
-            Delete instance of an entity</summary>
+            Delete an instance of an entity.</summary>
       <param name="entityName">Logical name of entity</param>
       <param name="id">Id of entity</param>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync.DisassociateAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Relationship,Microsoft.Xrm.Sdk.EntityReferenceCollection)">
       <summary>
-            Disassociate an entity with a set of entities</summary>
+            Disassociate an entity with a set of entities.</summary>
       <param name="entityName" />
       <param name="entityId" />
       <param name="relationship" />
@@ -1361,35 +1364,34 @@
       <summary>
             Perform an action in an organization specified by the request.</summary>
       <param name="request">Refer to SDK documentation for list of messages that can be used.</param>
-      <returns>Results from processing the request</returns>
+      <returns>Results from processing the request.</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync.RetrieveAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Query.ColumnSet)">
       <summary>
-            Retrieves instance of an entity</summary>
-      <param name="entityName">Logical name of entity</param>
-      <param name="id">Id of entity</param>
-      <param name="columnSet">Column Set collection to return with the request</param>
-      <returns>Selected Entity</returns>
+            Retrieves an instance of an entity.</summary>
+      <param name="entityName">Logical name of entity.</param>
+      <param name="id">Id of entity.</param>
+      <param name="columnSet">Column Set collection to return with the request.</param>
+      <returns>The specified entity.</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync.RetrieveMultipleAsync(Microsoft.Xrm.Sdk.Query.QueryBase)">
       <summary>
-            Retrieves a collection of entities</summary>
+            Retrieves a collection of entities.</summary>
       <param name="query" />
-      <returns>Returns an EntityCollection Object containing the results of the query</returns>
+      <returns>A collection containing the results of the query.</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync.UpdateAsync(Microsoft.Xrm.Sdk.Entity)">
       <summary>
-            Updates an entity and process any related entities</summary>
-      <param name="entity">entity to update</param>
+            Updates an entity and process any related entities.</summary>
+      <param name="entity">The entity to update.</param>
     </member>
     <member name="T:Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync2">
       <summary>
-            Interface containing extension methods provided by the DataverseServiceClient for the IOrganizationService Interface.
-            These extensions will only operate from within the client and are not supported server side.</summary>
+      Interface containing asynchronous extension methods implemented by the Dataverse ServiceClient class according to the IOrganizationService interface.</summary>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync2.AssociateAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Relationship,Microsoft.Xrm.Sdk.EntityReferenceCollection,System.Threading.CancellationToken)">
       <summary>
-            Associate an entity with a set of entities</summary>
+            Associate an entity with a set of entities.</summary>
       <param name="entityName" />
       <param name="entityId" />
       <param name="relationship" />
@@ -1398,28 +1400,28 @@
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync2.CreateAndReturnAsync(Microsoft.Xrm.Sdk.Entity,System.Threading.CancellationToken)">
       <summary>
-            Create an entity and process any related entities</summary>
-      <param name="entity">entity to create</param>
+            Create an entity and process any related entities.</summary>
+      <param name="entity">The entity to create.</param>
       <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
-      <returns>Returns the newly created record</returns>
+      <returns>The newly created entity record.</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync2.CreateAsync(Microsoft.Xrm.Sdk.Entity,System.Threading.CancellationToken)">
       <summary>
-            Create an entity and process any related entities</summary>
-      <param name="entity">entity to create</param>
+            Create an entity and process any related entities.</summary>
+      <param name="entity">The entity to create.</param>
       <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
-      <returns>The ID of the created record</returns>
+      <returns>The ID of the created record.</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync2.DeleteAsync(System.String,System.Guid,System.Threading.CancellationToken)">
       <summary>
-            Delete instance of an entity</summary>
-      <param name="entityName">Logical name of entity</param>
-      <param name="id">Id of entity</param>
+            Delete instance of an entity.</summary>
+      <param name="entityName">Logical name of the entity.</param>
+      <param name="id">Id of the entity.</param>
       <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync2.DisassociateAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Relationship,Microsoft.Xrm.Sdk.EntityReferenceCollection,System.Threading.CancellationToken)">
       <summary>
-            Disassociate an entity with a set of entities</summary>
+            Disassociate an entity with a set of entities.</summary>
       <param name="entityName" />
       <param name="entityId" />
       <param name="relationship" />
@@ -1429,30 +1431,30 @@
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync2.ExecuteAsync(Microsoft.Xrm.Sdk.OrganizationRequest,System.Threading.CancellationToken)">
       <summary>
             Perform an action in an organization specified by the request.</summary>
-      <param name="request">Refer to SDK documentation for list of messages that can be used.</param>
+      <param name="request">Refer to the SDK documentation for list of messages that can be used.</param>
       <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
       <returns>Results from processing the request</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync2.RetrieveAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Query.ColumnSet,System.Threading.CancellationToken)">
       <summary>
-            Retrieves instance of an entity</summary>
-      <param name="entityName">Logical name of entity</param>
-      <param name="id">Id of entity</param>
-      <param name="columnSet">Column Set collection to return with the request</param>
+            Retrieves instance of an entity.</summary>
+      <param name="entityName">Logical name of entity.</param>
+      <param name="id">Id of entity.</param>
+      <param name="columnSet">ColumnSet collection to return with the request.</param>
       <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
-      <returns>Selected Entity</returns>
+      <returns>The specified entity.</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync2.RetrieveMultipleAsync(Microsoft.Xrm.Sdk.Query.QueryBase,System.Threading.CancellationToken)">
       <summary>
-            Retrieves a collection of entities</summary>
+            Retrieves a collection of entities.</summary>
       <param name="query" />
       <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
-      <returns>Returns an EntityCollection Object containing the results of the query</returns>
+      <returns>A collection containing the results of the query.</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync2.UpdateAsync(Microsoft.Xrm.Sdk.Entity,System.Threading.CancellationToken)">
       <summary>
-            Updates an entity and process any related entities</summary>
-      <param name="entity">entity to update</param>
+            Updates an entity and process any related entities.</summary>
+      <param name="entity">The entity to update.</param>
       <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
     </member>
     <member name="T:Microsoft.PowerPlatform.Dataverse.Client.Model.ConfigurationOptions">
@@ -1764,9 +1766,9 @@
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.RequestBatch.#ctor(System.String,System.Boolean,System.Boolean)">
       <summary>
             Default constructor</summary>
+      <param name="batchName">String name of the batch, if blank, a GUID is used</param>
       <param name="returnResponses">True to return responses, False to not return responses</param>
       <param name="continueOnError">True to continue if anyone item trips an error, False to stop on the first error.</param>
-      <param name="batchName">String name of the batch, if blank, a GUID is used</param>
     </member>
     <member name="P:Microsoft.PowerPlatform.Dataverse.Client.RequestBatch.BatchId">
       <summary>
@@ -1917,12 +1919,12 @@
             Will attempt to connect directly to the URL provided for the API endpoint.</para></summary>
       <param name="userId">User Id supplied</param>
       <param name="password">Password for login</param>
+      <param name="hostUri">API or Instance URI to access the Dataverse environment.</param>
       <param name="useUniqueInstance">if set, will force the system to create a unique connection</param>
       <param name="clientId">The registered client Id on Azure portal.</param>
       <param name="redirectUri">The redirect URI application will be redirected post OAuth authentication.</param>
       <param name="promptBehavior">The prompt Behavior.</param>
       <param name="useDefaultCreds">(optional) If true attempts login using current user ( Online )</param>
-      <param name="hostUri">API or Instance URI to access the Dataverse environment.</param>
       <param name="tokenCacheStorePath">(Optional)The token cache path where token cache file is placed. if string.empty, will use default cache file store, if null, will use in memory cache</param>
       <param name="logger">Logging provider <see cref="T:Microsoft.Extensions.Logging.ILogger" /></param>
     </member>
@@ -2078,11 +2080,18 @@
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.DiscoverOnlineOrganizationsAsync(System.Func{System.String,System.Threading.Tasks.Task{System.String}},System.Uri,System.String,Microsoft.Extensions.Logging.ILogger)">
       <summary>
             Discovers Organizations Using the global discovery service and an external source for access tokens</summary>
-      <param name="discoveryServiceUri">Global discovery base URI to use to connect too,  if null will utilize the commercial Global Discovery Server.</param>
       <param name="tokenProviderFunction">Function that will provide access token to the discovery call.</param>
+      <param name="discoveryServiceUri">Global discovery base URI to use to connect too,  if null will utilize the commercial Global Discovery Server.</param>
       <param name="tokenCacheStorePath">(optional) path to log store</param>
       <param name="logger">Logging provider <see cref="T:Microsoft.Extensions.Logging.ILogger" /></param>
       <returns />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.DiscoverOnlineOrganizationsAsync(System.Func{System.String,System.Threading.Tasks.Task{System.String}},System.Uri,System.String,Microsoft.Extensions.Logging.ILogger,System.Threading.CancellationToken)">
+      <param name="tokenProviderFunction" />
+      <param name="discoveryServiceUri" />
+      <param name="tokenCacheStorePath" />
+      <param name="logger" />
+      <param name="cancellationToken" />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.DiscoverOnlineOrganizationsAsync(System.String,System.String,System.String,System.Uri,System.Boolean,System.String,Microsoft.PowerPlatform.Dataverse.Client.Auth.PromptBehavior,System.Boolean,Microsoft.PowerPlatform.Dataverse.Client.Model.DiscoveryServer,System.String,Microsoft.Extensions.Logging.ILogger)">
       <summary>
@@ -2091,13 +2100,13 @@
              You can also provide the discovery instance you wish to use, or not pass it.  If you do not specify a discovery region, the commercial global region is used</para></summary>
       <param name="userId">User ID to login with</param>
       <param name="password">Password to use to login with</param>
-      <param name="discoServer">(Optional) URI of the discovery server</param>
       <param name="clientId">The client Id.</param>
       <param name="redirectUri">The redirect uri.</param>
-      <param name="promptBehavior">The prompt behavior.</param>
       <param name="isOnPrem">The deployment type: OnPrem or Online.</param>
       <param name="authority">The authority provider for OAuth tokens. Unique if any already known.</param>
+      <param name="promptBehavior">The prompt behavior.</param>
       <param name="useDefaultCreds">(Optional) if specified, tries to use the current user</param>
+      <param name="discoServer">(Optional) URI of the discovery server</param>
       <param name="tokenCacheStorePath">(optional) path to log store</param>
       <param name="logger">Logging provider <see cref="T:Microsoft.Extensions.Logging.ILogger" /></param>
       <returns>A collection of organizations</returns>
@@ -2109,9 +2118,9 @@
       <param name="clientCredentials">The client credentials.</param>
       <param name="clientId">The client Id.</param>
       <param name="redirectUri">The redirect uri.</param>
-      <param name="promptBehavior">The prompt behavior.</param>
       <param name="isOnPrem">The deployment type: OnPrem or Online.</param>
       <param name="authority">The authority provider for OAuth tokens. Unique if any already known.</param>
+      <param name="promptBehavior">The prompt behavior.</param>
       <param name="useDefaultCreds">(Optional) if specified, tries to use the current user</param>
       <param name="tokenCacheStorePath">(optional) path to log store</param>
       <param name="logger">Logging provider <see cref="T:Microsoft.Extensions.Logging.ILogger" /></param>
@@ -2124,8 +2133,8 @@
       <param name="clientCredentials">The client credentials.</param>
       <param name="clientId">The client Id.</param>
       <param name="redirectUri">The redirect uri.</param>
-      <param name="promptBehavior">The prompt behavior.</param>
       <param name="authority">The authority provider for OAuth tokens. Unique if any already known.</param>
+      <param name="promptBehavior">The prompt behavior.</param>
       <param name="useDefaultCreds">(Optional) if specified, tries to use the current user</param>
       <param name="tokenCacheStorePath">(optional) path to log store</param>
       <param name="logger">Logging provider <see cref="T:Microsoft.Extensions.Logging.ILogger" /></param>
@@ -2173,21 +2182,22 @@
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.ExecuteWebRequest(System.Net.Http.HttpMethod,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Collections.Generic.List{System.String}},System.String,System.Threading.CancellationToken)">
       <summary>
-            Executes a web request against Xrm WebAPI.</summary>
-      <param name="queryString">Here you would pass the path and query parameters that you wish to pass onto the WebAPI.
-            The format used here is as follows:
-              {APIURI}/api/data/v{instance version}/querystring.
-            For example,
-                if you wanted to get data back from an account,  you would pass the following:
-                    accounts(id)
-                    which creates:  get - https://myinstance.crm.dynamics.com/api/data/v9.0/accounts(id)
-                if you were creating an account, you would pass the following:
-                    accounts
-                    which creates:  post - https://myinstance.crm.dynamics.com/api/data/v9.0/accounts - body contains the data.</param>
-      <param name="method">Method to use for the request</param>
-      <param name="body">Content your passing to the request</param>
-      <param name="customHeaders">Headers in addition to the default headers added by for Executing a web request</param>
-      <param name="contentType">Content Type attach to the request.  this defaults to application/json if not set.</param>
+            Executes a web request against the Dataverse Web API.</summary>
+      <param name="method">HTTP method to use for the request</param>
+      <param name="queryString">The path and query parameters that you wish to pass onto the Web API</param>
+      <param name="body">Request content</param>
+      <param name="customHeaders">Additional headers</param>
+      <param name="contentType">Content Type for the request. Defaults to <see langword="application/json" /></param>
+      <param name="cancellationToken">Cancellation token for the request</param>
+      <returns />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.ExecuteWebRequestAsync(System.Net.Http.HttpMethod,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Collections.Generic.List{System.String}},System.String,System.Threading.CancellationToken)">
+      <summary>Executes an asychronous web request against the Dataverse Web API.</summary>
+      <param name="method">HTTP method to use for the request</param>
+      <param name="queryString">The path and query parameters that you wish to pass onto the Web API</param>
+      <param name="body">Request content</param>
+      <param name="customHeaders">Additional headers</param>
+      <param name="contentType">Content Type for the request. Defaults to <see langword="application/json" /></param>
       <param name="cancellationToken">Cancellation token for the request</param>
       <returns />
     </member>
@@ -2329,7 +2339,7 @@
     <member name="P:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.EnableAffinityCookie">
       <summary>
             Defaults to True.
-            <para>When true, this setting applies the default connection routing strategy to connections to Dataverse.</para><para>This will 'prefer' a given node when interacting with Dataverse which improves overall connection performance.</para><para>When set to false, each call to Dataverse will be routed to any given node supporting your organization.</para><para>See https://docs.microsoft.com/en-us/powerapps/developer/data-platform/api-limits#remove-the-affinity-cookie for proper use.</para></summary>
+            <para>When true, this setting applies the default connection routing strategy to connections to Dataverse.</para><para>This will 'prefer' a given node when interacting with Dataverse which improves overall connection performance.</para><para>When set to false, each call to Dataverse will be routed to any given node supporting your organization.</para><para>See Server affinity for proper use.</para></summary>
     </member>
     <member name="P:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.EnvironmentId">
       <summary>
@@ -2611,6 +2621,16 @@
       <param name="message">Error Message</param>
       <param name="innerException">Supporting Exception</param>
     </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Utils.DataverseConnectionException.#ctor(System.String,System.Int32,System.String,System.Collections.Generic.IDictionary{System.String,System.String},Microsoft.Rest.HttpOperationException)">
+      <param name="message" />
+      <param name="errorCode" />
+      <param name="helpLink" />
+      <param name="data" />
+      <param name="httpOperationException" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Utils.DataverseConnectionException.GenerateClientConnectionException(Microsoft.Rest.HttpOperationException)">
+      <param name="httpOperationException" />
+    </member>
     <member name="T:Microsoft.PowerPlatform.Dataverse.Client.Utils.DataverseOperationException">
       <summary>
             Used to encompass a ServiceClient Operation Exception</summary>
@@ -2637,8 +2657,8 @@
             Creates a CdsService Client Exception</summary>
       <param name="message">Error Message</param>
       <param name="errorCode">Error code</param>
-      <param name="data">Data Properties</param>
       <param name="helpLink">Help Link</param>
+      <param name="data">Data Properties</param>
       <param name="httpOperationException" />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Utils.DataverseOperationException.GenerateClientOperationException(Microsoft.Rest.HttpOperationException)">

@@ -853,7 +853,7 @@ namespace Client_Core_Tests
                 Assert.Null(ex);
             }
             // Check user before we validate connection
-            client._connectionSvc.AuthenticationTypeInUse.Should().BeEquivalentTo(Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.ClientSecret);
+            client._connectionSvc.AuthenticationTypeInUse.Should().Be(Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.ClientSecret);
             client._connectionSvc.AuthContext.Scopes.Should().BeEquivalentTo(new string[] { $"{Conn_Url}/.default" });
             client._connectionSvc.AuthContext.Account.Should().BeNull();
             client._connectionSvc.AuthContext.AccessToken.Should().NotBeNull();
@@ -956,7 +956,7 @@ namespace Client_Core_Tests
             Assert.True(client.IsReady, "Failed to Create Connection via Connection string");
 
             // Check user before we validate connection
-            client._connectionSvc.AuthenticationTypeInUse.Should().BeEquivalentTo(Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.OAuth);
+            client._connectionSvc.AuthenticationTypeInUse.Should().Be(Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.OAuth);
             client._connectionSvc.AuthContext.Scopes.Should().BeEquivalentTo(new string[] { $"{Conn_Url}//user_impersonation" });
             client._connectionSvc.AuthContext.Account.Should().NotBeNull();
             client._connectionSvc.AuthContext.IdToken.Should().NotBeEmpty();
@@ -999,7 +999,7 @@ namespace Client_Core_Tests
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor - Discovery");
 
             // Check user before we validate connection
-            client._connectionSvc.AuthenticationTypeInUse.Should().BeEquivalentTo(Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.OAuth);
+            client._connectionSvc.AuthenticationTypeInUse.Should().Be(Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.OAuth);
             client._connectionSvc.AuthContext.Account.Should().NotBeNull();
             client._connectionSvc.AuthContext.IdToken.Should().NotBeEmpty();
             client._connectionSvc.AuthContext.Account.Username.Should().BeEquivalentTo(Conn_UserName);
@@ -1029,7 +1029,7 @@ namespace Client_Core_Tests
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor - Direct Connect");
 
             // Check user before we validate connection
-            client._connectionSvc.AuthenticationTypeInUse.Should().BeEquivalentTo(Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.OAuth);
+            client._connectionSvc.AuthenticationTypeInUse.Should().Be(Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.OAuth);
             client._connectionSvc.AuthContext.Scopes.Should().BeEquivalentTo(new string[] { $"{Conn_Url}//user_impersonation" });
             client._connectionSvc.AuthContext.Account.Should().NotBeNull();
             client._connectionSvc.AuthContext.IdToken.Should().NotBeEmpty();
@@ -1083,7 +1083,7 @@ namespace Client_Core_Tests
             ValidateConnection(client);
 
             // Check user before we validate connection
-            client._connectionSvc.AuthenticationTypeInUse.Should().BeEquivalentTo(Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.OAuth);
+            client._connectionSvc.AuthenticationTypeInUse.Should().Be(Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.OAuth);
             client._connectionSvc.AuthContext.Scopes.Should().BeEquivalentTo(new string[] { $"{Conn_Url}/user_impersonation" });
             client._connectionSvc.AuthContext.Account.Should().NotBeNull();
             client._connectionSvc.AuthContext.IdToken.Should().NotBeEmpty();

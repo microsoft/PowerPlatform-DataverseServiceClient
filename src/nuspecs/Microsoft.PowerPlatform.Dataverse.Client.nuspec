@@ -19,33 +19,33 @@
         <dependency id="Microsoft.Extensions.Http" version="3.1.8" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Logging" version="3.1.8" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Caching.Memory" version="3.1.8" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client" version="4.35.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.18.9" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client" version="4.56.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.56.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.24" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
-        <dependency id="System.Text.Json" version="6.0.7" exclude="Build,Analyzers" />
+        <dependency id="System.Text.Json" version="7.0.3" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".NETFramework4.7.2">
         <dependency id="Microsoft.Extensions.DependencyInjection" version="3.1.8" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Http" version="3.1.8" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Logging" version="3.1.8" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Caching.Memory" version="3.1.8" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client" version="4.35.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.18.9" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client" version="4.56.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.56.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.24" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
-        <dependency id="System.Text.Json" version="6.0.7" exclude="Build,Analyzers" />
+        <dependency id="System.Text.Json" version="7.0.3" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".NETFramework4.8">
         <dependency id="Microsoft.Extensions.DependencyInjection" version="3.1.8" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Http" version="3.1.8" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Logging" version="3.1.8" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Caching.Memory" version="3.1.8" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client" version="4.35.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.18.9" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client" version="4.56.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.56.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.24" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
-        <dependency id="System.Text.Json" version="6.0.7" exclude="Build,Analyzers" />
+        <dependency id="System.Text.Json" version="7.0.3" exclude="Build,Analyzers" />
       </group>
       <group targetFramework="NET6.0">
         <dependency id="System.Collections" version="4.3.0" exclude="Build,Analyzers" />
@@ -60,13 +60,13 @@
         <dependency id="System.Runtime.Serialization.Xml" version="4.3.0" exclude="Build,Analyzers" />
         <dependency id="System.Security.Permissions" version="5.0.0" exclude="Build,Analyzers" />
         <dependency id="System.ServiceModel.Http" version="4.10.2" exclude="Build,Analyzers" />
-        <dependency id="System.Text.Json" version="6.0.7" exclude="Build,Analyzers" />
+        <dependency id="System.Text.Json" version="7.0.3" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.DependencyInjection" version="3.1.8" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Http" version="3.1.8" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Logging" version="3.1.8" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Caching.Memory" version="3.1.8" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client" version="4.35.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.18.9" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client" version="4.56.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.56.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.24" exclude="Build,Analyzers" />
         <dependency id="Microsoft.VisualBasic" version="10.3.0" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
@@ -74,8 +74,6 @@
         <dependency id="System.Runtime.Caching" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Security.Cryptography.Algorithms" version="4.3.1" exclude="Build,Analyzers" />
         <dependency id="System.Security.Cryptography.ProtectedData" version="4.7.0" exclude="Build,Analyzers" />
-        <dependency id="System.Security.Cryptography.Xml" version="6.0.1" exclude="Build,Analyzers" /> <!-- Added for CVE-2022-34716 and CVE-2021-24112 -->
-        <dependency id="System.Security.Cryptography.Pkcs" version="6.0.3" exclude="Build,Analyzers" /> <!-- Added for CVE-2023-29331 -->
         <dependency id="System.Drawing.Common" version="5.0.3" exclude="Build,Analyzers"/> <!-- explict add to deal with CVE-2021-24112  --> 
       </group>      
     </dependencies>
