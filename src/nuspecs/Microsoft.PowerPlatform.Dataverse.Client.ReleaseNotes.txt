@@ -7,6 +7,17 @@ Notice:
     Note: Only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Updated Core SDK
+Added new properties to Organization detail to report Schema Type and Deployment Type. 
+Dependency changes:
+    System.Text.Json moved to 7.0.3
+    Microsoft.Identity.Client moved to 4.56.0
+    Microsoft.Identity.Client.Extensions.Msal moved to 4.56.0
+    Removed System.Security.Cryptography.Xml was transitive include to support CVE which is no longer necessary due to depending package updates
+    Removed System.Security.Cryptography.Pkcs was transitive include to support CVE which is no longer necessary due to depending package updates
+
+
+1.1.14:
 Updated Core SDK Libs
 Fixed issue with DataCenter ID not populating in Organization Detail object returned by the client.
 Fixed a hang problem when parsing multi layered exceptions 

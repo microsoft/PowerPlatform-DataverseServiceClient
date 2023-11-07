@@ -6,6 +6,7 @@ using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Security;
@@ -299,7 +300,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
                     }
                     else
                     {
+#pragma warning disable CS0618 // Type or member is obsolete
                         _authenticationResult = await publicAppClient.AcquireTokenByUsernamePassword(scopes, clientCredentials.UserName.UserName, ServiceClient.MakeSecureString(clientCredentials.UserName.Password)).ExecuteAsync().ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
                     }
                 }
                 else
