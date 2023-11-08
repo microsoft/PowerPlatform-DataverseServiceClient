@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,7 +49,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Model
 		public DateTime TrialExpirationDate { get; set; }
 		[JsonProperty(PropertyName = "Purpose")]
 		public string Purpose { get; set; }
-
-
-	}
+        [JsonProperty(PropertyName = "SchemaType")]
+        public string SchemaType { get; set; }
+    }
 }
