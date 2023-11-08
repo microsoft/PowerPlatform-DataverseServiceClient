@@ -37,6 +37,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth.TokenCache
             if (AppDomain.CurrentDomain != null)
             {
                 hostName = Path.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
+                if (hostName.IndexOfAny(Path.GetInvalidFileNameChars()) < 0)
+                {
+                    foreach (var c in Path.GetInvalidFileNameChars())
+                    {
+                        hostName = hostName.Replace(c, '_');
+                    }
+                }
             }
             string hostVersion = Environs.XrmSdkFileVersion;
             string companyName = typeof(OrganizationDetail).Assembly.GetCustomAttribute<AssemblyCompanyAttribute>().Company;

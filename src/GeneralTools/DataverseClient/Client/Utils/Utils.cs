@@ -43,7 +43,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     using (DiscoveryServers discoSvcs = new DiscoveryServers())
                     {
                         return discoSvcs.GetServerByShortName(OnlineRegon);
-                    };
+                    }
                 }
             }
             return null;

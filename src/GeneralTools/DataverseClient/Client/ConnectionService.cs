@@ -1750,6 +1750,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         _OrgDetail.UniqueName = resp.Detail.UniqueName;
                         _OrgDetail.UrlName = resp.Detail.UrlName;
                         _OrgDetail.DatacenterId = resp.Detail.DatacenterId;
+                        _OrgDetail.SchemaType = resp.Detail.SchemaType;
+                        _OrgDetail.OrganizationType = resp.Detail.OrganizationType;
+
                     }
                     _organization = _OrgDetail.UniqueName;
 
@@ -3007,6 +3010,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     d.EnvironmentId = !string.IsNullOrEmpty(inst.EnvironmentId) ? inst.EnvironmentId : string.Empty;
                     d.Geo = !string.IsNullOrEmpty(inst.Region) ? inst.Region : string.Empty;
                     d.TenantId = !string.IsNullOrEmpty(inst.TenantId) ? inst.TenantId : string.Empty;
+                    d.SchemaType = !string.IsNullOrEmpty(inst.SchemaType) ? inst.SchemaType : string.Empty;
+                    d.OrganizationType = (Xrm.Sdk.Organization.OrganizationType)Enum.Parse(typeof(Xrm.Sdk.Organization.OrganizationType), inst.OrganizationType.ToString());
                     System.Reflection.PropertyInfo proInfo = d.GetType().GetProperty("Endpoints");
                     if (proInfo != null)
                     {

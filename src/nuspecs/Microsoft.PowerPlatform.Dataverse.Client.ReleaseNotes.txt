@@ -9,6 +9,7 @@ Notice:
 ++CURRENTRELEASEID++
 Updated Core SDK
 Added new properties to Organization detail to report Schema Type and Deployment Type. 
+Fixed bug in creating file to user token cache when host name contains invalid characters. Fixes #406
 Dependency changes:
     System.Text.Json moved to 7.0.3
     Microsoft.Identity.Client moved to 4.56.0
