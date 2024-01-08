@@ -36,17 +36,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth.TokenCache
             string hostName = "DvBaseClient";
             if (AppDomain.CurrentDomain != null)
             {
-                hostName = Path.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
-                if (hostName.IndexOfAny(Path.GetInvalidFileNameChars()) < 0)
-                {
-                    foreach (var c in Path.GetInvalidFileNameChars())
-                    {
-                        hostName = hostName.Replace(c, '_');
-                    }
-                }
+                hostName = Path.GetFileNameWithoutExtension(Utilities.CleanUpPotentialFileName(AppDomain.CurrentDomain.FriendlyName));
             }
             string hostVersion = Environs.XrmSdkFileVersion;
-            string companyName = typeof(OrganizationDetail).Assembly.GetCustomAttribute<AssemblyCompanyAttribute>().Company;
+            string companyName = Utilities.CleanUpPotentialFileName(typeof(OrganizationDetail).Assembly.GetCustomAttribute<AssemblyCompanyAttribute>().Company);
 
 
             if (string.IsNullOrEmpty(tokenPathAndFileName))
@@ -54,7 +47,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth.TokenCache
                 tokenPathAndFileName = Path.Combine(MsalCacheHelper.UserRootDirectory, companyName?.Replace(" ", "_"), hostName, hostVersion, "dvtokens.dat");
             }
 
-            System.Diagnostics.Trace.WriteLine($"TokenCacheFilePath: {tokenPathAndFileName}");
+            Trace.WriteLine($"TokenCacheFilePath: {tokenPathAndFileName}");
 
             cacheFileDirectory = Path.GetDirectoryName(tokenPathAndFileName);
             cacheFileName = Path.GetFileName(tokenPathAndFileName);

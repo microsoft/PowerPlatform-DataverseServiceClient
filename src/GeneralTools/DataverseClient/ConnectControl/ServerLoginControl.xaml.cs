@@ -22,6 +22,7 @@ using System.Configuration;
 using Microsoft.PowerPlatform.Dataverse.Client.Model;
 using System.Media;
 using System.Windows.Automation.Peers;
+using System.Security.Policy;
 
 #endregion
 
@@ -327,7 +328,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 			tbCrmServerPort.Text = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmPort);
 
 			AdvancedOptions.tbUserId.Text = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmUserName);
-			AdvancedOptions.tbConnectUrl.Text = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.DirectConnectionUri);
+			AdvancedOptions.tbConnectUrl.Text = GetCleanedUpURL(StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.DirectConnectionUri));
 			AdvancedOptions.tbDomain.Text = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmDomain);
 
 			// Get Bool Settings
@@ -403,6 +404,22 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 			rbOnlinePrem_Click(this, null);
 		}
 
+		private string GetCleanedUpURL(string connectionUrl)
+		{
+			if( Uri.TryCreate(connectionUrl, UriKind.Absolute, out Uri workingUrl))
+			{
+				string workingUrlString = workingUrl.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped);
+                if (connectionUrl.ToUpperInvariant().Contains($"{workingUrlString.ToUpperInvariant()}/XRMSERVICES"))
+					return workingUrlString;
+				else
+	                return workingUrl.ToString();
+            }
+            else
+			{
+                return connectionUrl;
+            }
+		}
+
 		/// <summary>
 		/// Sets the current UI element for the Online region. 
 		/// </summary>
@@ -462,7 +479,8 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 			{
 				StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmOrg, string.Empty);
 				StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.UseDirectConnection, false.ToString());
-			}
+                StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.DirectConnectionUri, string.Empty);
+            }
 			else
 			{
 				StorageUtils.SetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmOrg, tbCrmOrg.Text);

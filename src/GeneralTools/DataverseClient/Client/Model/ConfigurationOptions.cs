@@ -23,7 +23,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Model
             if (options != null)
             {
                 EnableAffinityCookie = options.EnableAffinityCookie;
-                MaxBufferPoolSizeOveride = options.MaxBufferPoolSizeOveride;
+                MaxBufferPoolSizeOverride = options.MaxBufferPoolSizeOverride;
                 MaxFaultSizeOverride = options.MaxFaultSizeOverride;
                 MaxReceivedMessageSizeOverride = options.MaxReceivedMessageSizeOverride;
                 MaxRetryCount = options.MaxRetryCount;
@@ -131,11 +131,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Model
             set => _maxReceivedMessageSize = value;
         }
 
-        private string _maxBufferPoolSizeOveride = Utils.AppSettingsHelper.GetAppSetting<string>("MaxBufferPoolSizeOveride", null);
+        private string _maxBufferPoolSizeOveride = Utils.AppSettingsHelper.GetAppSetting<string>("MaxBufferPoolSizeOverride", null);
         /// <summary>
         /// MaxBufferPoolSize override. - Use under Microsoft Direction only. 
         /// </summary>
-        public string MaxBufferPoolSizeOveride
+        public string MaxBufferPoolSizeOverride
         {
             get => _maxBufferPoolSizeOveride;
             set => _maxBufferPoolSizeOveride = value;

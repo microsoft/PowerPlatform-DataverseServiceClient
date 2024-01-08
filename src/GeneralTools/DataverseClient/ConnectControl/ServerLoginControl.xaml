@@ -423,7 +423,7 @@
             </StackPanel>
 
             <!-- Row #9 Advanced -->
-            <local:AdvancedOptions Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="3" x:Name="AdvancedOptions" />
+            <local:AdvancedOptions Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="3" x:Name="AdvancedOptions" VerticalAlignment="Top"/>
 
             <!-- Row #10 Orgs -->
 			<StackPanel x:Name="stkOrg" HorizontalAlignment="Left" Grid.Column="0" Grid.Row="10" Grid.ColumnSpan="3" Orientation="Horizontal" VerticalAlignment="Center" >

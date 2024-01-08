@@ -35,9 +35,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
             DataverseTraceLogger logSink = null)
         {
             bool createdLogSource = false;
-            Stopwatch dtProxyCreate = new Stopwatch();
-            dtProxyCreate.Start();
-            Stopwatch dtConnectTimeCheck = new Stopwatch();
+            Stopwatch dtProxyCreate = Stopwatch.StartNew();
+            Stopwatch dtConnectTimeCheck = Stopwatch.StartNew();
             try
             {
                 if (logSink == null)
@@ -54,7 +53,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
                     logSink.Log(string.Format(CultureInfo.InvariantCulture, "{0} - attempting to connect to On-Premises Dataverse server @ {1}", LogString, ServiceUri.ToString()), TraceEventType.Verbose);
 
                     // Create the Service configuration for that URL
-                    dtConnectTimeCheck.Restart();
+                    dtConnectTimeCheck.Stop();
+                    dtConnectTimeCheck = Stopwatch.StartNew();
                     servicecfg = ServiceConfigurationFactoryAsync.CreateManagement<T>(ServiceUri);
                     dtConnectTimeCheck.Stop();
                     if (servicecfg == null)
@@ -73,7 +73,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
                 {
                     // Connect via anything other then AD.
                     // Setup for Auth Check Performance.
-                    dtConnectTimeCheck.Restart();
+                    dtConnectTimeCheck.Stop();
+                    dtConnectTimeCheck = Stopwatch.StartNew();
 
                     // Deal with IFD QurikyNess in ADFS configuration,  where ADFS can be configured to fall though to Kerb Auth.
                     AuthenticationCredentials authCred = ClaimsIFDFailOverAuth<T>(servicecfg, homeRealm, userCredentials);
@@ -89,7 +90,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
                     {
                         logSink.Log(string.Format(CultureInfo.InvariantCulture, "{0} - Initial Authenticated via {1} {3} . Auth Elapsed:{2}", LogString, servicecfg.AuthenticationType, dtConnectTimeCheck.Elapsed.ToString(), homeRealm.ToString()), TraceEventType.Verbose);
                         logSink.Log(string.Format(CultureInfo.InvariantCulture, "{0} - Relaying Auth to Resource Server: From {1} to {2}", LogString, homeRealm.ToString(), servicecfg.PolicyConfiguration.SecureTokenServiceIdentifier), TraceEventType.Verbose);
-                        dtConnectTimeCheck.Restart();
+                        dtConnectTimeCheck.Stop();
+                        dtConnectTimeCheck = Stopwatch.StartNew();
                         // Auth token against the correct server.
                         AuthenticationCredentials authCred2 = servicecfg.Authenticate(new AuthenticationCredentials()
                         {

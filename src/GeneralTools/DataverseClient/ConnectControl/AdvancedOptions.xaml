@@ -44,13 +44,17 @@
                 </Style>
             </Grid.Resources>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition MinWidth="94px" MaxWidth="150px" />
+                <ColumnDefinition MinWidth="90px" MaxWidth="115px" />
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition/>
-                <RowDefinition />
-                <RowDefinition />
+                <RowDefinition>
+                    <RowDefinition.Style>
+                        <Style TargetType="{x:Type RowDefinition}">
+                            <Setter Property="MinHeight"  Value="30" />
+                        </Style>
+                    </RowDefinition.Style>
+                </RowDefinition>
                 <RowDefinition>
                     <RowDefinition.Style>
                         <Style TargetType="{x:Type RowDefinition}">
@@ -58,6 +62,31 @@
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding DomainVisible}" Value="False">
                                     <Setter Property="Height" Value="0" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding DomainVisible}" Value="True">
+                                    <Setter Property="MinHeight"  Value="30" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </RowDefinition.Style>
+                </RowDefinition>
+                <RowDefinition>
+                    <RowDefinition.Style>
+                        <Style TargetType="{x:Type RowDefinition}">
+                            <Setter Property="MinHeight"  Value="30" />
+                        </Style>
+                    </RowDefinition.Style>
+                </RowDefinition>
+                <RowDefinition>
+                    <RowDefinition.Style>
+                        <Style TargetType="{x:Type RowDefinition}">
+                            <Setter Property="Height" Value="*" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding DomainVisible}" Value="False">
+                                    <Setter Property="Height" Value="0" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding DomainVisible}" Value="True">
+                                    <Setter Property="MinHeight"  Value="30" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>

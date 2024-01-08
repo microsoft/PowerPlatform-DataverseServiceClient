@@ -1280,5 +1280,20 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             return null;
         }
 
+        /// <summary>
+        /// Removes invalid characters from a potential file name.
+        /// </summary>
+        /// <param name="potentialFileName"></param>
+        /// <returns></returns>
+        internal static string CleanUpPotentialFileName ( string potentialFileName)
+        {
+            if (string.IsNullOrEmpty(potentialFileName))
+                return potentialFileName;
+
+            System.IO.Path.GetInvalidFileNameChars().Where(c => potentialFileName.Contains(c)).ToList().ForEach(c => potentialFileName = potentialFileName.Replace(c, '_'));
+
+            return potentialFileName;
+        }
+
     }
 }

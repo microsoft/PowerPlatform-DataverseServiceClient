@@ -327,14 +327,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
                             case PromptBehavior.Auto:
                                 break;
                             case PromptBehavior.Always:
-                                userPrompt = Microsoft.Identity.Client.Prompt.ForceLogin;
+                            case PromptBehavior.SelectAccount:
+                                userPrompt = Microsoft.Identity.Client.Prompt.SelectAccount;
                                 break;
                             case PromptBehavior.Never:
                             case PromptBehavior.RefreshSession:
                                 userPrompt = Microsoft.Identity.Client.Prompt.NoPrompt;
-                                break;
-                            case PromptBehavior.SelectAccount:
-                                userPrompt = Microsoft.Identity.Client.Prompt.SelectAccount;
                                 break;
                             default:
                                 break;

@@ -290,7 +290,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
 
             //if the client Id was not passed, use Sample AppID
-            if ((authenticationType != AuthenticationType.AD || authenticationType != AuthenticationType.ExternalTokenManagement) 
+            if ((authenticationType != AuthenticationType.AD
+                 && authenticationType != AuthenticationType.ExternalTokenManagement) 
                 && string.IsNullOrWhiteSpace(ClientId))
             {
                 logEntry.Log($"Client ID not supplied, using SDK Sample Client ID for this connection", System.Diagnostics.TraceEventType.Warning);

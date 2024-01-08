@@ -90,6 +90,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         internal object _lockObject = new object();
 
         /// <summary>
+        /// This is an internal lock object, used to sync clone operations.
+        /// </summary>
+        internal object _cloneLockObject = new object();
+
+        /// <summary>
         /// BatchManager for Execute Multiple.
         /// </summary>
         internal BatchManager _batchManager = null;
@@ -1396,19 +1401,25 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 {
                     try
                     {
+                        if (_cloneLockObject == null)
+                            _cloneLockObject = new object();
+
                         // Get Current Access Token.
                         // This will get the current access token
                         if (logger == null) logger = _logEntry._logger;
-                        proxy.HeaderToken = this.CurrentAccessToken;
-                        var SvcClient = new ServiceClient(proxy, true, _connectionSvc.AuthenticationTypeInUse, _connectionSvc?.OrganizationVersion, logger: logger);
-                        SvcClient._connectionSvc.SetClonedProperties(this);
-                        SvcClient.CallerAADObjectId = CallerAADObjectId;
-                        SvcClient.CallerId = CallerId;
-                        SvcClient.MaxRetryCount = _configuration.Value.MaxRetryCount;
-                        SvcClient.RetryPauseTime = _configuration.Value.RetryPauseTime;
-                        SvcClient.GetAccessToken = GetAccessToken;
-
-                        return SvcClient;
+                        lock (_cloneLockObject)
+                        {
+                            proxy.HeaderToken = this.CurrentAccessToken;
+                            var SvcClient = new ServiceClient(proxy, true, _connectionSvc.AuthenticationTypeInUse, _connectionSvc?.OrganizationVersion, logger: logger);
+                            SvcClient._connectionSvc.SetClonedProperties(this);
+                            SvcClient.CallerAADObjectId = CallerAADObjectId;
+                            SvcClient.CallerId = CallerId;
+                            SvcClient.MaxRetryCount = _configuration.Value.MaxRetryCount;
+                            SvcClient.RetryPauseTime = _configuration.Value.RetryPauseTime;
+                            SvcClient.GetAccessToken = GetAccessToken;
+                            SvcClient.GetCustomHeaders = GetCustomHeaders;
+                            return SvcClient;
+                        }
                     }
                     catch (DataverseConnectionException)
                     {
@@ -1791,7 +1802,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             ValidateConnectionLive();
             Guid requestTrackingId = Guid.NewGuid();
             OrganizationResponse resp = null;
-            Stopwatch logDt = new Stopwatch();
+            Stopwatch logDt = Stopwatch.StartNew();
             TimeSpan LockWait = TimeSpan.Zero;
             int retryCount = 0;
             bool retry = false;
@@ -1834,8 +1845,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         SessionTrackingId.HasValue && SessionTrackingId.Value != Guid.Empty ? $"SessionID={SessionTrackingId.Value.ToString()} : " : ""
                         ), TraceEventType.Verbose);
 
-                    logDt.Restart();
-                    _= await _connectionSvc.RefreshClientTokenAsync().ConfigureAwait(false);
+                    logDt.Stop();
+                    logDt = Stopwatch.StartNew();
+                    _ = await _connectionSvc.RefreshClientTokenAsync().ConfigureAwait(false);
                     rsp = await DataverseServiceAsync.ExecuteAsync(req).ConfigureAwait(false);
 
                     logDt.Stop();
@@ -1887,7 +1899,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             ValidateConnectionLive();
             Guid requestTrackingId = Guid.NewGuid();
             OrganizationResponse resp = null;
-            Stopwatch logDt = new Stopwatch();
+            Stopwatch logDt = Stopwatch.StartNew();
             TimeSpan LockWait = TimeSpan.Zero;
             int retryCount = 0;
             bool retry = false;
@@ -1931,14 +1943,16 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         requestIdLogSegement
                         ), TraceEventType.Verbose);
 
-                    logDt.Restart();
+                    logDt.Stop();
+                    logDt = Stopwatch.StartNew();
                     _connectionSvc.RefreshClientTokenAsync().Wait(); // Refresh the token if needed.. 
                     if (!_disableConnectionLocking) // Allow Developer to override Cross Thread Safeties
                         lock (_lockObject)
                         {
                             if (logDt.Elapsed > TimeSpan.FromMilliseconds(0000010))
                                 LockWait = logDt.Elapsed;
-                            logDt.Restart();
+                            logDt.Stop();
+                            logDt = Stopwatch.StartNew();
                             rsp = DataverseService.Execute(req);
                         }
                     else
