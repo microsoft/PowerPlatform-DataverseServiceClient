@@ -531,7 +531,11 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 			else
 			{
 				// Set URL that was connected too.
-				StorageUtils.SetConfigKey(ServerConfigKeys, Dynamics_ConfigFileServerKeys.DirectConnectionUri, ServiceClient.ConnectedOrgUriActual.ToString());
+				if (!string.IsNullOrEmpty(ServiceClient?._connectionSvc?.AuthContext?.Account?.Username))
+				{
+                    StorageUtils.SetConfigKey(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmUserName, ServiceClient?._connectionSvc?.AuthContext?.Account?.Username);
+                }
+                StorageUtils.SetConfigKey(ServerConfigKeys, Dynamics_ConfigFileServerKeys.DirectConnectionUri, ServiceClient.ConnectedOrgUriActual.ToString());
 				StorageUtils.SetConfigKey(ServerConfigKeys, Dynamics_ConfigFileServerKeys.UseDirectConnection, true.ToString());
 			}
 
@@ -575,7 +579,6 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 			// Make sure there is a value
 			if (!ValidateUserSpecifiedData()) return false;
 
-			// Check to see if its a direct connect. 
 			_directConnectUri = StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.DirectConnectionUri);
 
 			// Value is not a bool.. check to see if there is a value. 
@@ -1159,9 +1162,11 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 			{
 				bool IsClientIdOrRedirectUriEmpty = string.IsNullOrEmpty(ClientId) || RedirectUri == null;
 				bool IsUserNameNull = string.IsNullOrEmpty(StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmUserName));
-				var passwordSecureString = StorageUtils.GetConfigKey<SecureString>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmPassword);
-				bool IsPasswordNull = (passwordSecureString == null) || (passwordSecureString.Length == 0);
-				if (!bool.TryParse(StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.AdvancedCheck), out IsAdvancedCheckEnabled))
+                var passwordSecureString = StorageUtils.GetConfigKey<SecureString>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmPassword);
+                bool IsPasswordNull = (passwordSecureString == null) || (passwordSecureString.Length == 0);
+				bool IsServerUrlSpecifed = !string.IsNullOrEmpty(StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.DirectConnectionUri));
+
+                if (!bool.TryParse(StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.AdvancedCheck), out IsAdvancedCheckEnabled))
 				{
 					IsAdvancedCheckEnabled = false;
 				}
@@ -1198,25 +1203,25 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 				}
 				else if(!string.IsNullOrEmpty(StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmDeploymentType)) &&
 								StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmDeploymentType).Equals(CrmDeploymentType.O365.ToString(), StringComparison.OrdinalIgnoreCase) &&
-								IsAdvancedCheckEnabled)
+								IsAdvancedCheckEnabled && !IsServerUrlSpecifed)
 				{
 					// Use Default is not checked and Auth type is OAuth.		
-					if (IsUserNameNull && !IsPasswordNull)
+					if (IsUserNameNull)
 					{
 						ErrorLogger.WriteToFile(new System.ArgumentException(Messages.CRMCONNECT_LOGIN_VALIDATION_ERR_USERID, Dynamics_ConfigFileServerKeys.CrmUserName.ToString()));
 						_bgWorker.ReportProgress(100, new ServerConnectStatusEventArgs(Messages.CRMCONNECT_LOGIN_VALIDATION_ERR_USERID_MSG,
 									false, new System.ArgumentException(Messages.CRMCONNECT_LOGIN_VALIDATION_ERR_USERID)));
-						_tracer.Log("You must specify both User Name and Password or both are required to be null", TraceEventType.Information);
+						_tracer.Log("You must specify a User Name and Password or both are required to be null", TraceEventType.Information);
 						return false;
 					}
-					else if (!IsUserNameNull && IsPasswordNull)
-					{
-						ErrorLogger.WriteToFile(new System.ArgumentException(Messages.CRMCONNECT_LOGIN_VALIDATION_ERR_PASSWORD, Dynamics_ConfigFileServerKeys.CrmPassword.ToString()));
-						_bgWorker.ReportProgress(100, new ServerConnectStatusEventArgs(Messages.CRMCONNECT_LOGIN_VALIDATION_ERR_PASSWORD_MSG,
-									false, new System.ArgumentException(Messages.CRMCONNECT_LOGIN_VALIDATION_ERR_PASSWORD)));
-						_tracer.Log("You must specify both User Name and Password or both are required to be null", TraceEventType.Information);
-						return false;
-					}
+					//else if (!IsUserNameNull && IsPasswordNull)
+					//{
+					//	ErrorLogger.WriteToFile(new System.ArgumentException(Messages.CRMCONNECT_LOGIN_VALIDATION_ERR_PASSWORD, Dynamics_ConfigFileServerKeys.CrmPassword.ToString()));
+					//	_bgWorker.ReportProgress(100, new ServerConnectStatusEventArgs(Messages.CRMCONNECT_LOGIN_VALIDATION_ERR_PASSWORD_MSG,
+					//				false, new System.ArgumentException(Messages.CRMCONNECT_LOGIN_VALIDATION_ERR_PASSWORD)));
+					//	_tracer.Log("You must specify both User Name and Password or both are required to be null", TraceEventType.Information);
+					//	return false;
+					//}
 
 					if (IsClientIdOrRedirectUriEmpty && IsUserNameNull && IsPasswordNull)
 					{
@@ -1245,7 +1250,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 				{
 					// Use Default is not checked.. 
 					// if the on useDefualt Creds is not checked make sure the user name is there. 
-					if (string.IsNullOrEmpty(StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmUserName)))
+					if (string.IsNullOrEmpty(StorageUtils.GetConfigKey<string>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmUserName)) && !IsServerUrlSpecifed)
 					{
 						ErrorLogger.WriteToFile(new System.ArgumentException(Messages.CRMCONNECT_LOGIN_VALIDATION_ERR_USERID, Dynamics_ConfigFileServerKeys.CrmUserName.ToString()));
 						_bgWorker.ReportProgress(100, new ServerConnectStatusEventArgs(Messages.CRMCONNECT_LOGIN_VALIDATION_ERR_USERID_MSG,
@@ -1254,7 +1259,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 						return false;
 					}
 
-					if (StorageUtils.GetConfigKey<SecureString>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmPassword) == null)
+					if (StorageUtils.GetConfigKey<SecureString>(ServerConfigKeys, Dynamics_ConfigFileServerKeys.CrmPassword) == null && !IsServerUrlSpecifed)
 					{
 						ErrorLogger.WriteToFile(new System.ArgumentException(Messages.CRMCONNECT_LOGIN_VALIDATION_ERR_PASSWORD, Dynamics_ConfigFileServerKeys.CrmPassword.ToString()));
 						_bgWorker.ReportProgress(100, new ServerConnectStatusEventArgs(Messages.CRMCONNECT_LOGIN_VALIDATION_ERR_PASSWORD_MSG,
@@ -1441,21 +1446,34 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 
 				if (discoverResult.OrganizationDetailCollection != null)
 				{
-					bool isOnPrem = false; 
-					foreach (var itm in discoverResult.OrganizationDetailCollection)
+                    foreach (var itm in discoverResult.OrganizationDetailCollection)
 					{
-						var orgObj = Utilities.DeterminDiscoveryDataFromOrgDetail(new Uri(itm.Endpoints[EndpointType.OrganizationService]), out isOnPrem, Geo: itm.Geo);
-						if (orgObj != null)
+						try
 						{
-							if (trimToDiscoveryUri != null && !trimToDiscoveryUri.Equals(orgObj.DiscoveryServerUri))
-								continue;
-							AddOrgToOrgList(itm, orgObj.DisplayName, orgObj.DiscoveryServerUri);
-						}
-						else
-						{
-							AddOrgToOrgList(itm, !string.IsNullOrEmpty(itm.Geo) ? itm.Geo : "Unknown", orgObj.DiscoveryServerUri);
-						}
-					}
+							if (Uri.TryCreate(itm.Endpoints[EndpointType.OrganizationService], UriKind.Absolute, out Uri orgUri))
+							{
+								var orgObj = Utilities.DeterminDiscoveryDataFromOrgDetail(orgUri, out bool _, Geo: itm.Geo);
+								if (orgObj != null)
+								{
+									if (trimToDiscoveryUri != null && !trimToDiscoveryUri.Equals(orgObj.DiscoveryServerUri))
+										continue;
+									AddOrgToOrgList(itm, orgObj.DisplayName, orgObj.DiscoveryServerUri);
+								}
+								else
+								{
+									AddOrgToOrgList(itm, !string.IsNullOrEmpty(itm.Geo) ? itm.Geo : "Unknown", orgObj.DiscoveryServerUri);
+								}
+							}
+                            else
+                            {
+                                _tracer.Log($"Org {itm.UniqueName} has an invalid endpoint URI ({itm.Endpoints[EndpointType.OrganizationService]}). Skipping.", TraceEventType.Warning);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            _tracer.Log($"Exception {e.GetType().Name} while trying to add endpoint: {itm.Endpoints[EndpointType.OrganizationService]} to the server list. Message: {e.Message}", TraceEventType.Warning);
+                        }
+                    }
 				}
 			}
 			else
@@ -1629,7 +1647,7 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 					if ((UseDefaultCreds && IsAdvancedCheckEnabled) || (!UseDefaultCreds && !IsAdvancedCheckEnabled))
 					{
 						// Pass account as a hint
-						toSendUserId = account != null ? account.Username : string.Empty ;
+						toSendUserId = account != null ? account.Username : toSendUserId;
 						toSendSecurePW = null;
 					}
 

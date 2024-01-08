@@ -96,9 +96,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         logg.Log($"Failed to parse MaxReceivedMessageSizeOverride property. Value found: {maxRecvSz}. MaxReceivedMessageSizeOverride must be a valid integer.", System.Diagnostics.TraceEventType.Warning);
                 }
 
-                if (_maxBufferPoolSize == -1 && !string.IsNullOrEmpty(_configuration.Value.MaxBufferPoolSizeOveride))
+                if (_maxBufferPoolSize == -1 && !string.IsNullOrEmpty(_configuration.Value.MaxBufferPoolSizeOverride))
                 {
-                    var maxBufferPoolSz = _configuration.Value.MaxBufferPoolSizeOveride;
+                    var maxBufferPoolSz = _configuration.Value.MaxBufferPoolSizeOverride;
                     if (maxBufferPoolSz is string && !string.IsNullOrWhiteSpace(maxBufferPoolSz))
                     {
                         int.TryParse(maxBufferPoolSz, out _maxBufferPoolSize);

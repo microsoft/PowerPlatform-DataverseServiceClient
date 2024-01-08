@@ -117,7 +117,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         private PromptBehavior _promptBehavior;             // prompt behavior
         private string _tokenCachePath;                     // user specified token cache file path
         private bool _isOnPremOAuth = false;                // Identifies whether the connection is for OnPrem or Online Deployment for OAuth
-        private static string _userId = null;               //cached userid reading from config file
         private bool _isCalledbyExecuteRequest = false;     //Flag indicating that the an request called by Execute_Command
         private bool _isDefaultCredsLoginForOAuth = false;  //Flag indicating that the user is trying to login with the current user id.
 
@@ -342,7 +341,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <summary>
         /// Cached userid
         /// </summary>
-        internal string UserId { get { return _userId; } }
+        internal string UserId { get { return _userAccount != null ? _userAccount.Username : string.Empty; } }
 
         /// <summary>
         /// Flag indicating that the an request called by Execute_Command used for OAuth
@@ -957,7 +956,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             {
                 //unqueInstance = true; // this instance is unique.
                 _authority = string.Empty;
-                _userId = null;
                 Guid guID = Guid.NewGuid();
                 _ServiceCACHEName = _ServiceCACHEName + guID.ToString(); // Creating a unique instance name for the cache object.
             }
@@ -1064,7 +1062,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         {
             // Dataverse Service Endpoint to work with
             IOrganizationService dvService = null;
-            Stopwatch dtQueryTimer = new Stopwatch();
+            Stopwatch dtQueryTimer = Stopwatch.StartNew();
             try
             {
                 if (!IsAClone)
@@ -1406,21 +1404,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         return null;
                 }
 
-                //// Do a WHO AM I request to make sure the connection is good.
-                //if (!UseExternalConnection)
-                //{
-                //    Guid guIntialTrackingID = Guid.NewGuid();
-                //    logEntry.Log(string.Format("Beginning Validation of Dataverse Connection. RequestID: {0}", guIntialTrackingID.ToString()));
-                //    dtQueryTimer.Restart();
-                //    user = await GetWhoAmIDetails(dvService, guIntialTrackingID).ConfigureAwait(false);
-                //    dtQueryTimer.Stop();
-                //    logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Validation of Dataverse Connection Complete, total duration: {0}", dtQueryTimer.Elapsed.ToString()));
-                //}
-                //else
-                //{
-                //    logEntry.Log("External Dataverse Connection Provided, Skipping Validation");
-                //}
-
                 return (IOrganizationService)dvService;
 
             }
@@ -1483,8 +1466,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         private async Task<IOrganizationService> DoDirectLoginAsync(bool IsOnPrem = false)
         {
             logEntry.Log("Direct Login Process Started", TraceEventType.Verbose);
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
+            Stopwatch sw = Stopwatch.StartNew();
 
             IOrganizationService dvService = null;
             Uri OrgWorkingURI = null;
@@ -1600,8 +1582,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 {
                     Guid trackingID = Guid.NewGuid();
                     logEntry.Log(string.Format("Querying Organization Version. Request ID: {0}", trackingID));
-                    Stopwatch dtQueryTimer = new Stopwatch();
-                    dtQueryTimer.Restart();
+                    Stopwatch dtQueryTimer = Stopwatch.StartNew();
 
                     RetrieveVersionResponse getVersionResp = null;
                     var request = new RetrieveVersionRequest() { RequestId = trackingID };
@@ -1680,8 +1661,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     //TODO:// Add Logic here to improve perf by connecting to global disco.
                     Guid trackingID = Guid.NewGuid();
                     logEntry.Log(string.Format("Querying Organization Instance Details. Request ID: {0}", trackingID));
-                    Stopwatch dtQueryTimer = new Stopwatch();
-                    dtQueryTimer.Restart();
+                    Stopwatch dtQueryTimer = Stopwatch.StartNew();
 
                     var request = new RetrieveCurrentOrganizationRequest() { AccessType = 0, RequestId = trackingID };
                     RetrieveCurrentOrganizationResponse resp;
@@ -1795,8 +1775,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         {
             if (dvService != null)
             {
-                Stopwatch dtQueryTimer = new Stopwatch();
-                dtQueryTimer.Restart();
+                Stopwatch dtQueryTimer = Stopwatch.StartNew();
                 try
                 {
                     if (trackingID == Guid.Empty)
@@ -1893,6 +1872,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 _resource = sourceClient._connectionSvc._resource;
                 debugingCloneStateFilter++;
                 EnableCookieRelay = sourceClient._connectionSvc.EnableCookieRelay;
+                debugingCloneStateFilter++;
+                RequestAdditionalHeadersAsync = sourceClient._connectionSvc.RequestAdditionalHeadersAsync;
                 debugingCloneStateFilter++;
             }
             catch (Exception ex)
@@ -2098,8 +2079,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             {
                 postUri = $"{postUri}?{addedQueryParams}";
             }
+
+            Guid userProvidedRequestId = Guid.Empty;
+            if (req.RequestId.HasValue && req.RequestId != Guid.Empty )
+            {
+                userProvidedRequestId = req.RequestId.Value;
+            }
+
             // Execute request
-            var sResp = await Command_WebExecuteAsync(postUri, bodyOfRequest, methodToExecute, headers, "application/json", logMessageTag, callerId, disableConnectionLocking, maxRetryCount, retryPauseTime, uriOfInstance, cancellationToken: cancellationToken).ConfigureAwait(false);
+            var sResp = await Command_WebExecuteAsync(postUri, bodyOfRequest, methodToExecute, headers, "application/json", logMessageTag, callerId, disableConnectionLocking, maxRetryCount, retryPauseTime, uriOfInstance, cancellationToken: cancellationToken, requestTrackingId: userProvidedRequestId).ConfigureAwait(false);
             if (sResp != null && sResp.IsSuccessStatusCode)
             {
                 if (req is CreateRequest)
@@ -2182,7 +2170,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         internal async Task<HttpResponseMessage> Command_WebExecuteAsync(string queryString, string body, HttpMethod method, Dictionary<string, List<string>> customHeaders,
             string contentType, string errorStringCheck, Guid callerId, bool disableConnectionLocking, int maxRetryCount, TimeSpan retryPauseTime, Uri uriOfInstance = null, Guid requestTrackingId = default, CancellationToken cancellationToken = default)
         {
-            Stopwatch logDt = new Stopwatch();
+            Stopwatch logDt = Stopwatch.StartNew();
             int retryCount = 0;
             bool retry = false;
 
@@ -2350,8 +2338,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 // Add authorization header. - Here to catch the situation where a token expires during retry.
                 if (!customHeaders.ContainsKey(Utilities.RequestHeaders.AUTHORIZATION_HEADER))
                     customHeaders.Add(Utilities.RequestHeaders.AUTHORIZATION_HEADER, new List<string>() { string.Format("Bearer {0}", await RefreshClientTokenAsync().ConfigureAwait(false)) });
-
-                logDt.Restart(); // start clock.
+                logDt.Stop();
+                logDt = Stopwatch.StartNew();
 
                 logEntry.Log(string.Format(CultureInfo.InvariantCulture, "Execute Command - {0}{1}: {2}",
                         $"{method} {queryString}",
@@ -2534,7 +2522,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 RequestId = requestTrackingId.Value;
 
             HttpResponseMessage _httpResponse = null;
-            Stopwatch logDt = new Stopwatch();
+            Stopwatch logDt = Stopwatch.StartNew();
             try
             {
                 using (var _httpRequest = new HttpRequestMessage())
@@ -2596,7 +2584,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
                     if (providedHttpClient != null)
                     {
-                        logDt.Restart();
+                        logDt.Stop();
+                        logDt = Stopwatch.StartNew();
                         try
                         {
                             if (providedHttpClient.Timeout != MaxConnectionTimeout)
@@ -2613,7 +2602,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         // Fall though logic to deal with an Http client not being passed in.
                         using (HttpClient httpCli = new HttpClient())
                         {
-                            logDt.Restart();
+                            logDt.Stop();
+                            logDt = Stopwatch.StartNew();
                             try
                             {
                                 if (httpCli.Timeout != MaxConnectionTimeout)
@@ -2805,7 +2795,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         private static async Task<DiscoverOrganizationsResult> DiscoverOrganizations_InternalAsync(Uri discoveryServiceUri, ClientCredentials clientCredentials, X509Certificate2 loginCertificate, string clientId, Uri redirectUri, PromptBehavior promptBehavior, bool isOnPrem, string authority, bool useDefaultCreds = false, string tokenCacheStorePath = null, DataverseTraceLogger logSink = null, CancellationToken cancellationToken = default)
         {
             bool createdLogSource = false;
-            Stopwatch dtStartQuery = new Stopwatch();
+            Stopwatch dtStartQuery = Stopwatch.StartNew();
             try
             {
                 if (logSink == null)
@@ -2845,7 +2835,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
                 try
                 {
-                    dtStartQuery.Restart();
+                    dtStartQuery.Stop();
+                    dtStartQuery = Stopwatch.StartNew();
                     RetrieveOrganizationsResponse orgResponse = (RetrieveOrganizationsResponse)svcDiscoveryProxy.Execute(orgRequest);
                     dtStartQuery.Stop();
 
@@ -2973,8 +2964,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             if (discoveryServiceUri == null)
                 throw new ArgumentNullException(nameof(discoveryServiceUri), "Discovery service uri cannot be null.");
 
-            Stopwatch dtStartQuery = new Stopwatch();
-            dtStartQuery.Start();
+            Stopwatch dtStartQuery = Stopwatch.StartNew();
             // Initialize discovery service proxy.
             logSink.Log("QueryGlobalDiscovery - Initializing Discovery Server Uri with " + discoveryServiceUri.ToString());
 
@@ -3143,10 +3133,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
             // Set the Org into system config
             _organization = orgdata.UniqueName;
-            ConnectedOrganizationDetail = orgdata; 
+            ConnectedOrganizationDetail = orgdata;
 
-            var logDt = new Stopwatch();
-            logDt.Start();
+            var logDt = Stopwatch.StartNew();
             // Build User Credential
             logEntry.Log("ConnectAndInitService - Initializing Organization Service Object", TraceEventType.Verbose);
             // this to provide trouble shooting information when determining org connect failures.

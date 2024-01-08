@@ -23,6 +23,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Security;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 #endregion
@@ -708,6 +709,18 @@ namespace Client_Core_Tests
 
             cli.Delete("account", testSupport._DefaultId);
             Assert.Equal(baseTestDOP, cli.RecommendedDegreesOfParallelism);
+
+            Guid requestId = Guid.NewGuid();
+            cli._logEntry.Log($"New Request ID is {requestId}", TraceEventType.Information);
+            DeleteRequest deleteRequest = new DeleteRequest()
+            {
+                Target = new EntityReference("account", testSupport._DefaultId),
+                RequestId = requestId
+            };
+            cli.ExecuteOrganizationRequest(deleteRequest, useWebAPI: true);
+            Assert.Equal(baseTestDOP, cli.RecommendedDegreesOfParallelism);
+
+
         }
 
         [Fact]
@@ -798,7 +811,7 @@ namespace Client_Core_Tests
         [Trait("Category", "Live Connect Required")]
         public void ConnectUsingServiceIdentity_ClientSecret_CtorV1()
         {
-            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+           // System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
 
             var Conn_AppID = System.Environment.GetEnvironmentVariable("XUNITCONNTESTAPPID");
             var Conn_Secret = System.Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET");
@@ -893,7 +906,48 @@ namespace Client_Core_Tests
             ValidateConnection(client);
         }
 
-        [SkippableConnectionTest]
+		public Task<Dictionary<string, string>> GetAdditionalHeadersAsync()
+		{
+			var headers = new Dictionary<string, string>();
+			headers.Add("User-Agent", "abc");
+			return Task.FromResult(headers);
+		}
+
+		[SkippableConnectionTest]
+		[Trait("Category", "Live Connect Required")]
+		public void ConnectUsingUserIdentity_UIDPWHeaders_Consetup()
+		{
+			System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+			ConnectionOptions connectionOptions = new ConnectionOptions()
+			{
+				ServiceUri = new Uri(System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI")),
+				AuthenticationType = Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.OAuth,
+				UserName = System.Environment.GetEnvironmentVariable("XUNITCONNTESTUSERID"),
+				Password = ServiceClient.MakeSecureString(System.Environment.GetEnvironmentVariable("XUNITCONNTESTPW")),
+				ClientId = DataverseConnectionStringProcessor.sampleClientId,
+				RedirectUri = new Uri(DataverseConnectionStringProcessor.sampleRedirectUrl),
+				LoginPrompt = PromptBehavior.Auto,
+				RequestAdditionalHeadersAsync = GetAdditionalHeadersAsync,
+				Logger = Ilogger
+			};
+
+			// Connection params.
+			var client = new ServiceClient(connectionOptions, deferConnection: true);
+			Assert.NotNull(client);
+			Assert.False(client.IsReady, "Client is showing True on Deferred Connection.");
+			Assert.True(client.Connect(), "Connection was not activated");
+			Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
+
+			// Validate connection
+			ValidateConnection(client);
+			client._connectionSvc.RequestAdditionalHeadersAsync.Should().NotBeNull();
+
+			var clientClone = client.Clone();
+			ValidateConnection(clientClone, usingExternalAuth: true);
+			clientClone._connectionSvc.RequestAdditionalHeadersAsync.Should().NotBeNull();
+		}
+
+		[SkippableConnectionTest]
         [Trait("Category", "Live Connect Required")]
         public void ConnectUsingServiceIdentity_ClientSecret_ExternalAuth_CtorV1()
         {
@@ -1681,8 +1735,7 @@ namespace Client_Core_Tests
             return client;
         }
 
-
-        private void WaitForAsyncOperationToComplete(Stopwatch _HoldTime, Stopwatch _RunTime, ServiceClient client, Guid? asyncTrackingId)
+		private void WaitForAsyncOperationToComplete(Stopwatch _HoldTime, Stopwatch _RunTime, ServiceClient client, Guid? asyncTrackingId)
         {
             if (asyncTrackingId != null && asyncTrackingId != Guid.Empty)
             {
