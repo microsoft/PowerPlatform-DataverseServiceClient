@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+	<ProjectSpecificFx>true</ProjectSpecificFx>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net462;netcoreapp3.1</TargetFrameworks>
+	<TargetFrameworks>net462;net6.0</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
     <ComponentAreaName>DataverseClient-Tests</ComponentAreaName>
     <IsPackable>false</IsPackable>

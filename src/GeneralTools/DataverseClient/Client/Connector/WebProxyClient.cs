@@ -83,7 +83,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
         }
 
 #if NETCOREAPP
-        protected async internal Task<T> ExecuteOperation<T>(Func<Task<T>> asyncAction)
+        protected internal Task<T> ExecuteOperation<T>(Func<Task<T>> asyncAction)
         {
             if (asyncAction == null)
             {
@@ -92,7 +92,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
 
             using (CreateNewInitializer())
             {
-                return await asyncAction().ConfigureAwait(continueOnCapturedContext: true);
+                return asyncAction();
             }
         }
 #else

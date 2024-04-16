@@ -380,7 +380,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <summary>
         /// if set to true, the log provider is set locally
         /// </summary>
-        public bool isLogEntryCreatedLocaly { get; set; }
+        public bool isLogEntryCreatedLocally { get; set; }
 
         /// <summary>
         /// Get and Set of network credentials...
@@ -687,7 +687,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             _testSupportIOrg = testIOrganziationSvc;
             WebApiHttpClient = mockClient;
             logEntry = new DataverseTraceLogger(logger);
-            isLogEntryCreatedLocaly = true;
+            isLogEntryCreatedLocally = true;
 
             _OrgDetail = new OrganizationDetail();
             _OrgDetail.Endpoints.Add(EndpointType.OrganizationDataService, baseConnectUrl);
@@ -708,12 +708,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             if (logSink == null)
             {
                 logEntry = new DataverseTraceLogger();
-                isLogEntryCreatedLocaly = true;
+                isLogEntryCreatedLocally = true;
             }
             else
             {
                 logEntry = logSink;
-                isLogEntryCreatedLocaly = false;
+                isLogEntryCreatedLocally = false;
             }
 
             // is this a clone request
@@ -765,12 +765,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             if (logSink == null)
             {
                 logEntry = new DataverseTraceLogger();
-                isLogEntryCreatedLocaly = true;
+                isLogEntryCreatedLocally = true;
             }
             else
             {
                 logEntry = logSink;
-                isLogEntryCreatedLocaly = false;
+                isLogEntryCreatedLocally = false;
             }
 
             // is this a clone request
@@ -838,12 +838,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             if (logSink == null)
             {
                 logEntry = new DataverseTraceLogger();
-                isLogEntryCreatedLocaly = true;
+                isLogEntryCreatedLocally = true;
             }
             else
             {
                 logEntry = logSink;
-                isLogEntryCreatedLocaly = false;
+                isLogEntryCreatedLocally = false;
             }
 
             // is this a clone request
@@ -908,12 +908,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             if (logSink == null)
             {
                 logEntry = new DataverseTraceLogger();
-                isLogEntryCreatedLocaly = true;
+                isLogEntryCreatedLocally = true;
             }
             else
             {
                 logEntry = logSink;
-                isLogEntryCreatedLocaly = false;
+                isLogEntryCreatedLocally = false;
             }
 
             // is this a clone request
@@ -2086,6 +2086,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 userProvidedRequestId = req.RequestId.Value;
             }
 
+            RequestBinderUtil.GetAdditionalHeaders(headers, req); 
+
             // Execute request
             var sResp = await Command_WebExecuteAsync(postUri, bodyOfRequest, methodToExecute, headers, "application/json", logMessageTag, callerId, disableConnectionLocking, maxRetryCount, retryPauseTime, uriOfInstance, cancellationToken: cancellationToken, requestTrackingId: userProvidedRequestId).ConfigureAwait(false);
             if (sResp != null && sResp.IsSuccessStatusCode)
@@ -3008,6 +3010,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         proInfo.SetValue(d, ep, null);
                     }
 
+                    if (!Utilities.IsValidOrganizationUrl(d))
+                    {
+                        logSink.Log(string.Format(CultureInfo.InvariantCulture, "QueryGlobalDiscovery - Invalid Url returned from Discovery ({0})", d.Endpoints[EndpointType.OrganizationService]));
+                        continue;
+                    }
                     orgList.Add(d);
                 }
                 dtStartQuery.Stop();
@@ -3762,7 +3769,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 if (disposing)
                 {
                     disposedValue = true;
-                    if (isLogEntryCreatedLocaly)
+                    if (isLogEntryCreatedLocally)
                     {
                         logEntry?.Dispose();
                     }

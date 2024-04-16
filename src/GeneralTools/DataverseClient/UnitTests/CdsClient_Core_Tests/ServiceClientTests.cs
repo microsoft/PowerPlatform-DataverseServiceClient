@@ -823,6 +823,7 @@ namespace Client_Core_Tests
 
             // Validate connection
             ValidateConnection(client);
+
         }
 
         [SkippableConnectionTest]
@@ -1696,6 +1697,50 @@ namespace Client_Core_Tests
             finally
             {
             }
+        }
+
+        [SkippableConnectionTest]
+        [Trait("Category", "Live Connect Required")]
+        public async void RequestBuilder_Execute()
+        {
+            // System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
+            var Conn_AppID = System.Environment.GetEnvironmentVariable("XUNITCONNTESTAPPID");
+            var Conn_Secret = System.Environment.GetEnvironmentVariable("XUNITCONNTESTSECRET");
+            var Conn_Url = System.Environment.GetEnvironmentVariable("XUNITCONNTESTURI");
+
+            // Connection params.
+            var client = new ServiceClient(new Uri(Conn_Url), Conn_AppID, Conn_Secret, true, Ilogger);
+            Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
+
+            Entity a = new Entity("account");
+            a["name"] = "Test Account"; 
+            a.Id = Guid.NewGuid();
+
+            var trackingId = a.Id;
+
+            var rslt = await client.CreateRequestBuilder().WithCorrelationId(Guid.NewGuid()).WithHeader("User-Agent", "TEST").WithHeader("Foo", "TEST1").CreateAsync(a).ConfigureAwait(false);
+            Assert.IsType<Guid>(rslt);
+
+            a["name"] = "Test Account - step 2";
+            await client.CreateRequestBuilder().WithCorrelationId(Guid.NewGuid()).WithHeader("User-Agent", "TEST").WithHeader("Foo", "TEST1").UpdateAsync(a).ConfigureAwait(false);
+
+            a["name"] = "Test Account - step 3";
+            UpsertRequest upsert = new UpsertRequest();
+            upsert.Target = a;
+            var upResp = (UpsertResponse) await client.CreateRequestBuilder().WithCorrelationId(Guid.NewGuid()).WithHeader("User-Agent", "TEST").WithHeader("Foo", "TEST1").ExecuteAsync(upsert).ConfigureAwait(false);
+            Assert.IsType<UpsertResponse>(upResp);
+            Assert.False(upResp.RecordCreated);
+
+            // retrieve
+            var ret = (Entity)await client.CreateRequestBuilder().WithCorrelationId(Guid.NewGuid()).WithHeader("User-Agent", "TEST").WithHeader("Foo", "TEST1").RetrieveAsync("account", trackingId, new ColumnSet(true)).ConfigureAwait(false);
+            ret.Should().NotBeNull();
+            ret.Id.Should().Be(trackingId);
+            ret["name"].Should().Be("Test Account - step 3");
+
+            // delete
+            await client.CreateRequestBuilder().WithCorrelationId(Guid.NewGuid()).WithHeader("User-Agent", "TEST").WithHeader("Foo", "TEST1").DeleteAsync("account", trackingId).ConfigureAwait(false);
+            
         }
 
         // Not yet implemented

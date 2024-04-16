@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace Microsoft.PowerPlatform.Dataverse.Client.InternalExtensions
 {
     /// <summary>
-    /// Organization request/response extenstions
+    /// Organization request/response extensions
     /// </summary>
     internal static class RequestResponseExtenstions
     {

@@ -5,11 +5,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
     using System.Net;
     using System.Reflection;
     using System.ServiceModel;
+    using System.ServiceModel.Channels;
     using System.ServiceModel.Description;
     using System.Threading.Tasks;
     using Microsoft.PowerPlatform.Dataverse.Client;
+    using Microsoft.PowerPlatform.Dataverse.Client.Utils;
     using Microsoft.Xrm.Sdk;
     using Microsoft.Xrm.Sdk.Client;
+    using Microsoft.Xrm.Sdk.Messages;
     using Microsoft.Xrm.Sdk.Query;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
@@ -189,12 +192,20 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
 
         protected internal virtual OrganizationResponse ExecuteCore(OrganizationRequest request)
         {
-            return ExecuteAction(() => Channel.Execute(request));
+            return ExecuteAction(() => 
+            {
+                ProcessRequestBinderProperties(request);
+                return Channel.Execute(request);
+            });
         }
 
         protected internal virtual Task<OrganizationResponse> ExecuteAsyncCore(OrganizationRequest request)
         {
-            return ExecuteOperation(() => Channel.ExecuteAsync(request));
+            return ExecuteOperation(() =>
+            {
+                ProcessRequestBinderProperties(request);
+                return Channel.ExecuteAsync(request);
+            });
         }
 
         protected internal virtual void AssociateCore(string entityName, Guid entityId, Relationship relationship,
@@ -241,6 +252,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
         }
 
         #endregion
+
+        private void ProcessRequestBinderProperties(OrganizationRequest request)
+        {
+            if (OperationContext.Current != null)
+            {
+                HttpRequestMessageProperty messageProp = (HttpRequestMessageProperty)OperationContext.Current.OutgoingMessageProperties[HttpRequestMessageProperty.Name];
+                RequestBinderUtil.ProcessRequestBinderProperties(messageProp, request);
+            }
+        }
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 

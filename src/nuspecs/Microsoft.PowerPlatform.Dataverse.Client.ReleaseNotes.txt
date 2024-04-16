@@ -7,6 +7,17 @@ Notice:
     Note: Only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Updated Core SDK to 9.2.24044.9795
+Added new ServiceClient method for creating requests called "RequestBuilder" - will allow you to create a request and customized header, user, and other properties as part of there request generation.
+Dependency Changes:
+    Removed 
+        System.Security.Cryptography.Algorithms
+        System.Security.Cryptography.ProtectedData
+        System.Drawing.Common
+    Modified
+        System.Configuration.ConfigurationManager to 6.0.0
+
+1.1.17:
 Fix for Request ID not reflecting correctly for some requests. 
 Fix for RequestAdditionalHeadersAsync interface not being forwarded to Cloned copies of DVSC.  GitHub Reported - Fix #419
 Fix for Clone being called concurrently causing unnecessary calls to dataverse. GitHub reported - Fix #422 

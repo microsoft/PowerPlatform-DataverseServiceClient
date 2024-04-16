@@ -1,23 +1,19 @@
+// Ignore Spelling: Dataverse
+
 #region using
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Security;
 using System.ServiceModel;
 using System.ServiceModel.Description;
-using System.Xml;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Discovery;
 using Microsoft.Xrm.Sdk.Messages;
-using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
-using Microsoft.Xrm.Sdk.WebServiceClient;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.Net.Http;
@@ -28,10 +24,9 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.PowerPlatform.Dataverse.Client.Model;
-using System.Reflection;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.PowerPlatform.Dataverse.Client.Connector;
 using Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises;
+using Microsoft.PowerPlatform.Dataverse.Client.Builder;
 #endregion
 
 namespace Microsoft.PowerPlatform.Dataverse.Client
@@ -1442,6 +1437,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 _connectionSvc._isCloning = false; // set cloning behavior flag.
                 _configuration.Value.UseWebApiLoginFlow = false; // override default settings for clone ops.  
             }
+        }
+
+        /// <summary>
+        /// Creates a ServiceClient Request builder that allows you to customize a specific request sent to dataverse.  This should be used only for a single request and then released. 
+        /// </summary>
+        /// <returns>Service Request builder that is used to create and submit a single request.</returns>
+        public ServiceClientRequestBuilder CreateRequestBuilder()
+        {
+            return new ServiceClientRequestBuilder(this);
         }
 
         #region Dataverse DiscoveryServerMethods

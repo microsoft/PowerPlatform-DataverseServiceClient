@@ -1472,10 +1472,7 @@
             Defaults to True.
             <para>When true, this setting applies the default connection routing strategy to connections to Dataverse.</para><para>This will 'prefer' a given node when interacting with Dataverse which improves overall connection performance.</para><para>When set to false, each call to Dataverse will be routed to any given node supporting your organization.</para><para>See https://docs.microsoft.com/en-us/powerapps/developer/data-platform/api-limits#remove-the-affinity-cookie for proper use.</para></summary>
     </member>
-    <member name="P:Microsoft.PowerPlatform.Dataverse.Client.Model.ConfigurationOptions.MaxBufferPoolSizeOveride">
-      <summary>
-            MaxBufferPoolSize override. - Use under Microsoft Direction only.</summary>
-    </member>
+    <member name="P:Microsoft.PowerPlatform.Dataverse.Client.Model.ConfigurationOptions.MaxBufferPoolSizeOverride" />
     <member name="P:Microsoft.PowerPlatform.Dataverse.Client.Model.ConfigurationOptions.MaxFaultSizeOverride">
       <summary>
             MaxFaultSize override. - Use under Microsoft Direction only.</summary>
