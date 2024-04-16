@@ -20,6 +20,7 @@ using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 #endregion
 
 namespace Microsoft.PowerPlatform.Dataverse.Client
@@ -226,7 +227,28 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 return null;
             }
             return null;
+        }
 
+        public static bool IsValidOrganizationUrl(OrganizationDetail orgInfo)
+        {
+            if (orgInfo != null)
+            {
+                if (orgInfo.Endpoints != null)
+                {
+                    foreach (var ep in orgInfo.Endpoints)
+                    {
+                        if (Uri.IsWellFormedUriString(ep.Value, UriKind.Absolute))
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return false; 
         }
 
         /// <summary>
@@ -431,7 +453,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             retryCount++;
             logEntry.LogFailure(req, requestTrackingId, sessionTrackingId, disableConnectionLocking, LockWait, logDt, ex, errorStringCheck, webUriMessageReq: webUriReq);
             logEntry.LogRetry(retryCount, req, retryPauseTimeRunning, isThrottled: isThrottled);
-            System.Threading.Thread.Sleep(retryPauseTimeRunning);
+            Task.Delay(retryPauseTimeRunning);
         }
 
         /// <summary>
@@ -906,6 +928,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             /// PerRequest ID used to track a specific request.
             /// </summary>
             public const string X_MS_CLIENT_REQUEST_ID = "x-ms-client-request-id";
+            /// <summary>
+            /// PreRequest CorrlationId to trace request into Dataverse
+            /// </summary>
+            public const string X_MS_CORRELATION_REQUEST_ID = "x-ms-correlation-request-id";
             /// <summary>
             /// Content type of WebAPI request.
             /// </summary>
