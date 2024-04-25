@@ -7,6 +7,13 @@ Notice:
     Note: Only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Fix for Retry hang introduced in 1.1.21:
+Dependency Changes:
+    Added: 
+        System.ServiceModel.Http 4.10.3
+        System.ServiceModel.Primitives 4.10.3
+
+1.1.21:
 Updated Core SDK to 9.2.24044.9795
 Added new ServiceClient method for creating requests called "RequestBuilder" - will allow you to create a request and customized header, user, and other properties as part of there request generation.
 Dependency Changes:

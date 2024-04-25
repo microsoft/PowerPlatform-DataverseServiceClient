@@ -1871,7 +1871,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     retry = ShouldRetry(req, ex, retryCount, out isThrottled);
                     if (retry)
                     {
-                        Utilities.RetryRequest(req, requestTrackingId, LockWait, logDt, _logEntry, SessionTrackingId, _disableConnectionLocking, _retryPauseTimeRunning, ex, errorStringCheck, ref retryCount, isThrottled);
+                        retryCount = await Utilities.RetryRequest(req, requestTrackingId, LockWait, logDt, _logEntry, SessionTrackingId, _disableConnectionLocking, _retryPauseTimeRunning, ex, errorStringCheck, retryCount, isThrottled).ConfigureAwait(false);
                     }
                     else
                     {
@@ -1978,7 +1978,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     retry = ShouldRetry(req, ex, retryCount, out isThrottled);
                     if (retry)
                     {
-                        Utilities.RetryRequest(req, requestTrackingId, LockWait, logDt, _logEntry, SessionTrackingId, _disableConnectionLocking, _retryPauseTimeRunning, ex, errorStringCheck, ref retryCount, isThrottled);
+                        Task.Run(async () =>
+                        {
+                            retryCount = await Utilities.RetryRequest(req, requestTrackingId, LockWait, logDt, _logEntry, SessionTrackingId, _disableConnectionLocking, _retryPauseTimeRunning, ex, errorStringCheck, retryCount, isThrottled).ConfigureAwait(false);
+                        }).ConfigureAwait(false).GetAwaiter().GetResult();
                     }
                     else
                     {
