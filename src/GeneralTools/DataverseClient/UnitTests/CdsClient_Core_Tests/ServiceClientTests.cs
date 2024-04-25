@@ -15,6 +15,7 @@ using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 using Moq;
+using Newtonsoft.Json.Bson;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -752,6 +753,57 @@ namespace Client_Core_Tests
             Assert.Equal(defaultDOP, cli.RecommendedDegreesOfParallelism);
         }
 
+        [Fact]
+        public void RetryOperationTest()
+        {
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            ServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
+            Guid testGuid = Guid.NewGuid();
+
+            CreateRequest exampleRequest = new CreateRequest();
+            exampleRequest.Target = new Entity("account");
+            exampleRequest.Target.Attributes.Add("id", testGuid);
+
+            Stopwatch testwatch = Stopwatch.StartNew();
+            int retrycount = 0;
+
+            Task.Run(async () =>
+            {
+                retrycount = await Utilities.RetryRequest(exampleRequest, testGuid, new TimeSpan(0), testwatch, cli._logEntry, null, false, new TimeSpan(0, 0, 1), new Exception("Fake_TEST_MSG"), "test retry logic", retrycount, false, null).ConfigureAwait(false);
+            }).ConfigureAwait(false).GetAwaiter().GetResult();
+            Assert.True(retrycount == 1);
+            Task.Run(async () =>
+            {
+                retrycount = await Utilities.RetryRequest(exampleRequest, testGuid, new TimeSpan(0), testwatch, cli._logEntry, null, false, new TimeSpan(0, 0, 1), new Exception("Fake_TEST_MSG"), "test retry logic", retrycount, false, null).ConfigureAwait(false);
+            }).ConfigureAwait(false).GetAwaiter().GetResult();
+            Assert.True(retrycount == 2);
+        }
+
+        [Fact]
+        public async void RetryOperationAyncTest()
+        {
+            Mock<IOrganizationService> orgSvc = null;
+            Mock<MoqHttpMessagehander> fakHttpMethodHander = null;
+            ServiceClient cli = null;
+            testSupport.SetupMockAndSupport(out orgSvc, out fakHttpMethodHander, out cli);
+
+            Guid testGuid = Guid.NewGuid();
+
+            CreateRequest exampleRequest = new CreateRequest();
+            exampleRequest.Target = new Entity("account");
+            exampleRequest.Target.Attributes.Add("id", testGuid);
+
+            Stopwatch testwatch = Stopwatch.StartNew();
+            int retrycount = 0;
+
+            retrycount = await Utilities.RetryRequest(exampleRequest, testGuid, new TimeSpan(0), testwatch, cli._logEntry, null, false, new TimeSpan(0, 0, 1), new Exception("Fake_TEST_MSG"), "test retry logic", retrycount, false, null).ConfigureAwait(false);
+            Assert.True(retrycount == 1);
+            retrycount = await Utilities.RetryRequest(exampleRequest, testGuid, new TimeSpan(0), testwatch, cli._logEntry, null, false, new TimeSpan(0, 0, 1), new Exception("Fake_TEST_MSG"), "test retry logic", retrycount, false, null).ConfigureAwait(false);
+            Assert.True(retrycount == 2);
+        }
 
         #region LiveConnectedTests
 

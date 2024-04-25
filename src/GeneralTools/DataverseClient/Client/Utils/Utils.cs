@@ -446,14 +446,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="retryCount">retryCount</param>
         /// <param name="isThrottled">when set indicated this was caused by a Throttle</param>
         /// <param name="webUriReq"></param>
-        internal static void RetryRequest(OrganizationRequest req, Guid requestTrackingId, TimeSpan LockWait, Stopwatch logDt,
+        internal static async Task<int> RetryRequest(OrganizationRequest req, Guid requestTrackingId, TimeSpan LockWait, Stopwatch logDt,
             DataverseTraceLogger logEntry, Guid? sessionTrackingId, bool disableConnectionLocking, TimeSpan retryPauseTimeRunning,
-            Exception ex, string errorStringCheck, ref int retryCount, bool isThrottled, string webUriReq = "")
+            Exception ex, string errorStringCheck, int retryCount, bool isThrottled, string webUriReq = "")
         {
             retryCount++;
             logEntry.LogFailure(req, requestTrackingId, sessionTrackingId, disableConnectionLocking, LockWait, logDt, ex, errorStringCheck, webUriMessageReq: webUriReq);
             logEntry.LogRetry(retryCount, req, retryPauseTimeRunning, isThrottled: isThrottled);
-            Task.Delay(retryPauseTimeRunning);
+            await Task.Delay(retryPauseTimeRunning).ConfigureAwait(false);
+            return retryCount;
         }
 
         /// <summary>
