@@ -7,6 +7,16 @@ Notice:
     Note: Only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Fix for Logging MSAL telemetry when using ILogger
+    Previously, Logs for MSAL were not written to the configured ILogger, they would only go to Trace Source and InMemory Logs.
+Fix for RequestBuilder to properly honor CrmUserId and AADOid in request builder requests. 
+Updated ServiceClient retry logic to use the server specified RetryAfter for Time and Concurrency throttling fault codes, in addition to Burst.
+Updated ConnectionService retry logic to parse RetryAfter header as seconds instead of hours.
+Dependency Changes:
+    Modified:
+        Microsoft.Identity.Client to 4.61.3
+
+1.1.22:
 Fix for Retry hang introduced in 1.1.21:
 Dependency Changes:
     Added: 

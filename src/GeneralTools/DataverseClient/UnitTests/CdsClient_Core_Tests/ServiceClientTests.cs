@@ -1771,7 +1771,11 @@ namespace Client_Core_Tests
 
             var trackingId = a.Id;
 
-            var rslt = await client.CreateRequestBuilder().WithCorrelationId(Guid.NewGuid()).WithHeader("User-Agent", "TEST").WithHeader("Foo", "TEST1").CreateAsync(a).ConfigureAwait(false);
+            var rslt = await client.CreateRequestBuilder()
+                .WithCorrelationId(Guid.NewGuid())
+                .WithHeader("User-Agent", "TEST")
+                .WithHeader("Foo", "TEST1")
+                .CreateAsync(a).ConfigureAwait(false);
             Assert.IsType<Guid>(rslt);
 
             a["name"] = "Test Account - step 2";

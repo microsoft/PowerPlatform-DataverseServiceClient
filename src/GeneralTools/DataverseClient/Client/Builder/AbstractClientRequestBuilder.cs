@@ -133,6 +133,16 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Builder
                 parameters.Add(RequestBinderUtil.HEADERLIST, new Dictionary<string,string>(_headers));
             }
 
+            if (_crmUserId != null && _crmUserId != Guid.Empty)
+            {
+                parameters.Add(RequestHeaders.CALLER_OBJECT_ID_HTTP_HEADER, _crmUserId.Value);
+            }
+
+            if (_aadOidId != null && _aadOidId != Guid.Empty)
+            {
+                parameters.Add(RequestHeaders.AAD_CALLER_OBJECT_ID_HTTP_HEADER, _aadOidId.Value);
+            }
+
             request.Parameters.AddRange(parameters);
 
             // Clear in case this is reused.             

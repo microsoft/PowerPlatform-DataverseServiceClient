@@ -46,7 +46,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
             // reading overrides from app config if present..
             // these values override the values that are set on the client from the server.
-            DataverseTraceLogger logg = new DataverseTraceLogger();
+            DataverseTraceLogger logg = _callerCdsConnectionServiceHandler.logEntry;
             try
             {
                 // Initialize user agent
@@ -107,22 +107,18 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             if (_maxBufferPoolSize < MAXBUFFERPOOLDEFAULT)
                             {
                                 _maxBufferPoolSize = -1;
-                                logg.Log($"Failed to set MaxBufferPoolSizeOveride property. Value found: {maxBufferPoolSz}. Size must be larger then {MAXBUFFERPOOLDEFAULT}.", System.Diagnostics.TraceEventType.Warning);
+                                logg.Log($"Failed to set MaxBufferPoolSizeOverride property. Value found: {maxBufferPoolSz}. Size must be larger then {MAXBUFFERPOOLDEFAULT}.", System.Diagnostics.TraceEventType.Warning);
                             }
                         }
                     }
                     else
-                        logg.Log($"Failed to parse MaxBufferPoolSizeOveride property. Value found: {maxBufferPoolSz}. MaxReceivedMessageSizeOverride must be a valid integer.", System.Diagnostics.TraceEventType.Warning);
+                        logg.Log($"Failed to parse MaxBufferPoolSizeOverride property. Value found: {maxBufferPoolSz}. MaxReceivedMessageSizeOverride must be a valid integer.", System.Diagnostics.TraceEventType.Warning);
                 }
 
             }
             catch (Exception ex)
             {
-                logg.Log("Failed to process binding override properties,  Only MaxFaultSizeOverride, MaxReceivedMessageSizeOverride and MaxBufferPoolSizeOveride are supported and must be integers.", System.Diagnostics.TraceEventType.Warning, ex);
-            }
-            finally
-            {
-                logg.Dispose();
+                logg.Log("Failed to process binding override properties,  Only MaxFaultSizeOverride, MaxReceivedMessageSizeOverride and MaxBufferPoolSizeOverride are supported and must be integers.", System.Diagnostics.TraceEventType.Warning, ex);
             }
         }
 
@@ -258,6 +254,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 httpRequestMessage = new HttpRequestMessageProperty();
             }
 
+            string[] CrmUserIdList = null;
+            string[] AADOidList = null;
             if (httpRequestMessage != null)
             {
                 httpRequestMessage.Headers[Utilities.RequestHeaders.USER_AGENT_HTTP_HEADER] = _userAgent;
@@ -282,27 +280,68 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 Utilities.CleanUpHeaderKeys(httpRequestMessage.Headers); 
                 if (httpRequestMessageObject == null)
                     request.Properties.Add(HttpRequestMessageProperty.Name, httpRequestMessage);
+
+                CrmUserIdList = httpRequestMessage.Headers.GetValues(Utilities.RequestHeaders.CALLER_OBJECT_ID_HTTP_HEADER);
+                AADOidList = httpRequestMessage.Headers.GetValues(Utilities.RequestHeaders.AAD_CALLER_OBJECT_ID_HTTP_HEADER);
+
             }
 
             // Adding SOAP headers
             Guid callerId = Guid.Empty;
-            if (_callerCdsConnectionServiceHandler != null)
+            Guid AADOId = Guid.Empty;
+            if (CrmUserIdList != null && CrmUserIdList.Length > 0)
             {
-                if (_callerCdsConnectionServiceHandler.WebClient != null)
-                    callerId = _callerCdsConnectionServiceHandler.WebClient.CallerId;
-                if (_callerCdsConnectionServiceHandler.OnPremClient != null)
-                    callerId = _callerCdsConnectionServiceHandler.OnPremClient.CallerId;
+                if(!Guid.TryParse(CrmUserIdList[0], out callerId))
+                    _callerCdsConnectionServiceHandler.logEntry.Log("Failed to parse Caller Object ID from the HTTP Header.", System.Diagnostics.TraceEventType.Warning);
+                CrmUserIdList = null; // Clear the list.
             }
 
-            if (callerId == Guid.Empty) // Prefer the Caller ID over the AADObjectID.
+            if (AADOidList != null && AADOidList.Length > 0)
             {
-                if (_callerCdsConnectionServiceHandler != null && (_callerCdsConnectionServiceHandler.CallerAADObjectId.HasValue && _callerCdsConnectionServiceHandler.CallerAADObjectId.Value != Guid.Empty))
+                if (!Guid.TryParse(AADOidList[0], out AADOId))
+                    _callerCdsConnectionServiceHandler.logEntry.Log("Failed to parse AADObjectID from the HTTP Header.", System.Diagnostics.TraceEventType.Warning);
+                AADOidList = null; // Clear the list.
+            }
+
+            if (callerId == Guid.Empty && AADOId == Guid.Empty)
+            {
+                if (_callerCdsConnectionServiceHandler != null)
                 {
-                    // Add Caller ID to the SOAP Envelope.
-                    // Set a header request with the AAD Caller Object ID.
+                    if (_callerCdsConnectionServiceHandler.WebClient != null)
+                        callerId = _callerCdsConnectionServiceHandler.WebClient.CallerId;
+                    if (_callerCdsConnectionServiceHandler.OnPremClient != null)
+                        callerId = _callerCdsConnectionServiceHandler.OnPremClient.CallerId;
+                }
+
+                if (callerId == Guid.Empty) // Prefer the Caller ID over the AADObjectID.
+                {
+                    if (_callerCdsConnectionServiceHandler != null && (_callerCdsConnectionServiceHandler.CallerAADObjectId.HasValue && _callerCdsConnectionServiceHandler.CallerAADObjectId.Value != Guid.Empty))
+                    {
+                        // Add Caller ID to the SOAP Envelope.
+                        // Set a header request with the AAD Caller Object ID.
+                        using (OperationContextScope scope = new OperationContextScope((IContextChannel)channel))
+                        {
+                            var AADCallerIdHeader = new MessageHeader<Guid>(_callerCdsConnectionServiceHandler.CallerAADObjectId.Value).GetUntypedHeader(Utilities.RequestHeaders.AAD_CALLER_OBJECT_ID_HTTP_HEADER, "http://schemas.microsoft.com/xrm/2011/Contracts");
+                            request.Headers.Add(AADCallerIdHeader);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if ( callerId != Guid.Empty )
+                {
                     using (OperationContextScope scope = new OperationContextScope((IContextChannel)channel))
                     {
-                        var AADCallerIdHeader = new MessageHeader<Guid>(_callerCdsConnectionServiceHandler.CallerAADObjectId.Value).GetUntypedHeader(Utilities.RequestHeaders.AAD_CALLER_OBJECT_ID_HTTP_HEADER, "http://schemas.microsoft.com/xrm/2011/Contracts");
+                        var CallerIdHeader = new MessageHeader<Guid>(callerId).GetUntypedHeader(Xrm.Sdk.Client.SdkHeaders.CallerId, Xrm.Sdk.XmlNamespaces.V5.Contracts);
+                        request.Headers.Add(CallerIdHeader);
+                    }
+                }
+                else if (AADOId != Guid.Empty)
+                {
+                    using (OperationContextScope scope = new OperationContextScope((IContextChannel)channel))
+                    {
+                        var AADCallerIdHeader = new MessageHeader<Guid>(AADOId).GetUntypedHeader(Utilities.RequestHeaders.AAD_CALLER_OBJECT_ID_HTTP_HEADER, "http://schemas.microsoft.com/xrm/2011/Contracts");
                         request.Headers.Add(AADCallerIdHeader);
                     }
                 }

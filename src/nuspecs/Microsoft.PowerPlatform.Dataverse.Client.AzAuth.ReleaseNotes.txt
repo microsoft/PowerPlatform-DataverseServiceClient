@@ -1,0 +1,9 @@
+Notice: 
+    This package is an extension to the Microsoft.PowerPlatform.Dataverse.Client Nuget package.
+    This package is intended to work with .net full framework 4.6.2, 4.7.2 and 4.8, and .net 6.0
+
+++CURRENTRELEASEID++
+Initial release
+Provides an extension to the Dataverse ServiceClient to support authenticating with the Azure.Core DefaultAzureCredential flow. 
+        
+

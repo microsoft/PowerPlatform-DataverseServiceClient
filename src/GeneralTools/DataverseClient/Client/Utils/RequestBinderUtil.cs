@@ -44,11 +44,23 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Utils
                     }
                     continue;
                 }
+                if (itm.Key == Utilities.RequestHeaders.CALLER_OBJECT_ID_HTTP_HEADER)
+                {
+                    AddorUpdateHeaderProperties(httpRequestMessageHeaders, Utilities.RequestHeaders.CALLER_OBJECT_ID_HTTP_HEADER, itm.Value.ToString());
+                    continue;
+                }
+                if (itm.Key == Utilities.RequestHeaders.AAD_CALLER_OBJECT_ID_HTTP_HEADER)
+                {
+                    AddorUpdateHeaderProperties(httpRequestMessageHeaders, Utilities.RequestHeaders.AAD_CALLER_OBJECT_ID_HTTP_HEADER, itm.Value.ToString());
+                    continue;
+                }
             }
             if ( request.Parameters.Count > 0 )
             {
                 request.Parameters.Remove(Utilities.RequestHeaders.X_MS_CORRELATION_REQUEST_ID);
                 request.Parameters.Remove(Utilities.RequestHeaders.X_MS_CLIENT_SESSION_ID);
+                request.Parameters.Remove(Utilities.RequestHeaders.CALLER_OBJECT_ID_HTTP_HEADER);
+                request.Parameters.Remove(Utilities.RequestHeaders.AAD_CALLER_OBJECT_ID_HTTP_HEADER);
                 request.Parameters.Remove(HEADERLIST);
             }
         }

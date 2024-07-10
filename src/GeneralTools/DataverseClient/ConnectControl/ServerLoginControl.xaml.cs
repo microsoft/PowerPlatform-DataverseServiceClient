@@ -23,6 +23,7 @@ using Microsoft.PowerPlatform.Dataverse.Client.Model;
 using System.Media;
 using System.Windows.Automation.Peers;
 using System.Security.Policy;
+using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 
 #endregion
 
@@ -260,8 +261,21 @@ namespace Microsoft.PowerPlatform.Dataverse.ConnectControl
 
 			ConnectionManager = connectionManager;
 
-			// Set the CRM Server List here from the UI.. 
-			object oCrmDiscoServices = FindResource("OnlineDiscoveryServersDataSource");
+			
+            bool hideOnPrem = AppSettingsHelper.GetAppSetting<bool>("HideOnPrem", true);
+			if (hideOnPrem)
+			{
+				rbOnPrem.IsEnabled = false; 
+                rbOnPrem.Visibility = Visibility.Collapsed;
+			}
+			else
+			{
+				rbOnPrem.IsEnabled = true;
+				rbOnPrem.Visibility = Visibility.Visible;
+			}
+
+            // Set the CRM Server List here from the UI.. 
+            object oCrmDiscoServices = FindResource("OnlineDiscoveryServersDataSource");
 			if (oCrmDiscoServices != null && oCrmDiscoServices is Model.OnlineDiscoveryServers)
 				ConnectionManager.OnlineDiscoveryServerList = (Model.OnlineDiscoveryServers)oCrmDiscoServices;
 
