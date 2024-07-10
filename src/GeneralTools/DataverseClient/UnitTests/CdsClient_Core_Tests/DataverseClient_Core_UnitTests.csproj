@@ -25,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Client\Microsoft.PowerPlatform.Dataverse.Client.csproj" />
     <ProjectReference Include="..\..\Extensions\DynamicsExtension\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.csproj" />
+    <ProjectReference Include="..\..\Extensions\Microsoft.PowerPlatform.Dataverse.Client.AzAuth\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.csproj" />
   </ItemGroup>
 
   <ItemGroup>

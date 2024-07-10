@@ -365,7 +365,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <summary>
         /// Logging provider for DataverseConnectionServiceobject.
         /// </summary>
-        private DataverseTraceLogger logEntry { get; set; }
+        internal DataverseTraceLogger logEntry { get; set; }
 
         /// <summary>
         /// Returns Logs from this process.
@@ -2472,18 +2472,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         errorCode == ((int)ErrorCodes.ThrottlingTimeExceededError).ToString() ||
                         errorCode == ((int)ErrorCodes.ThrottlingConcurrencyLimitExceededError).ToString())
                     {
-                        if (errorCode == ((int)ErrorCodes.ThrottlingBurstRequestLimitExceededError).ToString())
-                        {
-                            // Use Retry-After delay when specified
-                            if (httpOperationException.Response.Headers.ContainsKey("Retry-After"))
-                                _retryPauseTimeRunning = TimeSpan.Parse(httpOperationException.Response.Headers["Retry-After"].FirstOrDefault());
-                            else
-                                _retryPauseTimeRunning = retryPauseTime.Add(TimeSpan.FromSeconds(Math.Pow(2, retryCount))); ; // default timespan with back off is response does not contain the tag..
+                        if (httpOperationException.Response.Headers.TryGetValue("Retry-After", out var retryAfter) && double.TryParse(retryAfter.FirstOrDefault(), out var retrySeconds))
+                        { 
+                            // Note: Retry-After header is in seconds.
+                             _retryPauseTimeRunning = TimeSpan.FromSeconds(retrySeconds);
                         }
                         else
-                        {
-                            // else use exponential back off delay
-                            _retryPauseTimeRunning = retryPauseTime.Add(TimeSpan.FromSeconds(Math.Pow(2, retryCount)));
+                        { 
+                            _retryPauseTimeRunning = retryPauseTime.Add(TimeSpan.FromSeconds(Math.Pow(2, retryCount))); ; // default timespan with back off is response does not contain the tag..
                         }
                         isThrottlingRetry = true;
                         return true;

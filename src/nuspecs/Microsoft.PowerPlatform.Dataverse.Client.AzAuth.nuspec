@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>Microsoft.PowerPlatform.Dataverse.Client.AzAuth</id>
+    <version>1.0.0</version>
+    <authors>Microsoft</authors>
+    <owners>crmsdk,Microsoft</owners>
+    <licenseUrl>https://go.microsoft.com/fwlink/?linkid=2108407</licenseUrl>
+    <projectUrl>https://github.com/microsoft/PowerPlatform-DataverseServiceClient</projectUrl>
+    <icon>images\Dataverse.128x128.png</icon>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>This package contains a auth extention for the Dataverse ServiceClient. This extention add support for authentication use the Azure.Core Library. This support the "DefaultAzureCredential" flow. This Package has been authored by the Microsoft Dataverse SDK team.</description>
+    <summary>This package contains a auth extention for the Dataverse ServiceClient. This extention add support for authentication use the Azure.Core Library.</summary>
+    <copyright>© Microsoft Corporation. All rights reserved.</copyright>
+    <tags>Dynamics CommonDataService CDS PowerApps PowerPlatform ServiceClient Dataverse</tags>
+    <dependencies>
+      <group targetFramework=".NETFramework4.6.2">
+        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.1.0" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.11.3" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETFramework4.7.2">
+        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.1.0" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.11.3" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETFramework4.8">
+        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.1.0" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.11.3" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="NET6.0">
+        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.1.0" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.11.3" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="{signedBinDir}\{configuration}\DataverseClient-AzAuth\net6.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" target="lib\net6.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" />
+    <file src="{signedBinDir}\{configuration}\DataverseClient-AzAuth\net6.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" target="lib\net6.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" />
+    <file src="{signedBinDir}\{configuration}\DataverseClient-AzAuth\net472\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" target="lib\net472\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" />
+    <file src="{signedBinDir}\{configuration}\DataverseClient-AzAuth\net472\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" target="lib\net472\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" />
+    <file src="{signedBinDir}\{configuration}\DataverseClient-AzAuth\net462\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" target="lib\net462\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" />
+    <file src="{signedBinDir}\{configuration}\DataverseClient-AzAuth\net462\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" target="lib\net462\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" />
+    <file src="{signedBinDir}\{configuration}\DataverseClient-AzAuth\net48\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" target="lib\net48\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" />
+    <file src="{signedBinDir}\{configuration}\DataverseClient-AzAuth\net48\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" target="lib\net48\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" />
+    <file src="{sharedImagesDir}\Desktop\Dataverse.128x128.png" target="images\Dataverse.128x128.png" />
+  </files>
+</package>

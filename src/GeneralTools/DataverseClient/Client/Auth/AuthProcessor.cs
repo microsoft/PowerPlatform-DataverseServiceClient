@@ -70,6 +70,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
                     createdLogSource = true;
                     logSink = new DataverseTraceLogger();
                 }
+                
+                // Set the logger in the MSAL Logger
+                MSALLoggerCallBack mSALLogger = new MSALLoggerCallBack(logSink);
 
                 string Authority = string.Empty;
                 string Resource = string.Empty;
@@ -139,7 +142,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
                         .WithAuthority(Authority)
                         .WithLegacyCacheCompatibility(false)
                         .WithHttpClientFactory(new MSALHttpClientFactory())
-                        .WithLogging(MSALLoggerCallBack.Log);
+                        .WithLogging(mSALLogger.Log);
                     }
 
                     // initialization of memory cache if its not already initialized.
@@ -189,7 +192,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
                             })
                         .WithAuthority(Authority)
                         .WithLegacyCacheCompatibility(false)
-                        .WithLogging(MSALLoggerCallBack.Log);
+                        .WithLogging(mSALLogger.Log);
 
                         pApp = cApp.Build();
 
@@ -300,9 +303,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
                     }
                     else
                     {
-#pragma warning disable CS0618 // Type or member is obsolete
-                        _authenticationResult = await publicAppClient.AcquireTokenByUsernamePassword(scopes, clientCredentials.UserName.UserName, ServiceClient.MakeSecureString(clientCredentials.UserName.Password)).ExecuteAsync().ConfigureAwait(false);
-#pragma warning restore CS0618 // Type or member is obsolete
+                        _authenticationResult = await publicAppClient.AcquireTokenByUsernamePassword(scopes, clientCredentials.UserName.UserName, clientCredentials.UserName.Password).ExecuteAsync().ConfigureAwait(false);
                     }
                 }
                 else

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<RootNamespace>Microsoft.PowerPlatform.Dataverse.Client.AzAuth</RootNamespace>
+		<ComponentAreaName>DataverseClient</ComponentAreaName>
+		<SignAssembly>true</SignAssembly>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<LangVersion>8.0</LangVersion>
+	</PropertyGroup>
+	<Import Project="..\..\..\..\Build.Common.core.props" />
+
+	<PropertyGroup>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<DocumentationFile>$(OutDir)\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml</DocumentationFile>
+		<AnalysisLevel>6.0</AnalysisLevel>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Azure.Identity" Version="$(PackageVersion_Azure_Identity)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Client\Microsoft.PowerPlatform.Dataverse.Client.csproj" />
+	</ItemGroup>
+	
+</Project>

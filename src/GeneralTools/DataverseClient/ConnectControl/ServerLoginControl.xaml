@@ -211,9 +211,9 @@
                 <Int32AnimationUsingKeyFrames Storyboard.TargetProperty="(KeyboardNavigation.TabIndex)" Storyboard.TargetName="cbUseDefaultCreds">
                     <EasingInt32KeyFrame KeyTime="0" Value="4"/>
                 </Int32AnimationUsingKeyFrames>
-                <Int32AnimationUsingKeyFrames Storyboard.TargetProperty="(KeyboardNavigation.TabIndex)" Storyboard.TargetName="tbDomain">
+                <!--<Int32AnimationUsingKeyFrames Storyboard.TargetProperty="(KeyboardNavigation.TabIndex)" Storyboard.TargetName="tbDomain">
                     <EasingInt32KeyFrame KeyTime="0" Value="8"/>
-                </Int32AnimationUsingKeyFrames>
+                </Int32AnimationUsingKeyFrames>-->
                 <Int32AnimationUsingKeyFrames Storyboard.TargetProperty="(KeyboardNavigation.TabIndex)" Storyboard.TargetName="cbAskforOrg">
                     <EasingInt32KeyFrame KeyTime="0" Value="11"/>
                 </Int32AnimationUsingKeyFrames>

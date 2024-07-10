@@ -2039,11 +2039,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     OrgEx.Detail.ErrorCode == ErrorCodes.ThrottlingTimeExceededError ||
                     OrgEx.Detail.ErrorCode == ErrorCodes.ThrottlingConcurrencyLimitExceededError)
                 {
-                    // Error was raised by a instance throttle trigger.
-                    if (OrgEx.Detail.ErrorCode == ErrorCodes.ThrottlingBurstRequestLimitExceededError)
-                    {
-                        // Use Retry-After delay when specified
-                        _retryPauseTimeRunning = (TimeSpan)OrgEx.Detail.ErrorDetails["Retry-After"];
+                     // Use Retry-After delay when specified
+                    if (OrgEx.Detail.ErrorDetails.TryGetValue("Retry-After", out var retryAfter) && retryAfter is TimeSpan retryAsTimeSpan)
+                    { 
+                         _retryPauseTimeRunning = retryAsTimeSpan;
                     }
                     else
                     {

@@ -1,0 +1,33 @@
+<Project>
+    <!-- This file is used for controling versions of packages for projects in this repo, it is also used to populate dependnaices in Nuspec files.-->
+    <PropertyGroup Label="Package versions">
+        <PackageVersion_Adal>3.19.8</PackageVersion_Adal>
+        <PackageVersion_MSAL>4.61.3</PackageVersion_MSAL>
+        <PackageVersion_CdsSdk>9.2.24044.9795-master</PackageVersion_CdsSdk>
+        <PackageVersion_CrmProxy>9.2.24044.9795-master</PackageVersion_CrmProxy>
+        <PackageVersion_Newtonsoft>13.0.1</PackageVersion_Newtonsoft>
+        <PackageVersion_RestClientRuntime>2.3.24</PackageVersion_RestClientRuntime>
+        <PackageVersion_XrmSdk>9.0.2.55</PackageVersion_XrmSdk>
+        <PackageVersion_Dep_OutlookXrmSdk>9.0.2.34</PackageVersion_Dep_OutlookXrmSdk>
+        <PackageVersion_BatchedTelemetry>3.0.8</PackageVersion_BatchedTelemetry>
+        <PackageVersion_DataverseClient>1.1.22</PackageVersion_DataverseClient>
+        <PackageVersion_CoverletCollector>3.1.0</PackageVersion_CoverletCollector>
+        <PackageVersion_Microsoft_Extensions>3.1.8</PackageVersion_Microsoft_Extensions>
+        <PackageVersion_SystemRuntime>6.0.0</PackageVersion_SystemRuntime>
+        <PackageVersion_SystemTextJson>7.0.3</PackageVersion_SystemTextJson>
+        <PackageVersion_SystemTextEncodingsWeb>7.0.0</PackageVersion_SystemTextEncodingsWeb>
+        <PackageVersion_SystemMemory>4.5.5</PackageVersion_SystemMemory>
+        <PackageVersion_SystemServiceModelHttp>4.10.3</PackageVersion_SystemServiceModelHttp>
+        <PackageVersion_SystemConfigurationConfigurationManager>6.0.0</PackageVersion_SystemConfigurationConfigurationManager>
+        <PackageVersion_SystemSecurityPermissions>6.0.0</PackageVersion_SystemSecurityPermissions>
+        <PackageVersion_Azure_Identity>1.12.0</PackageVersion_Azure_Identity>
+
+        <!-- Test: -->
+        <PackageVersion_MicrosoftNETTestSdk>17.5.0</PackageVersion_MicrosoftNETTestSdk>
+        <PackageVersion_MSTest>2.2.10</PackageVersion_MSTest>
+        <PackageVersion_Moq>4.16.0</PackageVersion_Moq>
+        <PackageVersion_XUnit>2.5.0</PackageVersion_XUnit>
+        <PackageVersion_XUnitRunnerVS>2.5.0</PackageVersion_XUnitRunnerVS>
+        <PackageVersion_FluentAssertions>6.12.0</PackageVersion_FluentAssertions>
+    </PropertyGroup>
+</Project>
