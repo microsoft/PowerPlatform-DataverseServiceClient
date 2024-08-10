@@ -578,6 +578,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
             set
             {
+                if (ConnectedOrgVersion == Version.Parse("9.0.0.0")) // Default setting found as this is a version number that is hard set during setup of connection. it is not possible to actually have an environment with this version number
+                {
+                    //force update version
+                    _logEntry.Log($"Requested current version from Dataverse, found: {OrganizationDetail.OrganizationVersion}");
+                }
+
                 if (_connectionSvc != null && Utilities.FeatureVersionMinimums.IsFeatureValidForEnviroment(_connectionSvc?.OrganizationVersion, Utilities.FeatureVersionMinimums.ForceConsistencySupported))
                     _connectionSvc.ForceServerCacheConsistency = value;
                 else
@@ -1269,7 +1275,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         _connectionSvc.RequestAdditionalHeadersAsync = GetCustomHeaders; 
                     // Assign the log entry host to the ConnectionService engine
                     ConnectionService tempConnectService = null;
-                    _connectionSvc.InternetProtocalToUse = useSsl ? "https" : "http";
+                    _connectionSvc.InternetProtocolToUse = useSsl ? "https" : "http";
                     if (!_connectionSvc.DoLogin(out tempConnectService))
                     {
                         _logEntry.Log("Unable to Login to Dataverse", TraceEventType.Error);

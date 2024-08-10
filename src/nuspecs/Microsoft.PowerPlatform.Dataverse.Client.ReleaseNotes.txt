@@ -7,9 +7,12 @@ Notice:
     Note: Only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Fix for endless retry loop issue in WebAPI calls when specific error states are encountered.
 Fix for Logging MSAL telemetry when using ILogger
     Previously, Logs for MSAL were not written to the configured ILogger, they would only go to Trace Source and InMemory Logs.
 Fix for RequestBuilder to properly honor CrmUserId and AADOid in request builder requests. 
+Fix for ForceServerMetadataCacheConsistency not being effective until an operation to retrieve current organization version has been executed.
+    If this us set to a value before any organization detail related information is retrieved, it will now cause the organization info to be retrieved from Dataverse. This is done only once. 
 Updated ServiceClient retry logic to use the server specified RetryAfter for Time and Concurrency throttling fault codes, in addition to Burst.
 Updated ConnectionService retry logic to parse RetryAfter header as seconds instead of hours.
 Dependency Changes:

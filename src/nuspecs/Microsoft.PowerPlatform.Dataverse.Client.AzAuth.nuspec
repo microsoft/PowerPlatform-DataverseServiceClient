@@ -15,32 +15,32 @@
     <tags>Dynamics CommonDataService CDS PowerApps PowerPlatform ServiceClient Dataverse</tags>
     <dependencies>
       <group targetFramework=".NETFramework4.6.2">
-        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.1.0" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.11.3" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.1.27" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.12.0" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".NETFramework4.7.2">
-        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.1.0" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.11.3" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.1.27" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.12.0" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".NETFramework4.8">
-        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.1.0" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.11.3" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.1.27" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.12.0" exclude="Build,Analyzers" />
       </group>
       <group targetFramework="NET6.0">
-        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.1.0" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.11.3" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.1.27" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.12.0" exclude="Build,Analyzers" />
       </group>
     </dependencies>
   </metadata>
   <files>
-    <file src="{signedBinDir}\{configuration}\DataverseClient-AzAuth\net6.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" target="lib\net6.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" />
-    <file src="{signedBinDir}\{configuration}\DataverseClient-AzAuth\net6.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" target="lib\net6.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" />
-    <file src="{signedBinDir}\{configuration}\DataverseClient-AzAuth\net472\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" target="lib\net472\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" />
-    <file src="{signedBinDir}\{configuration}\DataverseClient-AzAuth\net472\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" target="lib\net472\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" />
-    <file src="{signedBinDir}\{configuration}\DataverseClient-AzAuth\net462\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" target="lib\net462\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" />
-    <file src="{signedBinDir}\{configuration}\DataverseClient-AzAuth\net462\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" target="lib\net462\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" />
-    <file src="{signedBinDir}\{configuration}\DataverseClient-AzAuth\net48\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" target="lib\net48\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" />
-    <file src="{signedBinDir}\{configuration}\DataverseClient-AzAuth\net48\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" target="lib\net48\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" />
+    <file src="{signedBinDir}\{configuration}\DataverseClient\net6.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" target="lib\net6.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" />
+    <file src="{signedBinDir}\{configuration}\DataverseClient\net6.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" target="lib\net6.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" />
+    <file src="{signedBinDir}\{configuration}\DataverseClient\net472\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" target="lib\net472\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" />
+    <file src="{signedBinDir}\{configuration}\DataverseClient\net472\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" target="lib\net472\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" />
+    <file src="{signedBinDir}\{configuration}\DataverseClient\net462\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" target="lib\net462\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" />
+    <file src="{signedBinDir}\{configuration}\DataverseClient\net462\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" target="lib\net462\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" />
+    <file src="{signedBinDir}\{configuration}\DataverseClient\net48\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" target="lib\net48\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" />
+    <file src="{signedBinDir}\{configuration}\DataverseClient\net48\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" target="lib\net48\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" />
     <file src="{sharedImagesDir}\Desktop\Dataverse.128x128.png" target="images\Dataverse.128x128.png" />
   </files>
 </package>

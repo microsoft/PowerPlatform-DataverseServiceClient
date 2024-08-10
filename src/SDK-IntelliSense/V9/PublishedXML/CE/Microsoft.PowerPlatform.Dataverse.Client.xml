@@ -148,6 +148,140 @@
     <member name="T:Microsoft.PowerPlatform.Dataverse.Client.BooleanAttributeData" />
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.BooleanAttributeData.#ctor" />
     <member name="P:Microsoft.PowerPlatform.Dataverse.Client.BooleanAttributeData.BooleanOptions" />
+    <member name="T:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1">
+      <typeparam name="T" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.Associate(System.String,System.Guid,Microsoft.Xrm.Sdk.Relationship,Microsoft.Xrm.Sdk.EntityReferenceCollection)">
+      <param name="entityName" />
+      <param name="entityId" />
+      <param name="relationship" />
+      <param name="relatedEntities" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.AssociateAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Relationship,Microsoft.Xrm.Sdk.EntityReferenceCollection,System.Threading.CancellationToken)">
+      <param name="entityName" />
+      <param name="entityId" />
+      <param name="relationship" />
+      <param name="relatedEntities" />
+      <param name="cancellationToken" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.AssociateAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Relationship,Microsoft.Xrm.Sdk.EntityReferenceCollection)">
+      <param name="entityName" />
+      <param name="entityId" />
+      <param name="relationship" />
+      <param name="relatedEntities" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.Create(Microsoft.Xrm.Sdk.Entity)">
+      <param name="entity" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.CreateAndReturnAsync(Microsoft.Xrm.Sdk.Entity,System.Threading.CancellationToken)">
+      <param name="entity" />
+      <param name="cancellationToken" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.CreateAsync(Microsoft.Xrm.Sdk.Entity,System.Threading.CancellationToken)">
+      <param name="entity" />
+      <param name="cancellationToken" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.CreateAsync(Microsoft.Xrm.Sdk.Entity)">
+      <param name="entity" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.Delete(System.String,System.Guid)">
+      <param name="entityName" />
+      <param name="id" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.DeleteAsync(System.String,System.Guid,System.Threading.CancellationToken)">
+      <param name="entityName" />
+      <param name="id" />
+      <param name="cancellationToken" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.DeleteAsync(System.String,System.Guid)">
+      <param name="entityName" />
+      <param name="id" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.Disassociate(System.String,System.Guid,Microsoft.Xrm.Sdk.Relationship,Microsoft.Xrm.Sdk.EntityReferenceCollection)">
+      <param name="entityName" />
+      <param name="entityId" />
+      <param name="relationship" />
+      <param name="relatedEntities" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.DisassociateAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Relationship,Microsoft.Xrm.Sdk.EntityReferenceCollection,System.Threading.CancellationToken)">
+      <param name="entityName" />
+      <param name="entityId" />
+      <param name="relationship" />
+      <param name="relatedEntities" />
+      <param name="cancellationToken" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.DisassociateAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Relationship,Microsoft.Xrm.Sdk.EntityReferenceCollection)">
+      <param name="entityName" />
+      <param name="entityId" />
+      <param name="relationship" />
+      <param name="relatedEntities" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.Execute(Microsoft.Xrm.Sdk.OrganizationRequest)">
+      <param name="request" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.ExecuteAsync(Microsoft.Xrm.Sdk.OrganizationRequest,System.Threading.CancellationToken)">
+      <param name="request" />
+      <param name="cancellationToken" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.ExecuteAsync(Microsoft.Xrm.Sdk.OrganizationRequest)">
+      <param name="request" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.Retrieve(System.String,System.Guid,Microsoft.Xrm.Sdk.Query.ColumnSet)">
+      <param name="entityName" />
+      <param name="id" />
+      <param name="columnSet" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.RetrieveAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Query.ColumnSet,System.Threading.CancellationToken)">
+      <param name="entityName" />
+      <param name="id" />
+      <param name="columnSet" />
+      <param name="cancellationToken" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.RetrieveAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Query.ColumnSet)">
+      <param name="entityName" />
+      <param name="id" />
+      <param name="columnSet" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.RetrieveMultiple(Microsoft.Xrm.Sdk.Query.QueryBase)">
+      <param name="query" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.RetrieveMultipleAsync(Microsoft.Xrm.Sdk.Query.QueryBase,System.Threading.CancellationToken)">
+      <param name="query" />
+      <param name="cancellationToken" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.RetrieveMultipleAsync(Microsoft.Xrm.Sdk.Query.QueryBase)">
+      <param name="query" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.Update(Microsoft.Xrm.Sdk.Entity)">
+      <param name="entity" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.UpdateAsync(Microsoft.Xrm.Sdk.Entity,System.Threading.CancellationToken)">
+      <param name="entity" />
+      <param name="cancellationToken" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.UpdateAsync(Microsoft.Xrm.Sdk.Entity)">
+      <param name="entity" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.WithCorrelationId(System.Guid)">
+      <param name="correlationId" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.WithCrmUserId(System.Guid)">
+      <param name="crmUserId" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.WithHeader(System.String,System.String)">
+      <param name="key" />
+      <param name="value" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.WithHeaders(System.Collections.Generic.IDictionary{System.String,System.String})">
+      <param name="headers" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.WithRequestId(System.Guid)">
+      <param name="requestId" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Builder.AbstractClientRequestBuilder`1.WithUserObjectId(System.Guid)">
+      <param name="userObjectId" />
+    </member>
+    <member name="T:Microsoft.PowerPlatform.Dataverse.Client.Builder.ServiceClientRequestBuilder" />
     <member name="T:Microsoft.PowerPlatform.Dataverse.Client.DataverseDataTypeWrapper">
       <summary>
             Contains a variable definition.</summary>
@@ -157,18 +291,18 @@
             Create a new Data Type
             Default Constructor</summary>
     </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.DataverseDataTypeWrapper.#ctor(System.Object,Microsoft.PowerPlatform.Dataverse.Client.DataverseFieldType)">
-      <summary>
-            Create a new Data Type</summary>
-      <param name="data">Data to Set</param>
-      <param name="CdsFieldType">Type of Data to Set</param>
-    </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.DataverseDataTypeWrapper.#ctor(System.Object,Microsoft.PowerPlatform.Dataverse.Client.DataverseFieldType,System.String)">
       <summary>
             Create a new Data Type</summary>
       <param name="data">Data to Set</param>
       <param name="CdsFieldType">Type of Data to Set</param>
       <param name="relatedEntityName">Name of the related entity, applies to the Field Types: Customer and Lookup</param>
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.DataverseDataTypeWrapper.#ctor(System.Object,Microsoft.PowerPlatform.Dataverse.Client.DataverseFieldType)">
+      <summary>
+            Create a new Data Type</summary>
+      <param name="data">Data to Set</param>
+      <param name="CdsFieldType">Type of Data to Set</param>
     </member>
     <member name="P:Microsoft.PowerPlatform.Dataverse.Client.DataverseDataTypeWrapper.ReferencedEntity">
       <summary>
@@ -1961,14 +2095,6 @@
       <param name="relationship">Relationship Name</param>
       <param name="relatedEntities">Entities to associate</param>
     </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.AssociateAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Relationship,Microsoft.Xrm.Sdk.EntityReferenceCollection)">
-      <summary>
-            Associate an entity with a set of entities</summary>
-      <param name="entityName" />
-      <param name="entityId" />
-      <param name="relationship" />
-      <param name="relatedEntities" />
-    </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.AssociateAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Relationship,Microsoft.Xrm.Sdk.EntityReferenceCollection,System.Threading.CancellationToken)">
       <summary>
             Associate an entity with a set of entities</summary>
@@ -1977,6 +2103,14 @@
       <param name="relationship" />
       <param name="relatedEntities" />
       <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.AssociateAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Relationship,Microsoft.Xrm.Sdk.EntityReferenceCollection)">
+      <summary>
+            Associate an entity with a set of entities</summary>
+      <param name="entityName" />
+      <param name="entityId" />
+      <param name="relationship" />
+      <param name="relatedEntities" />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.Clone(Microsoft.Extensions.Logging.ILogger)">
       <summary>
@@ -2004,12 +2138,6 @@
       <param name="entity">Entity to create</param>
       <returns>ID of newly created entity</returns>
     </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.CreateAndReturnAsync(Microsoft.Xrm.Sdk.Entity)">
-      <summary>
-            Create an entity and process any related entities</summary>
-      <param name="entity">entity to create</param>
-      <returns>Returns the newly created record</returns>
-    </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.CreateAndReturnAsync(Microsoft.Xrm.Sdk.Entity,System.Threading.CancellationToken)">
       <summary>
             Create an entity and process any related entities</summary>
@@ -2017,11 +2145,11 @@
       <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
       <returns>Returns the newly created record</returns>
     </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.CreateAsync(Microsoft.Xrm.Sdk.Entity)">
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.CreateAndReturnAsync(Microsoft.Xrm.Sdk.Entity)">
       <summary>
             Create an entity and process any related entities</summary>
       <param name="entity">entity to create</param>
-      <returns>The ID of the created record</returns>
+      <returns>Returns the newly created record</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.CreateAsync(Microsoft.Xrm.Sdk.Entity,System.Threading.CancellationToken)">
       <summary>
@@ -2030,17 +2158,18 @@
       <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
       <returns>The ID of the created record</returns>
     </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.CreateAsync(Microsoft.Xrm.Sdk.Entity)">
+      <summary>
+            Create an entity and process any related entities</summary>
+      <param name="entity">entity to create</param>
+      <returns>The ID of the created record</returns>
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.CreateRequestBuilder" />
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.Delete(System.String,System.Guid)">
       <summary>
             Issues a Delete request to Dataverse</summary>
       <param name="entityName">Entity name to delete</param>
       <param name="id">ID if entity to delete</param>
-    </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.DeleteAsync(System.String,System.Guid)">
-      <summary>
-            Delete instance of an entity</summary>
-      <param name="entityName">Logical name of entity</param>
-      <param name="id">Id of entity</param>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.DeleteAsync(System.String,System.Guid,System.Threading.CancellationToken)">
       <summary>
@@ -2049,6 +2178,12 @@
       <param name="id">Id of entity</param>
       <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
     </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.DeleteAsync(System.String,System.Guid)">
+      <summary>
+            Delete instance of an entity</summary>
+      <param name="entityName">Logical name of entity</param>
+      <param name="id">Id of entity</param>
+    </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.Disassociate(System.String,System.Guid,Microsoft.Xrm.Sdk.Relationship,Microsoft.Xrm.Sdk.EntityReferenceCollection)">
       <summary>
             Issues a Disassociate Request to Dataverse.</summary>
@@ -2056,14 +2191,6 @@
       <param name="entityId">ID if Entity to disassociate from</param>
       <param name="relationship">Relationship Name</param>
       <param name="relatedEntities">Entities to disassociate</param>
-    </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.DisassociateAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Relationship,Microsoft.Xrm.Sdk.EntityReferenceCollection)">
-      <summary>
-            Disassociate an entity with a set of entities</summary>
-      <param name="entityName" />
-      <param name="entityId" />
-      <param name="relationship" />
-      <param name="relatedEntities" />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.DisassociateAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Relationship,Microsoft.Xrm.Sdk.EntityReferenceCollection,System.Threading.CancellationToken)">
       <summary>
@@ -2074,6 +2201,21 @@
       <param name="relatedEntities" />
       <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
     </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.DisassociateAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Relationship,Microsoft.Xrm.Sdk.EntityReferenceCollection)">
+      <summary>
+            Disassociate an entity with a set of entities</summary>
+      <param name="entityName" />
+      <param name="entityId" />
+      <param name="relationship" />
+      <param name="relatedEntities" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.DiscoverOnlineOrganizationsAsync(System.Func{System.String,System.Threading.Tasks.Task{System.String}},System.Uri,System.String,Microsoft.Extensions.Logging.ILogger,System.Threading.CancellationToken)">
+      <param name="tokenProviderFunction" />
+      <param name="discoveryServiceUri" />
+      <param name="tokenCacheStorePath" />
+      <param name="logger" />
+      <param name="cancellationToken" />
+    </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.DiscoverOnlineOrganizationsAsync(System.Func{System.String,System.Threading.Tasks.Task{System.String}},System.Uri,System.String,Microsoft.Extensions.Logging.ILogger)">
       <summary>
             Discovers Organizations Using the global discovery service and an external source for access tokens</summary>
@@ -2082,13 +2224,6 @@
       <param name="tokenCacheStorePath">(optional) path to log store</param>
       <param name="logger">Logging provider <see cref="T:Microsoft.Extensions.Logging.ILogger" /></param>
       <returns />
-    </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.DiscoverOnlineOrganizationsAsync(System.Func{System.String,System.Threading.Tasks.Task{System.String}},System.Uri,System.String,Microsoft.Extensions.Logging.ILogger,System.Threading.CancellationToken)">
-      <param name="tokenProviderFunction" />
-      <param name="discoveryServiceUri" />
-      <param name="tokenCacheStorePath" />
-      <param name="logger" />
-      <param name="cancellationToken" />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.DiscoverOnlineOrganizationsAsync(System.String,System.String,System.String,System.Uri,System.Boolean,System.String,Microsoft.PowerPlatform.Dataverse.Client.Auth.PromptBehavior,System.Boolean,Microsoft.PowerPlatform.Dataverse.Client.Model.DiscoveryServer,System.String,Microsoft.Extensions.Logging.ILogger)">
       <summary>
@@ -2147,17 +2282,17 @@
       <param name="request">Request object</param>
       <returns>Response object</returns>
     </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.ExecuteAsync(Microsoft.Xrm.Sdk.OrganizationRequest)">
-      <summary>
-            Perform an action in an organization specified by the request.</summary>
-      <param name="request">Refer to SDK documentation for list of messages that can be used.</param>
-      <returns>Results from processing the request</returns>
-    </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.ExecuteAsync(Microsoft.Xrm.Sdk.OrganizationRequest,System.Threading.CancellationToken)">
       <summary>
             Perform an action in an organization specified by the request.</summary>
       <param name="request">Refer to SDK documentation for list of messages that can be used.</param>
       <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
+      <returns>Results from processing the request</returns>
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.ExecuteAsync(Microsoft.Xrm.Sdk.OrganizationRequest)">
+      <summary>
+            Perform an action in an organization specified by the request.</summary>
+      <param name="request">Refer to SDK documentation for list of messages that can be used.</param>
       <returns>Results from processing the request</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.ExecuteOrganizationRequest(Microsoft.Xrm.Sdk.OrganizationRequest,System.String,System.Boolean)">
@@ -2228,14 +2363,6 @@
       <param name="columnSet">ColumnSet to request</param>
       <returns>Entity object</returns>
     </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.RetrieveAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Query.ColumnSet)">
-      <summary>
-            Retrieves instance of an entity</summary>
-      <param name="entityName">Logical name of entity</param>
-      <param name="id">Id of entity</param>
-      <param name="columnSet">Column Set collection to return with the request</param>
-      <returns>Selected Entity</returns>
-    </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.RetrieveAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Query.ColumnSet,System.Threading.CancellationToken)">
       <summary>
             Retrieves instance of an entity</summary>
@@ -2245,17 +2372,19 @@
       <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
       <returns>Selected Entity</returns>
     </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.RetrieveAsync(System.String,System.Guid,Microsoft.Xrm.Sdk.Query.ColumnSet)">
+      <summary>
+            Retrieves instance of an entity</summary>
+      <param name="entityName">Logical name of entity</param>
+      <param name="id">Id of entity</param>
+      <param name="columnSet">Column Set collection to return with the request</param>
+      <returns>Selected Entity</returns>
+    </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.RetrieveMultiple(Microsoft.Xrm.Sdk.Query.QueryBase)">
       <summary>
             Issues a RetrieveMultiple Request to Dataverse</summary>
       <param name="query">Query to Request</param>
       <returns>EntityCollection Result</returns>
-    </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.RetrieveMultipleAsync(Microsoft.Xrm.Sdk.Query.QueryBase)">
-      <summary>
-            Retrieves a collection of entities</summary>
-      <param name="query" />
-      <returns>Returns an EntityCollection Object containing the results of the query</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.RetrieveMultipleAsync(Microsoft.Xrm.Sdk.Query.QueryBase,System.Threading.CancellationToken)">
       <summary>
@@ -2264,21 +2393,27 @@
       <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
       <returns>Returns an EntityCollection Object containing the results of the query</returns>
     </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.RetrieveMultipleAsync(Microsoft.Xrm.Sdk.Query.QueryBase)">
+      <summary>
+            Retrieves a collection of entities</summary>
+      <param name="query" />
+      <returns>Returns an EntityCollection Object containing the results of the query</returns>
+    </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.Update(Microsoft.Xrm.Sdk.Entity)">
       <summary>
             Issues an update to Dataverse.</summary>
       <param name="entity">Entity to update into Dataverse</param>
-    </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.UpdateAsync(Microsoft.Xrm.Sdk.Entity)">
-      <summary>
-            Updates an entity and process any related entities</summary>
-      <param name="entity">entity to update</param>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.UpdateAsync(Microsoft.Xrm.Sdk.Entity,System.Threading.CancellationToken)">
       <summary>
             Updates an entity and process any related entities</summary>
       <param name="entity">entity to update</param>
       <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.UpdateAsync(Microsoft.Xrm.Sdk.Entity)">
+      <summary>
+            Updates an entity and process any related entities</summary>
+      <param name="entity">entity to update</param>
     </member>
     <member name="P:Microsoft.PowerPlatform.Dataverse.Client.ServiceClient.ActiveAuthenticationType">
       <summary>
@@ -2512,10 +2647,12 @@
             Logg an error with an Exception</summary>
       <param name="exception" />
     </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.TraceLoggerBase.Log(System.String)">
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.TraceLoggerBase.Log(System.String,System.Diagnostics.TraceEventType,System.Exception)">
       <summary>
-            Log a Message as an Information event.</summary>
+            Log a Trace event</summary>
       <param name="message" />
+      <param name="eventType" />
+      <param name="exception" />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.TraceLoggerBase.Log(System.String,System.Diagnostics.TraceEventType)">
       <summary>
@@ -2523,12 +2660,10 @@
       <param name="message" />
       <param name="eventType" />
     </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.TraceLoggerBase.Log(System.String,System.Diagnostics.TraceEventType,System.Exception)">
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.TraceLoggerBase.Log(System.String)">
       <summary>
-            Log a Trace event</summary>
+            Log a Message as an Information event.</summary>
       <param name="message" />
-      <param name="eventType" />
-      <param name="exception" />
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.TraceLoggerBase.RefreshListeners(System.Collections.Generic.List{Microsoft.PowerPlatform.Dataverse.Client.TraceSourceSetting})">
       <summary>
@@ -2607,11 +2742,6 @@
       <param name="serializationInfo" />
       <param name="streamingContext" />
     </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Utils.DataverseConnectionException.#ctor(System.String)">
-      <summary>
-            Creates a CdsService Client Exception</summary>
-      <param name="message">Error Message</param>
-    </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Utils.DataverseConnectionException.#ctor(System.String,System.Exception)">
       <summary>
             Creates a CdsService Client Exception</summary>
@@ -2625,6 +2755,11 @@
       <param name="data" />
       <param name="httpOperationException" />
     </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Utils.DataverseConnectionException.#ctor(System.String)">
+      <summary>
+            Creates a CdsService Client Exception</summary>
+      <param name="message">Error Message</param>
+    </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Utils.DataverseConnectionException.GenerateClientConnectionException(Microsoft.Rest.HttpOperationException)">
       <param name="httpOperationException" />
     </member>
@@ -2637,11 +2772,6 @@
             Creates a CdsService Client Exception</summary>
       <param name="serializationInfo" />
       <param name="streamingContext" />
-    </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Utils.DataverseOperationException.#ctor(System.String)">
-      <summary>
-            Creates a CdsService Client Exception</summary>
-      <param name="message">Error Message</param>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Utils.DataverseOperationException.#ctor(System.String,System.Exception)">
       <summary>
@@ -2657,6 +2787,11 @@
       <param name="helpLink">Help Link</param>
       <param name="data">Data Properties</param>
       <param name="httpOperationException" />
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Utils.DataverseOperationException.#ctor(System.String)">
+      <summary>
+            Creates a CdsService Client Exception</summary>
+      <param name="message">Error Message</param>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.Utils.DataverseOperationException.GenerateClientOperationException(Microsoft.Rest.HttpOperationException)">
       <summary>
@@ -2683,13 +2818,6 @@
       <param name="input">The XML stream to load.</param>
       <returns>the new XmlDocument object</returns>
     </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.XmlUtil.CreateXmlDocument(System.String)">
-      <summary>
-            Creates an XmlDocument object with secure default property values.
-            Loads the given XML into the XmlDocument.</summary>
-      <param name="xml">The XML to load.</param>
-      <returns>the new XmlDocument object</returns>
-    </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.XmlUtil.CreateXmlDocument(System.String,System.Boolean)">
       <summary>
             Creates an XmlDocument object with secure default property values.
@@ -2697,6 +2825,13 @@
             This overload is useful when a whitespace only element value is valid content.</summary>
       <param name="xml">The XML to load.</param>
       <param name="preserveWhiteSpace">Whether the whitespaces are to be preserved or not.</param>
+      <returns>the new XmlDocument object</returns>
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.XmlUtil.CreateXmlDocument(System.String)">
+      <summary>
+            Creates an XmlDocument object with secure default property values.
+            Loads the given XML into the XmlDocument.</summary>
+      <param name="xml">The XML to load.</param>
       <returns>the new XmlDocument object</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.XmlUtil.CreateXmlDocument(System.Xml.XmlReader)">
@@ -2711,17 +2846,17 @@
       <param name="xmlStream">Xml stream.</param>
       <returns>The new XmlReader object.</returns>
     </member>
-    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.XmlUtil.CreateXmlReader(System.String)">
-      <summary>
-            Creates an XmlReader object with secure default property values.</summary>
-      <param name="xml">The string to get the data from.</param>
-      <returns>the new XmlReader object</returns>
-    </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.XmlUtil.CreateXmlReader(System.String,System.Boolean)">
       <summary>
             Creates an XmlReader object with secure default property values and given whitespace setting.</summary>
       <param name="xml">The string to get the data from.</param>
       <param name="preserveWhiteSpace">Whether the whitespaces are to be preserved or not.</param>
+      <returns>the new XmlReader object</returns>
+    </member>
+    <member name="M:Microsoft.PowerPlatform.Dataverse.Client.XmlUtil.CreateXmlReader(System.String)">
+      <summary>
+            Creates an XmlReader object with secure default property values.</summary>
+      <param name="xml">The string to get the data from.</param>
       <returns>the new XmlReader object</returns>
     </member>
     <member name="M:Microsoft.PowerPlatform.Dataverse.Client.XmlUtil.CreateXmlWriter(System.IO.TextWriter,System.Boolean)">

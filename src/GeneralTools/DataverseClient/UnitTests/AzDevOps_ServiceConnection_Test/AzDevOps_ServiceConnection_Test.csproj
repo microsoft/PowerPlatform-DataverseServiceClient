@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	  <ProjectSpecificFx>true</ProjectSpecificFx>
+	  <OutputType>Exe</OutputType>
+	  <TargetFrameworks>net462;net6.0</TargetFrameworks>
+	  <SignAssembly>false</SignAssembly>
+	  <ComponentAreaName>DataverseClient-Tests</ComponentAreaName>
+	  <IsPackable>false</IsPackable>
+  </PropertyGroup>
+	<Import Project="..\..\..\..\Build.Common.core.props" />
+
+  <ItemGroup>
+      <ProjectReference Include="..\..\Extensions\Microsoft.PowerPlatform.Dataverse.Client.AzAuth\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.csproj" />
+	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(PackageVersion_Microsoft_Extensions)" />
+	  <PackageReference Include="Microsoft.Extensions.Http" Version="$(PackageVersion_Microsoft_Extensions)" />
+	  <PackageReference Include="Microsoft.Extensions.Logging" Version="$(PackageVersion_Microsoft_Extensions)" />
+	  <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="$(PackageVersion_Microsoft_Extensions)" />
+	  <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="$(PackageVersion_Microsoft_Extensions)" />
+	  <PackageReference Include="Microsoft.Identity.Client" version="$(PackageVersion_MSAL)" />
+	  <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="$(PackageVersion_RestClientRuntime)" />
+	  <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" Nowarn="NU1701" />
+  </ItemGroup>
+
+</Project>

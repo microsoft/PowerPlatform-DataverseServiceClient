@@ -394,7 +394,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <summary>
         /// Type of protocol to use
         /// </summary>
-        internal string InternetProtocalToUse { get { return _InternetProtocalToUse; } set { _InternetProtocalToUse = value; } }
+        internal string InternetProtocolToUse { get { return _InternetProtocalToUse; } set { _InternetProtocalToUse = value; } }
 
         /// <summary>
         /// returns the connected organization detail object.
@@ -2337,6 +2337,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             string requestIdLogSegement = logEntry.GetFormatedRequestSessionIdString(requestTrackingId, SessionTrackingId);
             do
             {
+                retry = false; // Set intial state. 
+
                 // Add authorization header. - Here to catch the situation where a token expires during retry.
                 if (!customHeaders.ContainsKey(Utilities.RequestHeaders.AUTHORIZATION_HEADER))
                     customHeaders.Add(Utilities.RequestHeaders.AUTHORIZATION_HEADER, new List<string>() { string.Format("Bearer {0}", await RefreshClientTokenAsync().ConfigureAwait(false)) });

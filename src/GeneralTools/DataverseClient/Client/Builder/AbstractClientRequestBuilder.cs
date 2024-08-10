@@ -67,7 +67,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Builder
         /// <returns></returns>
         public T WithHeader(string key, string value)
         {
-            _headers.Add(key, value);
+            if ( _headers.ContainsKey(key))
+            {
+                _headers[key] = value;
+            }
+            else
+            {
+                _headers.Add(key, value);
+            }
             return (T)this;
         }
 
@@ -79,7 +86,16 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Builder
         public T WithHeaders(IDictionary<string, string> headers)
         {
             foreach (var itm in headers)
-                _headers.Add(itm.Key, itm.Value);
+            {
+                if( _headers.ContainsKey(itm.Key))
+                {
+                    _headers[itm.Key] = itm.Value;
+                }
+                else
+                {
+                    _headers.Add(itm.Key, itm.Value);
+                }
+            }
             return (T)this;
         }
 

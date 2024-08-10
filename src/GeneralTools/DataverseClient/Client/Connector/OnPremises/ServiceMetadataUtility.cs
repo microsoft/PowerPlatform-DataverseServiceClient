@@ -16,7 +16,6 @@ using System.ServiceModel.Security.Tokens;
 using System.Text;
 using System.Xml;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
-//using Microsoft.Crm.Protocols.WSTrust.Bindings;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Client;
 using Microsoft.Xrm.Sdk.Common;
@@ -262,13 +261,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 			}
 
 			return null;
-		}
+        }
 
+#if NETFRAMEWORK
 		private static KerberosSecurityTokenParameters GetKerberosTokenParameters(SecurityBindingElement securityElement)
 		{
 			if (securityElement != null)
 			{
-#if NETFRAMEWORK
 				if (securityElement.EndpointSupportingTokenParameters != null)
 				{
 					if (securityElement.EndpointSupportingTokenParameters.Endorsing != null)
@@ -279,15 +278,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 						}
 					}
 				}
-#else
-				throw new PlatformNotSupportedException("Xrm.Sdk WSTrust");
-#endif
 			}
-
 			return null;
 		}
+#endif
 
-		private static IssuedSecurityTokenParameters GetIssuedTokenParameters(SecurityBindingElement securityElement)
+        private static IssuedSecurityTokenParameters GetIssuedTokenParameters(SecurityBindingElement securityElement)
 		{
 			if (securityElement != null)
 			{
@@ -351,15 +347,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 			}
 
 			return new CustomBinding(elements);
-		}
+        }
 
+#if NETFRAMEWORK
 		private static void ParseEndpoints(ServiceEndpointDictionary serviceEndpoints, ServiceEndpointCollection serviceEndpointCollection)
 		{
 			serviceEndpoints.Clear();
 
 			if (serviceEndpointCollection != null)
 			{
-#if NETFRAMEWORK
 				foreach (var endpoint in serviceEndpointCollection)
 				{
 					if (IsEndpointSupported(endpoint))
@@ -367,13 +363,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 						serviceEndpoints.Add(endpoint.Name, endpoint);
 					}
 				}
-#else
-				throw new PlatformNotSupportedException("Xrm.Sdk WSDL");
-#endif
 			}
 		}
+#endif
 
-		private static bool IsEndpointSupported(ServiceEndpoint endpoint)
+        private static bool IsEndpointSupported(ServiceEndpoint endpoint)
 		{
 			if (endpoint != null)
 			{
@@ -389,6 +383,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 
 		internal static ServiceEndpointMetadata RetrieveServiceEndpointMetadata(Type contractType, Uri serviceUri, bool checkForSecondary)
 		{
+#if NETFRAMEWORK // WebInfra; MetadataSet and CreateMetadataClient are NETFRAMEWORK-ONLY
 			ServiceEndpointMetadata serviceEndpointMetadata = new ServiceEndpointMetadata();
 
 			serviceEndpointMetadata.ServiceUrls = ServiceConfiguration<IOrganizationService>.CalculateEndpoints(serviceUri);
@@ -398,25 +393,17 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 				serviceEndpointMetadata.ServiceUrls.AlternateEndpoint = null;
 			}
 
-#if !NETFRAMEWORK
-			// TODO: Waiting on work for updated WCF endpoints collection to be completed. // hard throw here to prevent any futher progress. 
-			throw new PlatformNotSupportedException("Xrm.Sdk WSDL");  
-#endif
-
 			// Get version of current assembly which is the version of the SDK
-#pragma warning disable CS0162 // Unreachable code detected
 			Version sdkVersion = GetSDKVersionNumberFromAssembly();
-#pragma warning restore CS0162 // Unreachable code detected
 			var wsdlUri = new Uri(string.Format(CultureInfo.InvariantCulture, "{0}{1}&sdkversion={2}", serviceUri.AbsoluteUri, "?wsdl", sdkVersion.ToString(2)));
 
 			var mcli = CreateMetadataClient(wsdlUri.Scheme);
 			if (mcli != null)
 			{
-#if NETFRAMEWORK
 				try
 				{
 					serviceEndpointMetadata.ServiceMetadata = mcli.GetMetadata(wsdlUri, MetadataExchangeClientMode.HttpGet);
-				}
+		}
 				catch (InvalidOperationException ioexp)
 				{
 					bool rethrow = true;
@@ -447,29 +434,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 						throw;
 					}
 				}
-#else
-				throw new PlatformNotSupportedException("Xrm.Sdk WSDL");
-#endif
-			}
-            else
-            {
-#if !NETFRAMEWORK
-
-                if (serviceEndpointMetadata.ServiceMetadata == null)
-                    serviceEndpointMetadata.ServiceMetadata = new MetadataSet();
-                var MetadataBody = GetMexDocument(wsdlUri);
-#else
-				throw new PlatformNotSupportedException("Xrm.Sdk WSDL");
-#endif
 			}
 
-            ClientExceptionHelper.ThrowIfNull(serviceEndpointMetadata.ServiceMetadata, "STS Metadata");
+			ClientExceptionHelper.ThrowIfNull(serviceEndpointMetadata.ServiceMetadata, "STS Metadata");
 
 			var contracts = CreateContractCollection(contractType);
 
 			if (contracts != null)
 			{
-#if NETFRAMEWORK
 				// The following code inserts a custom WsdlImporter without removing the other 
 				// importers already in the collection.
 				var importer = new WsdlImporter(serviceEndpointMetadata.ServiceMetadata);
@@ -497,34 +469,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 				}
 
 				ParseEndpoints(serviceEndpointMetadata.ServiceEndpoints, endpoints);
-#else
-
-				// Dataverse requires Message Transport security which is not supported in .net core for ActiveDirectory. 
-
-
-				//AuthenticationPolicy authenticationPolicy = new AuthenticationPolicy();
-				//authenticationPolicy.PolicyElements.Add("AuthenticationType", "ActiveDirectory"); // Need to read these from metdata in the future if WCF does not provide support/. 
-				//TextMessageEncodingBindingElement text01 = new TextMessageEncodingBindingElement();
-				//HttpsTransportBindingElement http1 = new HttpsTransportBindingElement();
-				//http1.ExtendedProtectionPolicy = new System.Security.Authentication.ExtendedProtection.ExtendedProtectionPolicy(System.Security.Authentication.ExtendedProtection.PolicyEnforcement.WhenSupported, System.Security.Authentication.ExtendedProtection.ProtectionScenario.TransportSelected, null);
-				//CustomBinding bind = new CustomBinding(authenticationPolicy, new TextMessageEncodingBindingElement(), http1);
-				//bind.Name = "CustomBinding_IOrganizationService";
-				//bind.Namespace = "http://schemas.microsoft.com/xrm/2011/Contracts/Services";
-				//serviceEndpointMetadata.ServiceEndpoints.Add(
-				//	"CustomBinding_IOrganizationService",
-				//	new ServiceEndpoint(contracts[0],
-				//	bind, 
-				//	new EndpointAddress(serviceEndpointMetadata.ServiceUrls.PrimaryEndpoint)));
-
-
-				throw new PlatformNotSupportedException("Xrm.Sdk WSDL");
-#endif
 			}
 
 			return serviceEndpointMetadata;
+#else
+            throw new NotImplementedException("ServiceModel metadata support is limited for this target framework");
+#endif
 		}
 
-		private static Version GetSDKVersionNumberFromAssembly()
+            private static Version GetSDKVersionNumberFromAssembly()
 		{
 			string fileVersion = OrganizationServiceProxy.GetXrmSdkAssemblyFileVersion();
 
@@ -536,8 +489,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 			}
 
 			return parsedVersion;
-		}
+        }
 
+#if NETFRAMEWORK
 		/// <summary>
 		/// Returns a list of policy import extensions in the importer parameter and adds a SecurityBindingElementImporter if not already present in the list.
 		/// </summary>
@@ -546,7 +500,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 		private static List<IPolicyImportExtension> AddSecurityBindingToPolicyImporter(WsdlImporter importer)
 		{
 			List<IPolicyImportExtension> newExts = new List<IPolicyImportExtension>();
-#if NETFRAMEWORK
+
 
 			KeyedByTypeCollection<IPolicyImportExtension> policyExtensions = importer.PolicyImportExtensions;
 			SecurityBindingElementImporter securityBindingElementImporter = policyExtensions.Find<SecurityBindingElementImporter>();
@@ -564,18 +518,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 			newExts.AddRange(policyExtensions);
 
 			return newExts;
-#else
-			
-			newExts.Add(new AuthenticationPolicyImporter(new SecurityBindingElementImporter()));
-			return newExts;
-			//throw new PlatformNotSupportedException("Xrm.Sdk WSDL");
-#endif
 		}
+#endif
 
-		[SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Need to catch any exception here and fail.")]
+#if NETFRAMEWORK
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Need to catch any exception here and fail.")]
 		private static bool TryRetrieveMetadata(MetadataExchangeClient mcli, Uri serviceEndpoint, ServiceEndpointMetadata serviceEndpointMetadata)
 		{
-#if NETFRAMEWORK
+
 			bool rethrow = true;
 			try
 			{
@@ -589,12 +539,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 			}
 
 			return rethrow;
-#else
-			throw new PlatformNotSupportedException("Xrm.Sdk WSDL");
-#endif
 		}
+#endif
 
-		private static XmlQualifiedName GetPortTypeQName(ContractDescription contract)
+        private static XmlQualifiedName GetPortTypeQName(ContractDescription contract)
 		{
 			return new XmlQualifiedName(contract.Name, contract.Namespace);
 		}
@@ -602,11 +550,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 		private static Collection<ContractDescription> CreateContractCollection(Type contract)
 		{
 			return new Collection<ContractDescription> { ContractDescription.GetContract(contract) };
-		}
+        }
 
+#if NETFRAMEWORK
 		private static MetadataExchangeClient CreateMetadataClient(string scheme)
 		{
-#if NETFRAMEWORK
 			WSHttpBinding mexBinding = null;
 
 			if (string.Compare(scheme, "https", StringComparison.OrdinalIgnoreCase) == 0)
@@ -628,13 +576,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 			mcli.MaximumResolvedReferences = 100;
 
 			return mcli;
-#else
-			return null; 
-			//throw new PlatformNotSupportedException("Xrm.Sdk WSDL");
-#endif
 		}
+#endif
 
-		public static void ReplaceEndpointAddress(ServiceEndpoint endpoint, Uri adddress)
+        public static void ReplaceEndpointAddress(ServiceEndpoint endpoint, Uri adddress)
 		{
 			var addressBuilder = new EndpointAddressBuilder(endpoint.Address);
 			addressBuilder.Uri = adddress;

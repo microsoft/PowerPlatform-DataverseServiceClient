@@ -1,60 +1,50 @@
 using Azure.Core;
 using Azure.Identity;
 using Microsoft.Extensions.Logging;
-using Microsoft.PowerPlatform.Dataverse.Client.Model;
 using System;
 using System.Collections.Generic;
+using Microsoft.PowerPlatform.Dataverse.Client.Model;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Microsoft.PowerPlatform.Dataverse.Client
 {
     /// <summary>
-    /// Base auth class to create an authentication client for Az Authentication
-    /// This module will provide a means to create an Dataverse Service Client using Az Authentication
+    /// Auth class that will create a Workload Identity based authentication for Dataverse Service Client using the specified Azure DevOps Service Connection.
     /// </summary>
-    public class AzAuth
+    public class AzPipelineFederatedIdentityAuth
     {
-
-        private DefaultAzureCredential _defaultAzureCredential;
-        private DefaultAzureCredentialOptions _credentialOptions;
+        private AzurePipelinesCredential _pipelineCredential;
+        private AzurePipelinesCredentialOptions _credentialOptions;
         private readonly bool _autoResolveAuthorityAndTenant;
         private Dictionary<Uri, List<string>> _scopesList;
         private Dictionary<Uri, AccessToken?> _cacheList;
         private ILogger _logger;
-
-
-        /// <summary>
-        /// Creates a new instance of the ServiceClient class
-        /// </summary>
-        /// <param name="instanceUrl"></param>
-        /// <param name="autoResolveAuthorityAndTenant"></param>
-        /// <param name="credentialOptions"></param>
-        /// <param name="logger"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
-        public static ServiceClient CreateServiceClient(string instanceUrl, bool autoResolveAuthorityAndTenant = true, ILogger logger = null, DefaultAzureCredentialOptions credentialOptions = null)
-        {
-            if (!Uri.IsWellFormedUriString(instanceUrl, UriKind.RelativeOrAbsolute))
-            {
-                throw new ArgumentException("Invalid instance URL");
-            }
-            AzAuth azAuth = new AzAuth(autoResolveAuthorityAndTenant, credentialOptions , logger);
-            return new ServiceClient(new Uri(instanceUrl), tokenProviderFunction: azAuth.GetAccessToken, logger: logger);
-        }
+        private string _tenantId; 
+        private string _clientId;
+        private string _serviceConnectionId;
+        private string _systemAccessTokenEnvVarName;
 
         /// <summary>
-        /// Build this based on connection and configuration options. 
+        /// Creates a new instance of the ServiceClient class using the AzDevOps Service Connection
         /// </summary>
-        /// <param name="autoResolveAuthorityAndTenant"></param>
-        /// <param name="connectionOptions"></param>
-        /// <param name="configurationOptions"></param>
-        /// <param name="credentialOptions"></param>
+        /// <param name="tenantId">TenantId for the service connection</param>
+        /// <param name="clientId">ClientId for the service connection</param>
+        /// <param name="serviceConnectionId">Service Connection Id of AzDevOps ServiceConnection configured for workload identity</param>
+        /// <param name="connectionOptions">Dataverse ServiceClient Connection Options</param>
+        /// <param name="configurationOptions">Dataverse ServiceClient Configuration Options. Default = null</param>
+        /// <param name="systemAccessTokenEnvVarName">Environment Variable that has the current AzDevOps System Access Token.  Default=SYSTEM_ACCESSTOKEN</param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
-        public static ServiceClient CreateServiceClient(ConnectionOptions connectionOptions, ConfigurationOptions configurationOptions = null, bool autoResolveAuthorityAndTenant = true, DefaultAzureCredentialOptions credentialOptions = null)
+        public static ServiceClient CreateServiceClient(
+            string tenantId,
+            string clientId,
+            string serviceConnectionId,
+            ConnectionOptions connectionOptions,
+            ConfigurationOptions configurationOptions = null,
+            string systemAccessTokenEnvVarName = "SYSTEM_ACCESSTOKEN")
         {
-            if ( connectionOptions == null )
+            if (connectionOptions == null)
             {
                 throw new ArgumentException("ConnectionOptions are required");
             }
@@ -64,22 +54,26 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
             connectionOptions.AuthenticationType = AuthenticationType.ExternalTokenManagement; // force the authentication type to be external token management.
 
-            AzAuth azAuth = new AzAuth(autoResolveAuthorityAndTenant, credentialOptions, connectionOptions.Logger);
+            AzPipelineFederatedIdentityAuth azAuth = new AzPipelineFederatedIdentityAuth( tenantId, clientId, serviceConnectionId, systemAccessTokenEnvVarName, true, connectionOptions.Logger);
             connectionOptions.AccessTokenProviderFunctionAsync = azAuth.GetAccessToken;
-            return new ServiceClient(connectionOptions, false, configurationOptions); 
+            return new ServiceClient(connectionOptions, false, configurationOptions);
         }
 
-
-
         /// <summary>
-        /// Creates a new instance of the AzAuth class
+        /// Creates an instance of the AzPipelineFederatedIdentityAuth class
         /// </summary>
-        /// <param name="autoResolveAuthorityAndTenant"></param>
-        /// <param name="credentialOptions"></param>
-        /// <param name="logger"></param>
-        public AzAuth(bool autoResolveAuthorityAndTenant, DefaultAzureCredentialOptions credentialOptions = null, ILogger logger = null)
+        /// <param name="autoResolveAuthorityAndTenant">Should resolve Dataverse authority and resource from url.</param>
+        /// <param name="serviceConnectionId">Service Connection Id of AzDevOps ServiceConnection configured for workload identity</param>
+        /// <param name="clientId">ClientId for the service connection</param>
+        /// <param name="tenantId">TenantId for the service connection</param>
+        /// <param name="SystemAccessTokenEnvVarName">Environment Variable that has the current AzDevOps System Access Token.  Default=SYSTEM_ACCESSTOKEN</param>
+        /// <param name="logger">ILogger instance</param>
+        public AzPipelineFederatedIdentityAuth(string tenantId, string clientId, string serviceConnectionId, string SystemAccessTokenEnvVarName,  bool autoResolveAuthorityAndTenant, ILogger logger = null)
         {
-            _credentialOptions = credentialOptions;
+            _tenantId = tenantId;
+            _clientId = clientId;
+            _serviceConnectionId = serviceConnectionId;
+            _systemAccessTokenEnvVarName = SystemAccessTokenEnvVarName;
             _autoResolveAuthorityAndTenant = autoResolveAuthorityAndTenant;
             _logger = logger;
         }
@@ -95,9 +89,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             {
                 throw new ArgumentException("Invalid instance URL");
             }
-            AccessToken? accessToken = null; 
+            AccessToken? accessToken = null;
             Uri instanceUri = new Uri(instanceUrl);
-            if (_defaultAzureCredential == null)
+            if (_pipelineCredential == null)
             {
                 Uri resourceUri = await InitializeCredentials(instanceUri).ConfigureAwait(false);
                 ResolveScopesList(instanceUri, resourceUri);
@@ -115,14 +109,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 }
             }
 
-            if ( accessToken == null)
+            if (accessToken == null)
             {
                 Stopwatch sw = Stopwatch.StartNew();
                 _logger.LogDebug("Getting new access token for {0}", instanceUri);
-                accessToken = await _defaultAzureCredential.GetTokenAsync(new Azure.Core.TokenRequestContext(ResolveScopesList(instanceUri))).ConfigureAwait(false);
+                accessToken = await _pipelineCredential.GetTokenAsync(new TokenRequestContext(ResolveScopesList(instanceUri)), System.Threading.CancellationToken.None).ConfigureAwait(false);
                 _logger.LogDebug("Access token retrieved in {0}ms", sw.ElapsedMilliseconds);
                 sw.Stop();
-                if(_cacheList.ContainsKey(instanceUri))
+                if (_cacheList.ContainsKey(instanceUri))
                 {
                     _cacheList[instanceUri] = accessToken;
                 }
@@ -140,13 +134,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             return accessToken.Value.Token;
         }
 
-        /// <summary>
-        /// gets or creates the scope list for the current instance.
-        /// </summary>
-        /// <param name="instanceUrl"></param>
-        /// <param name="resource"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
         private string[] ResolveScopesList(Uri instanceUrl, Uri resource = null)
         {
             _scopesList ??= new Dictionary<Uri, List<string>>();
@@ -170,9 +157,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         {
             _logger.LogDebug("Initializing credentials for {0}", instanceUrl);
             Stopwatch sw = Stopwatch.StartNew();
-           
+
             Uri resourceUri = null;
-            _credentialOptions ??= new DefaultAzureCredentialOptions();
+            _credentialOptions ??= new AzurePipelinesCredentialOptions();
 
             if (_autoResolveAuthorityAndTenant)
             {
@@ -182,20 +169,21 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 var authDetails = await authorityResolver.ProbeForExpectedAuthentication(instanceUrl).ConfigureAwait(false);
                 resourceUri = authDetails.Resource;
                 _credentialOptions.AuthorityHost = authDetails.Authority;
-                _credentialOptions.TenantId = authDetails.Authority.Segments[1].Replace("/", "");
+                //_credentialOptions.TenantId = authDetails.Authority.Segments[1].Replace("/", "");
 
                 _logger.LogDebug("Authority and tenant resolved in {0}ms", sw.ElapsedMilliseconds);
                 _logger.LogDebug("Initialize Creds - found authority with name " + (string.IsNullOrEmpty(authDetails.Authority.ToString()) ? "<Not Provided>" : authDetails.Authority.ToString()));
                 _logger.LogDebug("Initialize Creds - found resource with name " + (string.IsNullOrEmpty(authDetails.Resource.ToString()) ? "<Not Provided>" : authDetails.Resource.ToString()));
-                _logger.LogDebug("Initialize Creds - found tenantId " + (string.IsNullOrEmpty(_credentialOptions.TenantId) ? "<Not Provided>" : _credentialOptions.TenantId));
+                //_logger.LogDebug("Initialize Creds - found tenantId " + (string.IsNullOrEmpty(_credentialOptions.TenantId) ? "<Not Provided>" : _credentialOptions.TenantId));
             }
-            _defaultAzureCredential = new DefaultAzureCredential(_credentialOptions);
+
+            _pipelineCredential = new AzurePipelinesCredential(_tenantId, _clientId, _serviceConnectionId, Environment.GetEnvironmentVariable(_systemAccessTokenEnvVarName), _credentialOptions);
 
             _logger.LogDebug("Credentials initialized in {0}ms", sw.ElapsedMilliseconds);
             sw.Start();
 
             return resourceUri;
         }
-        
+
     }
 }
