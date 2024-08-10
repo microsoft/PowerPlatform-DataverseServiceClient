@@ -4,11 +4,11 @@ using System.IdentityModel.Protocols.WSTrust;
 using System.IdentityModel.Tokens;
 using System.Linq;
 using System.Security;
-using System.Security.Permissions;
 using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.ServiceModel.Security;
 using System.Text;
+
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Client;
 using Microsoft.Xrm.Sdk.Common;
@@ -52,6 +52,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 
 			ClientExceptionHelper.ThrowIfNull(ServiceEndpointMetadata, "ServiceEndpointMetadata");
 
+#if NETFRAMEWORK
 			if (ServiceEndpointMetadata.ServiceEndpoints.Count == 0)
 			{
 				StringBuilder errorBuilder = new StringBuilder();
@@ -65,6 +66,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 
 				throw new InvalidOperationException(ClientExceptionHelper.FormatMessage(0, "The provided uri did not return any Service Endpoints!\n{0}", errorBuilder.ToString()));
 			}
+#endif
 
 			ServiceEndpoints = ServiceEndpointMetadata.ServiceEndpoints;
 
@@ -665,20 +667,20 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector.OnPremises
 						{
 							return Issue(authenticationCredentials);
 						}
-						catch (SecurityTokenValidationException)
-						{
-							retry = false;
+						//catch (SecurityTokenValidationException) // Removed due to a type conflict with DV Server
+						//{
+						//	retry = false;
 
-							// Fall back to windows integrated.
-							if (authenticationCredentials.IssuerEndpoints.ContainsKey(TokenServiceCredentialType.Windows.ToString()))
-							{
-								authenticationCredentials.EndpointType = TokenServiceCredentialType.Windows;
-								retry = ++retryCount < 2;
-							}
+						//	// Fall back to windows integrated.
+						//	if (authenticationCredentials.IssuerEndpoints.ContainsKey(TokenServiceCredentialType.Windows.ToString()))
+						//	{
+						//		authenticationCredentials.EndpointType = TokenServiceCredentialType.Windows;
+						//		retry = ++retryCount < 2;
+						//	}
 
-							// We don't care, we just want to return null.  The reason why we are are catching this one is because in pure Kerberos mode, this
-							// will throw a very bad exception that will crash VS.
-						}
+						//	// We don't care, we just want to return null.  The reason why we are are catching this one is because in pure Kerberos mode, this
+						//	// will throw a very bad exception that will crash VS.
+						//}
 						catch (SecurityNegotiationException)
 						{
 							// This is the exception with Integrated Windows Auth.

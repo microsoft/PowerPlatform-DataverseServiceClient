@@ -23,7 +23,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.PowerPlatform.Dat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.PowerPlatform.Dataverse.WebResourceUtility", "WebResourceUtility\Microsoft.PowerPlatform.Dataverse.WebResourceUtility.csproj", "{FDFD6B7F-A925-40EE-98DC-2E06C1D1E3B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.PowerPlatform.Dataverse.Client.AzAuth", "Extensions\Microsoft.PowerPlatform.Dataverse.Client.AzAuth\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.csproj", "{618D52B7-4CE7-402F-972B-E381C1C28299}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.PowerPlatform.Dataverse.Client.AzAuth", "Extensions\Microsoft.PowerPlatform.Dataverse.Client.AzAuth\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.csproj", "{618D52B7-4CE7-402F-972B-E381C1C28299}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzDevOps_ServiceConnection_Test", "UnitTests\AzDevOps_ServiceConnection_Test\AzDevOps_ServiceConnection_Test.csproj", "{581F17CF-C7DE-4147-8764-E6B4328C07E7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.PowerPlatform.Dataverse.Client.PowerShell", "PowerShell\Microsoft.PowerPlatform.Dataverse.Client.PowerShell\Microsoft.PowerPlatform.Dataverse.Client.PowerShell.csproj", "{8FD12028-BBEF-448B-BD43-E352386149DD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -143,6 +147,30 @@ Global
 		{618D52B7-4CE7-402F-972B-E381C1C28299}.Release|Any CPU.Build.0 = Release|Any CPU
 		{618D52B7-4CE7-402F-972B-E381C1C28299}.Release|x64.ActiveCfg = Release|Any CPU
 		{618D52B7-4CE7-402F-972B-E381C1C28299}.Release|x64.Build.0 = Release|Any CPU
+		{581F17CF-C7DE-4147-8764-E6B4328C07E7}.CRMINTERNAL|Any CPU.ActiveCfg = Debug|Any CPU
+		{581F17CF-C7DE-4147-8764-E6B4328C07E7}.CRMINTERNAL|Any CPU.Build.0 = Debug|Any CPU
+		{581F17CF-C7DE-4147-8764-E6B4328C07E7}.CRMINTERNAL|x64.ActiveCfg = Debug|Any CPU
+		{581F17CF-C7DE-4147-8764-E6B4328C07E7}.CRMINTERNAL|x64.Build.0 = Debug|Any CPU
+		{581F17CF-C7DE-4147-8764-E6B4328C07E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{581F17CF-C7DE-4147-8764-E6B4328C07E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{581F17CF-C7DE-4147-8764-E6B4328C07E7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{581F17CF-C7DE-4147-8764-E6B4328C07E7}.Debug|x64.Build.0 = Debug|Any CPU
+		{581F17CF-C7DE-4147-8764-E6B4328C07E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{581F17CF-C7DE-4147-8764-E6B4328C07E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{581F17CF-C7DE-4147-8764-E6B4328C07E7}.Release|x64.ActiveCfg = Release|Any CPU
+		{581F17CF-C7DE-4147-8764-E6B4328C07E7}.Release|x64.Build.0 = Release|Any CPU
+		{8FD12028-BBEF-448B-BD43-E352386149DD}.CRMINTERNAL|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FD12028-BBEF-448B-BD43-E352386149DD}.CRMINTERNAL|Any CPU.Build.0 = Debug|Any CPU
+		{8FD12028-BBEF-448B-BD43-E352386149DD}.CRMINTERNAL|x64.ActiveCfg = Debug|Any CPU
+		{8FD12028-BBEF-448B-BD43-E352386149DD}.CRMINTERNAL|x64.Build.0 = Debug|Any CPU
+		{8FD12028-BBEF-448B-BD43-E352386149DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FD12028-BBEF-448B-BD43-E352386149DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8FD12028-BBEF-448B-BD43-E352386149DD}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8FD12028-BBEF-448B-BD43-E352386149DD}.Debug|x64.Build.0 = Debug|Any CPU
+		{8FD12028-BBEF-448B-BD43-E352386149DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FD12028-BBEF-448B-BD43-E352386149DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8FD12028-BBEF-448B-BD43-E352386149DD}.Release|x64.ActiveCfg = Release|Any CPU
+		{8FD12028-BBEF-448B-BD43-E352386149DD}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -151,6 +179,7 @@ Global
 		{F85F6B93-D17D-4CAE-9B2F-D293BE73C700} = {CD32538C-E929-42F9-A936-5550427E2CD5}
 		{5A1A4FFF-78F5-48A2-9AB0-3E507E938465} = {CD32538C-E929-42F9-A936-5550427E2CD5}
 		{E24CC0FA-4686-448E-A9AC-7A2B58D07FF6} = {01915F6D-79FF-4118-9EAD-2470351C8035}
+		{581F17CF-C7DE-4147-8764-E6B4328C07E7} = {CD32538C-E929-42F9-A936-5550427E2CD5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EA6D26FC-C065-4849-959E-1EF7FC013AF2}

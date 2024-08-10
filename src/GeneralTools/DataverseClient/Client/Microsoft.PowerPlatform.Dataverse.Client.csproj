@@ -34,22 +34,31 @@
 		<PackageReference Include="Microsoft.Identity.Client" version="$(PackageVersion_MSAL)" />
 		<PackageReference Include="Microsoft.Rest.ClientRuntime" Version="$(PackageVersion_RestClientRuntime)" />
 		<PackageReference Include="Microsoft.VisualBasic" Version="10.3.0" />
-		<PackageReference Include="System.ServiceModel.Http" version="4.10.3" />
-		<PackageReference Include="System.ServiceModel.Primitives" version="4.10.3" />
 		<PackageReference Include="Newtonsoft.Json" Version="$(PackageVersion_Newtonsoft)" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="$(PackageVersion_SystemConfigurationConfigurationManager)" />
-		<!--<PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.7.0" />
-    <PackageReference Include="System.Security.Permissions" Version="$(PackageVersion_SystemSecurityPermissions)" />  -->
 		<PackageReference Include="System.Text.Json" Version="$(PackageVersion_SystemTextJson)" />
 		<PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="$(PackageVersion_MSAL)" />
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="$(PackageVersion_Microsoft_Extensions)" />
-		<!--<PackageReference Include="System.Drawing.Common" Version="5.0.3" />-->
-		<!-- explict add to deal with CVE-2021-24112  -->
 	</ItemGroup>
+	<Choose>
+		<When Condition="'$(TargetFramework)' == 'net6.0' or '$(TargetFramework)' == 'net8.0'">
+			<ItemGroup>
+				<PackageReference Include="System.ServiceModel.Http" version="$(PackageVersion_System_ServiceModel_PostNet6)" />
+				<PackageReference Include="System.ServiceModel.Primitives" version="$(PackageVersion_System_ServiceModel_PostNet6)"/>
+			</ItemGroup>
+		</When>
+		<Otherwise>
+			<ItemGroup>
+				<PackageReference Include="System.ServiceModel.Http" version="$(PackageVersion_System_ServiceModel_PreNet6)" />
+				<PackageReference Include="System.ServiceModel.Primitives" version="$(PackageVersion_System_ServiceModel_PreNet6)" />
+			</ItemGroup>
+		</Otherwise>
+	</Choose>
+
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net462' or '$(TargetFramework)' == 'net472' or '$(TargetFramework)' == 'net48'">
 		<Reference Include="System.Web" />
 	</ItemGroup>
+
 
 </Project>

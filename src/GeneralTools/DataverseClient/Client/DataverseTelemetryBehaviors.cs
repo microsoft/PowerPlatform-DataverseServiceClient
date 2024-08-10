@@ -369,8 +369,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             {
                 using (OperationContextScope scope = new OperationContextScope((IContextChannel)channel))
                 {
-                    var ForceConsistencytHeader = new MessageHeader<string>("Strong").GetUntypedHeader(Utilities.RequestHeaders.FORCE_CONSISTENCY, "http://schemas.microsoft.com/xrm/2011/Contracts");
-                    request.Headers.Add(ForceConsistencytHeader);
+                    var ForceConsistencyHeader = new MessageHeader<string>("Strong").GetUntypedHeader(Utilities.RequestHeaders.FORCE_CONSISTENCY, "http://schemas.microsoft.com/xrm/2011/Contracts");
+                    request.Headers.Add(ForceConsistencyHeader);
                 }
             }
             return null;

@@ -24,6 +24,9 @@
         <dependency id="Microsoft.Rest.ClientRuntime" version="[$PackageVersion_RestClientRuntime$,)" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="[$PackageVersion_Newtonsoft$,)" exclude="Build,Analyzers" />
         <dependency id="System.Text.Json" version="[$PackageVersion_SystemTextJson$,)" exclude="Build,Analyzers" />
+        <dependency id="System.ServiceModel.Http" version="[$PackageVersion_System_ServiceModel_PreNet6$,)" />
+        <dependency id="System.ServiceModel.Primitives" version="[$PackageVersion_System_ServiceModel_PreNet6$,)" />
+
       </group>
       <group targetFramework=".NETFramework4.7.2">
         <dependency id="Microsoft.Extensions.DependencyInjection" version="[$PackageVersion_Microsoft_Extensions$,)" exclude="Build,Analyzers" />
@@ -35,6 +38,8 @@
         <dependency id="Microsoft.Rest.ClientRuntime" version="[$PackageVersion_RestClientRuntime$,)" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="[$PackageVersion_Newtonsoft$,)" exclude="Build,Analyzers" />
         <dependency id="System.Text.Json" version="[$PackageVersion_SystemTextJson$,)" exclude="Build,Analyzers" />
+        <dependency id="System.ServiceModel.Http" version="[$PackageVersion_System_ServiceModel_PreNet6$,)" />
+        <dependency id="System.ServiceModel.Primitives" version="[$PackageVersion_System_ServiceModel_PreNet6$,)" />
       </group>
       <group targetFramework=".NETFramework4.8">
         <dependency id="Microsoft.Extensions.DependencyInjection" version="[$PackageVersion_Microsoft_Extensions$,)" exclude="Build,Analyzers" />
@@ -46,6 +51,8 @@
         <dependency id="Microsoft.Rest.ClientRuntime" version="[$PackageVersion_RestClientRuntime$,)" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="[$PackageVersion_Newtonsoft$,)" exclude="Build,Analyzers" />
         <dependency id="System.Text.Json" version="[$PackageVersion_SystemTextJson$,)" exclude="Build,Analyzers" />
+        <dependency id="System.ServiceModel.Http" version="[$PackageVersion_System_ServiceModel_PreNet6$,)" />
+        <dependency id="System.ServiceModel.Primitives" version="[$PackageVersion_System_ServiceModel_PreNet6$,)" />
       </group>
       <group targetFramework="NET6.0">
         <dependency id="System.Collections" version="4.3.0" exclude="Build,Analyzers" />
@@ -59,8 +66,8 @@
         <dependency id="System.Runtime.Serialization.Primitives" version="4.3.0" exclude="Build,Analyzers" />
         <dependency id="System.Runtime.Serialization.Xml" version="4.3.0" exclude="Build,Analyzers" />
         <dependency id="System.Security.Permissions" version="[$PackageVersion_SystemSecurityPermissions$,)" exclude="Build,Analyzers" />
-        <dependency id="System.ServiceModel.Http" version="4.10.3" exclude="Build,Analyzers" />
-        <dependency id="System.ServiceModel.Primitives" version="4.10.3" exclude="Build,Analyzers" />
+        <dependency id="System.ServiceModel.Http" version="[$PackageVersion_System_ServiceModel_PostNet6$,)" exclude="Build,Analyzers" />
+        <dependency id="System.ServiceModel.Primitives" version="[$PackageVersion_System_ServiceModel_PostNet6$,)" exclude="Build,Analyzers" />
         <dependency id="System.Text.Json" version="[$PackageVersion_SystemTextJson$,)" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.DependencyInjection" version="[$PackageVersion_Microsoft_Extensions$,)" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Http" version="[$PackageVersion_Microsoft_Extensions$,)" exclude="Build,Analyzers" />

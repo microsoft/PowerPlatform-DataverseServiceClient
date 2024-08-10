@@ -3,8 +3,8 @@
     <PropertyGroup Label="Package versions">
         <PackageVersion_Adal>3.19.8</PackageVersion_Adal>
         <PackageVersion_MSAL>4.61.3</PackageVersion_MSAL>
-        <PackageVersion_CdsSdk>9.2.24044.9795-master</PackageVersion_CdsSdk>
-        <PackageVersion_CrmProxy>9.2.24044.9795-master</PackageVersion_CrmProxy>
+        <PackageVersion_CdsSdk>9.2.24073.11611-master</PackageVersion_CdsSdk>
+        <PackageVersion_CrmProxy>9.2.24073.11611-master</PackageVersion_CrmProxy>
         <PackageVersion_Newtonsoft>13.0.1</PackageVersion_Newtonsoft>
         <PackageVersion_RestClientRuntime>2.3.24</PackageVersion_RestClientRuntime>
         <PackageVersion_XrmSdk>9.0.2.55</PackageVersion_XrmSdk>
@@ -17,10 +17,11 @@
         <PackageVersion_SystemTextJson>7.0.3</PackageVersion_SystemTextJson>
         <PackageVersion_SystemTextEncodingsWeb>7.0.0</PackageVersion_SystemTextEncodingsWeb>
         <PackageVersion_SystemMemory>4.5.5</PackageVersion_SystemMemory>
-        <PackageVersion_SystemServiceModelHttp>4.10.3</PackageVersion_SystemServiceModelHttp>
         <PackageVersion_SystemConfigurationConfigurationManager>6.0.0</PackageVersion_SystemConfigurationConfigurationManager>
         <PackageVersion_SystemSecurityPermissions>6.0.0</PackageVersion_SystemSecurityPermissions>
         <PackageVersion_Azure_Identity>1.12.0</PackageVersion_Azure_Identity>
+        <PackageVersion_System_ServiceModel_PreNet6>4.10.3</PackageVersion_System_ServiceModel_PreNet6>
+        <PackageVersion_System_ServiceModel_PostNet6>6.2.0</PackageVersion_System_ServiceModel_PostNet6>
 
         <!-- Test: -->
         <PackageVersion_MicrosoftNETTestSdk>17.5.0</PackageVersion_MicrosoftNETTestSdk>
