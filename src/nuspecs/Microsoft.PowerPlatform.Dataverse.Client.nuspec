@@ -21,7 +21,6 @@
         <dependency id="Microsoft.Extensions.Caching.Memory" version="[$PackageVersion_Microsoft_Extensions$,)" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client" version="[$PackageVersion_MSAL$,)" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="[$PackageVersion_MSAL$,)" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Rest.ClientRuntime" version="[$PackageVersion_RestClientRuntime$,)" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="[$PackageVersion_Newtonsoft$,)" exclude="Build,Analyzers" />
         <dependency id="System.Text.Json" version="[$PackageVersion_SystemTextJson$,)" exclude="Build,Analyzers" />
         <dependency id="System.ServiceModel.Http" version="[$PackageVersion_System_ServiceModel_PreNet6$,)" />
@@ -35,7 +34,6 @@
         <dependency id="Microsoft.Extensions.Caching.Memory" version="[$PackageVersion_Microsoft_Extensions$,)" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client" version="[$PackageVersion_MSAL$,)" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="[$PackageVersion_MSAL$,)" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Rest.ClientRuntime" version="[$PackageVersion_RestClientRuntime$,)" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="[$PackageVersion_Newtonsoft$,)" exclude="Build,Analyzers" />
         <dependency id="System.Text.Json" version="[$PackageVersion_SystemTextJson$,)" exclude="Build,Analyzers" />
         <dependency id="System.ServiceModel.Http" version="[$PackageVersion_System_ServiceModel_PreNet6$,)" />
@@ -48,7 +46,6 @@
         <dependency id="Microsoft.Extensions.Caching.Memory" version="[$PackageVersion_Microsoft_Extensions$,)" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client" version="[$PackageVersion_MSAL$,)" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="[$PackageVersion_MSAL$,)" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Rest.ClientRuntime" version="[$PackageVersion_RestClientRuntime$,)" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="[$PackageVersion_Newtonsoft$,)" exclude="Build,Analyzers" />
         <dependency id="System.Text.Json" version="[$PackageVersion_SystemTextJson$,)" exclude="Build,Analyzers" />
         <dependency id="System.ServiceModel.Http" version="[$PackageVersion_System_ServiceModel_PreNet6$,)" />
@@ -75,12 +72,37 @@
         <dependency id="Microsoft.Extensions.Caching.Memory" version="[$PackageVersion_Microsoft_Extensions$,)" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client" version="[$PackageVersion_MSAL$,)" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="[$PackageVersion_MSAL$,)" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Rest.ClientRuntime" version="[$PackageVersion_RestClientRuntime$,)" exclude="Build,Analyzers" />
         <dependency id="Microsoft.VisualBasic" version="10.3.0" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="[$PackageVersion_Newtonsoft$,)" exclude="Build,Analyzers" />
         <dependency id="System.Configuration.ConfigurationManager" version="[$PackageVersion_SystemConfigurationConfigurationManager$,)" exclude="Build,Analyzers" />
         <dependency id="System.Runtime.Caching" version="4.7.0" exclude="Build,Analyzers" />
       </group>      
+      <group targetFramework="NET8.0">
+        <dependency id="System.Collections" version="4.3.0" exclude="Build,Analyzers" />
+        <dependency id="System.Globalization" version="4.3.0" exclude="Build,Analyzers" />
+        <dependency id="System.Linq" version="4.3.0" exclude="Build,Analyzers" />
+        <dependency id="System.Linq.Expressions" version="4.3.0" exclude="Build,Analyzers" />
+        <dependency id="System.Private.DataContractSerialization" version="4.3.0" exclude="Build,Analyzers" />
+        <dependency id="System.Reflection" version="4.3.0" exclude="Build,Analyzers" />
+        <dependency id="System.Reflection.Extensions" version="4.3.0" exclude="Build,Analyzers" />
+        <dependency id="System.Reflection.TypeExtensions" version="4.7.0" exclude="Build,Analyzers" />
+        <dependency id="System.Runtime.Serialization.Primitives" version="4.3.0" exclude="Build,Analyzers" />
+        <dependency id="System.Runtime.Serialization.Xml" version="4.3.0" exclude="Build,Analyzers" />
+        <dependency id="System.Security.Permissions" version="[$PackageVersion_SystemSecurityPermissions$,)" exclude="Build,Analyzers" />
+        <dependency id="System.ServiceModel.Http" version="[$PackageVersion_System_ServiceModel_PostNet6$,)" exclude="Build,Analyzers" />
+        <dependency id="System.ServiceModel.Primitives" version="[$PackageVersion_System_ServiceModel_PostNet6$,)" exclude="Build,Analyzers" />
+        <dependency id="System.Text.Json" version="[$PackageVersion_SystemTextJson$,)" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.DependencyInjection" version="[$PackageVersion_Microsoft_Extensions$,)" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.Http" version="[$PackageVersion_Microsoft_Extensions$,)" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.Logging" version="[$PackageVersion_Microsoft_Extensions$,)" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.Caching.Memory" version="[$PackageVersion_Microsoft_Extensions$,)" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client" version="[$PackageVersion_MSAL$,)" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="[$PackageVersion_MSAL$,)" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.VisualBasic" version="10.3.0" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="[$PackageVersion_Newtonsoft$,)" exclude="Build,Analyzers" />
+        <dependency id="System.Configuration.ConfigurationManager" version="[$PackageVersion_SystemConfigurationConfigurationManager$,)" exclude="Build,Analyzers" />
+        <dependency id="System.Runtime.Caching" version="4.7.0" exclude="Build,Analyzers" />
+      </group> 
     </dependencies>
     <frameworkAssemblies>
       <frameworkAssembly assemblyName="System.Web" targetFramework=".NETFramework4.6.2, .NETFramework4.7.2, .NETFramework4.8" />

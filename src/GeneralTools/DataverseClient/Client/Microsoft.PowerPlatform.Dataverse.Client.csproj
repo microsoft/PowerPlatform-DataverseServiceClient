@@ -32,10 +32,11 @@
 		<PackageReference Include="Microsoft.Extensions.Http" Version="$(PackageVersion_Microsoft_Extensions)" />
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="$(PackageVersion_Microsoft_Extensions)" />
 		<PackageReference Include="Microsoft.Identity.Client" version="$(PackageVersion_MSAL)" />
-		<PackageReference Include="Microsoft.Rest.ClientRuntime" Version="$(PackageVersion_RestClientRuntime)" />
+		<!--<PackageReference Include="Microsoft.Rest.ClientRuntime" Version="$(PackageVersion_RestClientRuntime)" />-->
 		<PackageReference Include="Microsoft.VisualBasic" Version="10.3.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="$(PackageVersion_Newtonsoft)" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="$(PackageVersion_SystemConfigurationConfigurationManager)" />
+		<PackageReference Include="System.Formats.Asn1" Version="8.0.1" />
 		<PackageReference Include="System.Text.Json" Version="$(PackageVersion_SystemTextJson)" />
 		<PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="$(PackageVersion_MSAL)" />
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="$(PackageVersion_Microsoft_Extensions)" />
@@ -44,7 +45,7 @@
 		<When Condition="'$(TargetFramework)' == 'net6.0' or '$(TargetFramework)' == 'net8.0'">
 			<ItemGroup>
 				<PackageReference Include="System.ServiceModel.Http" version="$(PackageVersion_System_ServiceModel_PostNet6)" />
-				<PackageReference Include="System.ServiceModel.Primitives" version="$(PackageVersion_System_ServiceModel_PostNet6)"/>
+				<PackageReference Include="System.ServiceModel.Primitives" version="$(PackageVersion_System_ServiceModel_PostNet6)" />
 			</ItemGroup>
 		</When>
 		<Otherwise>

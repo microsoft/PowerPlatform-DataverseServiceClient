@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
-using Microsoft.Rest;
 using Microsoft.Xrm.Sdk;
 using Newtonsoft.Json.Linq;
 using System;
@@ -12,6 +11,7 @@ using System.Globalization;
 using System.ServiceModel;
 using System.Linq;
 using System.Text;
+using Microsoft.PowerPlatform.Dataverse.Client.Exceptions;
 
 namespace Microsoft.PowerPlatform.Dataverse.Client
 {
@@ -21,9 +21,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
     [LocalizableAttribute(false)]
     internal sealed class DataverseTraceLogger : TraceLoggerBase
     {
-        // Internal connection of exceptions since last clear.
-        private List<Exception> _ActiveExceptionsList;
-
         internal ILogger _logger;
 
         #region Properties
@@ -79,8 +76,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 TraceSourceName = traceSourceName;
             }
 
-            _ActiveExceptionsList = new List<Exception>();
-
             base.Initialize();
         }
 
@@ -88,7 +83,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         {
             _logger = logger;
             TraceSourceName = DefaultTraceSourceName;
-            _ActiveExceptionsList = new List<Exception>();
             base.Initialize();
         }
 
@@ -98,7 +92,6 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             if (base.LastError.Length > 0)
                 base.LastError = base.LastError.Remove(0, LastError.Length - 1);
             LastException = null;
-            _ActiveExceptionsList.Clear();
         }
 
         /// <summary>
@@ -151,39 +144,34 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 exception = new Exception(message);
             }
 
-            StringBuilder detailedDump = new StringBuilder();
-            StringBuilder lastMessage = new StringBuilder();
+            StringBuilder detailedDump = new StringBuilder(4096);
+            StringBuilder lastMessage = new StringBuilder(2048);
 
             lastMessage.AppendLine(message); // Added to fix missing last error line.
             detailedDump.AppendLine(message); // Added to fix missing error line.
 
-            if (!(exception != null && _ActiveExceptionsList.Contains(exception))) // Skip this line if its already been done.
-                GetExceptionDetail(exception, detailedDump, 0, lastMessage);
+            GetExceptionDetail(exception, detailedDump, 0, lastMessage);
 
             TraceEvent(eventType, (int)eventType, detailedDump.ToString(), exception);
             if (eventType == TraceEventType.Error)
             {
                 base.LastError += lastMessage.ToString();
-                if (!(exception != null && _ActiveExceptionsList.Contains(exception))) // Skip this line if its already been done.
+                // check and or alter the exception is its and HTTPOperationExecption.
+                if (exception is HttpOperationException httpOperationException)
                 {
-                    // check and or alter the exception is its and HTTPOperationExecption.
-                    if (exception is HttpOperationException httpOperationException)
+                    string errorMessage = "Not Provided";
+                    if (!string.IsNullOrWhiteSpace(httpOperationException.Response.Content))
                     {
-                        string errorMessage = "Not Provided";
-                        if (!string.IsNullOrWhiteSpace(httpOperationException.Response.Content))
-                        {
-                            JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
-                            errorMessage = string.IsNullOrEmpty(contentBody["error"]["message"]?.ToString()) ? "Not Provided" : GetFirstLineFromString(contentBody["error"]["message"]?.ToString()).Trim();
-                        }
-
-                        Utils.DataverseOperationException webApiExcept = new Utils.DataverseOperationException(errorMessage, httpOperationException);
-                        LastException = webApiExcept;
+                        JObject contentBody = JObject.Parse(httpOperationException.Response.Content);
+                        errorMessage = string.IsNullOrEmpty(contentBody["error"]["message"]?.ToString()) ? "Not Provided" : GetFirstLineFromString(contentBody["error"]["message"]?.ToString()).Trim();
                     }
-                    else
-                        LastException = exception;
+
+                    Utils.DataverseOperationException webApiExcept = new Utils.DataverseOperationException(errorMessage, httpOperationException);
+                    LastException = webApiExcept;
                 }
+                else
+                    LastException = exception;
             }
-            _ActiveExceptionsList.Add(exception);
 
             detailedDump.Clear();
             lastMessage.Clear();
@@ -196,17 +184,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="exception"></param>
         public override void Log(Exception exception)
         {
-            if (exception != null && _ActiveExceptionsList.Contains(exception))
-                return;  // already logged this one .
-
-            StringBuilder detailedDump = new StringBuilder();
-            StringBuilder lastMessage = new StringBuilder();
+            StringBuilder detailedDump = new StringBuilder(4096);
+            StringBuilder lastMessage = new StringBuilder(2048);
             GetExceptionDetail(exception, detailedDump, 0, lastMessage);
             TraceEvent(TraceEventType.Error, (int)TraceEventType.Error, detailedDump.ToString(), exception);
             base.LastError += lastMessage.ToString();
             LastException = exception;
-
-            _ActiveExceptionsList.Add(exception);
 
             detailedDump.Clear();
             lastMessage.Clear();
@@ -594,7 +577,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         {
             if (errorDetails != null && errorDetails.Count > 0)
             {
-                StringBuilder sw = new StringBuilder();
+                StringBuilder sw = new StringBuilder(2048);
                 sw.AppendLine("Error Details\t:");
                 foreach (var itm in errorDetails)
                 {

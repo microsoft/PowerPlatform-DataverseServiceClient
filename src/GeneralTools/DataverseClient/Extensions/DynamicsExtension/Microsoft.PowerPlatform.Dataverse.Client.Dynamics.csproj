@@ -15,6 +15,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Xrm.Sdk" Version="$(PackageVersion_CdsSdk)" />
 	<PackageReference Include="Microsoft.Crm.Sdk.Proxy" Version="$(PackageVersion_CrmProxy)" />
+	<PackageReference Include="System.Formats.Asn1" Version="8.0.1" />
   </ItemGroup>
 
   <ItemGroup>
