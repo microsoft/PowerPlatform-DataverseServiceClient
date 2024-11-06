@@ -7,6 +7,20 @@ Notice:
     Note: Only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+***** POSSIBLE Breaking Changes *****
+    Minor Release Bump, 
+        Added .net 8.0 Target. 
+        .net 6.0 Target will be removed in a subsequent release. 
+    Removed dependance on Microsoft.Rest.Client.  this was primary used for exception handling, and the necessary components have been reworked in to DVSC Exception management classes.
+
+Fix memory consumption when too many exception are throw by DV client. Git: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/474
+Dependency Changes:
+    Modified:
+        System.Text.Json to 8.0.4
+    Removed: 
+        Microsoft.Rest.Client - Necessary carried over in client.
+
+1.1.32: 
 Fix for endless retry loop issue in WebAPI calls when specific error states are encountered.
 Fix for Logging MSAL telemetry when using ILogger
     Previously, Logs for MSAL were not written to the configured ILogger, they would only go to Trace Source and InMemory Logs.

@@ -7,7 +7,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.PowerPlatform.Dataverse.Client.Auth;
+using Microsoft.PowerPlatform.Dataverse.Client.Exceptions;
 using Microsoft.PowerPlatform.Dataverse.Client.Extensions;
+using Microsoft.PowerPlatform.Dataverse.Client.HttpUtils;
 using Microsoft.PowerPlatform.Dataverse.Client.Model;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 using Microsoft.Xrm.Sdk;
@@ -138,10 +140,10 @@ namespace Client_Core_Tests
 
 
             // error throw.
-            Microsoft.Rest.HttpOperationException operationException = new Microsoft.Rest.HttpOperationException("HTTPOPEXC");
+            HttpOperationException operationException = new HttpOperationException("HTTPOPEXC");
             HttpResponseMessage Resp500 = new HttpResponseMessage(System.Net.HttpStatusCode.ServiceUnavailable);
             Resp500.Headers.Add("REQ_ID", "39393F77-8F8B-4416-846E-28B4D2AA5667");
-            operationException.Response = new Microsoft.Rest.HttpResponseMessageWrapper(Resp500, "{\"error\":{\"code\":\"0x80040203\",\"message\":\"Communication activity cannot have more than one Sender party\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiExceptionSourceKey\":\"Plugin/Microsoft.Crm.Common.ObjectModel.PhoneCallService\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiStepKey\":\"3ccabb1b-ea3e-db11-86a7-000a3a5473e8\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiDepthKey\":\"1\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiActivityIdKey\":\"1736f387-e025-4828-a2bb-74ea8ac768a2\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiPluginSolutionNameKey\":\"System\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiStepSolutionNameKey\":\"System\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiExceptionCategory\":\"ClientError\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiExceptionMesageName\":\"InvalidArgument\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiExceptionHttpStatusCode\":\"400\",\"@Microsoft.PowerApps.CDS.HelpLink\":\"http://go.microsoft.com/fwlink/?LinkID=398563&error=Microsoft.Crm.CrmException%3a80040203&client=platform\",\"@Microsoft.PowerApps.CDS.InnerError.Message\":\"Communication activity cannot have more than one Sender party\"}}");
+            operationException.Response = new HttpResponseMessageWrapper(Resp500, "{\"error\":{\"code\":\"0x80040203\",\"message\":\"Communication activity cannot have more than one Sender party\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiExceptionSourceKey\":\"Plugin/Microsoft.Crm.Common.ObjectModel.PhoneCallService\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiStepKey\":\"3ccabb1b-ea3e-db11-86a7-000a3a5473e8\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiDepthKey\":\"1\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiActivityIdKey\":\"1736f387-e025-4828-a2bb-74ea8ac768a2\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiPluginSolutionNameKey\":\"System\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiStepSolutionNameKey\":\"System\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiExceptionCategory\":\"ClientError\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiExceptionMesageName\":\"InvalidArgument\",\"@Microsoft.PowerApps.CDS.ErrorDetails.ApiExceptionHttpStatusCode\":\"400\",\"@Microsoft.PowerApps.CDS.HelpLink\":\"http://go.microsoft.com/fwlink/?LinkID=398563&error=Microsoft.Crm.CrmException%3a80040203&client=platform\",\"@Microsoft.PowerApps.CDS.InnerError.Message\":\"Communication activity cannot have more than one Sender party\"}}");
             logger.Log(operationException);
 
             Assert.NotNull(logger.LastError);

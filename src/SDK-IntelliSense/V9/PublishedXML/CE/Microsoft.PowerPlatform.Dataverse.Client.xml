@@ -1443,7 +1443,7 @@
     </member>
     <member name="F:Microsoft.PowerPlatform.Dataverse.Client.ImportSolutionProperties.CONVERTTOMANAGED">
       <summary>
-            Direct the system to convert any matching unmanaged customizations into your managed solution</summary>
+            Obsolete.  The system will convert unmanaged solution components to managed when you import a managed solution.</summary>
     </member>
     <member name="F:Microsoft.PowerPlatform.Dataverse.Client.ImportSolutionProperties.DESIREDLAYERORDERPARAM">
       <summary>

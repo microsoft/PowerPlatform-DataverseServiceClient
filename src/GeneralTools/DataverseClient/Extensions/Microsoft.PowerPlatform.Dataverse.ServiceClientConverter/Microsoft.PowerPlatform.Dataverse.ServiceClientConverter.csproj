@@ -2,19 +2,19 @@
 
 	<PropertyGroup>
 		<RootNamespace>Microsoft.PowerPlatform.Dataverse.ServiceClientConverter</RootNamespace>
-		<ComponentAreaName>DataverseClient</ComponentAreaName>
+		<ComponentAreaName>DataverseClientConverter</ComponentAreaName>
 		<SignAssembly>true</SignAssembly>
 	</PropertyGroup>
 	<Import Project="..\..\..\..\Build.Common.core.props" />
 
 	<PropertyGroup>
+		<TargetFrameworks>net462;net472;net48</TargetFrameworks>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<DocumentationFile>$(OutDir)\Microsoft.PowerPlatform.Dataverse.ServiceClientConverter.xml</DocumentationFile>
-		<TargetFrameworks>net462;net472;net48</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Microsoft.CrmSdk.XrmTooling.CoreAssembly" Version="9.1.0.110" />
-	  <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.0.0" />
+	  <PackageReference Include="Microsoft.CrmSdk.XrmTooling.CoreAssembly" Version="9.1.*" />
+	  <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.*" />
 	</ItemGroup>
 </Project>
