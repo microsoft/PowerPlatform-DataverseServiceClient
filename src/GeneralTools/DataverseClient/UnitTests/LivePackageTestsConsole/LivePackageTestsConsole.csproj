@@ -18,6 +18,7 @@
     </RestoreAdditionalProjectSources>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <TargetDvClientPackageVersion Condition=" '$(TargetDvClientPackageVersion)' == '' ">1.0.26</TargetDvClientPackageVersion>
+    <NoWarn>NU1605</NoWarn>
 
     <!-- Ensure we don't clobber local machine's package cache with dev/alpha versions. -->
     <RestorePackagesPath>$(MSBuildThisFileDirectory)..\.packages</RestorePackagesPath>

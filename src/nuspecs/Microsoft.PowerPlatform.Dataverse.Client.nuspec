@@ -117,6 +117,13 @@
     </frameworkAssemblies>
   </metadata>
   <files>
+    <file src="{signedBinDir}\{configuration}\DataverseClient\net8.0\Microsoft.PowerPlatform.Dataverse.Client.dll" target="lib\net8.0\Microsoft.PowerPlatform.Dataverse.Client.dll" />
+    <file src="{signedBinDir}\{configuration}\DataverseClient\net8.0\Microsoft.Xrm.Sdk.dll" target="lib\net8.0\Microsoft.Xrm.Sdk.dll" />
+    <file src="{signedBinDir}\{configuration}\DataverseClient\net8.0\Microsoft.Crm.Sdk.Proxy.dll" target="lib\net8.0\Microsoft.Crm.Sdk.Proxy.dll" />
+    <file src="{sdkIntellisenseDir}\V9\PublishedXML\CE\Microsoft.PowerPlatform.Dataverse.Client.xml" target="lib\net8.0\Microsoft.PowerPlatform.Dataverse.Client.xml" />
+    <file src="{sdkIntellisenseDir}\V9\PublishedXML\CE\Microsoft.Xrm.Sdk.xml" target="lib\net8.0\Microsoft.Xrm.Sdk.xml" />
+    <file src="{sdkIntellisenseDir}\V9\PublishedXML\CE\Microsoft.Crm.Sdk.Proxy.xml" target="lib\net8.0\Microsoft.Crm.Sdk.Proxy.xml" />
+
     <file src="{signedBinDir}\{configuration}\DataverseClient\net6.0\Microsoft.PowerPlatform.Dataverse.Client.dll" target="lib\net6.0\Microsoft.PowerPlatform.Dataverse.Client.dll" />
     <file src="{signedBinDir}\{configuration}\DataverseClient\net6.0\Microsoft.Xrm.Sdk.dll" target="lib\net6.0\Microsoft.Xrm.Sdk.dll" />
     <file src="{signedBinDir}\{configuration}\DataverseClient\net6.0\Microsoft.Crm.Sdk.Proxy.dll" target="lib\net6.0\Microsoft.Crm.Sdk.Proxy.dll" />

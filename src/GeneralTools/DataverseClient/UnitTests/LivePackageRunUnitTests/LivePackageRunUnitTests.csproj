@@ -8,6 +8,7 @@
     <SignAssembly>true</SignAssembly>
     <ComponentAreaName>DataverseClient-Tests-Package</ComponentAreaName>
     <IsPackable>false</IsPackable>
+    <NoWarn>NU1605</NoWarn>
 
     <!-- Ensure we don't clobber local machine's package cache with dev/alpha versions. -->
     <RestorePackagesPath>$(MSBuildThisFileDirectory)..\.packages</RestorePackagesPath>
