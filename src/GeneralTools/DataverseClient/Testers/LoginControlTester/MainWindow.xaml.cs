@@ -56,6 +56,7 @@ namespace LoginControlTester
 		public MainWindow()
 		{
 			InitializeComponent();
+			// CodeQL [SM02184] intent is to debug the login process
 			ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) =>
 			{
 				//MessageBox.Show("CertError");
