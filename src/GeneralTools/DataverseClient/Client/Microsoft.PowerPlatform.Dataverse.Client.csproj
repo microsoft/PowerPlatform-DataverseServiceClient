@@ -36,7 +36,7 @@
 		<PackageReference Include="Microsoft.VisualBasic" Version="10.3.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="$(PackageVersion_Newtonsoft)" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="$(PackageVersion_SystemConfigurationConfigurationManager)" />
-		<PackageReference Include="System.Formats.Asn1" Version="8.0.1" />
+		<PackageReference Include="System.Formats.Asn1" Version="$(PackageVersion_System_Formats_Asn1)" />
 		<PackageReference Include="System.Text.Json" Version="$(PackageVersion_SystemTextJson)" />
 		<PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="$(PackageVersion_MSAL)" />
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="$(PackageVersion_Microsoft_Extensions)" />

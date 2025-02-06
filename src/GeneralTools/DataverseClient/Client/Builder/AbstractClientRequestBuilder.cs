@@ -135,9 +135,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Builder
             }
 
             ParameterCollection parameters = new ParameterCollection();
-            Guid requestTracker = _requestId ?? Guid.NewGuid();
-            request.RequestId = requestTracker;
-            
+
+            if (_requestId != null)
+            {
+                request.RequestId = _requestId.Value;
+            }
+            else if (request.RequestId == null || request.RequestId == Guid.Empty)
+            {
+                request.RequestId = Guid.NewGuid();
+            }
 
             if (_correlationId != null)
             {

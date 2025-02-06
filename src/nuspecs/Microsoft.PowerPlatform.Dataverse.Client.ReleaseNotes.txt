@@ -7,11 +7,19 @@ Notice:
     Note: Only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+RequestId on OrganizationRequest is not overridden by random Guid if present. RequestId from ClientRequestBuilder still takes precedence over OrganizationRequest.RequestId
+Dependency changes:
+    Microsoft.Identity.Client updated to 4.66.1
+    System.Text.Json updated to 8.0.5
+    Azure.Identity updated to 1.31.1
+
+
+1.2.2: 
 ***** POSSIBLE Breaking Changes *****
     Minor Release Bump, 
         Added .net 8.0 Target. 
         .net 6.0 Target will be removed in a subsequent release. 
-    Removed dependance on Microsoft.Rest.Client.  this was primary used for exception handling, and the necessary components have been reworked in to DVSC Exception management classes.
+    Removed dependence on Microsoft.Rest.Client.  this was primary used for exception handling, and the necessary components have been reworked in to DVSC Exception management classes.
 
 Fix memory consumption when too many exception are throw by DV client. Git: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/474
 Dependency Changes:
