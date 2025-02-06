@@ -2,9 +2,9 @@
     <!-- This file is used for controling versions of packages for projects in this repo, it is also used to populate dependnaices in Nuspec files.-->
     <PropertyGroup Label="Package versions">
         <PackageVersion_Adal>3.19.8</PackageVersion_Adal>
-        <PackageVersion_MSAL>4.61.3</PackageVersion_MSAL>
-        <PackageVersion_CdsSdk>9.2.24073.11611-master</PackageVersion_CdsSdk>
-        <PackageVersion_CrmProxy>9.2.24073.11611-master</PackageVersion_CrmProxy>
+        <PackageVersion_MSAL>4.66.1</PackageVersion_MSAL>
+        <PackageVersion_CdsSdk>9.2.25021.14828-master</PackageVersion_CdsSdk>
+        <PackageVersion_CrmProxy>9.2.25021.14828-master</PackageVersion_CrmProxy>
         <PackageVersion_Newtonsoft>13.0.1</PackageVersion_Newtonsoft>
         <PackageVersion_RestClientRuntime>2.3.24</PackageVersion_RestClientRuntime>
         <PackageVersion_XrmSdk>9.0.2.56</PackageVersion_XrmSdk>
@@ -14,14 +14,15 @@
         <PackageVersion_CoverletCollector>3.1.0</PackageVersion_CoverletCollector>
         <PackageVersion_Microsoft_Extensions>3.1.8</PackageVersion_Microsoft_Extensions>
         <PackageVersion_SystemRuntime>6.0.0</PackageVersion_SystemRuntime>
-        <PackageVersion_SystemTextJson>8.0.4</PackageVersion_SystemTextJson>
+        <PackageVersion_SystemTextJson>8.0.5</PackageVersion_SystemTextJson>
         <PackageVersion_SystemTextEncodingsWeb>7.0.0</PackageVersion_SystemTextEncodingsWeb>
         <PackageVersion_SystemMemory>4.5.5</PackageVersion_SystemMemory>
         <PackageVersion_SystemConfigurationConfigurationManager>6.0.0</PackageVersion_SystemConfigurationConfigurationManager>
         <PackageVersion_SystemSecurityPermissions>6.0.0</PackageVersion_SystemSecurityPermissions>
-        <PackageVersion_Azure_Identity>1.12.0</PackageVersion_Azure_Identity>
+        <PackageVersion_Azure_Identity>1.13.1</PackageVersion_Azure_Identity>
         <PackageVersion_System_ServiceModel_PreNet6>4.10.3</PackageVersion_System_ServiceModel_PreNet6>
         <PackageVersion_System_ServiceModel_PostNet6>6.2.0</PackageVersion_System_ServiceModel_PostNet6>
+        <PackageVersion_System_Formats_Asn1>8.0.1</PackageVersion_System_Formats_Asn1>
 
         <!-- Test: -->
         <PackageVersion_MicrosoftNETTestSdk>17.5.0</PackageVersion_MicrosoftNETTestSdk>

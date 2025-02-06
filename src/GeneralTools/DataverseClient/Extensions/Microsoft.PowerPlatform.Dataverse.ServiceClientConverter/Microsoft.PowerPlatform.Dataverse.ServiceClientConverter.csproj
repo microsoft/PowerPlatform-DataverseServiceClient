@@ -16,5 +16,6 @@
 	<ItemGroup>
 	  <PackageReference Include="Microsoft.CrmSdk.XrmTooling.CoreAssembly" Version="9.1.*" />
 	  <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.*" />
+	  <PackageReference Include="System.Text.Json" Version="$(PackageVersion_SystemTextJson)" />
 	</ItemGroup>
 </Project>
