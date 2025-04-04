@@ -1729,6 +1729,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
         internal OrganizationResponse ExecuteOrganizationRequestImpl(OrganizationRequest req, string logMessageTag = "User Defined", bool useWebAPI = false, bool bypassPluginExecution = false)
         {
+            _logEntry.ResetLastError();  // Reset Last Error
             ValidateConnectionLive();
             if (req != null)
             {
@@ -1752,6 +1753,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
         private async Task<OrganizationResponse> ExecuteOrganizationRequestAsyncImpl(OrganizationRequest req, CancellationToken cancellationToken, string logMessageTag = "User Defined", bool useWebAPI = false, bool bypassPluginExecution = false)
         {
+            _logEntry.ResetLastError();  // Reset Last Error
             ValidateConnectionLive();
             cancellationToken.ThrowIfCancellationRequested();
             if (req != null)

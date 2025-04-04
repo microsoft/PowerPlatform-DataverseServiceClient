@@ -23,11 +23,8 @@
       <group targetFramework=".NETFramework4.8">
         <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.2.2" exclude="Build,Analyzers" />
       </group>
-      <group targetFramework="NET6.0">
-        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.2.2" exclude="Build,Analyzers" />
-      </group>
       <group targetFramework="NET8.0">
-        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.2.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.2.3" exclude="Build,Analyzers" />
       </group>
       
     </dependencies>
@@ -45,8 +42,6 @@
   <files>
     <file src="{signedBinDir}\{configuration}\DataverseClient\net8.0\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.dll" target="lib\net8.0\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.dll" />
     <file src="{signedBinDir}\{configuration}\DataverseClient\net8.0\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.xml" target="lib\net8.0\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.xml" />
-    <file src="{signedBinDir}\{configuration}\DataverseClient\net6.0\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.dll" target="lib\net6.0\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.dll" />
-    <file src="{signedBinDir}\{configuration}\DataverseClient\net6.0\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.xml" target="lib\net6.0\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.xml" />
     <file src="{signedBinDir}\{configuration}\DataverseClient\net472\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.dll" target="lib\net472\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.dll" />
     <file src="{signedBinDir}\{configuration}\DataverseClient\net472\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.xml" target="lib\net472\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.xml" />
     <file src="{signedBinDir}\{configuration}\DataverseClient\net462\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.dll" target="lib\net462\Microsoft.PowerPlatform.Dataverse.Client.Dynamics.dll" />

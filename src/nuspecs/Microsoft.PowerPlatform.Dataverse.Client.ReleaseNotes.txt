@@ -7,6 +7,15 @@ Notice:
     Note: Only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Fix for Null ILogger passed to the AzAuth Client Creators causing a fault.  Git: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/481
+Fix for Memory Leak in Retrieve Multiple. Git: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/463
+Fix for Memory bloat issue caused by not releasing lastErrorMessage property. 
+Updated Error messages verbosity when checking for authority from Dataverse during onboard auth phase.
+Dependency changes:
+    System.ServiceModel.Http updated to 8.1.2 
+    REMOVED .net 6.0 Targets. .net 6.0 is no longer in support. 
+
+1.2.3:
 RequestId on OrganizationRequest is not overridden by random Guid if present. RequestId from ClientRequestBuilder still takes precedence over OrganizationRequest.RequestId
 Dependency changes:
     Microsoft.Identity.Client updated to 4.66.1

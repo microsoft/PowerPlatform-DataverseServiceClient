@@ -10,7 +10,7 @@
 	<PropertyGroup>
     <ProjectDir Condition="'$(ProjectDir)' == '' ">$(MSBuildProjectDirectory)\</ProjectDir>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-		<TargetFrameworks>net6.0</TargetFrameworks>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>

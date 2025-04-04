@@ -26,10 +26,6 @@
         <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.2.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Identity" version="1.12.0" exclude="Build,Analyzers" />
       </group>
-      <group targetFramework="NET6.0">
-        <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.2.0" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.12.0" exclude="Build,Analyzers" />
-      </group>
       <group targetFramework="NET8.0">
         <dependency id="Microsoft.PowerPlatform.Dataverse.Client" version="1.2.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Identity" version="1.12.0" exclude="Build,Analyzers" />
@@ -39,8 +35,6 @@
   <files>
     <file src="{signedBinDir}\{configuration}\DataverseClient\net8.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" target="lib\net8.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" />
     <file src="{signedBinDir}\{configuration}\DataverseClient\net8.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" target="lib\net8.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" />
-    <file src="{signedBinDir}\{configuration}\DataverseClient\net6.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" target="lib\net6.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" />
-    <file src="{signedBinDir}\{configuration}\DataverseClient\net6.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" target="lib\net6.0\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" />
     <file src="{signedBinDir}\{configuration}\DataverseClient\net472\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" target="lib\net472\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" />
     <file src="{signedBinDir}\{configuration}\DataverseClient\net472\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" target="lib\net472\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.xml" />
     <file src="{signedBinDir}\{configuration}\DataverseClient\net462\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" target="lib\net462\Microsoft.PowerPlatform.Dataverse.Client.AzAuth.dll" />

@@ -3,7 +3,7 @@
   <PropertyGroup>
 	  <ProjectSpecificFx>true</ProjectSpecificFx>
 	  <OutputType>Exe</OutputType>
-	  <TargetFrameworks>net462;net6.0</TargetFrameworks>
+	  <TargetFrameworks>net462;net8.0</TargetFrameworks>
 	  <SignAssembly>false</SignAssembly>
 	  <ComponentAreaName>DataverseClient-Tests</ComponentAreaName>
 	  <IsPackable>false</IsPackable>

@@ -21,7 +21,7 @@
         <PackageVersion_SystemSecurityPermissions>6.0.0</PackageVersion_SystemSecurityPermissions>
         <PackageVersion_Azure_Identity>1.13.1</PackageVersion_Azure_Identity>
         <PackageVersion_System_ServiceModel_PreNet6>4.10.3</PackageVersion_System_ServiceModel_PreNet6>
-        <PackageVersion_System_ServiceModel_PostNet6>6.2.0</PackageVersion_System_ServiceModel_PostNet6>
+        <PackageVersion_System_ServiceModel_PostNet6>8.1.2</PackageVersion_System_ServiceModel_PostNet6>
         <PackageVersion_System_Formats_Asn1>8.0.1</PackageVersion_System_Formats_Asn1>
 
         <!-- Test: -->
