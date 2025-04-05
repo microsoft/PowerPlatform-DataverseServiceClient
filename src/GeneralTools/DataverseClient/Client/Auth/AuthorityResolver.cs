@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -28,6 +27,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
         /// OAuth resource to request authentication for.
         /// </summary>
         public Uri Resource { get; internal set; }
+
+        /// <summary>
+        /// Error message if probing failed.
+        /// </summary>
+        public string ErrorMessage { get; internal set; } = string.Empty;
     }
 
     /// <summary>
@@ -57,7 +61,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
         }
 
         /// <summary>
-        /// Attemtps to solicit a WWW-Authenticate reply using an unauthenticated GET call to the given endpoint.
+        /// Attempts to solicit a WWW-Authenticate reply using an unauthenticated GET call to the given endpoint.
         /// Parses returned header for details
         /// </summary>
         /// <param name="endpoint">endpoint to challenge for authority and resource</param>
@@ -81,7 +85,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
                 {
                     errDetails = $"; details: {wex.Message} ({wex.Status})";
                 }
-                LogError($"Failed to get response from: {endpoint}; error: {ex.Message}{errDetails}");
+
+                details.ErrorMessage = $"Failed to get response from: {endpoint}; error: {ex.Message}{errDetails}";
+                LogError(details.ErrorMessage);
                 return details;
             }
 
@@ -89,7 +95,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
             if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.BadRequest)
             {
                 // didn't find endpoint.
-                LogError($"Failed to get Authority and Resource error. Attempt to Access Endpoint {endpoint} resulted in {response.StatusCode}.");
+                details.ErrorMessage = $"Failed to get Authority and Resource error. Attempt to Access Endpoint {endpoint} resulted in {response.StatusCode}.";
+                LogError(details.ErrorMessage);
                 return details;
             }
 
@@ -97,12 +104,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
             {
                 var authenticateHeaders = response.Headers.GetValues(AuthenticateHeader);
                 // need to support OnPrem returning multiple Authentication headers. 
-                foreach (var authenticateHeaderraw in authenticateHeaders)
+                foreach (var authenticateHeaderRaw in authenticateHeaders)
                 {
                     if (details.Success)
                         break;
 
-                    string authenticateHeader = authenticateHeaderraw.Trim();
+                    string authenticateHeader = authenticateHeaderRaw.Trim();
 
                     // This also checks for cases like "BearerXXXX authorization_uri=...." and "Bearer" and "Bearer "
                     if (!authenticateHeader.StartsWith(Bearer, StringComparison.OrdinalIgnoreCase)
@@ -112,7 +119,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
                         if (isOnPrem)
                             continue;
 
-                        LogError($"Malformed 'Bearer' format: {authenticateHeader}");
+                        details.ErrorMessage = $"Malformed 'Bearer' format: {authenticateHeader}";
+                        LogError(details.ErrorMessage);
                         return details;
                     }
 
@@ -126,7 +134,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
                     }
                     catch (ArgumentException)
                     {
-                        LogError($"Malformed arguments in '{AuthenticateHeader}: {authenticateHeader}");
+                        details.ErrorMessage = $"Malformed arguments in '{AuthenticateHeader}: {authenticateHeader}";
+                        LogError(details.ErrorMessage);
                         return details;
                     }
 
@@ -134,7 +143,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
                     {
                         if (!authenticateHeaderItems.TryGetValue(AuthorityKey, out var auth))
                         {
-                            LogError($"Response header from {endpoint} is missing expected key/value for {AuthorityKey}");
+                            details.ErrorMessage = $"Response header from {endpoint} is missing expected key/value for {AuthorityKey}";
+                            LogError(details.ErrorMessage);
                             return details;
                         }
                         details.Authority = new Uri(
@@ -143,7 +153,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
 
                         if (!authenticateHeaderItems.TryGetValue(ResourceKey, out var res))
                         {
-                            LogError($"Response header from {endpoint} is missing expected key/value for {ResourceKey}");
+                            details.ErrorMessage = $"Response header from {endpoint} is missing expected key/value for {ResourceKey}";
+                            LogError(details.ErrorMessage);
                             return details;
                         }
                         details.Resource = new Uri(res);

@@ -1,6 +1,7 @@
 using Azure.Core;
 using Azure.Identity;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.PowerPlatform.Dataverse.Client.Model;
 using System;
 using System.Collections.Generic;
@@ -81,7 +82,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         {
             _credentialOptions = credentialOptions;
             _autoResolveAuthorityAndTenant = autoResolveAuthorityAndTenant;
-            _logger = logger;
+            _logger = logger ?? NullLogger.Instance;
         }
 
         /// <summary>

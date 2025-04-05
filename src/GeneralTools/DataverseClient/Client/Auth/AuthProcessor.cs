@@ -152,7 +152,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Auth
                     if (userCert != null)
                     {
                         logSink.Log("Initial ObtainAccessToken - CERT", TraceEventType.Verbose);
-                        cApp = cAppBuilder.WithCertificate(userCert).Build();
+                        cApp = cAppBuilder.WithCertificate(userCert, true).Build();
                         memoryBackedTokenCache.Initialize(cApp.AppTokenCache);
                         _authenticationResult = await ObtainAccessTokenAsync(cApp, Scopes, logSink).ConfigureAwait(false);
                     }

@@ -60,7 +60,7 @@ if($RunFromVSBuild -eq $false)
 }
 else
 {
-	$BinsDirectory = [System.IO.Path]::Combine($BuildSourcesDirectory , "bin" , $BuildConfiguration, "DataverseClient" , "net6.0" )
+	$BinsDirectory = [System.IO.Path]::Combine($BuildSourcesDirectory , "bin" , $BuildConfiguration, "DataverseClient" , "net8.0" )
 }
 ## Copying PowerShell Module out only. 
 Write-Host ">>> BINS path is $BinsDirectory"

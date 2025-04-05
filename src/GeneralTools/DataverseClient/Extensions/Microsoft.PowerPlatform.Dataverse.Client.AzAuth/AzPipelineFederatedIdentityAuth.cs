@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Microsoft.PowerPlatform.Dataverse.Client.Model;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Microsoft.PowerPlatform.Dataverse.Client
 {
@@ -75,7 +76,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             _serviceConnectionId = serviceConnectionId;
             _systemAccessTokenEnvVarName = SystemAccessTokenEnvVarName;
             _autoResolveAuthorityAndTenant = autoResolveAuthorityAndTenant;
-            _logger = logger;
+            _logger = logger ?? NullLogger.Instance;
         }
 
         /// <summary>
