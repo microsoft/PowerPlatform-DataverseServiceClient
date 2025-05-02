@@ -19,6 +19,7 @@ using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 #endregion
 
@@ -445,14 +446,20 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="retryCount">retryCount</param>
         /// <param name="isThrottled">when set indicated this was caused by a Throttle</param>
         /// <param name="webUriReq"></param>
+        /// <param name="cancellationToken"></param>
         internal static async Task<int> RetryRequest(OrganizationRequest req, Guid requestTrackingId, TimeSpan LockWait, Stopwatch logDt,
             DataverseTraceLogger logEntry, Guid? sessionTrackingId, bool disableConnectionLocking, TimeSpan retryPauseTimeRunning,
-            Exception ex, string errorStringCheck, int retryCount, bool isThrottled, string webUriReq = "")
+            Exception ex, string errorStringCheck, int retryCount, bool isThrottled, string webUriReq = "", CancellationToken cancellationToken = default)
         {
             retryCount++;
             logEntry.LogFailure(req, requestTrackingId, sessionTrackingId, disableConnectionLocking, LockWait, logDt, ex, errorStringCheck, webUriMessageReq: webUriReq);
             logEntry.LogRetry(retryCount, req, retryPauseTimeRunning, isThrottled: isThrottled);
-            await Task.Delay(retryPauseTimeRunning).ConfigureAwait(false);
+
+            // Task.Delay returns early if the CancellationToken is cancelled, but throws a TaskCancelledException if
+            // we pass it an already-cancelled CancellationToken.  If case that occurs, skip the call for consistent behavior.
+            if (!cancellationToken.IsCancellationRequested) 
+                await Task.Delay(retryPauseTimeRunning, cancellationToken).ConfigureAwait(false);
+
             return retryCount;
         }
 
