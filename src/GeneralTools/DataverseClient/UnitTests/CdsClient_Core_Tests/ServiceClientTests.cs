@@ -26,6 +26,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Security;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
@@ -102,6 +103,23 @@ namespace Client_Core_Tests
                 cli.Dispose();
                 _ = (WhoAmIResponse)await cli.ExecuteAsync(new WhoAmIRequest()).ConfigureAwait(false);
             });
+        }
+
+        [Fact]
+        public async Task ThrowsOperationCanceledExceptionWhenCancelled()
+        {
+            testSupport.SetupMockAndSupport(out var orgSvc, out var fakHttpMethodHander, out var cli);
+            var cts = new CancellationTokenSource();
+
+            var cancelledToken = cts.Token;
+            cts.Cancel();
+
+            Func<Task> cancelledRequest = async() =>
+            {
+                await cli.ExecuteAsync(new WhoAmIRequest(), cts.Token).ConfigureAwait(false);
+            };
+
+            await cancelledRequest.Should().ThrowAsync<OperationCanceledException>().ConfigureAwait(false);
         }
 
         [Fact]
@@ -805,6 +823,65 @@ namespace Client_Core_Tests
             Assert.True(retrycount == 1);
             retrycount = await Utilities.RetryRequest(exampleRequest, testGuid, new TimeSpan(0), testwatch, cli._logEntry, null, false, new TimeSpan(0, 0, 1), new Exception("Fake_TEST_MSG"), "test retry logic", retrycount, false, null).ConfigureAwait(false);
             Assert.True(retrycount == 2);
+        }
+
+        [Fact]
+        public async Task RetryOperationCancelledDuringDelayTest()
+        {
+            testSupport.SetupMockAndSupport(out var orgSvc, out var fakHttpMethodHander, out var cli);
+
+            Guid testGuid = Guid.NewGuid();
+
+            CreateRequest exampleRequest = new CreateRequest();
+            exampleRequest.Target = new Entity("account");
+            exampleRequest.Target.Attributes.Add("id", testGuid);
+
+            Stopwatch testwatch = Stopwatch.StartNew();
+
+            var cts = new CancellationTokenSource();
+            var cancellationToken = cts.Token;
+
+            var delay = TimeSpan.FromSeconds(5);
+            
+            var retryTask = Task.Run(async () =>
+            {
+                await Utilities.RetryRequest(exampleRequest, testGuid, new TimeSpan(0), testwatch, cli._logEntry, null, false, delay, new Exception("Fake_TEST_MSG"), "test retry logic", 0, false, null, cancellationToken: cancellationToken).ConfigureAwait(false);
+            });
+
+            await Task.Delay(TimeSpan.FromMilliseconds(100)).ConfigureAwait(false);
+            cts.Cancel();
+            await Task.Delay(TimeSpan.FromMilliseconds(50)).ConfigureAwait(false);
+
+            retryTask.IsCompleted.Should().BeTrue("Task.Delay within Utilities.RetryRequest should just return early, allowing the task to complete");
+            testwatch.Elapsed.Should().BeLessThan(delay, "Task should return before its delay timer can complete due to cancellation");
+        }
+
+        [Fact]
+        public async Task RetryOperationShouldNotThrowWhenAlreadyCanceledTest()
+        {
+            testSupport.SetupMockAndSupport(out var orgSvc, out var fakHttpMethodHander, out var cli);
+
+            Guid testGuid = Guid.NewGuid();
+
+            CreateRequest exampleRequest = new CreateRequest();
+            exampleRequest.Target = new Entity("account");
+            exampleRequest.Target.Attributes.Add("id", testGuid);
+
+            Stopwatch testwatch = Stopwatch.StartNew();
+
+            var cts = new CancellationTokenSource();
+            var cancellationToken = cts.Token;
+            cts.Cancel(); // Cancel before the token is even provided to the method
+
+            var delay = TimeSpan.FromSeconds(5);
+
+            Func<Task> cancelledRetry = async () =>
+            {
+                await Utilities.RetryRequest(exampleRequest, testGuid, new TimeSpan(0), testwatch, cli._logEntry, null, false, delay, new Exception("Fake_TEST_MSG"), "test retry logic", 0, false, null, cancellationToken: cancellationToken).ConfigureAwait(false);
+            };
+
+            await cancelledRetry.Should().NotThrowAsync<TaskCanceledException>().ConfigureAwait(false);
+            testwatch.Elapsed.Should().BeLessThan(delay, "Task should return before its delay timer can complete due to cancellation");
         }
 
         #region LiveConnectedTests

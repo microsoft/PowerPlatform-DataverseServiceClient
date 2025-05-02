@@ -2383,7 +2383,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         retry = ShouldRetryWebAPI(ex, retryCount, maxRetryCount, retryPauseTime, out isThrottled);
                         if (retry)
                         {
-                            retryCount = await Utilities.RetryRequest(null, requestTrackingId, TimeSpan.Zero, logDt, logEntry, SessionTrackingId, disableConnectionLocking, _retryPauseTimeRunning, ex, errorStringCheck, retryCount, isThrottled, webUriReq: $"{method} {queryString}").ConfigureAwait(false);
+                            retryCount = await Utilities.RetryRequest(null, requestTrackingId, TimeSpan.Zero, logDt, logEntry, SessionTrackingId, disableConnectionLocking, _retryPauseTimeRunning, ex, errorStringCheck, retryCount, isThrottled, webUriReq: $"{method} {queryString}", cancellationToken).ConfigureAwait(false);
                         }
                         else
                         {

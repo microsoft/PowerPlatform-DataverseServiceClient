@@ -1876,10 +1876,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 catch (Exception ex)
                 {
                     bool isThrottled = false;
-                    retry = ShouldRetry(req, ex, retryCount, out isThrottled);
+                    retry = ShouldRetry(req, ex, retryCount, out isThrottled) || !cancellationToken.IsCancellationRequested;
                     if (retry)
                     {
-                        retryCount = await Utilities.RetryRequest(req, requestTrackingId, LockWait, logDt, _logEntry, SessionTrackingId, _disableConnectionLocking, _retryPauseTimeRunning, ex, errorStringCheck, retryCount, isThrottled).ConfigureAwait(false);
+                        retryCount = await Utilities.RetryRequest(req, requestTrackingId, LockWait, logDt, _logEntry, SessionTrackingId, _disableConnectionLocking, _retryPauseTimeRunning, ex, errorStringCheck, retryCount, isThrottled, cancellationToken: cancellationToken).ConfigureAwait(false);
                     }
                     else
                     {
@@ -1887,6 +1887,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         _logEntry.LogException(req, ex, errorStringCheck);
                         //keep it in end so that LastError could be a better message.
                         _logEntry.LogFailure(req, requestTrackingId, SessionTrackingId, _disableConnectionLocking, LockWait, logDt, ex, errorStringCheck, true);
+
+                        // Callers which cancel should expect to handle a OperationCanceledException
+                        if (ex is OperationCanceledException)
+                            throw;
+                        else
+                            cancellationToken.ThrowIfCancellationRequested();
                     }
                     resp = null;
                 }
@@ -2022,6 +2028,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             isThrottlingRetry = false;
             if (retryCount >= _configuration.Value.MaxRetryCount)
                 return false;
+            else if (ex is OperationCanceledException)
+                return false;
             else if (((string.Equals(req.RequestName.ToLower(), "retrieve"))
                 && ((Utilities.ShouldAutoRetryRetrieveByEntityName(((Microsoft.Xrm.Sdk.EntityReference)req.Parameters["Target"]).LogicalName))))
                 || (string.Equals(req.RequestName.ToLower(), "retrievemultiple")
@@ -2047,10 +2055,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     OrgEx.Detail.ErrorCode == ErrorCodes.ThrottlingTimeExceededError ||
                     OrgEx.Detail.ErrorCode == ErrorCodes.ThrottlingConcurrencyLimitExceededError)
                 {
-                     // Use Retry-After delay when specified
+                    // Use Retry-After delay when specified
                     if (OrgEx.Detail.ErrorDetails.TryGetValue("Retry-After", out var retryAfter) && retryAfter is TimeSpan retryAsTimeSpan)
-                    { 
-                         _retryPauseTimeRunning = retryAsTimeSpan;
+                    {
+                        _retryPauseTimeRunning = retryAsTimeSpan;
                     }
                     else
                     {

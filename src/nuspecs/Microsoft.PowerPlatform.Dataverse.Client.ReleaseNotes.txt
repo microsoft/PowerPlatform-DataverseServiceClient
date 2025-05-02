@@ -7,6 +7,9 @@ Notice:
     Note: Only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Fix for CancellationToken not canceling retries during delays Git: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/508
+
+1.2.5
 Fix for Null ILogger passed to the AzAuth Client Creators causing a fault.  Git: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/481
 Fix for Memory Leak in Retrieve Multiple. Git: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/463
 Fix for Memory bloat issue caused by not releasing lastErrorMessage property. 
