@@ -1876,7 +1876,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 catch (Exception ex)
                 {
                     bool isThrottled = false;
-                    retry = ShouldRetry(req, ex, retryCount, out isThrottled) || !cancellationToken.IsCancellationRequested;
+                    retry = ShouldRetry(req, ex, retryCount, out isThrottled) && !cancellationToken.IsCancellationRequested;
                     if (retry)
                     {
                         retryCount = await Utilities.RetryRequest(req, requestTrackingId, LockWait, logDt, _logEntry, SessionTrackingId, _disableConnectionLocking, _retryPauseTimeRunning, ex, errorStringCheck, retryCount, isThrottled, cancellationToken: cancellationToken).ConfigureAwait(false);
