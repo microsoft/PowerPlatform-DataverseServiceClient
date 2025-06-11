@@ -2475,14 +2475,19 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         errorCode == ((int)ErrorCodes.ThrottlingTimeExceededError).ToString() ||
                         errorCode == ((int)ErrorCodes.ThrottlingConcurrencyLimitExceededError).ToString())
                     {
-                        if (httpOperationException.Response.Headers.TryGetValue("Retry-After", out var retryAfter) && double.TryParse(retryAfter.FirstOrDefault(), out var retrySeconds))
-                        { 
+                        if (_configuration.Value.UseExponentialRetryDelayForConcurrencyThrottle && errorCode == ((int)ErrorCodes.ThrottlingConcurrencyLimitExceededError).ToString())
+                        {
+                            // Use exponential delay for concurrency throttling if UseExponentialRetryDelayForConcurrencyThrottle is set to true
+                            _retryPauseTimeRunning = retryPauseTime.Add(TimeSpan.FromSeconds(Math.Pow(2, retryCount)));
+                        }
+                        else if (httpOperationException.Response.Headers.TryGetValue("Retry-After", out var retryAfter) && double.TryParse(retryAfter.FirstOrDefault(), out var retrySeconds))
+                        {
                             // Note: Retry-After header is in seconds.
-                             _retryPauseTimeRunning = TimeSpan.FromSeconds(retrySeconds);
+                            _retryPauseTimeRunning = TimeSpan.FromSeconds(retrySeconds);
                         }
                         else
                         { 
-                            _retryPauseTimeRunning = retryPauseTime.Add(TimeSpan.FromSeconds(Math.Pow(2, retryCount))); ; // default timespan with back off is response does not contain the tag..
+                            _retryPauseTimeRunning = retryPauseTime.Add(TimeSpan.FromSeconds(Math.Pow(2, retryCount))); // default timespan with back off is response does not contain the tag..
                         }
                         isThrottlingRetry = true;
                         return true;
@@ -2595,6 +2600,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             }
                         }
                         catch { }
+                        // CodeQL [SM03781] By Design - this is a client library and users need to be able to target any relevant URI
                         _httpResponse = await providedHttpClient.SendAsync(_httpRequest, cancellationToken).ConfigureAwait(false);
                         logDt.Stop();
                     }
@@ -2613,6 +2619,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                                 }
                             }
                             catch { }
+                            // CodeQL [SM03781] By Design - this is a client library and users need to be able to target any relevant URI
                             _httpResponse = await httpCli.SendAsync(_httpRequest, cancellationToken).ConfigureAwait(false);
                             logDt.Stop();
                         }

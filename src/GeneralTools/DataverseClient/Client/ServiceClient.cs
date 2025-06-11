@@ -208,6 +208,15 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         }
 
         /// <summary>
+        /// Use exponential retry delay for concurrency throttling instead of server specified Retry-After header where possible - Defaults to False.
+        /// </summary>
+        public bool UseExponentialRetryDelayForConcurrencyThrottle
+        {
+            get { return _configuration.Value.UseExponentialRetryDelayForConcurrencyThrottle; }
+            set { _configuration.Value.UseExponentialRetryDelayForConcurrencyThrottle = value; }
+        }
+
+        /// <summary>
         /// if true the service is ready to accept requests.
         /// </summary>
         public bool IsReady { get; private set; }
@@ -1417,6 +1426,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             SvcClient.CallerId = CallerId;
                             SvcClient.MaxRetryCount = _configuration.Value.MaxRetryCount;
                             SvcClient.RetryPauseTime = _configuration.Value.RetryPauseTime;
+                            SvcClient.UseExponentialRetryDelayForConcurrencyThrottle = _configuration.Value.UseExponentialRetryDelayForConcurrencyThrottle;
                             SvcClient.GetAccessToken = GetAccessToken;
                             SvcClient.GetCustomHeaders = GetCustomHeaders;
                             return SvcClient;
@@ -2055,9 +2065,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     OrgEx.Detail.ErrorCode == ErrorCodes.ThrottlingTimeExceededError ||
                     OrgEx.Detail.ErrorCode == ErrorCodes.ThrottlingConcurrencyLimitExceededError)
                 {
-                    // Use Retry-After delay when specified
-                    if (OrgEx.Detail.ErrorDetails.TryGetValue("Retry-After", out var retryAfter) && retryAfter is TimeSpan retryAsTimeSpan)
+                    if (_configuration.Value.UseExponentialRetryDelayForConcurrencyThrottle && OrgEx.Detail.ErrorCode == ErrorCodes.ThrottlingConcurrencyLimitExceededError)
                     {
+                        // Use exponential delay for concurrency throttling if UseExponentialRetryDelayForConcurrencyThrottle is set to true
+                        _retryPauseTimeRunning = _configuration.Value.RetryPauseTime.Add(TimeSpan.FromSeconds(Math.Pow(2, retryCount)));
+                    }
+                    else if (OrgEx.Detail.ErrorDetails.TryGetValue("Retry-After", out var retryAfter) && retryAfter is TimeSpan retryAsTimeSpan)
+                    {
+                        // Use Retry-After delay when specified
                         _retryPauseTimeRunning = retryAsTimeSpan;
                     }
                     else

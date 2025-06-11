@@ -884,6 +884,18 @@ namespace Client_Core_Tests
             testwatch.Elapsed.Should().BeLessThan(delay, "Task should return before its delay timer can complete due to cancellation");
         }
 
+        [Fact]
+        public void TestOptionUseExponentialRetryDelayForConcurrencyThrottle()
+        {
+            testSupport.SetupMockAndSupport(out var orgSvc, out var fakHttpMethodHander, out var cli);
+            cli.UseExponentialRetryDelayForConcurrencyThrottle = true;
+
+            var rsp = (WhoAmIResponse)cli.ExecuteOrganizationRequest(new WhoAmIRequest());
+
+            // Validate that the behavior remains unchanged when the option UseExponentialRetryDelayForConcurrencyThrottle is set to true.
+            Assert.Equal(rsp.UserId, testSupport._UserId);
+        }
+
         #region LiveConnectedTests
 
         [SkippableConnectionTest]

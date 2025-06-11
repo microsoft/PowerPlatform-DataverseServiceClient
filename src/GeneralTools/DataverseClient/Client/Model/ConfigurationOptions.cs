@@ -33,6 +33,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Model
                 RetryPauseTime = options.RetryPauseTime;
                 UseWebApi = options.UseWebApi;
                 UseWebApiLoginFlow = options.UseWebApiLoginFlow;
+                UseExponentialRetryDelayForConcurrencyThrottle = options.UseExponentialRetryDelayForConcurrencyThrottle;
             }
         }
 
@@ -69,6 +70,17 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Model
         {
             get => _useWebApi;
             set => _useWebApi = value;
+        }
+
+        private bool _useExponentialRetryDelayForConcurrencyThrottle = Utils.AppSettingsHelper.GetAppSetting<bool>("UseExponentialRetryDelayForConcurrencyThrottle", false);
+
+        /// <summary>
+        /// Use exponential retry delay for concurrency throttling instead of server specified Retry-After header
+        /// </summary>
+        public bool UseExponentialRetryDelayForConcurrencyThrottle
+        {
+            get => _useExponentialRetryDelayForConcurrencyThrottle;
+            set => _useExponentialRetryDelayForConcurrencyThrottle = value;
         }
 
         private bool _useWebApiLoginFlow = Utils.AppSettingsHelper.GetAppSetting<bool>("UseWebApiLoginFlow", true);
