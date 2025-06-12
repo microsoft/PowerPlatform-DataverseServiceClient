@@ -7,6 +7,9 @@ Notice:
     Note: Only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Add a new configuration option UseExponentialRetryDelayForConcurrencyThrottle to use exponential retry delay for concurrency throttling, instead of the server-specified Retry-After header where applicable. Default is False.
+
+1.2.7
 Fix for CancellationToken not canceling retries during delays Git: https://github.com/microsoft/PowerPlatform-DataverseServiceClient/issues/508
 
 1.2.5

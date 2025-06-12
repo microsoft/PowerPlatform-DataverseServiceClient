@@ -190,6 +190,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 _logger.LogDebug("Initialize Creds - found resource with name " + (string.IsNullOrEmpty(authDetails.Resource.ToString()) ? "<Not Provided>" : authDetails.Resource.ToString()));
                 _logger.LogDebug("Initialize Creds - found tenantId " + (string.IsNullOrEmpty(_credentialOptions.TenantId) ? "<Not Provided>" : _credentialOptions.TenantId));
             }
+            // CodeQL [SM05137] Not applicable - this is a Public client SDK
             _defaultAzureCredential = new DefaultAzureCredential(_credentialOptions);
 
             _logger.LogDebug("Credentials initialized in {0}ms", sw.ElapsedMilliseconds);
