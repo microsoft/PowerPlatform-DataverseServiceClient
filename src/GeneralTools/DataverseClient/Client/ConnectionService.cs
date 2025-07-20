@@ -1471,13 +1471,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 
             IOrganizationService dvService = null;
             Uri OrgWorkingURI = null;
-            if (!IsOnPrem || _eAuthType == AuthenticationType.OAuth) // Use this even if its onPrem, when auth type == oauth. 
+            if (!IsOnPrem)
             {
-                OrgWorkingURI = new Uri(string.Format(SoapOrgUriFormat, _targetInstanceUriToConnectTo.Scheme, _targetInstanceUriToConnectTo.DnsSafeHost));
+                OrgWorkingURI = new Uri(string.Format(SoapOrgUriFormat, _targetInstanceUriToConnectTo.Scheme, _targetInstanceUriToConnectTo.Authority));
             }
             else
             {
-                OrgWorkingURI = new Uri(string.Format(SoapOrgUriFormat, _targetInstanceUriToConnectTo.Scheme, $"{_targetInstanceUriToConnectTo.DnsSafeHost}/{_organization}"));
+                OrgWorkingURI = new Uri(string.Format(SoapOrgUriFormat, _targetInstanceUriToConnectTo.Scheme, $"{_targetInstanceUriToConnectTo.Authority}/{_organization}"));
             }
             _targetInstanceUriToConnectTo = OrgWorkingURI;
 
