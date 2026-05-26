@@ -2,6 +2,12 @@
   <!-- See: https://docs.microsoft.com/en-us/visualstudio/msbuild/customize-your-build?view=vs-2019#directorybuildprops-and-directorybuildtargets -->
   <Import Project="$([MSBuild]::GetPathOfFileAbove($(MSBuildThisFile), '$(MSBuildThisFileDirectory)../'))" />
 
+  <!-- Central package version definitions (PackageVersion_* properties).
+       Without this import the $(PackageVersion_*) variables are empty, so every
+       PackageReference resolves to the oldest version on the feed (e.g. Newtonsoft.Json 3.5.8,
+       Azure.Identity 1.0.0), surfacing as security vulnerabilities in consuming projects. -->
+  <Import Project="$(MSBuildThisFileDirectory)Packages.props" />
+
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
