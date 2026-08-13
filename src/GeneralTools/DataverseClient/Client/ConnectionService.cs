@@ -86,6 +86,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         private OrganizationWebProxyClientAsync _svcWebClientProxy;
         private OrganizationServiceProxyAsync _svcOnPremClientProxy;
         private OrganizationWebProxyClientAsync _externalWebClientProxy; // OAuth specific web service proxy
+        private readonly object _redirectRecoveryLock = new object();
 
         [NonSerializedAttribute]
         private WhoAmIResponse user;                        // Dataverse user entity that is the service.
@@ -1848,7 +1849,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 debugingCloneStateFilter++;
                 OrganizationId = sourceClient.ConnectedOrgId;
                 debugingCloneStateFilter++;
-                _ActualDataverseOrgUri = sourceClient.ConnectedOrgUriActual;
+                _ActualDataverseOrgUri = sourceClient.CurrentOrganizationServiceUri;
                 debugingCloneStateFilter++;
                 _MsalAuthClient = sourceClient._connectionSvc._MsalAuthClient;
                 debugingCloneStateFilter++;
@@ -3755,6 +3756,337 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
 
             return clientToken;
+        }
+
+        internal async Task<bool> TryRecoverFromCrossHostRedirectAsync(Exception exception, Uri requestServiceUri, Guid requestId)
+        {
+            if (_eAuthType != AuthenticationType.ExternalTokenManagement || GetAccessTokenAsync == null || exception == null)
+                return false;
+
+            Uri redirectAuthority;
+            string challenge;
+            if (!TryGetRedirectAuthority(exception, out redirectAuthority, out challenge))
+                return false;
+
+            Uri redirectedServiceUri;
+            if (!TryCreateTrustedRedirectServiceUri(requestServiceUri, redirectAuthority, out redirectedServiceUri))
+            {
+                logEntry.Log(
+                    string.Format(
+                        CultureInfo.InvariantCulture,
+                        "Cross-host redirect recovery rejected an untrusted target. RequestId={0}, CurrentAuthority={1}, RedirectAuthority={2}",
+                        requestId,
+                        GetAuthority(requestServiceUri),
+                        GetAuthority(redirectAuthority)),
+                    TraceEventType.Warning);
+                return false;
+            }
+
+            bool recoveryAlreadyCompleted;
+            lock (_redirectRecoveryLock)
+            {
+                recoveryAlreadyCompleted = string.Equals(
+                    GetAuthority(_ActualDataverseOrgUri),
+                    GetAuthority(redirectedServiceUri),
+                    StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (recoveryAlreadyCompleted)
+            {
+                logEntry.Log(
+                    string.Format(
+                        CultureInfo.InvariantCulture,
+                        "Cross-host redirect recovery already completed by another request. RequestId={0}, Authority={1}",
+                        requestId,
+                        GetAuthority(redirectedServiceUri)),
+                    TraceEventType.Information);
+                return true;
+            }
+
+            logEntry.Log(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    "Cross-host redirect recovery detected. RequestId={0}, CurrentAuthority={1}, RedirectAuthority={2}, ChallengeResource={3}",
+                    requestId,
+                    GetAuthority(requestServiceUri),
+                    GetAuthority(redirectedServiceUri),
+                    GetChallengeResourceAuthority(challenge)),
+                TraceEventType.Warning);
+
+            string redirectedToken;
+            try
+            {
+                redirectedToken = await GetAccessTokenAsync(redirectedServiceUri.ToString()).ConfigureAwait(false);
+                if (string.IsNullOrEmpty(redirectedToken))
+                {
+                    logEntry.Log(
+                        string.Format(
+                            CultureInfo.InvariantCulture,
+                            "Cross-host redirect recovery token provider returned an empty token. RequestId={0}, RedirectAuthority={1}",
+                            requestId,
+                            GetAuthority(redirectedServiceUri)),
+                        TraceEventType.Error);
+                    return false;
+                }
+            }
+            catch (Exception tokenException)
+            {
+                logEntry.Log(
+                    string.Format(
+                        CultureInfo.InvariantCulture,
+                        "Cross-host redirect recovery token acquisition failed. RequestId={0}, RedirectAuthority={1}",
+                        requestId,
+                        GetAuthority(redirectedServiceUri)),
+                    TraceEventType.Error,
+                    tokenException);
+                return false;
+            }
+
+            OrganizationWebProxyClientAsync replacementProxy = null;
+            OrganizationWebProxyClientAsync previousProxy = null;
+            try
+            {
+                lock (_redirectRecoveryLock)
+                {
+                    if (string.Equals(GetAuthority(_ActualDataverseOrgUri), GetAuthority(redirectedServiceUri), StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+
+                    previousProxy = _svcWebClientProxy ?? _externalWebClientProxy;
+                    replacementProxy = CreateRedirectedWebProxy(previousProxy, redirectedServiceUri, redirectedToken);
+
+                    _svcWebClientProxy = replacementProxy;
+                    if (UseExternalConnection)
+                        _externalWebClientProxy = replacementProxy;
+
+                    _ActualDataverseOrgUri = redirectedServiceUri;
+                    _targetInstanceUriToConnectTo = redirectedServiceUri;
+                    _hostname = redirectedServiceUri.Host;
+                    replacementProxy = null;
+                }
+
+                DisposeWebProxy(previousProxy);
+
+                logEntry.Log(
+                    string.Format(
+                        CultureInfo.InvariantCulture,
+                        "Cross-host redirect recovery updated the SOAP endpoint. RequestId={0}, ConnectedAuthority={1}",
+                        requestId,
+                        GetAuthority(_ActualDataverseOrgUri)),
+                    TraceEventType.Information);
+                return true;
+            }
+            catch (Exception recoveryException)
+            {
+                DisposeWebProxy(replacementProxy);
+                logEntry.Log(
+                    string.Format(
+                        CultureInfo.InvariantCulture,
+                        "Cross-host redirect recovery failed while replacing the SOAP endpoint. RequestId={0}, RedirectAuthority={1}",
+                        requestId,
+                        GetAuthority(redirectedServiceUri)),
+                    TraceEventType.Error,
+                    recoveryException);
+                return false;
+            }
+        }
+
+        internal static bool TryCreateTrustedRedirectServiceUri(Uri currentServiceUri, Uri redirectUri, out Uri redirectedServiceUri)
+        {
+            redirectedServiceUri = null;
+            if (currentServiceUri == null || redirectUri == null ||
+                !string.Equals(currentServiceUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(redirectUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) ||
+                !string.IsNullOrEmpty(currentServiceUri.UserInfo) ||
+                !string.IsNullOrEmpty(redirectUri.UserInfo) ||
+                currentServiceUri.Port != redirectUri.Port)
+                return false;
+
+            string currentHost = currentServiceUri.DnsSafeHost;
+            string redirectHost = redirectUri.DnsSafeHost;
+            if (string.Equals(currentHost, redirectHost, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            int currentSeparator = currentHost.IndexOf('.');
+            int redirectSeparator = redirectHost.IndexOf('.');
+            if (currentSeparator <= 0 || redirectSeparator <= 0)
+                return false;
+
+            string currentSuffix = currentHost.Substring(currentSeparator);
+            string redirectSuffix = redirectHost.Substring(redirectSeparator);
+            if (!string.Equals(currentSuffix, redirectSuffix, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            bool currentIsRouted;
+            bool redirectIsRouted;
+            string currentOrganization = GetCanonicalOrganizationName(currentHost.Substring(0, currentSeparator), out currentIsRouted);
+            string redirectOrganization = GetCanonicalOrganizationName(redirectHost.Substring(0, redirectSeparator), out redirectIsRouted);
+            if (currentIsRouted == redirectIsRouted ||
+                !string.Equals(currentOrganization, redirectOrganization, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            UriBuilder redirectedBuilder = new UriBuilder(currentServiceUri)
+            {
+                Scheme = redirectUri.Scheme,
+                Host = redirectUri.Host,
+                Port = redirectUri.IsDefaultPort ? -1 : redirectUri.Port
+            };
+            redirectedServiceUri = redirectedBuilder.Uri;
+            return true;
+        }
+
+        internal static bool TryGetRedirectResourceUri(string challenge, out Uri resourceUri)
+        {
+            resourceUri = null;
+            if (string.IsNullOrWhiteSpace(challenge))
+                return false;
+
+            const string resourceKey = "resource_id=";
+            int resourceIndex = 0;
+            while (true)
+            {
+                resourceIndex = challenge.IndexOf(resourceKey, resourceIndex, StringComparison.OrdinalIgnoreCase);
+                if (resourceIndex < 0)
+                    return false;
+
+                if (resourceIndex == 0 ||
+                    challenge[resourceIndex - 1] == ',' ||
+                    char.IsWhiteSpace(challenge[resourceIndex - 1]))
+                    break;
+
+                resourceIndex += resourceKey.Length;
+            }
+
+            string resourceValue = challenge.Substring(resourceIndex + resourceKey.Length).TrimStart();
+            if (resourceValue.Length == 0)
+                return false;
+
+            if (resourceValue[0] == '"' || resourceValue[0] == '\'')
+            {
+                char quote = resourceValue[0];
+                int closingQuote = resourceValue.IndexOf(quote, 1);
+                if (closingQuote < 0)
+                    return false;
+
+                resourceValue = resourceValue.Substring(1, closingQuote - 1);
+            }
+            else
+            {
+                int terminator = resourceValue.IndexOfAny(new[] { ',', ' ', '\t', '\r', '\n' });
+                if (terminator >= 0)
+                    resourceValue = resourceValue.Substring(0, terminator);
+            }
+
+            return Uri.TryCreate(resourceValue, UriKind.Absolute, out resourceUri);
+        }
+
+        private static bool TryGetRedirectAuthority(Exception exception, out Uri redirectAuthority, out string challenge)
+        {
+            redirectAuthority = null;
+            challenge = null;
+
+            for (Exception current = exception; current != null; current = current.InnerException)
+            {
+                WebException webException = current as WebException;
+                HttpWebResponse response = webException?.Response as HttpWebResponse;
+                if (response != null && response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    challenge = response.Headers[HttpResponseHeader.WwwAuthenticate];
+                    if (response.ResponseUri != null)
+                    {
+                        redirectAuthority = response.ResponseUri;
+                        return true;
+                    }
+
+                    if (TryGetRedirectResourceUri(challenge, out redirectAuthority))
+                        return true;
+                }
+
+                if (current is MessageSecurityException &&
+                    TryGetRedirectResourceUri(current.Message, out redirectAuthority))
+                {
+                    challenge = current.Message;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static string GetCanonicalOrganizationName(string organizationHost, out bool isRouted)
+        {
+            const string routingSuffix = "--d";
+            isRouted = organizationHost.EndsWith(routingSuffix, StringComparison.OrdinalIgnoreCase);
+            return isRouted
+                ? organizationHost.Substring(0, organizationHost.Length - routingSuffix.Length)
+                : organizationHost;
+        }
+
+        private static string GetAuthority(Uri uri)
+        {
+            return uri == null ? string.Empty : uri.GetLeftPart(UriPartial.Authority);
+        }
+
+        private static string GetChallengeResourceAuthority(string challenge)
+        {
+            Uri resourceUri;
+            return TryGetRedirectResourceUri(challenge, out resourceUri) ? GetAuthority(resourceUri) : string.Empty;
+        }
+
+        private OrganizationWebProxyClientAsync CreateRedirectedWebProxy(
+            OrganizationWebProxyClientAsync source,
+            Uri serviceUri,
+            string accessToken)
+        {
+            OrganizationWebProxyClientAsync destination = null;
+            try
+            {
+                destination = source?.StrongTypeAssembly == null
+                    ? new OrganizationWebProxyClientAsync(serviceUri, _MaxConnectionTimeout, source?.UsesStrongTypes ?? true)
+                    : new OrganizationWebProxyClientAsync(serviceUri, _MaxConnectionTimeout, source.StrongTypeAssembly);
+
+                destination.HeaderToken = accessToken;
+                CopyWebProxySettings(source, destination);
+                AttachWebProxyHander(destination);
+                destination.InnerChannel.OperationTimeout = _MaxConnectionTimeout;
+                return destination;
+            }
+            catch
+            {
+                DisposeWebProxy(destination);
+                throw;
+            }
+        }
+
+        private static void CopyWebProxySettings(OrganizationWebProxyClientAsync source, OrganizationWebProxyClientAsync destination)
+        {
+            if (source == null || destination == null)
+                return;
+
+            destination.CallerId = source.CallerId;
+            destination.CallerRegardingObjectId = source.CallerRegardingObjectId;
+            destination.ClientAppName = source.ClientAppName;
+            destination.ClientAppVersion = source.ClientAppVersion;
+            destination.LanguageCodeOverride = source.LanguageCodeOverride;
+            destination.OfflinePlayback = source.OfflinePlayback;
+            destination.SdkClientVersion = source.SdkClientVersion;
+            destination.SyncOperationType = source.SyncOperationType;
+            destination.userType = source.userType;
+        }
+
+        private static void DisposeWebProxy(OrganizationWebProxyClientAsync proxy)
+        {
+            if (proxy == null)
+                return;
+
+            try
+            {
+                proxy.Dispose();
+            }
+            catch
+            {
+            }
         }
 
         #region IDisposable Support

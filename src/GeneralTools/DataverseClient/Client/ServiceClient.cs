@@ -90,6 +90,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         internal object _cloneLockObject = new object();
 
         /// <summary>
+        /// Shares a redirected organization endpoint across a root ServiceClient and all of its clones.
+        /// </summary>
+        private RedirectEndpointState _redirectEndpointState = new RedirectEndpointState();
+
+        /// <summary>
         /// BatchManager for Execute Multiple.
         /// </summary>
         internal BatchManager _batchManager = null;
@@ -437,6 +442,19 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// this URI could be influenced by user defined variables.
         /// </summary>
         public Uri ConnectedOrgUriActual { get { if (_connectionSvc != null) return _connectionSvc.ConnectOrgUriActual; else return null; } }
+
+        /// <summary>
+        /// Gets the endpoint preferred for new clones in this ServiceClient family.
+        /// </summary>
+        internal Uri CurrentOrganizationServiceUri
+        {
+            get
+            {
+                return _connectionSvc == null
+                    ? null
+                    : _redirectEndpointState.GetCurrent(_connectionSvc.ConnectOrgUriActual);
+            }
+        }
 
         /// <summary>
         /// Returns the friendly name of the connected Dataverse instance.
@@ -1384,12 +1402,13 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             try
             {
                 OrganizationWebProxyClientAsync proxy = null;
-                if (_connectionSvc.ConnectOrgUriActual != null)
+                Uri connectedOrgUri = CurrentOrganizationServiceUri;
+                if (connectedOrgUri != null)
                 {
                     if (strongTypeAsm == null)
-                        proxy = new OrganizationWebProxyClientAsync(_connectionSvc.ConnectOrgUriActual, true);
+                        proxy = new OrganizationWebProxyClientAsync(connectedOrgUri, true);
                     else
-                        proxy = new OrganizationWebProxyClientAsync(_connectionSvc.ConnectOrgUriActual, strongTypeAsm);
+                        proxy = new OrganizationWebProxyClientAsync(connectedOrgUri, strongTypeAsm);
                 }
                 else
                 {
@@ -1421,6 +1440,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                         {
                             proxy.HeaderToken = this.CurrentAccessToken;
                             var SvcClient = new ServiceClient(proxy, true, _connectionSvc.AuthenticationTypeInUse, _connectionSvc?.OrganizationVersion, logger: logger);
+                            SvcClient._redirectEndpointState = _redirectEndpointState;
                             SvcClient._connectionSvc.SetClonedProperties(this);
                             SvcClient.CallerAADObjectId = CallerAADObjectId;
                             SvcClient.CallerId = CallerId;
@@ -1828,9 +1848,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             TimeSpan LockWait = TimeSpan.Zero;
             int retryCount = 0;
             bool retry = false;
+            bool crossHostRedirectRecoveryAttempted = false;
 
             do
             {
+                Uri requestServiceUri = _connectionSvc.ConnectOrgUriActual;
                 try
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -1886,23 +1908,42 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 catch (Exception ex)
                 {
                     bool isThrottled = false;
-                    retry = ShouldRetry(req, ex, retryCount, out isThrottled) && !cancellationToken.IsCancellationRequested;
-                    if (retry)
+                    bool redirectRecovered = !crossHostRedirectRecoveryAttempted &&
+                        !cancellationToken.IsCancellationRequested &&
+                        await _connectionSvc.TryRecoverFromCrossHostRedirectAsync(ex, requestServiceUri, requestTrackingId).ConfigureAwait(false);
+                    if (redirectRecovered)
                     {
-                        retryCount = await Utilities.RetryRequest(req, requestTrackingId, LockWait, logDt, _logEntry, SessionTrackingId, _disableConnectionLocking, _retryPauseTimeRunning, ex, errorStringCheck, retryCount, isThrottled, cancellationToken: cancellationToken).ConfigureAwait(false);
+                        crossHostRedirectRecoveryAttempted = true;
+                        _redirectEndpointState.Update(_connectionSvc.ConnectOrgUriActual);
+                        retry = true;
+                        _logEntry.Log(
+                            string.Format(
+                                CultureInfo.InvariantCulture,
+                                "Retrying request after cross-host redirect recovery. RequestID={0}, ConnectedAuthority={1}",
+                                requestTrackingId,
+                                ConnectedOrgUriActual?.GetLeftPart(UriPartial.Authority)),
+                            TraceEventType.Information);
                     }
                     else
                     {
-                        _logEntry.LogRetry(retryCount, req, _retryPauseTimeRunning, true, isThrottled: isThrottled);
-                        _logEntry.LogException(req, ex, errorStringCheck);
-                        //keep it in end so that LastError could be a better message.
-                        _logEntry.LogFailure(req, requestTrackingId, SessionTrackingId, _disableConnectionLocking, LockWait, logDt, ex, errorStringCheck, true);
-
-                        // Callers which cancel should expect to handle a OperationCanceledException
-                        if (ex is OperationCanceledException)
-                            throw;
+                        retry = ShouldRetry(req, ex, retryCount, out isThrottled) && !cancellationToken.IsCancellationRequested;
+                        if (retry)
+                        {
+                            retryCount = await Utilities.RetryRequest(req, requestTrackingId, LockWait, logDt, _logEntry, SessionTrackingId, _disableConnectionLocking, _retryPauseTimeRunning, ex, errorStringCheck, retryCount, isThrottled, cancellationToken: cancellationToken).ConfigureAwait(false);
+                        }
                         else
-                            cancellationToken.ThrowIfCancellationRequested();
+                        {
+                            _logEntry.LogRetry(retryCount, req, _retryPauseTimeRunning, true, isThrottled: isThrottled);
+                            _logEntry.LogException(req, ex, errorStringCheck);
+                            //keep it in end so that LastError could be a better message.
+                            _logEntry.LogFailure(req, requestTrackingId, SessionTrackingId, _disableConnectionLocking, LockWait, logDt, ex, errorStringCheck, true);
+
+                            // Callers which cancel should expect to handle a OperationCanceledException
+                            if (ex is OperationCanceledException)
+                                throw;
+                            else
+                                cancellationToken.ThrowIfCancellationRequested();
+                        }
                     }
                     resp = null;
                 }
@@ -1931,9 +1972,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             TimeSpan LockWait = TimeSpan.Zero;
             int retryCount = 0;
             bool retry = false;
+            bool crossHostRedirectRecoveryAttempted = false;
 
             do
             {
+                Uri requestServiceUri = _connectionSvc.ConnectOrgUriActual;
                 try
                 {
                     _retryPauseTimeRunning = _configuration.Value.RetryPauseTime; // Set the default time for each loop.
@@ -1999,20 +2042,38 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 catch (Exception ex)
                 {
                     bool isThrottled = false;
-                    retry = ShouldRetry(req, ex, retryCount, out isThrottled);
-                    if (retry)
+                    bool redirectRecovered = !crossHostRedirectRecoveryAttempted &&
+                        _connectionSvc.TryRecoverFromCrossHostRedirectAsync(ex, requestServiceUri, requestTrackingId).ConfigureAwait(false).GetAwaiter().GetResult();
+                    if (redirectRecovered)
                     {
-                        Task.Run(async () =>
-                        {
-                            retryCount = await Utilities.RetryRequest(req, requestTrackingId, LockWait, logDt, _logEntry, SessionTrackingId, _disableConnectionLocking, _retryPauseTimeRunning, ex, errorStringCheck, retryCount, isThrottled).ConfigureAwait(false);
-                        }).ConfigureAwait(false).GetAwaiter().GetResult();
+                        crossHostRedirectRecoveryAttempted = true;
+                        _redirectEndpointState.Update(_connectionSvc.ConnectOrgUriActual);
+                        retry = true;
+                        _logEntry.Log(
+                            string.Format(
+                                CultureInfo.InvariantCulture,
+                                "Retrying request after cross-host redirect recovery. RequestID={0}, ConnectedAuthority={1}",
+                                requestTrackingId,
+                                ConnectedOrgUriActual?.GetLeftPart(UriPartial.Authority)),
+                            TraceEventType.Information);
                     }
                     else
                     {
-                        _logEntry.LogRetry(retryCount, req, _retryPauseTimeRunning, true, isThrottled: isThrottled);
-                        _logEntry.LogException(req, ex, errorStringCheck);
-                        //keep it in end so that LastError could be a better message.
-                        _logEntry.LogFailure(req, requestTrackingId, SessionTrackingId, _disableConnectionLocking, LockWait, logDt, ex, errorStringCheck, true);
+                        retry = ShouldRetry(req, ex, retryCount, out isThrottled);
+                        if (retry)
+                        {
+                            Task.Run(async () =>
+                            {
+                                retryCount = await Utilities.RetryRequest(req, requestTrackingId, LockWait, logDt, _logEntry, SessionTrackingId, _disableConnectionLocking, _retryPauseTimeRunning, ex, errorStringCheck, retryCount, isThrottled).ConfigureAwait(false);
+                            }).ConfigureAwait(false).GetAwaiter().GetResult();
+                        }
+                        else
+                        {
+                            _logEntry.LogRetry(retryCount, req, _retryPauseTimeRunning, true, isThrottled: isThrottled);
+                            _logEntry.LogException(req, ex, errorStringCheck);
+                            //keep it in end so that LastError could be a better message.
+                            _logEntry.LogFailure(req, requestTrackingId, SessionTrackingId, _disableConnectionLocking, LockWait, logDt, ex, errorStringCheck, true);
+                        }
                     }
                     resp = null;
                 }
@@ -2112,7 +2173,33 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
             }
             return null;
         }
-        
+
+        private sealed class RedirectEndpointState
+        {
+            private readonly object syncRoot = new object();
+
+            private Uri current;
+
+            public Uri GetCurrent(Uri fallback)
+            {
+                lock (syncRoot)
+                {
+                    return current ?? fallback;
+                }
+            }
+
+            public void Update(Uri serviceUri)
+            {
+                if (serviceUri == null)
+                    return;
+
+                lock (syncRoot)
+                {
+                    current = serviceUri;
+                }
+            }
+        }
+
         /// <summary>
         /// Validates that a connection is live and connected. Throws an exception if the connection is not active. 
         /// </summary>
