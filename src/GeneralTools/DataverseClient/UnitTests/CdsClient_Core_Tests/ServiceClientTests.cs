@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.PowerPlatform.Dataverse.Client.Auth;
+using Microsoft.PowerPlatform.Dataverse.Client.Connector;
 using Microsoft.PowerPlatform.Dataverse.Client.Exceptions;
 using Microsoft.PowerPlatform.Dataverse.Client.Extensions;
 using Microsoft.PowerPlatform.Dataverse.Client.HttpUtils;
@@ -24,8 +25,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security;
+using System.ServiceModel.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -167,6 +170,174 @@ namespace Client_Core_Tests
             Assert.NotNull(logger.LastError);
             Exception exOut = logger.LastException;
 
+        }
+
+        [Fact]
+        public void CrossHostRedirect_CreatesTrustedTemporaryServiceUri()
+        {
+            var currentUri = new Uri("https://contoso.crm.dynamics.com/XRMServices/2011/Organization.svc/web?SDKClientVersion=1.2.0.2");
+            var responseUri = new Uri("https://contoso--d.crm.dynamics.com/XRMServices/2011/Organization.svc/web");
+
+            Uri redirectedUri;
+            var result = ConnectionService.TryCreateTrustedRedirectServiceUri(currentUri, responseUri, out redirectedUri);
+
+            Assert.True(result);
+            Assert.Equal("contoso--d.crm.dynamics.com", redirectedUri.Host);
+            Assert.Equal(currentUri.AbsolutePath, redirectedUri.AbsolutePath);
+            Assert.Equal(currentUri.Query, redirectedUri.Query);
+        }
+
+        [Fact]
+        public void CrossHostRedirect_CreatesTrustedFailbackServiceUri()
+        {
+            var currentUri = new Uri("https://contoso--d.crm.dynamics.com/XRMServices/2011/Organization.svc/web");
+            var responseUri = new Uri("https://contoso.crm.dynamics.com/XRMServices/2011/Organization.svc/web");
+
+            Uri redirectedUri;
+            var result = ConnectionService.TryCreateTrustedRedirectServiceUri(currentUri, responseUri, out redirectedUri);
+
+            Assert.True(result);
+            Assert.Equal("contoso.crm.dynamics.com", redirectedUri.Host);
+        }
+
+        [Theory]
+        [InlineData("https://evil.example.com/XRMServices/2011/Organization.svc/web")]
+        [InlineData("https://otherorg--d.crm.dynamics.com/XRMServices/2011/Organization.svc/web")]
+        [InlineData("http://contoso--d.crm.dynamics.com/XRMServices/2011/Organization.svc/web")]
+        [InlineData("https://contoso--d.crm.dynamics.com:444/XRMServices/2011/Organization.svc/web")]
+        [InlineData("https://contoso.crm.dynamics.com/XRMServices/2011/Organization.svc/web")]
+        [InlineData("https://contoso--evil.crm.dynamics.com/XRMServices/2011/Organization.svc/web")]
+        [InlineData("https://user@contoso--d.crm.dynamics.com/XRMServices/2011/Organization.svc/web")]
+        public void CrossHostRedirect_RejectsUntrustedOrSameHostTargets(string responseUrl)
+        {
+            var currentUri = new Uri("https://contoso.crm.dynamics.com/XRMServices/2011/Organization.svc/web");
+
+            Uri redirectedUri;
+            var result = ConnectionService.TryCreateTrustedRedirectServiceUri(currentUri, new Uri(responseUrl), out redirectedUri);
+
+            Assert.False(result);
+            Assert.Null(redirectedUri);
+        }
+
+        [Fact]
+        public void CrossHostRedirect_RejectsCurrentUriWithUserInfo()
+        {
+            var currentUri = new Uri("https://user@contoso.crm.dynamics.com/XRMServices/2011/Organization.svc/web");
+            var responseUri = new Uri("https://contoso--d.crm.dynamics.com/XRMServices/2011/Organization.svc/web");
+
+            Uri redirectedUri;
+            var result = ConnectionService.TryCreateTrustedRedirectServiceUri(currentUri, responseUri, out redirectedUri);
+
+            Assert.False(result);
+            Assert.Null(redirectedUri);
+        }
+
+        [Fact]
+        public void CrossHostRedirect_ParsesChallengeResource()
+        {
+            const string challenge =
+                "Bearer authorization_uri=\"https://login.microsoftonline.com/tenant\", resource_id=\"https://contoso--d.crm.dynamics.com/\"";
+
+            Uri resourceUri;
+            var result = ConnectionService.TryGetRedirectResourceUri(challenge, out resourceUri);
+
+            Assert.True(result);
+            Assert.Equal("https://contoso--d.crm.dynamics.com/", resourceUri.AbsoluteUri);
+        }
+
+        [Fact]
+        public void CrossHostRedirect_RejectsEmbeddedChallengeResourceKey()
+        {
+            const string challenge =
+                "Bearer notresource_id=\"https://contoso--d.crm.dynamics.com/\"";
+
+            Uri resourceUri;
+            var result = ConnectionService.TryGetRedirectResourceUri(challenge, out resourceUri);
+
+            Assert.False(result);
+            Assert.Null(resourceUri);
+        }
+
+        [Fact]
+        public async Task CrossHostRedirect_RecoveryReplacesProxyAndRequestsRedirectToken()
+        {
+            var currentUri = new Uri("https://contoso.crm.dynamics.com/XRMServices/2011/Organization.svc/web");
+            var strongTypeAssembly = typeof(ServiceClientTests).Assembly;
+            var originalProxy = new OrganizationWebProxyClientAsync(currentUri, strongTypeAssembly);
+            var logger = new DataverseTraceLogger(Ilogger);
+            var connection = new ConnectionService(
+                originalProxy,
+                Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.ExternalTokenManagement,
+                logger,
+                true);
+            SetConnectionServiceUri(connection, currentUri);
+
+            string requestedTokenUri = null;
+            connection.GetAccessTokenAsync = targetUri =>
+            {
+                requestedTokenUri = targetUri;
+                return Task.FromResult("redirect-token");
+            };
+
+            try
+            {
+                var exception = new MessageSecurityException(
+                    "The HTTP request is unauthorized. resource_id=https://contoso--d.crm.dynamics.com/");
+                var result = await connection.TryRecoverFromCrossHostRedirectAsync(
+                    exception,
+                    currentUri,
+                    Guid.NewGuid()).ConfigureAwait(false);
+
+                Assert.True(result);
+                Assert.Equal("contoso--d.crm.dynamics.com", connection.ConnectOrgUriActual.Host);
+                Assert.Equal("contoso--d.crm.dynamics.com", new Uri(requestedTokenUri).Host);
+                Assert.Equal("contoso--d.crm.dynamics.com", connection.WebClient.Endpoint.Address.Uri.Host);
+                Assert.Equal("redirect-token", connection.WebClient.HeaderToken);
+                Assert.Same(strongTypeAssembly, connection.WebClient.StrongTypeAssembly);
+            }
+            finally
+            {
+                connection.Dispose();
+            }
+        }
+
+        [Fact]
+        public async Task CrossHostRedirect_RecoveryRejectsDifferentOrganization()
+        {
+            var currentUri = new Uri("https://contoso.crm.dynamics.com/XRMServices/2011/Organization.svc/web");
+            var originalProxy = new OrganizationWebProxyClientAsync(currentUri, true);
+            var logger = new DataverseTraceLogger(Ilogger);
+            var connection = new ConnectionService(
+                originalProxy,
+                Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.ExternalTokenManagement,
+                logger,
+                true);
+            SetConnectionServiceUri(connection, currentUri);
+
+            var tokenRequested = false;
+            connection.GetAccessTokenAsync = targetUri =>
+            {
+                tokenRequested = true;
+                return Task.FromResult("redirect-token");
+            };
+
+            try
+            {
+                var exception = new MessageSecurityException(
+                    "The HTTP request is unauthorized. resource_id=https://otherorg--d.crm.dynamics.com/");
+                var result = await connection.TryRecoverFromCrossHostRedirectAsync(
+                    exception,
+                    currentUri,
+                    Guid.NewGuid()).ConfigureAwait(false);
+
+                Assert.False(result);
+                Assert.False(tokenRequested);
+                Assert.Equal("contoso.crm.dynamics.com", connection.ConnectOrgUriActual.Host);
+            }
+            finally
+            {
+                connection.Dispose();
+            }
         }
 
         [Fact]
@@ -1925,6 +2096,15 @@ namespace Client_Core_Tests
             Assert.True(client.IsReady, "Failed to Create Connection via Constructor");
 
             return client;
+        }
+
+        private static void SetConnectionServiceUri(ConnectionService connection, Uri serviceUri)
+        {
+            var field = typeof(ConnectionService).GetField(
+                "_ActualDataverseOrgUri",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(field);
+            field.SetValue(connection, serviceUri);
         }
 
 		private void WaitForAsyncOperationToComplete(Stopwatch _HoldTime, Stopwatch _RunTime, ServiceClient client, Guid? asyncTrackingId)

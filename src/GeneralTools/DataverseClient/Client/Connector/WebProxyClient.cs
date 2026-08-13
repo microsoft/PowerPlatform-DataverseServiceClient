@@ -21,21 +21,27 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
         protected WebProxyClientAsync(Uri serviceUrl, bool useStrongTypes)
             : base(CreateServiceEndpoint(serviceUrl, useStrongTypes, Utilites.DefaultTimeout, null))
         {
+            UsesStrongTypes = useStrongTypes;
         }
 
         protected WebProxyClientAsync(Uri serviceUrl, Assembly strongTypeAssembly)
             : base(CreateServiceEndpoint(serviceUrl, true, Utilites.DefaultTimeout, strongTypeAssembly))
         {
+            UsesStrongTypes = true;
+            StrongTypeAssembly = strongTypeAssembly;
         }
 
         protected WebProxyClientAsync(Uri serviceUrl, TimeSpan timeout, bool useStrongTypes)
             : base(CreateServiceEndpoint(serviceUrl, useStrongTypes, timeout, null))
         {
+            UsesStrongTypes = useStrongTypes;
         }
 
         protected WebProxyClientAsync(Uri serviceUrl, TimeSpan timeout, Assembly strongTypeAssembly)
             : base(CreateServiceEndpoint(serviceUrl, true, timeout, strongTypeAssembly))
         {
+            UsesStrongTypes = true;
+            StrongTypeAssembly = strongTypeAssembly;
         }
 
         #region Properties
@@ -47,6 +53,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Connector
         internal string ClientAppName { get; set; }
 
         internal string ClientAppVersion { get; set; }
+
+        internal bool UsesStrongTypes { get; }
+
+        internal Assembly StrongTypeAssembly { get; }
 
         #endregion
 
