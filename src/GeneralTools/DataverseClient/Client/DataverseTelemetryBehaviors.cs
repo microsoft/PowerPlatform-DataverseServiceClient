@@ -277,6 +277,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 }
 
                 AddExternalHeaders(httpRequestMessage);
+                WorkloadAttributionScope.ApplyTo(httpRequestMessage.Headers);
                 Utilities.CleanUpHeaderKeys(httpRequestMessage.Headers); 
                 if (httpRequestMessageObject == null)
                     request.Properties.Add(HttpRequestMessageProperty.Name, httpRequestMessage);

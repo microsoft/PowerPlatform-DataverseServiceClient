@@ -18,6 +18,8 @@
 	<ItemGroup>
 		<Compile Remove="UnitTestBehaviors\**" />
 		<Compile Remove="UnitTests\**" />
+		<!-- Legacy Microsoft.Rest implementations were superseded by Exceptions\. -->
+		<Compile Remove="Utils\DataverseConnectionException.cs;Utils\DataverseOperationException.cs" />
 		<EmbeddedResource Remove="UnitTestBehaviors\**" />
 		<EmbeddedResource Remove="UnitTests\**" />
 		<None Remove="UnitTestBehaviors\**" />

@@ -490,6 +490,12 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         internal Func<Task<Dictionary<string, string>>> GetCustomHeaders { get; set; } = null;
 
         /// <summary>
+        /// Default workload attribution for this client, captured separately for each operation.
+        /// Request-builder attribution takes precedence. Clones inherit this immutable value.
+        /// </summary>
+        public WorkloadAttribution WorkloadAttribution { get; set; }
+
+        /// <summary>
         /// Gets or Sets the current caller ID
         /// </summary>
         public Guid CallerId
@@ -929,6 +935,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         {
             // store the options and ready for connect call. 
             _setupConnectionOptions = connectionOptions;
+            WorkloadAttribution = connectionOptions.WorkloadAttribution;
 
             //_configuration
             if ( serviceClientConfiguration != null )
@@ -1429,6 +1436,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                             SvcClient.UseExponentialRetryDelayForConcurrencyThrottle = _configuration.Value.UseExponentialRetryDelayForConcurrencyThrottle;
                             SvcClient.GetAccessToken = GetAccessToken;
                             SvcClient.GetCustomHeaders = GetCustomHeaders;
+                            SvcClient.WorkloadAttribution = WorkloadAttribution;
                             return SvcClient;
                         }
                     }
@@ -1648,7 +1656,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     queryString = baseQueryString;
             }
 
-            var result = _connectionSvc.Command_WebExecuteAsync(queryString, body, method, customHeaders, contentType, string.Empty, CallerId, _disableConnectionLocking, MaxRetryCount, RetryPauseTime, cancellationToken: cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
+            HttpResponseMessage result;
+            using (WorkloadAttributionScope.Create(this))
+            {
+                result = _connectionSvc.Command_WebExecuteAsync(queryString, body, method, customHeaders, contentType, string.Empty, CallerId, _disableConnectionLocking, MaxRetryCount, RetryPauseTime, cancellationToken: cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
+            }
             if (result == null)
                 throw LastException;
             else
@@ -1701,7 +1713,11 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                     queryString = baseQueryString;
             }
 
-            var result = await _connectionSvc.Command_WebExecuteAsync(queryString, body, method, customHeaders, contentType, string.Empty, CallerId, _disableConnectionLocking, MaxRetryCount, RetryPauseTime, cancellationToken: cancellationToken).ConfigureAwait(false);
+            HttpResponseMessage result;
+            using (WorkloadAttributionScope.Create(this))
+            {
+                result = await _connectionSvc.Command_WebExecuteAsync(queryString, body, method, customHeaders, contentType, string.Empty, CallerId, _disableConnectionLocking, MaxRetryCount, RetryPauseTime, cancellationToken: cancellationToken).ConfigureAwait(false);
+            }
             if (result == null)
                 throw LastException;
             else
@@ -1751,7 +1767,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 else
                 {
                     // use Web API.
-                    return _connectionSvc.Command_WebAPIProcess_ExecuteAsync(req, logMessageTag, bypassPluginExecution, _metadataUtlity, CallerId, _disableConnectionLocking, MaxRetryCount, RetryPauseTime, new CancellationToken()).ConfigureAwait(false).GetAwaiter().GetResult();
+                    using (WorkloadAttributionScope.Create(this, req))
+                    {
+                        return _connectionSvc.Command_WebAPIProcess_ExecuteAsync(req, logMessageTag, bypassPluginExecution, _metadataUtlity, CallerId, _disableConnectionLocking, MaxRetryCount, RetryPauseTime, new CancellationToken()).ConfigureAwait(false).GetAwaiter().GetResult();
+                    }
                 }
             }
             else
@@ -1776,7 +1795,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 else
                 {
                     // use Web API.
-                    return await _connectionSvc.Command_WebAPIProcess_ExecuteAsync(req, logMessageTag, bypassPluginExecution, _metadataUtlity, CallerId, _disableConnectionLocking, MaxRetryCount, RetryPauseTime, cancellationToken).ConfigureAwait(false);
+                    using (WorkloadAttributionScope.Create(this, req))
+                    {
+                        return await _connectionSvc.Command_WebAPIProcess_ExecuteAsync(req, logMessageTag, bypassPluginExecution, _metadataUtlity, CallerId, _disableConnectionLocking, MaxRetryCount, RetryPauseTime, cancellationToken).ConfigureAwait(false);
+                    }
                 }
             }
             else
@@ -1820,6 +1842,14 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="cancellationToken"></param>
         /// <returns>Result of create request or null.</returns>
         internal async Task<OrganizationResponse> Command_ExecuteAsyncImpl(OrganizationRequest req, string errorStringCheck, System.Threading.CancellationToken cancellationToken, bool bypassPluginExecution = false)
+        {
+            using (WorkloadAttributionScope.Create(this, req))
+            {
+                return await Command_ExecuteAsyncCore(req, errorStringCheck, cancellationToken, bypassPluginExecution).ConfigureAwait(false);
+            }
+        }
+
+        private async Task<OrganizationResponse> Command_ExecuteAsyncCore(OrganizationRequest req, string errorStringCheck, CancellationToken cancellationToken, bool bypassPluginExecution)
         {
             ValidateConnectionLive();
             Guid requestTrackingId = Guid.NewGuid();
@@ -1921,8 +1951,17 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         /// <param name="req">Request to run</param>
         /// <param name="errorStringCheck">Formatted Error string</param>
         /// <param name="bypassPluginExecution">Adds the bypass plugin behavior to this request. Note: this will only apply if the caller has the prvBypassPlugins permission to bypass plugins.  If its attempted without the permission the request will fault.</param>
+        /// <param name="inheritWorkload">Preserves this client's initiating attribution for SDK-internal metadata requests.</param>
         /// <returns>Result of create request or null.</returns>
-        internal OrganizationResponse Command_Execute(OrganizationRequest req, string errorStringCheck, bool bypassPluginExecution = false)
+        internal OrganizationResponse Command_Execute(OrganizationRequest req, string errorStringCheck, bool bypassPluginExecution = false, bool inheritWorkload = false)
+        {
+            using (WorkloadAttributionScope.Create(this, req, inheritWorkload))
+            {
+                return Command_ExecuteCore(req, errorStringCheck, bypassPluginExecution);
+            }
+        }
+
+        private OrganizationResponse Command_ExecuteCore(OrganizationRequest req, string errorStringCheck, bool bypassPluginExecution)
         {
             ValidateConnectionLive();
             Guid requestTrackingId = Guid.NewGuid();

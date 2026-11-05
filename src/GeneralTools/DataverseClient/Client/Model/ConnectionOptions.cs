@@ -108,5 +108,10 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Model
         /// Function that Dataverse ServiceClient will call to request custom headers
         /// </summary>
         public Func<Task<Dictionary<string, string>>> RequestAdditionalHeadersAsync { get; set; }
+
+        /// <summary>
+        /// Optional default workload attribution, captured when the ServiceClient is created.
+        /// </summary>
+        public WorkloadAttribution WorkloadAttribution { get; set; }
     }
 }

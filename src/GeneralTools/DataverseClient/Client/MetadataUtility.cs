@@ -83,7 +83,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			request.EntityFilters = filter;
 			request.RetrieveAsIfPublished = !onlyPublished;
 
-			RetrieveAllEntitiesResponse response = (RetrieveAllEntitiesResponse)svcAct.Command_Execute(request, "GetAllEntityMetadata");
+			RetrieveAllEntitiesResponse response = (RetrieveAllEntitiesResponse)svcAct.Command_Execute(request, "GetAllEntityMetadata", inheritWorkload: true);
 			if (response != null)
 			{
 				foreach (var entity in response.EntityMetadata)
@@ -176,7 +176,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 				RetrieveEntityRequest request = new RetrieveEntityRequest();
 				request.LogicalName = entityName;
 				request.EntityFilters = requestType;
-				RetrieveEntityResponse response = (RetrieveEntityResponse)svcAct.Command_Execute(request, "GetEntityMetadata");
+				RetrieveEntityResponse response = (RetrieveEntityResponse)svcAct.Command_Execute(request, "GetEntityMetadata", inheritWorkload: true);
 				if (response != null)
 				{
 					entityMetadata = response.EntityMetadata;
@@ -216,7 +216,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 					RetrieveAllEntitiesRequest request = new RetrieveAllEntitiesRequest();
 					request.EntityFilters = EntityFilters.Entity;
 					request.RetrieveAsIfPublished = true;
-					RetrieveAllEntitiesResponse response = (RetrieveAllEntitiesResponse)svcAct.Command_Execute(request, "GetEntityLogicalName");
+					RetrieveAllEntitiesResponse response = (RetrieveAllEntitiesResponse)svcAct.Command_Execute(request, "GetEntityLogicalName", inheritWorkload: true);
 					if (response != null)
 					{
 						foreach (EntityMetadata metadata in response.EntityMetadata)
@@ -264,7 +264,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 					request.EntityLogicalName = entityName;
 					request.LogicalName = attributeName;
 
-					RetrieveAttributeResponse response = (RetrieveAttributeResponse)svcAct.Command_Execute(request, "GetAttributeMetadata");
+					RetrieveAttributeResponse response = (RetrieveAttributeResponse)svcAct.Command_Execute(request, "GetAttributeMetadata", inheritWorkload: true);
 					if (response != null)
 					{
 						attributeMetadata = response.AttributeMetadata;
@@ -351,7 +351,7 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
 			RetrieveOptionSetRequest optReq = new RetrieveOptionSetRequest { Name = optionSetName };
 
 			// query Dataverse
-			RetrieveOptionSetResponse response = (RetrieveOptionSetResponse)svcAct.Command_Execute(optReq, "GetGlobalOptionSetMetadata");
+			RetrieveOptionSetResponse response = (RetrieveOptionSetResponse)svcAct.Command_Execute(optReq, "GetGlobalOptionSetMetadata", inheritWorkload: true);
 			if (response != null)
 			{
 				if (response.OptionSetMetadata is OptionSetMetadata && (OptionSetMetadata)response.OptionSetMetadata != null)
