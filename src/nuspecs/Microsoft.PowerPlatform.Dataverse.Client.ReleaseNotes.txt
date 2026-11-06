@@ -7,6 +7,7 @@ Notice:
     Note: Only AD on FullFramework, OAuth, Certificate, ClientSecret Authentication types are supported at this time.
 
 ++CURRENTRELEASEID++
+Added typed workload attribution through WorkloadAttribution, ServiceClient defaults, ConnectionOptions, and per-request WithWorkloadAttribution. Attribution applies to SOAP and Web API HTTP requests and is preserved across retries.
 Add a new configuration option UseExponentialRetryDelayForConcurrencyThrottle to use exponential retry delay for concurrency throttling, instead of the server-specified Retry-After header where applicable. Default is False.
 
 1.2.7
@@ -467,5 +468,4 @@ Intial Alpha release of Microsoft.Cds.Client.CdsServiceClient
             ADFS + OAuth and the application ID you wish to use registered.
         This library removes several Dynamics specific helper methods from CrmServiceClient.
             this additional methods can be found by include the nuget package Microsoft.Cds.Client.Dynamics
-
 

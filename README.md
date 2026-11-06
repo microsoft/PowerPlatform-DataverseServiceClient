@@ -59,6 +59,51 @@ For connections strings, docs on supported patterns are here: [Connection String
 
 Microsoft Documentation root for Dataverse ServiceClient can be found here: [Dataverse ServiceClient Docs](https://docs.microsoft.com/en-us/dotnet/api/microsoft.powerplatform.dataverse.client?view=dataverse-sdk-latest)
 
+### Workload attribution
+
+Use workload attribution to identify the application and feature behind
+Dataverse requests. ServiceClient formats the `x-ms-workload` header for SOAP
+and Web API requests and preserves attribution across retries.
+
+Set a client default and optionally override it for an individual request.
+The example assumes a configured `connectionString` and persistent GUIDs
+`originId` and `scopeId`:
+
+```csharp
+using Microsoft.Crm.Sdk.Messages;
+using Microsoft.PowerPlatform.Dataverse.Client;
+using Microsoft.PowerPlatform.Dataverse.Client.Model;
+
+using var client = new ServiceClient(connectionString);
+client.WorkloadAttribution = new WorkloadAttribution(
+    originName: "contoso_catalog", originId: originId);
+
+var identity = (WhoAmIResponse)await client.ExecuteAsync(new WhoAmIRequest());
+
+var searchWorkload = new WorkloadAttribution(
+    originName: "contoso_catalog", originId: originId,
+    scopeName: "catalog_reader", scopeId: scopeId,
+    component: "search");
+
+identity = (WhoAmIResponse)await client.CreateRequestBuilder()
+    .WithWorkloadAttribution(searchWorkload)
+    .ExecuteAsync(new WhoAmIRequest());
+```
+
+`WorkloadAttribution` is immutable. Origin name and GUID are required; scope name
+and GUID are an optional pair, and component is independently optional. IDs must
+be nonzero GUIDs. Names contain 3-63 ASCII letters, digits, or underscores and
+start with a letter. Invalid configuration throws `ArgumentException`.
+
+Keep workload IDs stable across requests and retries, and exclude personal data
+and secrets. Attribution is diagnostic metadata; standard authentication and
+authorization apply.
+
+Per-request attribution overrides client defaults. Typed attribution takes
+precedence over custom workload headers. Use `WithWorkloadAttribution(null)` to
+suppress the typed default for one request; raw custom headers retain their
+existing behavior. Use a separate request builder for each concurrent request.
+
 ## Contributing
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us the rights to use your contribution. For details, visit https://cla.microsoft.com.
 

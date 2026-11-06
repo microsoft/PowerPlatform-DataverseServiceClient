@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using static Microsoft.PowerPlatform.Dataverse.Client.Utilities;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
+using Microsoft.PowerPlatform.Dataverse.Client.Model;
 
 namespace Microsoft.PowerPlatform.Dataverse.Client.Builder
 {
@@ -27,6 +28,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Builder
         private Dictionary<string, string> _headers = new Dictionary<string, string>();
         private Guid? _aadOidId; // this ObjectID to use for the requesting user.
         private Guid? _crmUserId; // this is the CRM user id to use for the requesting user.
+        private WorkloadAttribution _workloadAttribution;
+        private bool _hasWorkloadAttribution;
 
         /// <summary>
         /// Internal use only,  used to build a base class for request builders.
@@ -56,6 +59,19 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Builder
         public T WithCorrelationId(Guid correlationId)
         {
             _correlationId = correlationId;
+            return (T)this;
+        }
+
+        /// <summary>
+        /// Sets attribution for the next request, overriding the client's default.
+        /// Use a separate builder for each concurrent request.
+        /// </summary>
+        /// <param name="workload">Immutable attribution, or null to suppress typed client defaults for this request.</param>
+        /// <returns>This request builder.</returns>
+        public T WithWorkloadAttribution(WorkloadAttribution workload)
+        {
+            _workloadAttribution = workload;
+            _hasWorkloadAttribution = true;
             return (T)this;
         }
 
@@ -136,6 +152,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Builder
 
             ParameterCollection parameters = new ParameterCollection();
 
+            if (_hasWorkloadAttribution)
+                parameters.Add(WorkloadAttributionScope.ParameterName, _workloadAttribution);
+
             if (_requestId != null)
             {
                 request.RequestId = _requestId.Value;
@@ -181,6 +200,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client.Builder
             _requestId = null;
             _correlationId = null;
             _headers.Clear();
+            _workloadAttribution = null;
+            _hasWorkloadAttribution = false;
         }
 
         #region IOrganization Services Interface Implementations

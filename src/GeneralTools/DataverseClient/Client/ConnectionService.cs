@@ -2173,6 +2173,9 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
         internal async Task<HttpResponseMessage> Command_WebExecuteAsync(string queryString, string body, HttpMethod method, Dictionary<string, List<string>> customHeaders,
             string contentType, string errorStringCheck, Guid callerId, bool disableConnectionLocking, int maxRetryCount, TimeSpan retryPauseTime, Uri uriOfInstance = null, Guid requestTrackingId = default, CancellationToken cancellationToken = default)
         {
+            var workload = WorkloadAttributionScope.Current;
+            if (workload != null && customHeaders != null)
+                customHeaders = customHeaders.ToDictionary(header => header.Key, header => header.Value?.ToList(), customHeaders.Comparer);
             Stopwatch logDt = Stopwatch.StartNew();
             int retryCount = 0;
             bool retry = false;
@@ -2326,6 +2329,8 @@ namespace Microsoft.PowerPlatform.Dataverse.Client
                 }
                 finally { } // do nothing on header failure for now.
             }
+
+            WorkloadAttributionScope.ApplyTo(customHeaders, workload);
 
             if (EnableCookieRelay && CurrentCookieCollection != null)
             {
